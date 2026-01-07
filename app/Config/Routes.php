@@ -18,18 +18,61 @@ $routes->post('auth/process_login', function() {
     return redirect()->to('/dashboard')->with('success', 'Login berhasil!');
 });
 
-// Dashboard Route - Mengarah ke folder Customer
+// Dashboard Routes
 $routes->get('dashboard', function() {
     return view('Customer/dashboard');
 });
 
-// Route untuk dashboard actions
+// Add this route
+$routes->get('dashboard/ticket_detail/(:num)', function($id) {
+    // You can pass ticket ID to the view if needed
+    $data['ticket_id'] = $id;
+    return view('Customer/ticket_detail', $data);
+});
+// Add profile route
+$routes->get('dashboard/profile', function() {
+    return view('Customer/profile_customer');
+});
+
+// Add create ticket routes
 $routes->get('dashboard/create_ticket', function() {
-    return redirect()->to('/dashboard')->with('message', 'Create ticket form would open here');
+    return view('Customer/create_ticket');
+});
+
+$routes->post('dashboard/tickets/create', function() {
+    // Process ticket creation here
+    // You can access form data via $request->getPost()
+    $request = service('request');
+    
+    // Simulate processing
+    return redirect()->to('/dashboard/my_tickets')->with('success', 'Ticket created successfully!');
+});
+
+// Add notification routes
+$routes->get('dashboard/notifications', function() {
+    return view('Customer/notifications');
+});
+
+$routes->get('dashboard/notifications/(:num)', function($id) {
+    // Simulate viewing a specific notification
+    return redirect()->to('/dashboard/notifications')->with('message', 'Viewing notification #' . $id);
+});
+
+$routes->post('dashboard/notifications/mark_read', function() {
+    // Process marking notifications as read
+    return redirect()->to('/dashboard/notifications')->with('success', 'Notifications marked as read');
+});
+
+$routes->post('dashboard/notifications/clear_all', function() {
+    // Process clearing all notifications
+    return redirect()->to('/dashboard/notifications')->with('success', 'All notifications cleared');
+});
+$routes->get('dashboard/create_ticket', function() {
+    return view('Customer/create_ticket');
 });
 
 $routes->get('dashboard/my_tickets', function() {
-    return redirect()->to('/dashboard')->with('message', 'My tickets page would open here');
+    return view('Customer/my_tickets');
 });
 
 $routes->get('dashboard/view_messages', function() {
@@ -43,5 +86,5 @@ $routes->get('dashboard/logout', function() {
 $routes->post('dashboard/search_tickets', function() {
     $request = service('request');
     $search_term = $request->getPost('search_term');
-    return redirect()->to('/dashboard')->with('search_message', "Search results for: $search_term");
+    return redirect()->to('/dashboard/my_tickets')->with('search_message', "Search results for: $search_term");
 });

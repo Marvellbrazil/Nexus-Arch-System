@@ -4,197 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEXUS - Login</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#434264',
+                        'secondary': '#756EA4',
+                        'accent': '#BA94ED',
+                        'light-bg': '#D7D5EE',
+                        'text-light': 'rgba(204, 221, 255, 0.80)',
+                        'border-light': 'rgba(204, 221, 255, 0.24)',
+                    },
+                    fontFamily: {
+                        'roboto': ['Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS untuk checkbox -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
-        }
-        
-        body {
-            background-color: #D7D5EE;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .background-effects {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        
-        .background-effect-1 {
-            width: 40vw;
-            height: 40vw;
-            position: absolute;
-            right: -10%;
-            bottom: -10%;
-            transform: rotate(149deg);
-            background: linear-gradient(75deg, rgba(56.96, 44.47, 127.72, 0.26) 75%, #D6D3EE 83%, rgba(174.48, 162.84, 202.33, 0.94) 100%, #817CB2 100%);
-            filter: blur(80px);
-            opacity: 0.8;
-        }
-        
-        .background-effect-2 {
-            width: 35vw;
-            height: 25vw;
-            position: absolute;
-            left: -5%;
-            top: 10%;
-            transform: rotate(8deg);
-            background: linear-gradient(75deg, rgba(65.04, 45.10, 137.14, 0.31) 75%, #D6D3EE 83%, rgba(174.48, 162.84, 202.33, 0.94) 100%, #817CB2 100%);
-            filter: blur(80px);
-            opacity: 0.7;
-        }
-        
-        .background-effect-3 {
-            width: 15vw;
-            height: 20vw;
-            position: absolute;
-            right: 5%;
-            top: -5%;
-            transform: rotate(8deg);
-            background: linear-gradient(75deg, rgba(16.56, 8.41, 46.05, 0.97) 33%, #D6D3EE 83%, rgba(174.48, 162.84, 202.33, 0.94) 100%, #817CB2 100%);
-            filter: blur(80px);
-            opacity: 0.6;
-        }
-        
-        .background-effect-4 {
-            width: 20vw;
-            height: 15vw;
-            position: absolute;
-            left: -5%;
-            top: -5%;
-            transform: rotate(4deg);
-            background: linear-gradient(75deg, rgba(16.56, 8.41, 46.05, 0.39) 75%, #D6D3EE 83%, rgba(174.48, 162.84, 202.33, 0.94) 100%, #817CB2 100%);
-            filter: blur(80px);
-            opacity: 0.5;
-        }
-        
-        .login-container {
-            position: relative;
-            z-index: 2;
-            width: 90%;
-            max-width: 450px;
-            min-width: 320px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .logo-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            justify-content: center;
-            width: 100%;
-        }
-        
-        .logo-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            object-fit: cover;
-            background: #434264;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-        }
-        
-        .logo-text {
-            color: #817CB2;
-            font-size: 36px;
-            font-weight: 700;
-            margin-left: 15px;
-        }
-        
-        .login-card {
-            width: 100%;
-            background: #434264;
-            border-radius: 19px;
-            padding: 25px 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .login-title {
-            text-align: center;
-            color: white;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        
-        .form-label {
-            color: rgba(204, 221, 255, 0.80);
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .form-input {
-            width: 100%;
-            height: 54px;
-            padding: 0 20px;
-            background: rgba(204, 221, 255, 0.12);
-            border: 1px solid rgba(204, 221, 255, 0.24);
-            border-radius: 6px;
-            color: rgba(204, 221, 255, 0.80);
-            font-size: 17px;
-            font-weight: 700;
-            outline: none;
-            transition: all 0.3s;
-        }
-        
-        .form-input:focus {
-            border-color: rgba(204, 221, 255, 0.6);
-            box-shadow: 0 0 0 2px rgba(204, 221, 255, 0.2);
-        }
-        
-        .password-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            width: 100%;
-        }
-        
-        .forgot-link {
-            color: rgba(204, 221, 255, 0.80);
-            font-size: 14px;
-            font-weight: 700;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .forgot-link:hover {
-            color: #BA94ED;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-        }
-        
         .checkbox-container {
             width: 18px;
             height: 18px;
@@ -204,7 +43,6 @@
             background: rgba(204, 221, 255, 0.12);
             border-radius: 4px;
             border: 2px solid rgba(204, 221, 255, 0.12);
-            margin-right: 10px;
             cursor: pointer;
         }
         
@@ -225,189 +63,120 @@
             left: 3px;
         }
         
-        .remember-label {
-            color: white;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
+        .form-input:focus {
+            border-color: rgba(204, 221, 255, 0.6);
+            box-shadow: 0 0 0 2px rgba(204, 221, 255, 0.2);
         }
         
-        .login-button {
-            width: 100%;
-            height: 45px;
-            background: #756EA4;
-            border: none;
-            border-radius: 6px;
-            color: #C1D1F3;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 20px 0;
+        .blur-80 {
+            filter: blur(80px);
         }
         
-        .login-button:hover {
-            background: #817CB2;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .signup-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 15px;
-            width: 100%;
-        }
-        
-        .signup-text {
-            color: rgba(204, 221, 255, 0.92);
-            font-size: 14px;
-            font-weight: 700;
-            margin-right: 5px;
-        }
-        
-        .signup-link {
-            color: #BA94ED;
-            font-size: 14px;
-            font-weight: 400;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .signup-link:hover {
-            text-decoration: underline;
-        }
-        
-        .alert-message {
-            padding: 12px 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
-            display: none; /* Sembunyikan default */
-        }
-        
-        .alert-success {
-            background-color: rgba(76, 175, 80, 0.15);
-            color: #4CAF50;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-        
-        .alert-error {
-            background-color: rgba(244, 67, 54, 0.15);
-            color: #f44336;
-            border: 1px solid rgba(244, 67, 54, 0.3);
+        .blur-60 {
+            filter: blur(60px);
         }
         
         @media (max-width: 768px) {
-            .login-container {
-                max-width: 400px;
-                padding: 15px;
-            }
-            
-            .logo-text {
-                font-size: 30px;
-            }
-            
-            .logo-img {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-            
-            .login-card {
-                padding: 20px;
-            }
-            
-            .background-effect-1, .background-effect-2, .background-effect-3, .background-effect-4 {
+            .blur-80 {
                 filter: blur(60px);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                max-width: 350px;
-            }
-            
-            .logo-text {
-                font-size: 26px;
-            }
-            
-            .login-title {
-                font-size: 28px;
-            }
-            
-            .form-input {
-                height: 48px;
-                font-size: 16px;
             }
         }
     </style>
 </head>
-<body>
+<body class="bg-light-bg min-h-screen flex justify-center items-center overflow-hidden relative font-roboto">
+    
     <!-- Background Effects -->
-    <div class="background-effects">
-        <div class="background-effect-1"></div>
-        <div class="background-effect-2"></div>
-        <div class="background-effect-3"></div>
-        <div class="background-effect-4"></div>
+    <div class="absolute w-full h-full top-0 left-0 z-1">
+        <div class="w-[40vw] h-[40vw] absolute -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.26)] via-[#D6D3EE] to-[#817CB2] blur-80 opacity-80"></div>
+        <div class="w-[35vw] h-[25vw] absolute -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.31)] via-[#D6D3EE] to-[#817CB2] blur-80 opacity-70"></div>
+        <div class="w-[15vw] h-[20vw] absolute right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.97)] via-[#D6D3EE] to-[#817CB2] blur-80 opacity-60"></div>
+        <div class="w-[20vw] h-[15vw] absolute -left-[5%] -top-[5%] rotate-[4deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.39)] via-[#D6D3EE] to-[#817CB2] blur-80 opacity-50"></div>
     </div>
     
     <!-- Login Container -->
-    <div class="login-container">
+    <div class="relative z-2 w-[90%] max-w-[450px] min-w-[320px] p-5 flex flex-col items-center">
         <!-- Logo -->
-        <div class="logo-container">
-            <div class="logo-img">NX</div>
-            <div class="logo-text">NEXUS</div>
+        <div class="flex items-center mb-[30px] justify-center w-full">
+            <div class="w-[60px] h-[60px] rounded-[10px] bg-primary flex items-center justify-center text-white font-bold text-[24px]">
+                NX
+            </div>
+            <div class="text-[#817CB2] text-[36px] font-bold ml-[15px]">
+                NEXUS
+            </div>
         </div>
         
         <!-- Login Card -->
-        <div class="login-card">
-            <h2 class="login-title">Login</h2>
+        <div class="w-full bg-primary rounded-[19px] p-[25px_30px] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+            <h2 class="text-center text-white text-[32px] font-bold mb-[30px]">
+                Login
+            </h2>
             
-            <!-- Alert Message (akan ditampilkan via JavaScript) -->
+            <!-- Alert Message -->
             <div id="alertMessage" class="alert-message"></div>
             
             <!-- Login Form -->
             <form id="loginForm" action="<?= base_url('auth/process_login') ?>" method="POST">
-                <!-- CSRF Token untuk keamanan -->
+                <!-- CSRF Token -->
                 <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
                 
                 <!-- Email Field -->
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter email" required>
-                    <small id="emailError" style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;"></small>
+                <div class="mb-[20px] w-full">
+                    <label for="email" class="block text-text-light text-[14px] font-bold mb-[8px]">
+                        Email Address
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="w-full h-[54px] px-5 bg-[rgba(204,221,255,0.12)] border border-border-light rounded-[6px] text-text-light text-[17px] font-bold outline-none form-input transition-all duration-300 placeholder:text-text-light/50"
+                        placeholder="Enter email"
+                        required
+                    >
+                    <small id="emailError" class="text-[#ff6b6b] text-[12px] mt-[5px] hidden"></small>
                 </div>
                 
                 <!-- Password Field -->
-                <div class="form-group">
-                    <div class="password-header">
-                        <label class="form-label" for="password">Password</label>
-                        <a href="<?= base_url('auth/forgot_password') ?>" class="forgot-link">Forgot?</a>
+                <div class="mb-[20px] w-full">
+                    <div class="flex justify-between items-center mb-[8px] w-full">
+                        <label for="password" class="block text-text-light text-[14px] font-bold">
+                            Password
+                        </label>
+                        <a href="<?= base_url('auth/forgot_password') ?>" class="text-text-light text-[14px] font-bold no-underline hover:text-accent cursor-pointer">
+                            Forgot?
+                        </a>
                     </div>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Password" required>
-                    <small id="passwordError" style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;"></small>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="w-full h-[54px] px-5 bg-[rgba(204,221,255,0.12)] border border-border-light rounded-[6px] text-text-light text-[17px] font-bold outline-none form-input transition-all duration-300 placeholder:text-text-light/50"
+                        placeholder="Password"
+                        required
+                    >
+                    <small id="passwordError" class="text-[#ff6b6b] text-[12px] mt-[5px] hidden"></small>
                 </div>
                 
                 <!-- Remember Me -->
-                <div class="remember-me">
+                <div class="flex items-center my-[20px]">
                     <div class="checkbox-container" id="rememberCheckbox"></div>
                     <input type="hidden" name="remember" id="remember" value="0">
-                    <span class="remember-label" onclick="toggleRemember()">Remember Me</span>
+                    <span class="text-white text-[14px] font-bold ml-[10px] cursor-pointer" onclick="toggleRemember()">
+                        Remember Me
+                    </span>
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="login-button">Login</button>
+                <button 
+                    type="submit" 
+                    class="w-full h-[45px] bg-secondary hover:bg-[#817CB2] text-[#C1D1F3] text-[16px] font-extrabold rounded-[6px] border-none cursor-pointer transition-all duration-300 my-[20px] hover:-translate-y-[2px] hover:shadow-[0_5px_15px_rgba(0,0,0,0.2)]"
+                >
+                    Login
+                </button>
             </form>
-            
-            
         </div>
     </div>
     
-    <!-- JavaScript -->
+    <!-- JavaScript (Sama seperti original) -->
     <script>
         // Fungsi untuk toggle Remember Me
         function toggleRemember() {
@@ -422,7 +191,7 @@
         function showAlert(message, type = 'success') {
             const alertDiv = document.getElementById('alertMessage');
             alertDiv.textContent = message;
-            alertDiv.className = `alert-message alert-${type}`;
+            alertDiv.className = `p-[12px_20px] rounded-[6px] mb-[20px] text-[14px] font-semibold text-center ${type === 'success' ? 'bg-[rgba(76,175,80,0.15)] text-[#4CAF50] border border-[rgba(76,175,80,0.3)]' : 'bg-[rgba(244,67,54,0.15)] text-[#f44336] border border-[rgba(244,67,54,0.3)]'}`;
             alertDiv.style.display = 'block';
             
             // Sembunyikan alert setelah 5 detik
