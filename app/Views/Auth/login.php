@@ -371,7 +371,7 @@
             <div id="alertMessage" class="alert-message"></div>
             
             <!-- Login Form -->
-            <form id="loginForm" action="<?= base_url('auth/process_login') ?>" method="POST">
+            <form id="loginForm" action="" method="POST">
                 <!-- CSRF Token untuk keamanan -->
                 <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
                 
@@ -402,8 +402,6 @@
                 <!-- Submit Button -->
                 <button type="submit" class="login-button">Login</button>
             </form>
-            
-            
         </div>
     </div>
     
