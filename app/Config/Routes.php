@@ -7,11 +7,16 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // Default route
-$routes->get('/', 'Home::index');
+$routes->get('/', function() {
+    return redirect()->to('login');
+});
 
 // Auth Routes
-$routes->get('login', function() {
-    return view('Auth/login');
+$routes->group('login', function($routes) {
+    $routes->get('', 'UserController::loginForm');
+    $routes->post('post', 'UserController::login');
+    $routes->get('otp', 'UserController::otpForm');
+    $routes->post('otp/post', 'UserController::otp');
 });
 
 $routes->post('auth/process_login', function() {

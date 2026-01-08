@@ -51,6 +51,7 @@
             </div>
             <span class="ml-4 text-[36px] font-bold text-[#817CB2]">NEXUS</span>
         </div>
+<<<<<<< HEAD
 
         <!-- Card -->
         <div class="w-full bg-[#434264] rounded-[19px] px-10 py-8 shadow-xl">
@@ -80,6 +81,26 @@
                        font-bold text-[17px]
                        focus:outline-none
                        focus:ring-2 focus:ring-[#CCDDFD33]">
+=======
+        
+        <!-- Login Card -->
+        <div class="login-card">
+            <h2 class="login-title">Login</h2>
+            
+            <!-- Alert Message (akan ditampilkan via JavaScript) -->
+            <div id="alertMessage" class="alert-message"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" action="" method="POST">
+                <!-- CSRF Token untuk keamanan -->
+                <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter email" required>
+                    <small id="emailError" style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;"></small>
+>>>>>>> ee1c17e51b35ba1072ceb5a01ac816c39508c38b
                 </div>
 
                 <!-- Password -->
