@@ -51,7 +51,6 @@
             </div>
             <span class="ml-4 text-[36px] font-bold text-[#817CB2]">NEXUS</span>
         </div>
-<<<<<<< HEAD
 
         <!-- Card -->
         <div class="w-full bg-[#434264] rounded-[19px] px-10 py-8 shadow-xl">
@@ -81,96 +80,98 @@
                        font-bold text-[17px]
                        focus:outline-none
                        focus:ring-2 focus:ring-[#CCDDFD33]">
-=======
-        
-        <!-- Login Card -->
-        <div class="login-card">
-            <h2 class="login-title">Login</h2>
-            
-            <!-- Alert Message (akan ditampilkan via JavaScript) -->
-            <div id="alertMessage" class="alert-message"></div>
-            
-            <!-- Login Form -->
-            <form id="loginForm" action="" method="POST">
-                <!-- CSRF Token untuk keamanan -->
-                <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-                
-                <!-- Email Field -->
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter email" required>
-                    <small id="emailError" style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;"></small>
->>>>>>> ee1c17e51b35ba1072ceb5a01ac816c39508c38b
-                </div>
 
-                <!-- Password -->
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <label class="text-sm font-bold text-[#CCDDFDCC]">
-                            Password
-                        </label>
-                        <a href="<?= base_url('auth/forgot_password') ?>"
-                            class="text-sm font-bold text-[#CCDDFDCC] hover:text-[#BA94ED]">
-                            Forgot?
-                        </a>
-                    </div>
 
-                    <input type="password" name="password" placeholder="Password" required class="w-full h-[54px] px-5 rounded-md
+                    <!-- Login Card -->
+                    <div class="login-card">
+                        <h2 class="login-title">Login</h2>
+
+                        <!-- Alert Message (akan ditampilkan via JavaScript) -->
+                        <div id="alertMessage" class="alert-message"></div>
+
+                        <!-- Login Form -->
+                        <form id="loginForm" action="" method="POST">
+                            <!-- CSRF Token untuk keamanan -->
+                            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+
+                            <!-- Email Field -->
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-input" placeholder="Enter email"
+                                    required>
+                                <small id="emailError"
+                                    style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;"></small>
+
+                            </div>
+
+                            <!-- Password -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm font-bold text-[#CCDDFDCC]">
+                                        Password
+                                    </label>
+                                    <a href="<?= base_url('auth/forgot_password') ?>"
+                                        class="text-sm font-bold text-[#CCDDFDCC] hover:text-[#BA94ED]">
+                                        Forgot?
+                                    </a>
+                                </div>
+
+                                <input type="password" name="password" placeholder="Password" required class="w-full h-[54px] px-5 rounded-md
                        bg-[#CCDDFD1F]
                        border border-[#CCDDFD3D]
                        text-[#CCDDFDCC]
                        font-bold text-[17px]
                        focus:outline-none
                        focus:ring-2 focus:ring-[#CCDDFD33]">
-                </div>
+                            </div>
 
-                <!-- Remember Me -->
-                <div class="flex items-center pt-2 cursor-pointer" onclick="toggleRemember()">
-                    <div id="rememberCheckbox" class="w-[18px] h-[18px] mr-3
+                            <!-- Remember Me -->
+                            <div class="flex items-center pt-2 cursor-pointer" onclick="toggleRemember()">
+                                <div id="rememberCheckbox" class="w-[18px] h-[18px] mr-3
                        border-2 border-[#CCDDFD1F]
                        rounded
                        bg-[#CCDDFD1F]
                        flex items-center justify-center">
-                    </div>
-                    <input type="hidden" name="remember" id="remember" value="0">
-                    <span class="text-white font-bold text-sm">
-                        Remember Me
-                    </span>
-                </div>
+                                </div>
+                                <input type="hidden" name="remember" id="remember" value="0">
+                                <span class="text-white font-bold text-sm">
+                                    Remember Me
+                                </span>
+                            </div>
 
-                <!-- Button -->
-                <div class="pt-3">
-                    <button type="submit" class="w-full h-[45px]
+                            <!-- Button -->
+                            <div class="pt-3">
+                                <button type="submit" class="w-full h-[45px]
                        bg-[#756EA4]
                        rounded-md
                        text-[#C1D1F3]
                        font-extrabold text-base
                        hover:bg-[#817CB2]
                        transition-all">
-                       Login
-                    </button>
+                                    Login
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
                 </div>
 
-            </form>
-        </div>
+                <!-- JS (tetap sama) -->
+                <script>
+                    function toggleRemember() {
+                        const box = document.getElementById('rememberCheckbox');
+                        const input = document.getElementById('remember');
 
-    </div>
+                        box.classList.toggle('bg-[#756EA4]');
+                        box.classList.toggle('border-[#756EA4]');
+                        box.innerHTML = box.classList.contains('bg-[#756EA4]')
+                            ? '<div class="w-[10px] h-[6px] border-l-2 border-b-2 border-white rotate-[-45deg]"></div>'
+                            : '';
 
-    <!-- JS (tetap sama) -->
-    <script>
-        function toggleRemember() {
-            const box = document.getElementById('rememberCheckbox');
-            const input = document.getElementById('remember');
-
-            box.classList.toggle('bg-[#756EA4]');
-            box.classList.toggle('border-[#756EA4]');
-            box.innerHTML = box.classList.contains('bg-[#756EA4]')
-                ? '<div class="w-[10px] h-[6px] border-l-2 border-b-2 border-white rotate-[-45deg]"></div>'
-                : '';
-
-            input.value = box.classList.contains('bg-[#756EA4]') ? '1' : '0';
-        }
-    </script>
+                        input.value = box.classList.contains('bg-[#756EA4]') ? '1' : '0';
+                    }
+                </script>
 
 </body>
 
