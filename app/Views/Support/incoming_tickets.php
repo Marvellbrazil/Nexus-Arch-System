@@ -1,6 +1,6 @@
-<?= $this->extend('layouts/customer_layout') ?>
+<?= $this->extend('layouts/support_layout') ?>
 
-<?= $this->section('title') ?>My Tickets - NEXUS<?= $this->endSection() ?>
+<?= $this->section('title') ?>Incoming Tickets - NEXUS Support<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
@@ -15,11 +15,11 @@
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex-1">
-                <h1 class="text-2xl md:text-[32px] font-semibold mb-1 md:mb-[5px] text-text-dark">My Tickets</h1>
-                <p class="text-sm md:text-[15px] font-light text-[#666]">Manage and track your support requests</p>
+                <h1 class="text-2xl md:text-[32px] font-semibold mb-1 md:mb-[5px] text-text-dark">Incoming Tickets</h1>
+                <p class="text-sm md:text-[15px] font-light text-[#666]">Review and forward tickets to appropriate departments</p>
             </div>
             
-            <!-- Search and Add Ticket -->
+            <!-- Search and Stats -->
             <div class="flex flex-col sm:flex-row gap-3 md:gap-[15px]">
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -32,11 +32,14 @@
                         id="ticketSearch"
                     >
                 </div>
-                <a href="<?= base_url('dashboard/create_ticket') ?>" 
-                   class="h-10 md:h-[44px] px-4 md:px-[20px] bg-secondary text-white rounded-xl flex items-center justify-center gap-2 hover:bg-[#817CB2] transition-colors font-medium text-sm md:text-base">
-                    <i class="fas fa-plus"></i>
-                    <span>New Ticket</span>
-                </a>
+                
+                <!-- Stats Badge -->
+                <div class="px-4 py-2 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center gap-2">
+                    <i class="fas fa-inbox"></i>
+                    <span class="font-medium">
+                        <span class="font-bold">12</span> Pending
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -46,11 +49,11 @@
         <div class="bg-white rounded-xl p-3 md:p-5 shadow-sm border border-gray-200">
             <div class="flex items-center gap-2 md:gap-3">
                 <div class="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-ticket-alt text-blue-600 text-sm md:text-base"></i>
+                    <i class="fas fa-inbox text-blue-600 text-sm md:text-base"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-xs md:text-sm">Total Tickets</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">12</p>
+                    <p class="text-gray-600 text-xs md:text-sm">Total Incoming</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800">24</p>
                 </div>
             </div>
         </div>
@@ -61,8 +64,8 @@
                     <i class="fas fa-clock text-yellow-600 text-sm md:text-base"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-xs md:text-sm">Open</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">5</p>
+                    <p class="text-gray-600 text-xs md:text-sm">Pending Review</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800">12</p>
                 </div>
             </div>
         </div>
@@ -70,22 +73,22 @@
         <div class="bg-white rounded-xl p-3 md:p-5 shadow-sm border border-gray-200">
             <div class="flex items-center gap-2 md:gap-3">
                 <div class="w-8 h-8 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600 text-sm md:text-base"></i>
+                    <i class="fas fa-share-alt text-green-600 text-sm md:text-base"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-xs md:text-sm">Resolved</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">7</p>
+                    <p class="text-gray-600 text-xs md:text-sm">Forwarded Today</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800">8</p>
                 </div>
             </div>
         </div>
         
         <div class="bg-white rounded-xl p-3 md:p-5 shadow-sm border border-gray-200">
             <div class="flex items-center gap-2 md:gap-3">
-                <div class="w-8 h-8 md:w-12 md:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-chart-line text-purple-600 text-sm md:text-base"></i>
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-sm md:text-base"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-xs md:text-sm">This Month</p>
+                    <p class="text-gray-600 text-xs md:text-sm">High Priority</p>
                     <p class="text-xl md:text-2xl font-bold text-gray-800">3</p>
                 </div>
             </div>
@@ -97,19 +100,17 @@
         <!-- Table Header -->
         <div class="p-4 md:p-6 border-b border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 class="text-lg md:text-[20px] font-semibold text-gray-800">Recent Tickets</h2>
+                <h2 class="text-lg md:text-[20px] font-semibold text-gray-800">Pending Review Tickets</h2>
                 
                 <!-- Filter & Sort Options -->
                 <div class="flex flex-wrap gap-2 md:gap-3">
                     <!-- Sort by -->
                     <div class="relative w-full md:w-auto">
                         <select id="sortBy" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary appearance-none bg-white pr-8">
-                            <option value="date-desc">Sort by: Date (Newest)</option>
-                            <option value="date-asc">Sort by: Date (Oldest)</option>
+                            <option value="date-desc">Sort by: Newest First</option>
+                            <option value="date-asc">Sort by: Oldest First</option>
                             <option value="priority-desc">Sort by: Priority (High to Low)</option>
                             <option value="priority-asc">Sort by: Priority (Low to High)</option>
-                            <option value="id-desc">Sort by: Ticket ID (Desc)</option>
-                            <option value="id-asc">Sort by: Ticket ID (Asc)</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
@@ -123,14 +124,6 @@
                             <option value="alpha">Project Alpha</option>
                             <option value="beta">Project Beta</option>
                             <option value="gamma">Project Gamma</option>
-                        </select>
-                        
-                        <select id="filterStatus" class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
-                            <option value="all">All Status</option>
-                            <option value="open">Open</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="closed">Closed</option>
                         </select>
                         
                         <select id="filterPriority" class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
@@ -157,14 +150,6 @@
                     <option value="alpha">Project Alpha</option>
                     <option value="beta">Project Beta</option>
                     <option value="gamma">Project Gamma</option>
-                </select>
-                
-                <select id="filterStatusMobile" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
-                    <option value="all">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
                 </select>
                 
                 <select id="filterPriorityMobile" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
@@ -195,9 +180,9 @@
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
                             </div>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header hidden md:table-cell" data-sort="project">
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header hidden md:table-cell" data-sort="customer">
                             <div class="flex items-center gap-1">
-                                <span>Project</span>
+                                <span>Customer</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
                             </div>
                         </th>
@@ -214,9 +199,9 @@
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
                             </div>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header" data-sort="status">
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header hidden md:table-cell" data-sort="project">
                             <div class="flex items-center gap-1">
-                                <span>Status</span>
+                                <span>Project</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
                             </div>
                         </th>
@@ -225,81 +210,71 @@
                 </thead>
                 <tbody id="ticketsTable" class="divide-y divide-gray-200">
                     <?php 
-                    $tickets = [
+                    $incoming_tickets = [
                         [
                             'id' => '#10425', 
                             'id_num' => 10425,
                             'subject' => 'Fix mixizading app updates', 
-                            'project' => 'Project Alpha', 
-                            'project_key' => 'alpha',
+                            'customer' => 'John Smith',
+                            'customer_initials' => 'JS',
                             'priority' => 'Urgent', 
                             'priority_value' => 4,
                             'priorityColor' => 'bg-red-100 text-red-800', 
                             'time' => 'Yesterday, 9:50 PM', 
                             'timestamp' => strtotime('-1 day -2 hours'),
-                            'status' => 'Closed', 
-                            'status_key' => 'closed',
-                            'statusColor' => 'bg-gray-100 text-gray-800'
+                            'project' => 'Project Alpha'
                         ],
                         [
                             'id' => '#10421', 
                             'id_num' => 10421,
                             'subject' => 'Login issue causing error message', 
-                            'project' => 'Project Alpha', 
-                            'project_key' => 'alpha',
-                            'priority' => 'Medium', 
-                            'priority_value' => 2,
-                            'priorityColor' => 'bg-yellow-100 text-yellow-800', 
+                            'customer' => 'Sarah Johnson',
+                            'customer_initials' => 'SJ',
+                            'priority' => 'High', 
+                            'priority_value' => 3,
+                            'priorityColor' => 'bg-orange-100 text-orange-800', 
                             'time' => 'Today, 10:30 AM', 
                             'timestamp' => strtotime('today 10:30'),
-                            'status' => 'In Progress', 
-                            'status_key' => 'in-progress',
-                            'statusColor' => 'bg-blue-100 text-blue-800'
+                            'project' => 'Project Alpha'
                         ],
                         [
                             'id' => '#10422', 
                             'id_num' => 10422,
                             'subject' => 'Feature request for new export option', 
-                            'project' => 'Project Alpha', 
-                            'project_key' => 'alpha',
-                            'priority' => 'Low', 
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800', 
+                            'customer' => 'Michael Chen',
+                            'customer_initials' => 'MC',
+                            'priority' => 'Medium', 
+                            'priority_value' => 2,
+                            'priorityColor' => 'bg-yellow-100 text-yellow-800', 
                             'time' => 'Yesterday, 4:50 PM', 
                             'timestamp' => strtotime('-1 day 16:50'),
-                            'status' => 'Open', 
-                            'status_key' => 'open',
-                            'statusColor' => 'bg-gray-100 text-gray-800'
+                            'project' => 'Project Beta'
                         ],
                         [
                             'id' => '#10423', 
                             'id_num' => 10423,
                             'subject' => 'Fix firestorx issues neat issues', 
-                            'project' => 'Project Beta', 
-                            'project_key' => 'beta',
+                            'customer' => 'David Wilson',
+                            'customer_initials' => 'DW',
                             'priority' => 'High', 
                             'priority_value' => 3,
-                            'priorityColor' => 'bg-red-100 text-red-800', 
+                            'priorityColor' => 'bg-orange-100 text-orange-800', 
                             'time' => 'Today, 8:30 AM', 
                             'timestamp' => strtotime('today 8:30'),
-                            'status' => 'In Progress', 
-                            'status_key' => 'in-progress',
-                            'statusColor' => 'bg-blue-100 text-blue-800'
+                            'project' => 'Project Gamma'
                         ],
                         [
                             'id' => '#10424', 
                             'id_num' => 10424,
                             'subject' => 'Fix safissax issues source log iss', 
-                            'project' => 'Project Beta', 
-                            'project_key' => 'beta',
+                            'customer' => 'Emma Thompson',
+                            'customer_initials' => 'ET',
                             'priority' => 'Low', 
                             'priority_value' => 1,
                             'priorityColor' => 'bg-blue-100 text-blue-800', 
                             'time' => 'Jan. 22, 7:45 PM', 
                             'timestamp' => strtotime('-2 days 19:45'),
-                            'status' => 'Resolved', 
-                            'status_key' => 'resolved',
-                            'statusColor' => 'bg-green-100 text-green-800'
+                            'project' => 'Project Beta'
                         ],
                     ];
                     ?>
@@ -330,59 +305,79 @@
 
     <!-- Help Cards -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <!-- Need Help Card -->
+        <!-- Processing Guidelines -->
         <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
             <div class="flex items-center gap-3 md:gap-[15px] mb-4">
                 <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-question-circle text-blue-600 text-lg md:text-xl"></i>
+                    <i class="fas fa-clipboard-check text-blue-600 text-lg md:text-xl"></i>
                 </div>
-                <h3 class="text-lg md:text-[20px] font-semibold text-gray-800">Need Help?</h3>
+                <h3 class="text-lg md:text-[20px] font-semibold text-gray-800">Processing Guidelines</h3>
             </div>
             <p class="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
-                If you need assistance, please open a new ticket or search our knowledge base.
+                As a support agent, your role is to review incoming tickets and forward them to the appropriate department. Follow these steps:
             </p>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a href="<?= base_url('dashboard/create_ticket') ?>" 
-                   class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm md:text-base text-center">
-                    Open Ticket
-                </a>
-                <button class="px-4 md:px-6 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm md:text-base">
-                    Knowledge Base
-                </button>
-            </div>
+            <ol class="text-gray-600 text-sm md:text-base space-y-2 list-decimal pl-5">
+                <li>Review the ticket details and customer information</li>
+                <li>Determine the appropriate department (Technical, IT, Development, etc.)</li>
+                <li>Add any relevant notes or observations</li>
+                <li>Forward the ticket using the "Summary" view</li>
+                <li>Update the ticket status to "Forwarded"</li>
+            </ol>
         </div>
         
         <!-- Quick Actions Card -->
         <div class="bg-gradient-to-r from-secondary to-[#8A84C6] rounded-xl p-4 md:p-6 text-white">
             <h3 class="text-lg md:text-[20px] font-semibold mb-3 md:mb-4">Quick Actions</h3>
             <p class="text-white/80 text-sm md:text-base mb-4 md:mb-6">
-                Quick links for ordering and addons
+                Common tasks for incoming ticket review
             </p>
             
             <div class="flex flex-col sm:flex-row gap-3">
-                <button class="px-4 md:px-6 py-2 md:py-3 bg-white text-secondary rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    <span>Place New Order</span>
-                </button>
+                <a href="<?= site_url('support/ticket_summary/10421') ?>" 
+                   class="px-4 md:px-6 py-2 md:py-3 bg-white text-secondary rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
+                    <i class="fas fa-file-alt"></i>
+                    <span>View Sample Summary</span>
+                </a>
                 
-                <button class="px-4 md:px-6 py-2 md:py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
-                    <i class="fas fa-cube"></i>
-                    <span>View Addons</span>
+                <button onclick="exportReport()" 
+                        class="px-4 md:px-6 py-2 md:py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i>
+                    <span>Export Report</span>
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Custom styles for table */
+    .hover-row:hover {
+        background-color: #f9fafb;
+    }
+    
+    /* Animation for new tickets */
+    @keyframes highlightNew {
+        0% { background-color: rgba(117, 110, 164, 0.1); }
+        100% { background-color: transparent; }
+    }
+    
+    .new-ticket {
+        animation: highlightNew 2s ease-out;
+    }
+</style>
+
 <script>
     // Ticket data
-    const ticketsData = <?= json_encode($tickets) ?>;
+    const ticketsData = <?= json_encode($incoming_tickets) ?>;
+    
+    // Deteksi apakah menggunakan index.php atau tidak
+    const hasIndexPHP = window.location.pathname.includes('index.php');
+    const urlPrefix = hasIndexPHP ? 'index.php/' : '';
     
     // Sorting state
     let currentSort = { column: 'date', direction: 'desc' };
     let currentFilters = {
         project: 'all',
-        status: 'all',
         priority: 'all'
     };
     
@@ -411,11 +406,6 @@
             filterAndSortTickets();
         });
         
-        document.getElementById('filterStatus').addEventListener('change', function() {
-            currentFilters.status = this.value;
-            filterAndSortTickets();
-        });
-        
         document.getElementById('filterPriority').addEventListener('change', function() {
             currentFilters.priority = this.value;
             filterAndSortTickets();
@@ -424,11 +414,6 @@
         // Mobile filter dropdowns
         document.getElementById('filterProjectMobile').addEventListener('change', function() {
             currentFilters.project = this.value;
-            filterAndSortTickets();
-        });
-        
-        document.getElementById('filterStatusMobile').addEventListener('change', function() {
-            currentFilters.status = this.value;
             filterAndSortTickets();
         });
         
@@ -478,6 +463,15 @@
         
         // Initialize sort icons
         updateSortIcons();
+        
+        // Mark new tickets with animation
+        setTimeout(() => {
+            document.querySelectorAll('tr').forEach((row, index) => {
+                if (index > 0 && index <= 2) { // First 2 tickets after header
+                    row.classList.add('new-ticket');
+                }
+            });
+        }, 500);
     });
     
     function filterAndSortTickets() {
@@ -489,6 +483,7 @@
             filteredTickets = filteredTickets.filter(ticket => 
                 ticket.subject.toLowerCase().includes(searchTerm) ||
                 ticket.id.toLowerCase().includes(searchTerm) ||
+                ticket.customer.toLowerCase().includes(searchTerm) ||
                 ticket.project.toLowerCase().includes(searchTerm)
             );
         }
@@ -496,14 +491,7 @@
         // Apply project filter
         if (currentFilters.project !== 'all') {
             filteredTickets = filteredTickets.filter(ticket => 
-                ticket.project_key === currentFilters.project
-            );
-        }
-        
-        // Apply status filter
-        if (currentFilters.status !== 'all') {
-            filteredTickets = filteredTickets.filter(ticket => 
-                ticket.status_key === currentFilters.status
+                ticket.project.toLowerCase().includes(currentFilters.project)
             );
         }
         
@@ -533,9 +521,9 @@
                     aValue = a.subject.toLowerCase();
                     bValue = b.subject.toLowerCase();
                     break;
-                case 'project':
-                    aValue = a.project.toLowerCase();
-                    bValue = b.project.toLowerCase();
+                case 'customer':
+                    aValue = a.customer.toLowerCase();
+                    bValue = b.customer.toLowerCase();
                     break;
                 case 'priority':
                     aValue = a.priority_value;
@@ -545,9 +533,9 @@
                     aValue = a.timestamp;
                     bValue = b.timestamp;
                     break;
-                case 'status':
-                    aValue = a.status.toLowerCase();
-                    bValue = b.status.toLowerCase();
+                case 'project':
+                    aValue = a.project.toLowerCase();
+                    bValue = b.project.toLowerCase();
                     break;
                 default:
                     aValue = a.timestamp;
@@ -576,7 +564,7 @@
         tickets.forEach((ticket, index) => {
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             const row = document.createElement('tr');
-            row.className = `${rowClass} hover:bg-gray-100 transition-colors`;
+            row.className = `${rowClass} hover-row transition-colors`;
             row.innerHTML = `
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
@@ -584,11 +572,16 @@
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <div>
                         <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none">${ticket.subject}</p>
-                        <p class="text-gray-500 text-xs mt-1 hidden md:block">Last updated: ${getRelativeTime(ticket.timestamp)}</p>
+                        <p class="text-gray-500 text-xs mt-1 hidden md:block">${ticket.customer}</p>
                     </div>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
-                    <span class="text-gray-700 text-sm">${ticket.project}</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 text-xs font-bold">
+                            ${ticket.customer_initials}
+                        </div>
+                        <span class="text-gray-700 text-sm">${ticket.customer}</span>
+                    </div>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <span class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
@@ -598,20 +591,23 @@
                 <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
                     <span class="text-gray-600 text-sm">${ticket.time}</span>
                 </td>
-                <td class="py-3 px-3 md:py-4 md:px-6">
-                    <span class="px-2 py-1 text-xs rounded-full ${ticket.statusColor} font-medium whitespace-nowrap">
-                        ${ticket.status}
-                    </span>
+                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
+                    <span class="text-gray-700 text-sm">${ticket.project}</span>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6">
-                    <div class="flex items-center gap-1 md:gap-2">
-                        <a href="<?= base_url('dashboard/ticket_detail/') ?>${ticket.id_num}" 
-                           class="px-3 py-1 md:px-4 md:py-2 bg-secondary text-white text-xs md:text-sm rounded-lg hover:bg-[#817CB2] transition-colors whitespace-nowrap">
-                            View
+                    <div class="flex items-center gap-2">
+                        <!-- PERBAIKAN: Gunakan base_url langsung -->
+                        <a href="<?= base_url('support/ticket_detail/') ?>${ticket.id_num}" 
+                           class="px-3 py-1 md:px-3 md:py-2 bg-blue-100 text-blue-700 text-xs md:text-sm rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>View</span>
                         </a>
-                        <button class="p-1 md:p-2 text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-ellipsis-v text-xs"></i>
-                        </button>
+                        <!-- PERBAIKAN: Gunakan base_url langsung -->
+                        <a href="<?= base_url('support/ticket_summary/') ?>${ticket.id_num}" 
+                           class="px-3 py-1 md:px-3 md:py-2 bg-secondary text-white text-xs md:text-sm rounded-lg hover:bg-[#817CB2] transition-colors whitespace-nowrap flex items-center gap-1">
+                            <i class="fas fa-file-alt text-xs"></i>
+                            <span>Summary</span>
+                        </a>
                     </div>
                 </td>
             `;
@@ -624,7 +620,7 @@
             row.innerHTML = `
                 <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
                     <div class="flex flex-col items-center justify-center">
-                        <i class="fas fa-ticket-alt text-2xl md:text-3xl text-gray-300 mb-3"></i>
+                        <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
                         <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
                         <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
                     </div>
@@ -653,15 +649,49 @@
         }
     }
     
-    function getRelativeTime(timestamp) {
-        const now = Math.floor(Date.now() / 1000);
-        const diff = now - timestamp;
+    // Export report function
+    function exportReport() {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
         
-        if (diff < 60) return 'just now';
-        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
-        if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
-        if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
-        return Math.floor(diff / 604800) + ' weeks ago';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+        btn.disabled = true;
+        
+        // Simulate export process
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            // Show success message
+            showToast('Report exported successfully!', 'success');
+        }, 1500);
+    }
+    
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-24 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'error' ? 'bg-red-500 text-white' : 
+            type === 'success' ? 'bg-green-500 text-white' : 
+            'bg-blue-500 text-white'
+        }`;
+        toast.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i class="fas ${
+                    type === 'error' ? 'fa-exclamation-circle' : 
+                    type === 'success' ? 'fa-check-circle' : 
+                    'fa-info-circle'
+                }"></i>
+                <span class="text-sm">${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 </script>
 <?= $this->endSection() ?>

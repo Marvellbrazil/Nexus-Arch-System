@@ -3,43 +3,65 @@
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
-use CodeIgniter\HTTP\RequestInterface;
-use CodeIgniter\HTTP\ResponseInterface;
-use Psr\Log\LoggerInterface;
 
-/**
- * BaseController provides a convenient place for loading components
- * and performing functions that are needed by all your controllers.
- *
- * Extend this class in any new controllers:
- * ```
- *     class Home extends BaseController
- * ```
- *
- * For security, be sure to declare any new methods as protected or private.
- */
-abstract class BaseController extends Controller
+class BaseController extends Controller
 {
-    /**
-     * Be sure to declare properties for any property fetch you initialized.
-     * The creation of dynamic property is deprecated in PHP 8.2.
-     */
+    protected $helpers = ['url', 'form', 'session'];
 
-    // protected $session;
-
-    /**
-     * @return void
-     */
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
-        // Load here all helpers you want to be available in your controllers that extend BaseController.
-        // Caution: Do not put the this below the parent::initController() call below.
-        // $this->helpers = ['form', 'url'];
-
-        // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
+        
+        // Load session
+        $this->session = \Config\Services::session();
+        
+        // Check authentication for all controllers except Auth
+        if (!$this instanceof Auth) {
+            $this->checkLogin();
+        }
+    }
 
-        // Preload any models, libraries, etc, here.
-        // $this->session = service('session');
+protected function checkLogin()
+{
+    // Skip check for login processing
+    $currentURL = current_url();
+    if (strpos($currentURL, 'process_login') !== false) {
+        return;
+    }
+    
+    if (!session()->get('isLoggedIn')) {
+        return redirect()->to('/login')->with('error', 'Please login first');
+    }
+}
+
+    protected function checkRole($allowedRoles)
+    {
+        $userRole = session()->get('role_name');
+        
+        if (!in_array($userRole, $allowedRoles)) {
+            return redirect()->to('/login')->with('error', 'Unauthorized access');
+        }
+    }
+
+    protected function checkDepartment($allowedDepartments)
+    {
+        $userDepartment = session()->get('department_name');
+        
+        if (!in_array($userDepartment, $allowedDepartments)) {
+            return redirect()->to('/login')->with('error', 'Unauthorized department access');
+        }
+    }
+
+    protected function loadCommonData()
+    {
+        $data['user'] = [
+            'full_name' => session()->get('full_name'),
+            'email' => session()->get('email'),
+            'role_name' => session()->get('role_name'),
+            'department_name' => session()->get('department_name'),
+            'photo_profile' => session()->get('photo_profile')
+        ];
+        
+        return $data;
     }
 }

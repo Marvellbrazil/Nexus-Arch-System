@@ -1,226 +1,285 @@
 <?= $this->extend('layouts/customer_layout') ?>
 
-<?= $this->section('title') ?>Ticket Detail - NEXUS<?= $this->endSection() ?>
+<?= $this->section('title') ?>Ticket #12345 Detail - NEXUS<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
-<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.26)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
-<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.31)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
-<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.97)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
+<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
+<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
+<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="mt-[77px] p-[30px] relative z-10">
     <!-- Page Header -->
-    <div class="mb-[25px]">
-        <h1 class="text-[35px] font-semibold mb-[5px] text-text-dark">Ticket Detail</h1>
-        <p class="text-[15px] font-light text-[#666]">Tickets Area</p>
-    </div>
-
-    <!-- Ticket Header Info -->
-    <div class="bg-dark-bg rounded-[24px] p-6 mb-6">
-        <!-- Ticket ID, Title, Project -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-8">
-                <div class="bg-[#BFBBE4] rounded-[34px] px-6 py-3">
-                    <div class="flex items-center gap-6">
-                        <span class="text-primary text-[17px] font-bold font-mulish">#12345</span>
-                        <span class="text-primary/95 text-[17px] font-bold font-mulish">Cannot Access Dashboard</span>
-                        <span class="text-primary text-[16px] font-bold font-mulish">ProjectX</span>
-                    </div>
-                </div>
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-[32px] font-semibold mb-2 text-text-dark">Ticket #12345</h1>
+                <p class="text-[15px] font-light text-[#666]">Cannot Access Dashboard • ProjectX</p>
             </div>
             
-            <div class="flex items-center gap-4">
-                <!-- Date -->
-                <span class="text-[#D8DEFF] text-[20px] font-semibold font-mulish">February 19, 2026</span>
-                
-                <!-- Priority -->
-                <div class="w-[77px] h-[28px] bg-[#FF7D2C] rounded-[6px] flex items-center justify-center">
-                    <span class="text-white text-[14px] font-bold font-mulish">HIGH</span>
-                </div>
-                
-                <!-- Status -->
-                <div class="w-[77px] h-[28px] bg-[#10B981] rounded-[6px] flex items-center justify-center">
-                    <span class="text-white text-[14px] font-bold font-mulish">OPEN</span>
-                </div>
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <a href="<?= base_url('dashboard/my_tickets') ?>" 
+                   class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Tickets
+                </a>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-sm font-medium flex items-center gap-2">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
             </div>
-        </div>
-        
-        <!-- Status Label -->
-        <div class="flex justify-end">
-            <span class="text-[#D6D8FF] text-[11px] font-semibold font-mulish">Status</span>
         </div>
     </div>
 
-    <!-- Ticket Details Section -->
-    <div class="grid grid-cols-3 gap-6 mb-8">
-        <!-- Ticket Summary -->
-        <div class="col-span-2 bg-card-bg rounded-[24px] p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-[20px] font-normal text-text-muted opacity-90 font-mulish">Ticket Summary</h2>
-                <div class="w-[121px] h-[22px] bg-secondary rounded-[4px] flex items-center gap-2 px-3">
-                    <i class="fas fa-check text-white text-[12px]"></i>
-                    <span class="text-white text-[10px] font-semibold font-mulish">Technical Issue</span>
-                </div>
-            </div>
-            
-            <div class="border-t border-text-muted/28 pt-4">
-                <p class="text-text-muted text-[11px] font-medium leading-[17px] font-mulish">
-                    I'm having trouble accessing the ProjectX dashboard. Every time I try to log in, I receive an error message that says "Access Denied".<br/>
-                    I've tried clearing my cache and using different browsers, but the issue persists. Please assist.
-                </p>
-            </div>
-        </div>
-        
-        <!-- Progress Info -->
-        <div class="bg-card-bg rounded-[24px] p-6">
-            <h3 class="text-[17px] font-normal text-text-muted opacity-90 mb-6 font-mulish">Progress Info :</h3>
-            
+    <!-- Ticket Status -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Ticket Info Card -->
+        <div class="bg-gradient-to-r from-secondary to-[#8A84C6] rounded-2xl p-6 text-white">
+            <h3 class="text-lg font-semibold mb-4">Ticket Information</h3>
             <div class="space-y-4">
-                <!-- Progress Bar -->
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-chart-line text-text-muted text-[20px]"></i>
-                    <div class="flex-1">
-                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="h-full bg-secondary w-3/4"></div>
-                        </div>
-                        <span class="text-text-muted text-[11px]">75% Complete</span>
+                <div>
+                    <div class="text-white/80 text-sm mb-1">Status</div>
+                    <div class="flex items-center gap-3">
+                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">OPEN</div>
+                        <div class="text-lg font-bold">In Progress</div>
                     </div>
                 </div>
-                
-                <!-- Status -->
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-circle text-secondary text-[16px]"></i>
-                    <span class="text-text-muted text-[17px] font-normal">Status : <span class="text-secondary font-semibold">In Progress</span></span>
+                <div>
+                    <div class="text-white/80 text-sm mb-1">Priority</div>
+                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block">HIGH</div>
                 </div>
-                
-                <!-- Last Update -->
-                <div class="flex items-center gap-3">
-                    <i class="far fa-clock text-text-muted text-[16px]"></i>
-                    <div>
-                        <span class="text-text-muted text-[17px] font-normal">Last Update :</span>
-                        <div class="text-[#6D5BD0] text-[11px] font-normal mt-1">Accept by Support Team 1 hour ago</div>
-                    </div>
+                <div>
+                    <div class="text-white/80 text-sm mb-1">Created</div>
+                    <div class="text-lg font-semibold">Feb 19, 2026</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Progress</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Completion</span>
+                        <span>75%</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-secondary rounded-full w-3/4"></div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="far fa-clock text-gray-400"></i>
+                        <span>Last update: 1 hour ago</span>
+                    </div>
+                    <div class="text-secondary font-medium">Accepted by Support Team</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Category</h3>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-tools text-secondary text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-gray-800 font-semibold">Technical Issue</div>
+                    <div class="text-gray-600 text-sm">Software & Applications</div>
+                </div>
+            </div>
+            <p class="text-gray-600 text-sm">
+                Dashboard access problem with error message "Access Denied"
+            </p>
         </div>
     </div>
 
     <!-- Conversation Section -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-[27px] font-medium text-text-dark/85">Conversation</h2>
-            <div class="flex items-center gap-3">
-                <!-- Download Button -->
-                <button class="px-4 py-2 bg-[#E3DAEE] text-primary rounded-[5px] border border-[#E9D5FF] flex items-center gap-2 hover:bg-[#D5CBE8] transition-colors">
-                    <i class="fas fa-download text-[#A855F7] text-[19px]"></i>
-                    <span class="text-primary text-[19px] font-normal font-inter">Download</span>
-                </button>
-                
-                <!-- Attach Button -->
-                <button class="w-[56px] h-[44px] bg-[#E3DAEE] rounded-[5px] border-r border-[#E9D5FF] flex items-center justify-center hover:bg-[#D5CBE8] transition-colors">
-                    <i class="fas fa-link text-[#A855F7] text-[22px]"></i>
-                </button>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+        <!-- Section Header -->
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-800">Conversation</h2>
+                <div class="text-gray-600 text-sm">
+                    <i class="far fa-comments mr-1"></i>
+                    4 messages
+                </div>
             </div>
         </div>
-        
-        <!-- Conversation Thread -->
-        <div class="bg-card-bg rounded-[16px] p-8 shadow-sm">
-            <!-- Customer Message -->
-            <div class="mb-8 pb-8 border-b border-primary/41">
+
+        <!-- Conversation Container (Scrollable) -->
+        <div id="conversationContainer" class="p-6 h-[500px] overflow-y-auto">
+            <!-- Conversation Timeline -->
+            <div class="space-y-6">
+                <!-- Date Header - February 19 -->
+                <div class="text-center">
+                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">February 19, 2026</span>
+                </div>
+
+                <!-- Message 1 - Customer (OLDEST) -->
                 <div class="flex gap-4">
                     <!-- Avatar -->
-                    <div class="w-[48px] h-[48px] rounded-full border border-[rgba(59,62,68,0.03)] overflow-hidden flex-shrink-0">
-                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <i class="fas fa-user text-gray-400"></i>
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
                         </div>
                     </div>
                     
                     <!-- Message Content -->
                     <div class="flex-1">
-                        <!-- Message Header -->
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[#1E293B] text-[16px] font-semibold font-roboto">John Smith</span>
-                                <div class="bg-[#D6CCF3] rounded-[8px] px-3 py-1">
-                                    <span class="text-[#7E22CE] text-[14px] font-normal font-inter">Customer</span>
-                                </div>
-                                <div class="w-[11px] h-[11px] bg-[#581C87] rounded-full flex items-center justify-center">
-                                    <i class="fas fa-level-up-alt text-white text-[8px]"></i>
-                                </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div>
+                                <span class="text-gray-800 font-semibold">John Smith</span>
+                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-primary text-[14px] font-normal font-roboto">Today, 11:00 AM</span>
-                                <i class="fas fa-chevron-down text-primary text-[16px]"></i>
+                            <div class="text-gray-500 text-sm ml-auto">
+                                <i class="far fa-clock mr-1"></i>
+                                11:00 AM
                             </div>
                         </div>
                         
-                        <!-- Message Text -->
-                        <p class="text-[#475569] text-[15px] font-normal leading-[27px] mb-4 font-roboto">
-                            Hi team, please assist me in this issue. Attached is a screenshot of the error message and the log file.
-                        </p>
-                        
-                        <!-- Attachment -->
-                        <div class="bg-[#FAF5FF] rounded-[5px] border border-[#E2E8F0] p-3 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-[19px] h-[19px] bg-[#F3E8FF] rounded-[5px] flex items-center justify-center">
-                                    <i class="fas fa-image text-[#A855F7]"></i>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-gray-700 mb-3">
+                                Hi team, I'm having trouble accessing the ProjectX dashboard. Every time I try to log in, 
+                                I receive an error message that says "Access Denied". I've tried clearing my cache and using 
+                                different browsers, but the issue persists.
+                            </p>
+                            
+                            <!-- Attachment -->
+                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                <div class="w-8 h-8 bg-secondary/10 rounded flex items-center justify-center">
+                                    <i class="fas fa-image text-secondary"></i>
                                 </div>
-                                <div>
-                                    <div class="text-primary/65 text-[10px] font-normal font-inter">Image - 320KB</div>
-                                    <div class="text-primary text-[14px] font-normal font-roboto">error_screenshot.png</div>
+                                <div class="flex-1">
+                                    <div class="text-gray-800 text-sm font-medium">error_screenshot.png</div>
+                                    <div class="text-gray-500 text-xs">320 KB • Image</div>
                                 </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button class="w-[22px] h-[22px] bg-[#F3E8FF] rounded-[5px] flex items-center justify-center">
-                                    <i class="fas fa-download text-[#A855F7] text-[11px]"></i>
-                                </button>
-                                <button class="w-[22px] h-[22px] bg-[#F3E8FF] rounded-[5px] flex items-center justify-center">
-                                    <i class="fas fa-paperclip text-[#A855F7] text-[11px]"></i>
+                                <button class="text-gray-400 hover:text-secondary download-btn">
+                                    <i class="fas fa-download"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Support Message -->
-            <div>
+
+                <!-- Message 2 - Support -->
                 <div class="flex gap-4">
                     <!-- Avatar -->
-                    <div class="w-[49px] h-[48px] rounded-full bg-[#E2E8F0] flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-headset text-gray-400"></i>
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-headset text-green-600"></i>
+                        </div>
                     </div>
                     
                     <!-- Message Content -->
                     <div class="flex-1">
-                        <!-- Message Header -->
-                        <div class="flex items-center gap-3 mb-3">
-                            <span class="text-[#1E293B] text-[16px] font-semibold font-roboto">Bigmo Nasihuy</span>
-                            <div class="bg-[#D6CCF3] rounded-[8px] px-3 py-1">
-                                <span class="text-[#7E22CE] text-[14px] font-normal font-inter">Support</span>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div>
+                                <span class="text-gray-800 font-semibold">Sarah Johnson</span>
+                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support Agent</span>
                             </div>
-                            <div class="w-[11px] h-[11px] bg-[#581C87] rounded-full flex items-center justify-center">
-                                <i class="fas fa-level-up-alt text-white text-[8px]"></i>
+                            <div class="text-gray-500 text-sm ml-auto">
+                                <i class="far fa-clock mr-1"></i>
+                                11:30 AM
                             </div>
                         </div>
                         
-                        <!-- Message Text -->
-                        <p class="text-[#475569] text-[16px] font-normal leading-[27px] mb-4 font-roboto">
-                            Thank you for report, John. We've received your issue and will look into it as soon as possible.
-                        </p>
+                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                            <p class="text-gray-700">
+                                Thank you for reporting this issue, John. We've received your ticket and will look into it immediately. 
+                                Could you please provide your browser version and operating system?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Header - Today -->
+                <div class="text-center mt-8 pt-8 border-t border-gray-200">
+                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Today</span>
+                </div>
+
+                <!-- Message 3 - Customer -->
+                <div class="flex gap-4">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Content -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div>
+                                <span class="text-gray-800 font-semibold">John Smith</span>
+                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
+                            </div>
+                            <div class="text-gray-500 text-sm ml-auto">
+                                <i class="far fa-clock mr-1"></i>
+                                09:15 AM • 1 hour ago
+                            </div>
+                        </div>
                         
-                        <!-- Attachment -->
-                        <div class="bg-[#FAF5FF] rounded-[5px] border border-[#E2E8F0] p-3 w-[183px]">
-                            <div class="flex items-center gap-3">
-                                <div class="w-[19px] h-[19px] bg-[#F3E8FF] rounded-[5px] flex items-center justify-center">
-                                    <i class="fas fa-image text-[#A855F7]"></i>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="text-gray-700 mb-3">
+                                Thanks for the quick response! I'm using Chrome version 120.0.6099.130 on Windows 11. 
+                                I've attached the error log file for your reference.
+                            </p>
+                            
+                            <!-- Attachment -->
+                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                <div class="w-8 h-8 bg-secondary/10 rounded flex items-center justify-center">
+                                    <i class="fas fa-file-alt text-secondary"></i>
                                 </div>
-                                <div>
-                                    <div class="text-primary/65 text-[10px] font-normal font-inter">Image - 123KB</div>
-                                    <div class="text-primary text-[14px] font-normal font-inter">fix_attempt.png</div>
+                                <div class="flex-1">
+                                    <div class="text-gray-800 text-sm font-medium">error_log.txt</div>
+                                    <div class="text-gray-500 text-xs">45 KB • Text File</div>
                                 </div>
+                                <button class="text-gray-400 hover:text-secondary download-btn">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message 4 - Support (Resolved) - LATEST MESSAGE -->
+                <div id="latestMessage" class="flex gap-4">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-headset text-green-600"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Content -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div>
+                                <span class="text-gray-800 font-semibold">Michael Chen</span>
+                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support Lead</span>
+                            </div>
+                            <div class="text-gray-500 text-sm ml-auto">
+                                <i class="far fa-clock mr-1"></i>
+                                10:30 AM • 15 min ago
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                            <p class="text-gray-700 mb-3">
+                                Issue identified and resolved. There was a permission configuration issue on our end. 
+                                The dashboard should now be accessible. Please try logging in again and let us know if you encounter any further issues.
+                            </p>
+                            
+                            <!-- Resolution Badge -->
+                            <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-200">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <span class="text-green-700 text-sm font-medium">Issue marked as resolved</span>
                             </div>
                         </div>
                     </div>
@@ -230,104 +289,330 @@
     </div>
 
     <!-- Reply Section -->
-    <div class="bg-card-bg rounded-[16px] p-6 shadow-lg">
-        <div class="flex items-start gap-4">
-            <!-- Textarea -->
-            <div class="flex-1">
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Your Reply</h3>
+        
+        <div class="space-y-4">
+            <!-- Message Input -->
+            <div>
                 <textarea 
-                    placeholder="Write a reply to the customer..." 
-                    class="w-full h-[50px] bg-transparent text-primary/52 text-[19px] font-normal leading-[27px] focus:outline-none resize-none font-roboto"
-                    rows="1"
+                    placeholder="Type your message here..."
+                    class="w-full h-32 p-4 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 resize-none text-gray-700"
+                    rows="4"
                 ></textarea>
-                
-                <!-- File Info -->
-                <div class="text-[#94A3B8] text-[12px] font-normal mt-2 font-roboto">
-                    Max file size: 10MB
+                <div class="text-gray-500 text-xs mt-1">
+                    Max file size: 10MB • Supports images, PDF, Word, text files
                 </div>
             </div>
             
-            <!-- Buttons -->
-            <div class="flex items-center gap-3">
-                <!-- Choose File Button -->
-                <button class="w-[109px] h-[26px] bg-[#7E6BC4] rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#6D5CB3] transition-colors">
-                    <div class="w-[8px] h-[14px] bg-white transform -rotate-16"></div>
-                    <span class="text-white text-[12px] font-normal font-poppins">Choose File</span>
+            <!-- File Attachment -->
+            <div class="flex items-center gap-4">
+                <button id="attachFileBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2">
+                    <i class="fas fa-paperclip"></i>
+                    Attach File
                 </button>
-                
-                <!-- Send Reply Button -->
-                <button class="w-[98px] h-[26px] bg-[#7E6BC4] rounded-[20px] flex items-center justify-center hover:bg-[#6D5CB3] transition-colors">
-                    <span class="text-white text-[12px] font-normal font-poppins">Send Reply</span>
+                <div id="fileInfo" class="text-gray-500 text-sm">
+                    No files attached
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button id="sendReplyBtn" class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium flex items-center gap-2 flex-1 justify-center">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Reply
+                </button>
+                <button id="cancelBtn" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1">
+                    Cancel
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Poppins font -->
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    /* Custom scrollbar for conversation container */
+    #conversationContainer::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #conversationContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    #conversationContainer::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+    
+    #conversationContainer::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Message hover effects */
+    .bg-gray-50:hover {
+        background-color: #f8fafc;
+    }
+    
+    .bg-green-50:hover {
+        background-color: #f0fdf4;
+    }
+    
+    /* Transition effects */
+    .transition-all {
+        transition: all 0.2s ease;
+    }
+    
+    .transition-colors {
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    
+    /* New message animation */
+    .new-message {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    /* Scroll to bottom button */
+    #scrollToBottomBtn {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* Conversation container styling */
+    #conversationContainer {
+        scroll-behavior: smooth;
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Textarea auto-resize
-        const textarea = document.querySelector('textarea');
+document.addEventListener('DOMContentLoaded', function() {
+    // Get conversation container
+    const conversationContainer = document.getElementById('conversationContainer');
+    
+    // Auto-scroll to latest message when page loads
+    setTimeout(() => {
+        if (conversationContainer) {
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+        }
+    }, 100);
+    
+    // Textarea auto-resize
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
         textarea.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
-        
-        // File upload preview
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.style.display = 'none';
-        fileInput.accept = 'image/*,.pdf,.doc,.docx';
-        
-        document.querySelector('button:contains("Choose File")').addEventListener('click', function() {
-            fileInput.click();
-        });
-        
-        fileInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const fileName = e.target.files[0].name;
-                const fileSize = (e.target.files[0].size / (1024 * 1024)).toFixed(2);
-                
-                if (fileSize > 10) {
-                    alert('File size exceeds 10MB limit');
-                    return;
+    }
+    
+    // File attachment
+    const attachBtn = document.getElementById('attachFileBtn');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    if (attachBtn && fileInfo) {
+        attachBtn.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,.pdf,.doc,.docx,.txt';
+            input.onchange = function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    
+                    if (fileSize > 10) {
+                        alert('File size exceeds 10MB limit');
+                        return;
+                    }
+                    
+                    fileInfo.innerHTML = `
+                        <div class="flex items-center gap-2 animate-slide-in">
+                            <i class="fas fa-file text-secondary"></i>
+                            <span class="text-gray-700">${file.name} (${fileSize} MB)</span>
+                            <button class="ml-2 text-red-500 hover:text-red-700 remove-file-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add remove file button handler
+                    const removeBtn = fileInfo.querySelector('.remove-file-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', function() {
+                            fileInfo.innerHTML = 'No files attached';
+                        });
+                    }
                 }
-                
-                // Show file info
-                const fileInfo = document.createElement('div');
-                fileInfo.className = 'text-green-600 text-sm mt-2';
-                fileInfo.innerHTML = `Selected: ${fileName} (${fileSize} MB)`;
-                
-                // Remove previous file info
-                const prevInfo = document.querySelector('.text-green-600');
-                if (prevInfo) prevInfo.remove();
-                
-                document.querySelector('textarea').parentElement.appendChild(fileInfo);
-            }
+            };
+            input.click();
         });
-        
-        // Send reply button
-        document.querySelector('button:contains("Send Reply")').addEventListener('click', function() {
-            const message = document.querySelector('textarea').value.trim();
-            
+    }
+    
+    // Send reply button
+    const sendBtn = document.getElementById('sendReplyBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+            const message = textarea.value.trim();
             if (!message) {
-                alert('Please write a reply before sending');
+                alert('Please write a message before sending');
                 return;
             }
             
-            // Simulate sending
-            alert('Reply sent successfully!');
-            document.querySelector('textarea').value = '';
-            document.querySelector('textarea').style.height = 'auto';
+            // Show loading state
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            this.disabled = true;
             
-            // Remove file info if exists
-            const fileInfo = document.querySelector('.text-green-600');
-            if (fileInfo) fileInfo.remove();
+            // Simulate sending delay
+            setTimeout(() => {
+                // Reset button
+                this.innerHTML = originalText;
+                this.disabled = false;
+                
+                // Add new message to conversation
+                addNewMessage(message);
+                
+                // Clear form
+                textarea.value = '';
+                textarea.style.height = 'auto';
+                if (fileInfo) fileInfo.innerHTML = 'No files attached';
+                
+            }, 1500);
+        });
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            textarea.value = '';
+            textarea.style.height = 'auto';
+            if (fileInfo) fileInfo.innerHTML = 'No files attached';
+        });
+    }
+    
+    // Download buttons
+    document.querySelectorAll('.download-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fileName = this.closest('.bg-white')?.querySelector('.text-gray-800')?.textContent || 'file';
+            alert(`Downloading ${fileName}...`);
         });
     });
+    
+    // Function to add new message
+    function addNewMessage(text) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        
+        // Create new message element
+        const newMessage = document.createElement('div');
+        newMessage.className = 'flex gap-4 new-message';
+        newMessage.innerHTML = `
+            <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-blue-600"></i>
+                </div>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <div>
+                        <span class="text-gray-800 font-semibold">You</span>
+                        <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
+                    </div>
+                    <div class="text-gray-500 text-sm ml-auto">
+                        <i class="far fa-clock mr-1"></i>
+                        ${timeString} • Just now
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <p class="text-gray-700">${text}</p>
+                </div>
+            </div>
+        `;
+        
+        // Get conversation timeline container
+        const conversationTimeline = conversationContainer.querySelector('.space-y-6');
+        
+        // Check if we need to create "Today" section
+        let todaySection = conversationTimeline.querySelector('div:has(span:contains("Today"))');
+        
+        if (!todaySection) {
+            // Create new "Today" section
+            todaySection = document.createElement('div');
+            todaySection.innerHTML = `
+                <div class="text-center mt-8 pt-8 border-t border-gray-200">
+                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Today</span>
+                </div>
+            `;
+            conversationTimeline.appendChild(todaySection);
+        }
+        
+        // Add message to the bottom of the conversation (after today section)
+        conversationTimeline.appendChild(newMessage);
+        
+        // Scroll to new message
+        setTimeout(() => {
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+        }, 100);
+    }
+    
+    // Show scroll to bottom button when user scrolls up
+    conversationContainer.addEventListener('scroll', function() {
+        const isScrolledUp = this.scrollTop < (this.scrollHeight - this.clientHeight - 100);
+        
+        // Remove existing button if any
+        const existingBtn = document.getElementById('scrollToBottomBtn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+        
+        // Add scroll to bottom button if user is not at bottom
+        if (isScrolledUp) {
+            const scrollBtn = document.createElement('button');
+            scrollBtn.id = 'scrollToBottomBtn';
+            scrollBtn.className = 'fixed bottom-32 right-8 bg-secondary text-white p-3 rounded-full shadow-lg hover:bg-secondary/90 transition-colors z-10';
+            scrollBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            scrollBtn.title = 'Scroll to latest message';
+            
+            scrollBtn.addEventListener('click', function() {
+                conversationContainer.scrollTop = conversationContainer.scrollHeight;
+            });
+            
+            document.body.appendChild(scrollBtn);
+        }
+    });
+    
+    // Export button
+    const exportBtn = document.querySelector('button:contains("Export")');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            alert('Exporting conversation...');
+        });
+    }
+});
 </script>
 <?= $this->endSection() ?>

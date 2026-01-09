@@ -1,3 +1,4 @@
+
 <?php
 $session = \Config\Services::session();
 $success = $session->getFlashdata('success');
@@ -5,13 +6,16 @@ $error = $session->getFlashdata('error');
 $message = $session->getFlashdata('message');
 $search_message = $session->getFlashdata('search_message');
 
-$username = $session->get('username') ?? $session->get('name') ?? $session->get('user') ?? 'Customer';
+// Determine username for display in navbar (fallbacks if session keys differ)
+$username = $session->get('username') ?? $session->get('name') ?? $session->get('user') ?? 'Support';
 
-$notification_count = 3;
+$notification_count = 5;
 $notifications = [
-    ['id' => 1, 'title' => 'New message from support', 'message' => 'Your ticket #10421 has been updated', 'time' => '2 mins ago', 'read' => false, 'type' => 'message'],
-    ['id' => 2, 'title' => 'Ticket resolved', 'message' => 'Ticket #10422 has been resolved', 'time' => '1 hour ago', 'read' => true, 'type' => 'success'],
-    ['id' => 3, 'title' => 'New ticket assigned', 'message' => 'You have been assigned to ticket #10425', 'time' => '3 hours ago', 'read' => false, 'type' => 'assignment'],
+    ['id' => 1, 'title' => 'New ticket assigned', 'message' => 'Ticket #10425 has been assigned to you', 'time' => '5 mins ago', 'read' => false, 'type' => 'assignment'],
+    ['id' => 2, 'title' => 'Ticket escalated', 'message' => 'Ticket #10421 has been escalated', 'time' => '30 mins ago', 'read' => false, 'type' => 'warning'],
+    ['id' => 3, 'title' => 'Customer replied', 'message' => 'New reply on ticket #10422', 'time' => '1 hour ago', 'read' => true, 'type' => 'message'],
+    ['id' => 4, 'title' => 'System alert', 'message' => 'High priority tickets pending', 'time' => '2 hours ago', 'read' => false, 'type' => 'alert'],
+    ['id' => 5, 'title' => 'Team update', 'message' => 'Weekly team meeting at 3 PM', 'time' => '3 hours ago', 'read' => true, 'type' => 'info'],
 ];
 ?>
 <!DOCTYPE html>
@@ -19,7 +23,7 @@ $notifications = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Customer Dashboard - NEXUS') ?></title>
+    <title><?= esc($title ?? 'Support Dashboard - NEXUS') ?></title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -528,9 +532,9 @@ $notifications = [
             </button>
             
             <!-- Logo (Mobile) -->
-            <a href="<?= base_url('customer/dashboard') ?>" class="flex items-center gap-3 no-underline">
+            <a href="<?= base_url('support/dashboard') ?>" class="flex items-center gap-3 no-underline">
                 <div class="w-8 h-8 logo-glass rounded-xl flex items-center justify-center">
-                    <span class="text-white font-bold text-sm">N</span>
+                    <i class="fas fa-headset text-white text-sm"></i>
                 </div>
                 <div class="text-primary text-base font-bold whitespace-nowrap">
                     NEXUS
@@ -542,31 +546,31 @@ $notifications = [
         <div class="desktop-layout">
             <!-- Logo (Desktop) -->
             <div class="hidden md:flex items-center gap-3 navbar-left">
-                <a href="<?= base_url('customer/dashboard') ?>" class="flex items-center gap-3 no-underline">
+                <a href="<?= base_url('support/dashboard') ?>" class="flex items-center gap-3 no-underline">
                     <div class="w-8 h-8 logo-glass rounded-xl flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">N</span>
+                        <i class="fas fa-headset text-white text-sm"></i>
                     </div>
                     <div class="text-primary text-base md:text-lg font-bold whitespace-nowrap">NEXUS</div>
                 </a>
             </div>
             <!-- Desktop Navigation -->
             <div class="desktop-nav-container">
-                <a href="<?= base_url('customer/dashboard') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/dashboard') ? 'active' : '' ?>">
-                    <i class="fas fa-home mr-2 text-sm"></i>
+                <a href="<?= base_url('support/dashboard') ?>" 
+                   class="nav-glass-item <?= current_url() == base_url('support/dashboard') ? 'active' : '' ?>">
+                    <i class="fas fa-tachometer-alt mr-2 text-sm"></i>
                     Dashboard
                 </a>
                 
-                <a href="<?= base_url('customer/my_tickets') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : '' ?>">
-                    <i class="fas fa-ticket-alt mr-2 text-sm"></i>
-                    My Tickets
+                <a href="<?= base_url('support/incoming') ?>" 
+                   class="nav-glass-item <?= current_url() == base_url('support/incoming') ? 'active' : '' ?>">
+                    <i class="fas fa-inbox mr-2 text-sm"></i>
+                    Incoming
                 </a>
                 
-                <a href="<?= base_url('customer/create_ticket') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : '' ?>">
-                    <i class="fas fa-plus mr-2 text-sm"></i>
-                    Create Ticket
+                <a href="<?= base_url('support/ticket_in_progress') ?>" 
+                   class="nav-glass-item <?= current_url() == base_url('support/ticket_in_progress') ? 'active' : '' ?>">
+                    <i class="fas fa-sync-alt mr-2 text-sm"></i>
+                    In Progress
                 </a>
                 
                 <div class="nav-separator"></div>
@@ -583,7 +587,7 @@ $notifications = [
                     <div id="notificationDropdown" class="notification-dropdown absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
                         <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
                             <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-sm md:text-base">Customer Notifications</h3>
+                                <h3 class="font-bold text-sm md:text-base">Support Notifications</h3>
                                 <span class="text-xs md:text-sm bg-white/20 px-2 py-1 rounded-full"><?= $notification_count ?> new</span>
                             </div>
                         </div>
@@ -595,21 +599,29 @@ $notifications = [
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($notifications as $notification): ?>
-                                    <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
+                                    <a href="<?= base_url('support/notifications/' . $notification['id']) ?>" 
                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                         <div class="flex gap-3">
                                             <div class="flex-shrink-0">
-                                                <?php if ($notification['type'] == 'message'): ?>
+                                                <?php if ($notification['type'] == 'assignment'): ?>
+                                                    <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                                        <i class="fas fa-user-plus text-purple-600"></i>
+                                                    </div>
+                                                <?php elseif ($notification['type'] == 'warning'): ?>
+                                                    <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                                        <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                                                    </div>
+                                                <?php elseif ($notification['type'] == 'alert'): ?>
+                                                    <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                                        <i class="fas fa-bell text-red-600"></i>
+                                                    </div>
+                                                <?php elseif ($notification['type'] == 'message'): ?>
                                                     <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                                                         <i class="fas fa-comment text-blue-600"></i>
                                                     </div>
-                                                <?php elseif ($notification['type'] == 'success'): ?>
-                                                    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                                                        <i class="fas fa-check-circle text-green-600"></i>
-                                                    </div>
                                                 <?php else: ?>
-                                                    <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                                                        <i class="fas fa-ticket-alt text-purple-600"></i>
+                                                    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                                        <i class="fas fa-info-circle text-green-600"></i>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
@@ -629,15 +641,15 @@ $notifications = [
                             <?php endif; ?>
                         </div>
                         <div class="p-3 border-t border-gray-200 bg-gray-50">
-                            <a href="<?= base_url('customer/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
+                            <a href="<?= base_url('support/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
                                 View All Notifications
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <a href="<?= base_url('customer/profile') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/profile') ? 'active' : '' ?>">
+                <a href="<?= base_url('support/profile') ?>" 
+                   class="nav-glass-item <?= current_url() == base_url('support/profile') ? 'active' : '' ?>">
                     <?= esc($username) ?>
                 </a>
             </div>
@@ -669,21 +681,29 @@ $notifications = [
                             </div>
                         <?php else: ?>
                             <?php foreach ($notifications as $notification): ?>
-                                <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
+                                <a href="<?= base_url('support/notifications/' . $notification['id']) ?>" 
                                    class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                     <div class="flex gap-3">
                                         <div class="flex-shrink-0">
-                                            <?php if ($notification['type'] == 'message'): ?>
+                                            <?php if ($notification['type'] == 'assignment'): ?>
+                                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-user-plus text-purple-600 text-xs"></i>
+                                                </div>
+                                            <?php elseif ($notification['type'] == 'warning'): ?>
+                                                <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xs"></i>
+                                                </div>
+                                            <?php elseif ($notification['type'] == 'alert'): ?>
+                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-bell text-red-600 text-xs"></i>
+                                                </div>
+                                            <?php elseif ($notification['type'] == 'message'): ?>
                                                 <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                                     <i class="fas fa-comment text-blue-600 text-xs"></i>
                                                 </div>
-                                            <?php elseif ($notification['type'] == 'success'): ?>
-                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                                    <i class="fas fa-check-circle text-green-600 text-xs"></i>
-                                                </div>
                                             <?php else: ?>
-                                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                    <i class="fas fa-ticket-alt text-purple-600 text-xs"></i>
+                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-info-circle text-green-600 text-xs"></i>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -698,7 +718,7 @@ $notifications = [
                         <?php endif; ?>
                     </div>
                     <div class="p-3 border-t border-gray-200 bg-gray-50">
-                        <a href="<?= base_url('customer/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-xs">
+                        <a href="<?= base_url('support/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-xs">
                             View All
                         </a>
                     </div>
@@ -710,9 +730,9 @@ $notifications = [
                 <span class="username-display text-sm font-medium hidden xs:inline">
                     <?= esc($username) ?>
                 </span>
-                <a href="<?= base_url('customer/profile') ?>" class="no-underline">
+                <a href="<?= base_url('support/profile') ?>" class="no-underline">
                     <div class="user-avatar-glass w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                        <?= strtoupper(substr($username, 0, 1)) ?>
+                        SA
                     </div>
                 </a>
             </div>
@@ -722,9 +742,9 @@ $notifications = [
         <div class="hidden md:flex items-center gap-3">
             <!-- User Avatar (Desktop) -->
             <div>
-                <a href="<?= base_url('customer/profile') ?>" class="no-underline">
+                <a href="<?= base_url('support/profile') ?>" class="no-underline">
                     <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        <?= strtoupper(substr($username, 0, 1)) ?>
+                        SA
                     </div>
                 </a>
             </div>
@@ -735,49 +755,49 @@ $notifications = [
     <div id="mobileNav" class="md:hidden fixed top-24 left-0 w-full h-0 overflow-hidden transition-all duration-300 z-40">
         <div class="mobile-glass-menu animate-fade-in">
             <!-- Mobile User Info -->
-            <a href="<?= base_url('customer/profile') ?>" class="flex items-center gap-3 p-4 mb-2 border-b border-gray-100 no-underline hover:bg-gray-50 rounded-t-2xl">
+            <a href="<?= base_url('support/profile') ?>" class="flex items-center gap-3 p-4 mb-2 border-b border-gray-100 no-underline hover:bg-gray-50 rounded-t-2xl">
                 <div class="w-12 h-12 user-avatar-glass rounded-full flex items-center justify-center text-white font-bold">
-                    <?= strtoupper(substr($username, 0, 1)) ?>
+                    SA
                 </div>
                 <div>
-                    <div class="text-primary font-bold"><?= esc($username) ?></div>
-                    <div class="text-primary/70 text-xs">Customer</div>
+                    <div class="text-primary font-bold">Support Agent</div>
+                    <div class="text-primary/70 text-xs">Technical Support</div>
                 </div>
             </a>
             
             <!-- Mobile Navigation Links -->
             <div class="p-3">
-                <a href="<?= base_url('customer/dashboard') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/dashboard') ? 'active' : 'text-primary' ?>">
-                    <i class="fas fa-home text-secondary"></i>
+                <a href="<?= base_url('support/dashboard') ?>" 
+                   class="mobile-nav-item <?= current_url() == base_url('support/dashboard') ? 'active' : 'text-primary' ?>">
+                    <i class="fas fa-tachometer-alt text-secondary"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
                 
-                <a href="<?= base_url('customer/my_tickets') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : 'text-primary' ?>">
-                    <i class="fas fa-ticket-alt text-secondary"></i>
-                    <span class="font-medium">My Tickets</span>
+                <a href="<?= base_url('support/incoming') ?>" 
+                   class="mobile-nav-item <?= current_url() == base_url('support/incoming') ? 'active' : 'text-primary' ?>">
+                    <i class="fas fa-inbox text-secondary"></i>
+                    <span class="font-medium">Incoming Tickets</span>
                 </a>
                 
-                <a href="<?= base_url('customer/create_ticket') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : 'text-primary' ?>">
-                    <i class="fas fa-plus text-secondary"></i>
-                    <span class="font-medium">Create Ticket</span>
+                <a href="<?= base_url('support/ticket_in_progress') ?>" 
+                   class="mobile-nav-item <?= current_url() == base_url('support/ticket_in_progress') ? 'active' : 'text-primary' ?>">
+                    <i class="fas fa-sync-alt text-secondary"></i>
+                    <span class="font-medium">In Progress</span>
                 </a>
                 
-                <a href="<?= base_url('customer/notifications') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/notifications') ? 'active' : 'text-primary' ?>">
-                    <i class="fas fa-bell text-secondary"></i>
-                    <span class="font-medium">Notifications</span>
-                </a>
-                
-                <a href="<?= base_url('customer/profile') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/profile') ? 'active' : 'text-primary' ?>">
+                <a href="<?= base_url('support/profile') ?>" 
+                   class="mobile-nav-item <?= current_url() == base_url('support/profile') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-user text-secondary"></i>
                     <span class="font-medium">Profile</span>
                 </a>
                 
-                <a href="<?= base_url('customer/logout') ?>" 
+                <a href="<?= base_url('support/settings') ?>" 
+                   class="mobile-nav-item <?= current_url() == base_url('support/settings') ? 'active' : 'text-primary' ?>">
+                    <i class="fas fa-cog text-secondary"></i>
+                    <span class="font-medium">Settings</span>
+                </a>
+                
+                <a href="<?= base_url('support/logout') ?>" 
                    class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="font-medium">Logout</span>
@@ -794,7 +814,7 @@ $notifications = [
     <!-- Footer -->
     <footer class="bg-footer-bg h-12 md:h-[60px] w-full flex items-center px-4 md:px-6 mt-8">
         <div class="text-text-dark text-xs md:text-sm font-normal">
-            Customer Dashboard • Copyright © <?= date('Y') ?> NexusArchSystem. All Rights Reserved.
+            Support Dashboard • Copyright © <?= date('Y') ?> NexusArchSystem. All Rights Reserved.
         </div>
     </footer>
 
@@ -943,7 +963,7 @@ $notifications = [
             
             // Simulate new notification (for demo purposes)
             setInterval(() => {
-                if (window.location.pathname.includes('customer') && Math.random() > 0.7) {
+                if (window.location.pathname.includes('support') && Math.random() > 0.7) {
                     const currentCount = parseInt(document.querySelector('.notification-badge')?.textContent || '0');
                     updateNotificationCount(currentCount + 1);
                 }
@@ -994,15 +1014,13 @@ $notifications = [
                 });
                 
                 // Desktop nav
-                if (currentPath.includes('/customer/dashboard')) {
+                if (currentPath.includes('/support/dashboard')) {
                     document.querySelector('a[href*="dashboard"].nav-glass-item')?.classList.add('active');
-                } else if (currentPath.includes('/customer/my_tickets')) {
-                    document.querySelector('a[href*="my_tickets"].nav-glass-item')?.classList.add('active');
-                } else if (currentPath.includes('/customer/create_ticket')) {
-                    document.querySelector('a[href*="create_ticket"].nav-glass-item')?.classList.add('active');
-                } else if (currentPath.includes('/customer/notifications')) {
-                    document.querySelector('a[href*="notifications"].nav-glass-item')?.classList.add('active');
-                } else if (currentPath.includes('/customer/profile')) {
+                } else if (currentPath.includes('/support/incoming')) {
+                    document.querySelector('a[href*="incoming"].nav-glass-item')?.classList.add('active');
+                } else if (currentPath.includes('/support/ticket_in_progress')) {
+                    document.querySelector('a[href*="ticket_in_progress"].nav-glass-item')?.classList.add('active');
+                } else if (currentPath.includes('/support/profile')) {
                     document.querySelector('a[href*="profile"].nav-glass-item')?.classList.add('active');
                 }
                 
