@@ -14,8 +14,8 @@
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
-            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">Username's Dashboard</h1>
-            <p class="text-sm md:text-[15px] font-light text-[#666]">Dashboard Area</p>
+            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">Customer Dashboard</h1>
+            <p class="text-sm md:text-[15px] font-light text-[#666]">Customer Dashboard Area</p>
         </div>
         
         <!-- Action Buttons -->
@@ -42,15 +42,15 @@
                     U
                 </div>
                 <div>
-                    <h2 class="text-text-dark text-base md:text-[18px] font-semibold">Username</h2>
-                    <div class="text-text-muted text-xs md:text-[12px]">Customer</div>
+                    <h2 class="text-text-dark text-base md:text-[18px] font-semibold"><?= $data['user']['full_name'] ?></h2>
+                    <div class="text-text-muted text-xs md:text-[12px]"><?= $data['user']['role'] ?></div>
                 </div>
             </div>
             
             <div class="text-text-muted text-sm md:text-[14px] mb-4 md:mb-[20px]">
                 <div class="flex items-center gap-2 mb-2">
                     <i class="fas fa-envelope text-gray-400"></i>
-                    <span class="truncate">username@example.com</span>
+                    <span class="truncate"><?= $data['user']['email'] ?></span>
                 </div>
             </div>
             
@@ -87,7 +87,7 @@
         <!-- Stat Cards -->
         <!-- Total Tickets -->
         <div class="lg:col-span-3 bg-gradient-to-br from-[#3D3C5E] to-[#4A4570] rounded-xl p-5 md:p-6 text-white shadow-sm flex flex-col items-center justify-center text-center">
-            <div class="text-4xl md:text-5xl font-bold mb-2">12</div>
+            <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['total_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Total Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] flex items-center justify-center mb-4">
                 <i class="fas fa-arrow-up text-green-400 mr-1"></i>
@@ -100,7 +100,7 @@
 
         <!-- Active Tickets -->
         <div class="lg:col-span-3 bg-gradient-to-br from-[#3D3C5E] to-[#4A4570] rounded-xl p-5 md:p-6 text-white shadow-sm flex flex-col items-center justify-center text-center">
-            <div class="text-4xl md:text-5xl font-bold mb-2">5</div>
+            <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['open_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Active Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] mb-4">
                 3 need attention

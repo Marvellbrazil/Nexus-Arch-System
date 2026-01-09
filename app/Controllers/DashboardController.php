@@ -38,11 +38,11 @@ class DashboardController extends Controller
     public function customer()
     {
         $data = [
-            'title' => 'Customer Dashboard',
+            'title' => '',
             'user' => [
                 'name' => 'John Customer',
                 'role' => 'Customer',
-                'email' => 'customer@nexus.com'
+                'email' => 'customerandus@nexus.com'
             ],
             'stats' => [
                 'my_tickets' => 5,

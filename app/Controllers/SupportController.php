@@ -2,19 +2,22 @@
 
 namespace App\Controllers;
 
-class Support extends BaseController
+use CodeIgniter\Exceptions\PageNotFoundException;
+use Exception;
+
+class SupportController extends BaseController
 {
     public function __construct()
     {
         // Check if user is logged in
         if (!session()->get('is_logged_in')) {
-            return redirect()->to('login');
+            return redirect()->to('/login');
         }
         
         // Check if user has support role
         $userRole = session()->get('role');
         if (!in_array($userRole, ['Support', 'Admin'])) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+            throw PageNotFoundException::forPageNotFound();
         }
     }
 
@@ -49,7 +52,7 @@ class Support extends BaseController
                     ->where('user_id', $userId)
                     ->where($readColumn, 0)
                     ->countAllResults();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $notificationCount = 5; // Default fallback
             }
         }
@@ -197,7 +200,7 @@ class Support extends BaseController
                     ->getResultArray();
             }
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Fallback jika ada error
             $data['notifications'] = [];
         }
@@ -227,7 +230,7 @@ class Support extends BaseController
             
             return redirect()->to(site_url('support/notifications'))->with('success', 'All notifications marked as read');
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->to(site_url('support/notifications'))->with('error', 'Error updating notifications');
         }
     }
@@ -299,7 +302,7 @@ public function ticketDetail($ticketId)
         // Get conversation messages
         // PERBAIKAN: Cek apakah tabel ticket_messages ada
         if (!$db->tableExists('ticket_messages')) {
-            throw new \Exception('Table ticket_messages does not exist');
+            throw new Exception('Table ticket_messages does not exist');
         }
         
         // PERBAIKAN: Cek struktur tabel ticket_messages
@@ -315,7 +318,7 @@ public function ticketDetail($ticketId)
                 $userColumn = 'created_by';
             } else {
                 // Jika tidak ada kolom user, gunakan data dummy
-                throw new \Exception('No user column found in ticket_messages');
+                throw new Exception('No user column found in ticket_messages');
             }
         }
         
@@ -328,7 +331,7 @@ public function ticketDetail($ticketId)
             ->get()
             ->getResultArray();
         
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         // Jika ada error, gunakan data dummy
         $data['messages'] = [];
     }
@@ -377,7 +380,7 @@ public function ticketDetail($ticketId)
         } else {
             $data['attachments'] = [];
         }
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $data['attachments'] = [];
     }
     
@@ -408,7 +411,7 @@ public function departmentConversation($ticketId)
             ->where('t.ticket_id', $ticketId)
             ->get()
             ->getRowArray();
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         log_message('error', 'Error fetching ticket: ' . $e->getMessage());
     }
     

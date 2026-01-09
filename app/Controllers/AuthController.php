@@ -3,8 +3,9 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use Config\Services;
 
-class Auth extends BaseController
+class AuthController extends BaseController
 {
     public function login()
     {
@@ -19,15 +20,15 @@ class Auth extends BaseController
 public function processLogin()
 {
     // DEBUG: Tampilkan informasi request
-    echo "=== DEBUG LOGIN ===";
-    echo "<br>Method: " . $this->request->getMethod();
-    echo "<br>POST Data: ";
-    print_r($this->request->getPost());
-    echo "<br>Session sebelum login: ";
-    print_r(session()->get());
-    echo "<br>=== END DEBUG ===";
+    // echo "=== DEBUG LOGIN ===";
+    // echo "<br>Method: " . $this->request->getMethod();
+    // echo "<br>POST Data: ";
+    // print_r($this->request->getPost());
+    // echo "<br>Session sebelum login: ";
+    // print_r(session()->get());
+    // echo "<br>=== END DEBUG ===";
     
-    $validation = \Config\Services::validation();
+    $validation = Services::validation();
     $validation->setRules([
         'email' => 'required|valid_email',
         'password' => 'required'

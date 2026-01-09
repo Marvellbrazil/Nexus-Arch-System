@@ -3,20 +3,23 @@
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
+use Config\Services;
 
 class BaseController extends Controller
 {
     protected $helpers = ['url', 'form', 'session'];
+
+    protected $session;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
         
         // Load session
-        $this->session = \Config\Services::session();
+        $this->session = Services::session();
         
         // Check authentication for all controllers except Auth
-        if (!$this instanceof Auth) {
+        if (!$this instanceof AuthController) {
             $this->checkLogin();
         }
     }

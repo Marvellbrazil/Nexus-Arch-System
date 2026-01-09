@@ -2,8 +2,9 @@
 
 namespace App\Controllers;
 
-class Department extends BaseController
+class DepartmentController extends BaseController
 {
+    protected $departmentName = '';
     public function __construct()
     {
         // Check if user is department staff

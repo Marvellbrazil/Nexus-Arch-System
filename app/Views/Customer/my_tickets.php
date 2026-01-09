@@ -342,7 +342,7 @@
                 If you need assistance, please open a new ticket or search our knowledge base.
             </p>
             <div class="flex flex-col sm:flex-row gap-3">
-                <a href="<?= base_url('dashboard/create_ticket') ?>" 
+                <a href="<?= base_url('customer/create_ticket') ?>" 
                    class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm md:text-base text-center">
                     Open Ticket
                 </a>

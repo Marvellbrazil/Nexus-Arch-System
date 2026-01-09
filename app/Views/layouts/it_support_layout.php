@@ -803,7 +803,7 @@ $notifications = [
     <!-- Footer -->
     <footer class="bg-footer-bg h-12 md:h-[60px] w-full flex items-center px-4 md:px-6 mt-8">
         <div class="text-text-dark text-xs md:text-sm font-normal">
-            IT Support Dashboard • Copyright © <?= date('Y') ?> NexusArchSystem. All Rights Reserved.
+            IT Support Dashboard • Copyright © <?= date('Y') ?> Nexus Arch System. All Rights Reserved.
         </div>
     </footer>
 

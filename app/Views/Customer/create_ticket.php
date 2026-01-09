@@ -242,7 +242,7 @@
                                    class="w-full h-10 md:h-[50px] px-3 md:px-4 pl-8 md:pl-10 bg-white/70 border border-gray-300 rounded-xl text-text-dark text-xs md:text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 smooth-transition"
                                    required
                                    maxlength="100">
-                            <i class="fas fa-pen absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs md:text-sm"></i>
+                            <i class="fas fa-pen absolute left-2 md:left-3 top-1/2 transform -translate-y-5 text-gray-400 text-xs md:text-sm"></i>
                             <div class="text-right text-gray-500 text-xs mt-1" id="titleCounter">0/100 characters</div>
                         </div>
                     </div>

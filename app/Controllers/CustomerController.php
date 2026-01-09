@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-class Customer extends BaseController
+class CustomerController extends BaseController
 {
     public function __construct()
     {
@@ -53,7 +53,13 @@ class Customer extends BaseController
             ->get()
             ->getResultArray();
 
-        return view('Customer/dashboard', $data);
+        $data['user'] = [
+            'full_name' => session()->get('full_name'),
+            'email' => session()->get('email'),
+            'role' => session()->get('role_name'),
+        ];
+
+        return view('Customer/dashboard', ['data' => $data]);
     }
 
     public function createTicket()

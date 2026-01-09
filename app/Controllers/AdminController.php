@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 
-class Admin extends BaseController
+class AdminController extends BaseController
 {
     protected $userModel;
     
