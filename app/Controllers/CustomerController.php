@@ -22,23 +22,36 @@ class CustomerController extends BaseController
         $totalTickets = $db->table('tickets')
             ->where('customer_id', $userId)
             ->countAllResults();
-            
-        $openTickets = $db->table('tickets t')
+        
+        $totalTicketsPerWeek = $db->table('tickets t')
+            ->where('t.customer_id', $userId)
+            ->where('t.created_at >=', date('Y-m-d', strtotime('-1 week')))
+            ->countAllResults();
+        
+        $activeTickets = $db->table('tickets t')
             ->join('statuses s', 's.status_id = t.status_id')
             ->where('t.customer_id', $userId)
             ->where('s.status_name', 'Open')
             ->countAllResults();
-            
+
         $inProgressTickets = $db->table('tickets t')
             ->join('statuses s', 's.status_id = t.status_id')
             ->where('t.customer_id', $userId)
             ->where('s.status_name', 'In Progress')
             ->countAllResults();
 
+        $resolvedTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'Resolved')
+            ->countAllResults();
+            
         $data['stats'] = [
             'total_tickets' => $totalTickets,
-            'open_tickets' => $openTickets,
-            'in_progress_tickets' => $inProgressTickets
+            'total_tickets_per_week' => $totalTicketsPerWeek,
+            'active_tickets' => $activeTickets,
+            'in_progress_tickets' => $inProgressTickets,
+            'resolved_tickets' => $resolvedTickets,
         ];
 
         // Get recent tickets
@@ -58,6 +71,21 @@ class CustomerController extends BaseController
             'email' => session()->get('email'),
             'role' => session()->get('role_name'),
         ];
+
+        // Greeting untuk customer
+        $hour = date('H');
+
+        if ($hour >= 5 && $hour < 12) {
+            $time = "Morning";
+        } elseif ($hour >= 12 && $hour < 17) {
+            $time = "Afternoon";
+        } elseif ($hour >= 17 && $hour < 21) {
+            $time = "Evening";
+        } else {
+            $time = "Night";
+        }
+
+        $data['current_time'] = $time;
 
         return view('Customer/dashboard', ['data' => $data]);
     }
@@ -221,8 +249,39 @@ public function projectDetail($projectId)
     {
         $data = $this->loadCommonData();
         
+        // Get customer statistics
         $userId = session()->get('user_id');
         $db = db_connect();
+        
+        // Count tickets
+        $totalTickets = $db->table('tickets')
+            ->where('customer_id', $userId)
+            ->countAllResults();
+        
+        $activeTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'Open')
+            ->countAllResults();
+
+        $inProgressTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'In Progress')
+            ->countAllResults();
+
+        $resolvedTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'Resolved')
+            ->countAllResults();
+
+        $data['stats'] = [
+            'total_tickets' => $totalTickets,
+            'active_tickets' => $activeTickets,
+            'in_progress_tickets' => $inProgressTickets,
+            'resolved_tickets' => $resolvedTickets,
+        ];
         
         // Get user details
         $data['user_details'] = $db->table('users u')
@@ -233,7 +292,7 @@ public function projectDetail($projectId)
             ->get()
             ->getRowArray();
             
-        return view('Customer/profile_customer', $data);
+        return view('Customer/profile_customer', ['data' => $data]);
     }
     public function notifications()
 {

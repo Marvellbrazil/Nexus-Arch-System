@@ -85,9 +85,9 @@ public function processLogin()
     session()->set($sessionData);
     
     // DEBUG: Tampilkan session setelah login
-    echo "<br>=== SESSION SET ===";
-    echo "<br>Session setelah login: ";
-    print_r(session()->get());
+    // echo "<br>=== SESSION SET ===";
+    // echo "<br>Session setelah login: ";
+    // print_r(session()->get());
 
     // Update last login
     $userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);

@@ -723,7 +723,7 @@ $notifications = [
             <!-- User Avatar (Desktop) -->
             <div>
                 <a href="<?= base_url('customer/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ml-2">
                         <?= strtoupper(substr($username, 0, 1)) ?>
                     </div>
                 </a>

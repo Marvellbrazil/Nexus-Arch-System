@@ -48,7 +48,7 @@
                     <!-- User Info -->
                     <div class="flex-1">
                         <div class="flex flex-wrap items-center gap-3 mb-3">
-                            <h2 class="text-2xl font-bold text-gray-800">Username</h2>
+                            <h2 class="text-2xl font-bold text-gray-800"><?= $data['user_details']['full_name'] ?></h2>
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-semibold rounded-full">
                                     Customer
@@ -62,15 +62,15 @@
                         <div class="space-y-2">
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-envelope text-gray-400"></i>
-                                <span class="text-gray-700">username@gmail.com</span>
+                                <span class="text-gray-700"><?= $data['user_details']['email'] ?></span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-phone text-gray-400"></i>
-                                <span class="text-gray-700">+62 123-4567-8901</span>
+                                <span class="text-gray-700"><?= ($data['user_details']['phone_number'] != null) ? $data['user_details']['phone_number'] : 'Not Set' ?></span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-calendar-alt text-gray-400"></i>
-                                <span class="text-gray-700">Joined: December 15, 2025</span>
+                                <span class="text-gray-700">Joined at <?= date('F d, Y', strtotime($data['user_details']['created_at'])) ?></span>
                             </div>
                         </div>
                     </div>
@@ -87,28 +87,28 @@
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Full Name</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">Username</span>
+                                <span class="text-gray-800"><?= $data['user_details']['full_name'] ?></span>
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Username</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">username</span>
+                                <span class="text-gray-800"><?= $data['user_details']['username'] ?></span>
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Email Address</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">username@gmail.com</span>
+                                <span class="text-gray-800"><?= $data['user_details']['email'] ?></span>
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Phone Number</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">+62 123-4567-8901</span>
+                                <span class="text-gray-800"><?= ($data['user_details']['phone_number'] != null) ? $data['user_details']['phone_number'] : 'Not Set' ?></span>
                             </div>
                         </div>
                     </div>
@@ -138,7 +138,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Total Tickets</p>
-                                <p class="text-2xl font-bold">30</p>
+                                <p class="text-2xl font-bold"><?= $data['stats']['total_tickets'] ?></p>
                             </div>
                         </div>
                     </div>
@@ -150,7 +150,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Active</p>
-                                <p class="text-2xl font-bold">7</p>
+                                <p class="text-2xl font-bold"><?= $data['stats']['active_tickets'] ?></p>
                             </div>
                         </div>
                     </div>
@@ -162,7 +162,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Resolved</p>
-                                <p class="text-2xl font-bold">8</p>
+                                <p class="text-2xl font-bold"><?= $data['stats']['resolved_tickets'] ?></p>
                             </div>
                         </div>
                     </div>
@@ -266,22 +266,22 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-gray-50 rounded-xl p-4 text-center">
                 <p class="text-gray-600 text-sm mb-2">Total Tickets</p>
-                <p class="text-3xl font-bold text-gray-800">30</p>
+                <p class="text-3xl font-bold text-gray-800"><?= $data['stats']['total_tickets'] ?></p>
             </div>
             
             <div class="bg-blue-50 rounded-xl p-4 text-center">
-                <p class="text-blue-600 text-sm mb-2">Open</p>
-                <p class="text-3xl font-bold text-blue-700">7</p>
+                <p class="text-blue-600 text-sm mb-2">Active</p>
+                <p class="text-3xl font-bold text-blue-700"><?= $data['stats']['active_tickets'] ?></p>
             </div>
             
             <div class="bg-yellow-50 rounded-xl p-4 text-center">
                 <p class="text-yellow-600 text-sm mb-2">In Progress</p>
-                <p class="text-3xl font-bold text-yellow-700">10</p>
+                <p class="text-3xl font-bold text-yellow-700"><?= $data['stats']['in_progress_tickets'] ?></p>
             </div>
             
             <div class="bg-green-50 rounded-xl p-4 text-center">
                 <p class="text-green-600 text-sm mb-2">Resolved</p>
-                <p class="text-3xl font-bold text-green-700">8</p>
+                <p class="text-3xl font-bold text-green-700"><?= $data['stats']['resolved_tickets'] ?></p>
             </div>
         </div>
         

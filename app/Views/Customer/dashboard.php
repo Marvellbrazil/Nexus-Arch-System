@@ -14,8 +14,8 @@
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
-            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">Customer Dashboard</h1>
-            <p class="text-sm md:text-[15px] font-light text-[#666]">Customer Dashboard Area</p>
+            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">Good <?= $data['current_time'] ?>, <?= $data['user']['full_name'] ?>!</h1>
+            <p class="text-sm md:text-[15px] font-light text-[#666]">Welcome Back to the Dashboard Area</p>
         </div>
         
         <!-- Action Buttons -->
@@ -39,7 +39,7 @@
         <div class="lg:col-span-3 bg-white rounded-xl p-4 md:p-[25px] shadow-sm border border-gray-200">
             <div class="flex items-center gap-3 md:gap-[15px] mb-4 md:mb-[20px]">
                 <div class="w-12 h-12 md:w-[50px] md:h-[50px] bg-secondary rounded-full flex items-center justify-center text-white text-lg md:text-[20px] font-bold">
-                    U
+                    <?= $data['user']['full_name'][0] ?>
                 </div>
                 <div>
                     <h2 class="text-text-dark text-base md:text-[18px] font-semibold"><?= $data['user']['full_name'] ?></h2>
@@ -91,7 +91,7 @@
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Total Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] flex items-center justify-center mb-4">
                 <i class="fas fa-arrow-up text-green-400 mr-1"></i>
-                <span>2 new this week</span>
+                <span><?= $data['stats']['total_tickets_per_week'] ?> new this week</span>
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-full flex items-center justify-center mt-2">
                 <i class="fas fa-ticket-alt text-lg md:text-xl"></i>
@@ -100,10 +100,10 @@
 
         <!-- Active Tickets -->
         <div class="lg:col-span-3 bg-gradient-to-br from-[#3D3C5E] to-[#4A4570] rounded-xl p-5 md:p-6 text-white shadow-sm flex flex-col items-center justify-center text-center">
-            <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['open_tickets'] ?></div>
+            <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['active_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Active Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] mb-4">
-                3 need attention
+                <?= $data['stats']['in_progress_tickets'] ?> tickets In Progress
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-full flex items-center justify-center mt-2">
                 <i class="fas fa-clock text-lg md:text-xl"></i>
@@ -112,10 +112,10 @@
 
         <!-- Resolved Tickets -->
         <div class="lg:col-span-3 bg-gradient-to-br from-[#3D3C5E] to-[#4A4570] rounded-xl p-5 md:p-6 text-white shadow-sm flex flex-col items-center justify-center text-center">
-            <div class="text-4xl md:text-5xl font-bold mb-2">7</div>
+            <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['resolved_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Resolved Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] mb-4">
-                94% satisfaction
+                abokai
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-full flex items-center justify-center mt-2">
                 <i class="fas fa-check-circle text-lg md:text-xl"></i>
