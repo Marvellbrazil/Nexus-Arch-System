@@ -17,25 +17,9 @@ class BaseController extends Controller
         
         // Load session
         $this->session = Services::session();
-        
-        // Check authentication for all controllers except Auth
-        if (!$this instanceof AuthController) {
-            $this->checkLogin();
-        }
     }
 
-protected function checkLogin()
-{
-    // Skip check for login processing
-    $currentURL = current_url();
-    if (strpos($currentURL, 'process_login') !== false) {
-        return;
-    }
-    
-    if (!session()->get('isLoggedIn')) {
-        return redirect()->to('/login')->with('error', 'Please login first');
-    }
-}
+
 
     protected function checkRole($allowedRoles)
     {

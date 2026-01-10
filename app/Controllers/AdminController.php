@@ -11,9 +11,6 @@ class AdminController extends BaseController
     public function __construct()
     {
         $this->userModel = new UserModel();
-        
-        // Check if user is admin
-        $this->checkRole(['Admin']);
     }
 
     public function dashboard()

@@ -79,7 +79,7 @@ public function processLogin()
         'department_id' => $user['department_id'],
         'department_name' => $department ? $department['department_name'] : null,
         'photo_profile' => $user['photo_profile'],
-        'isLoggedIn' => true
+        'isLoggedIn' => true,
     ];
 
     session()->set($sessionData);

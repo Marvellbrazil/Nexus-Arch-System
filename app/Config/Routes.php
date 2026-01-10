@@ -20,6 +20,7 @@ $routes->get('login', [AuthController::class, 'login']);
 $routes->post('process_login', [AuthController::class, 'processLogin']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
+$routes->get('logout', [AuthController::class, 'logout']);
 
 // Admin Routes
 $routes->group('admin', function($routes) {

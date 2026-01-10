@@ -39,7 +39,7 @@
         <div class="lg:col-span-3 bg-white rounded-xl p-4 md:p-[25px] shadow-sm border border-gray-200">
             <div class="flex items-center gap-3 md:gap-[15px] mb-4 md:mb-[20px]">
                 <div class="w-12 h-12 md:w-[50px] md:h-[50px] bg-secondary rounded-full flex items-center justify-center text-white text-lg md:text-[20px] font-bold">
-                    <?= $data['user']['full_name'][0] ?>
+                    <?= 'a' ?>
                 </div>
                 <div>
                     <h2 class="text-text-dark text-base md:text-[18px] font-semibold"><?= $data['user']['full_name'] ?></h2>
