@@ -18,7 +18,6 @@ $routes->get('/', [HomeController::class, 'index']);
 // Auth Routes
 $routes->get('login', [AuthController::class, 'login']);
 $routes->post('process_login', [AuthController::class, 'processLogin']);
-$routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
 
@@ -49,6 +48,7 @@ $routes->group('customer', function($routes) {
     $routes->get('ticket_detail/(:num)', [CustomerController::class, 'ticketDetail/$1']);
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->get('notifications', [CustomerController::class, 'notifications']);
+    $routes->get('logout', [AuthController::class, 'logout']);
 });
 
 // Support Routes

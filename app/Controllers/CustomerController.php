@@ -338,11 +338,4 @@ public function projectDetail($projectId)
     
     return view('Customer/notifications', $data);
 }
-
-// Juga tambahkan method logout jika belum ada
-public function logout()
-{
-    session()->destroy();
-    return redirect()->to('/login')->with('success', 'Logged out successfully');
-}
 }
