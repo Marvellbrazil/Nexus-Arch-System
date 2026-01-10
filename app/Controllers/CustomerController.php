@@ -45,6 +45,12 @@ class CustomerController extends BaseController
             ->where('t.customer_id', $userId)
             ->where('s.status_name', 'Resolved')
             ->countAllResults();
+
+        $cancelledTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'Cancelled')
+            ->countAllResults();
             
         $data['stats'] = [
             'total_tickets' => $totalTickets,
@@ -52,6 +58,7 @@ class CustomerController extends BaseController
             'active_tickets' => $activeTickets,
             'in_progress_tickets' => $inProgressTickets,
             'resolved_tickets' => $resolvedTickets,
+            'cancelled_tickets' => $cancelledTickets,
         ];
 
         // Get recent tickets
@@ -304,10 +311,10 @@ public function projectDetail($projectId)
     public function notifications()
     {
         $data = $this->loadCommonData();
-        
+
         $userId = session()->get('user_id');
         $db = db_connect();
-        
+
         // Get notifications for this customer (simulated data for now)
         // In real app, you would query from notifications table
         $data['notifications'] = [
@@ -339,10 +346,10 @@ public function projectDetail($projectId)
                 'ticket_id' => null
             ]
         ];
-        
+
         // Mark all notifications as read when viewing (simulated)
         // In real app: $db->table('notifications')->where('user_id', $userId)->update(['is_read' => 1]);
-        
+
         return view('Customer/notifications', $data);
     }
 }

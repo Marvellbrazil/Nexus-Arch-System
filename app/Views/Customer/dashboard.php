@@ -115,7 +115,7 @@
             <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['resolved_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Resolved Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] mb-4">
-                
+                <?= $data['stats']['cancelled_tickets'] ?> tickets cancelled
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-full flex items-center justify-center mt-2">
                 <i class="fas fa-check-circle text-lg md:text-xl"></i>

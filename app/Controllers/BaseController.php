@@ -42,16 +42,16 @@ class BaseController extends Controller
 
     protected function loadCommonData()
     {
-
         $userId = session()->get('user_id');
         $model = new UserModel();
         
         // Get user details 
         $data['user'] = [
+            'username' => $model->where('user_id', $userId)->get()->getRowArray()['username'],
             'full_name' => $model->where('user_id', $userId)->get()->getRowArray()['full_name'],
             'email' => $model->where('user_id', $userId)->get()->getRowArray()['email'],
-            'role_name' => $model->where('user_id', $userId)->get()->getRowArray()['role_name'],
-            'department_name' => $model->where('user_id', $userId)->get()->getRowArray()['department_name'],
+            'role_name' => $this->session->get('role_name'),
+            'department_name' => $this->session->get('department_name'),
             'photo_profile' => $model->where('user_id', $userId)->get()->getRowArray()['photo_profile'],
         ];
         

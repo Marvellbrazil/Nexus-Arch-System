@@ -71,14 +71,8 @@ public function processLogin()
     // Set session data
     $sessionData = [
         'user_id' => $user['user_id'],
-        'username' => $user['username'],
-        'full_name' => $user['full_name'],
-        'email' => $user['email'],
-        'role_id' => $user['role_id'],
         'role_name' => $role ? $role['role_name'] : 'Unknown',
-        'department_id' => $user['department_id'],
         'department_name' => $department ? $department['department_name'] : null,
-        'photo_profile' => $user['photo_profile'],
         'isLoggedIn' => true,
     ];
 
