@@ -39,7 +39,7 @@
         <div class="lg:col-span-3 bg-white rounded-xl p-4 md:p-[25px] shadow-sm border border-gray-200">
             <div class="flex items-center gap-3 md:gap-[15px] mb-4 md:mb-[20px]">
                 <div class="w-12 h-12 md:w-[50px] md:h-[50px] bg-secondary rounded-full flex items-center justify-center text-white text-lg md:text-[20px] font-bold">
-                    <?= 'a' ?>
+                    <?= strtoupper(substr($data['user']['full_name'], 0, 1)) ?>
                 </div>
                 <div>
                     <h2 class="text-text-dark text-base md:text-[18px] font-semibold"><?= $data['user']['full_name'] ?></h2>
@@ -54,7 +54,7 @@
                 </div>
             </div>
             
-            <div class="mb-4 md:mb-[25px]">
+            <!-- <div class="mb-4 md:mb-[25px]">
                 <h3 class="text-text-dark text-sm md:text-[14px] font-semibold mb-2">Projects:</h3>
                 <ul class="text-text-muted text-xs md:text-[12px] space-y-1">
                     <li class="flex items-center gap-2">
@@ -70,7 +70,7 @@
                         Project 3
                     </li>
                 </ul>
-            </div>
+            </div> -->
             
             <div class="flex flex-col sm:flex-row gap-2 md:gap-[12px]">
                 <a href="<?= base_url('customer/profile') ?>" 
@@ -115,7 +115,7 @@
             <div class="text-4xl md:text-5xl font-bold mb-2"><?= $data['stats']['resolved_tickets'] ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-3">Resolved Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] mb-4">
-                abokai
+                
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-full flex items-center justify-center mt-2">
                 <i class="fas fa-check-circle text-lg md:text-xl"></i>

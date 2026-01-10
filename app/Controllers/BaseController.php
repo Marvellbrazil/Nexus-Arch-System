@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use Config\Services;
+use App\Models\UserModel;
 
 class BaseController extends Controller
 {
@@ -41,12 +42,17 @@ class BaseController extends Controller
 
     protected function loadCommonData()
     {
+
+        $userId = session()->get('user_id');
+        $model = new UserModel();
+        
+        // Get user details 
         $data['user'] = [
-            'full_name' => session()->get('full_name'),
-            'email' => session()->get('email'),
-            'role_name' => session()->get('role_name'),
-            'department_name' => session()->get('department_name'),
-            'photo_profile' => session()->get('photo_profile')
+            'full_name' => $model->where('user_id', $userId)->get()->getRowArray()['full_name'],
+            'email' => $model->where('user_id', $userId)->get()->getRowArray()['email'],
+            'role_name' => $model->where('user_id', $userId)->get()->getRowArray()['role_name'],
+            'department_name' => $model->where('user_id', $userId)->get()->getRowArray()['department_name'],
+            'photo_profile' => $model->where('user_id', $userId)->get()->getRowArray()['photo_profile'],
         ];
         
         return $data;

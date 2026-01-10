@@ -276,11 +276,18 @@ public function projectDetail($projectId)
             ->where('s.status_name', 'Resolved')
             ->countAllResults();
 
+        $cancelledTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.customer_id', $userId)
+            ->where('s.status_name', 'Cancelled')
+            ->countAllResults();
+
         $data['stats'] = [
             'total_tickets' => $totalTickets,
             'active_tickets' => $activeTickets,
             'in_progress_tickets' => $inProgressTickets,
             'resolved_tickets' => $resolvedTickets,
+            'cancelled_tickets' => $cancelledTickets,
         ];
         
         // Get user details
@@ -295,47 +302,47 @@ public function projectDetail($projectId)
         return view('Customer/profile_customer', ['data' => $data]);
     }
     public function notifications()
-{
-    $data = $this->loadCommonData();
-    
-    $userId = session()->get('user_id');
-    $db = db_connect();
-    
-    // Get notifications for this customer (simulated data for now)
-    // In real app, you would query from notifications table
-    $data['notifications'] = [
-        [
-            'id' => 1,
-            'title' => 'New message from support',
-            'message' => 'Your ticket #10421 has been updated with a new response',
-            'time' => '2 mins ago',
-            'type' => 'message',
-            'is_read' => false,
-            'ticket_id' => 10421
-        ],
-        [
-            'id' => 2,
-            'title' => 'Ticket resolved',
-            'message' => 'Your ticket #10422 has been marked as resolved',
-            'time' => '1 hour ago',
-            'type' => 'success',
-            'is_read' => true,
-            'ticket_id' => 10422
-        ],
-        [
-            'id' => 3,
-            'title' => 'Welcome to NEXUS',
-            'message' => 'Thank you for joining our support system',
-            'time' => '3 days ago',
-            'type' => 'info',
-            'is_read' => true,
-            'ticket_id' => null
-        ]
-    ];
-    
-    // Mark all notifications as read when viewing (simulated)
-    // In real app: $db->table('notifications')->where('user_id', $userId)->update(['is_read' => 1]);
-    
-    return view('Customer/notifications', $data);
-}
+    {
+        $data = $this->loadCommonData();
+        
+        $userId = session()->get('user_id');
+        $db = db_connect();
+        
+        // Get notifications for this customer (simulated data for now)
+        // In real app, you would query from notifications table
+        $data['notifications'] = [
+            [
+                'id' => 1,
+                'title' => 'New message from support',
+                'message' => 'Your ticket #10421 has been updated with a new response',
+                'time' => '2 mins ago',
+                'type' => 'message',
+                'is_read' => false,
+                'ticket_id' => 10421
+            ],
+            [
+                'id' => 2,
+                'title' => 'Ticket resolved',
+                'message' => 'Your ticket #10422 has been marked as resolved',
+                'time' => '1 hour ago',
+                'type' => 'success',
+                'is_read' => true,
+                'ticket_id' => 10422
+            ],
+            [
+                'id' => 3,
+                'title' => 'Welcome to NEXUS',
+                'message' => 'Thank you for joining our support system',
+                'time' => '3 days ago',
+                'type' => 'info',
+                'is_read' => true,
+                'ticket_id' => null
+            ]
+        ];
+        
+        // Mark all notifications as read when viewing (simulated)
+        // In real app: $db->table('notifications')->where('user_id', $userId)->update(['is_read' => 1]);
+        
+        return view('Customer/notifications', $data);
+    }
 }
