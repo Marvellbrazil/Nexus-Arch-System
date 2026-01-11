@@ -575,7 +575,7 @@ $notifications = [
                 <div class="nav-separator"></div>
 
                 <!-- Notification placed next to Profile in center nav -->
-                <div class="relative">
+                <div class="relative" title="Notification (<?= $notification_count ?>)">
                     <button id="notificationButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
                         <i class="fas fa-bell text-lg"></i>
                         <?php if ($notification_count > 0): ?>
@@ -716,17 +716,18 @@ $notifications = [
         <!-- Desktop Right Section (Hidden on mobile) -->
         <div class="hidden md:flex items-center gap-3">
             <!-- User Avatar (Desktop) -->
-            <div>
+            <div title="Logout">
+                <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors ml-4" onclick="location.href = '/logout'">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-lg active"></i>
+                </button>
+            </div>
+            <div class="nav-separator"></div>
+            <div title="<?= esc($username) ?>">
                 <a href="<?= base_url('customer/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
+                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         <?= strtoupper(substr($username, 0, 1)) ?>
                     </div>
                 </a>
-            </div>
-            <div>
-                <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors" onclick="location.href = '/logout'">
-                    <i class="fa-solid fa-arrow-right-from-bracket text-lg" style="color: red;"></i>
-                </button>
             </div>
         </div>
     </header>
