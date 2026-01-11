@@ -1,11 +1,14 @@
 <?php
+use App\Models\UserModel;
+
 $session = \Config\Services::session();
 $success = $session->getFlashdata('success');
 $error = $session->getFlashdata('error');
 $message = $session->getFlashdata('message');
 $search_message = $session->getFlashdata('search_message');
 
-$username = $session->get('username') ?? $session->get('name') ?? $session->get('user') ?? 'Customer';
+$model = new UserModel();
+$username = $model->where('user_id', session()->get('user_id'))->get()->getRowArray()['full_name'];
 
 $notification_count = 3;
 $notifications = [
@@ -635,11 +638,6 @@ $notifications = [
                         </div>
                     </div>
                 </div>
-
-                <a href="<?= base_url('customer/profile') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/profile') ? 'active' : '' ?>">
-                    <?= esc($username) ?>
-                </a>
             </div>
         </div>
         
@@ -707,11 +705,8 @@ $notifications = [
             
             <!-- User Profile Section (Mobile) -->
             <div class="mobile-profile-section">
-                <span class="username-display text-sm font-medium hidden xs:inline">
-                    <?= esc($username) ?>
-                </span>
                 <a href="<?= base_url('customer/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs ml-2">
                         <?= strtoupper(substr($username, 0, 1)) ?>
                     </div>
                 </a>
@@ -723,10 +718,15 @@ $notifications = [
             <!-- User Avatar (Desktop) -->
             <div>
                 <a href="<?= base_url('customer/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ml-2">
+                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
                         <?= strtoupper(substr($username, 0, 1)) ?>
                     </div>
                 </a>
+            </div>
+            <div>
+                <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors" onclick="location.href = '/logout'">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-lg" style="color: red;"></i>
+                </button>
             </div>
         </div>
     </header>

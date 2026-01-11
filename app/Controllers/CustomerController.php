@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controllers;
+use App\Models\UserModel;
 
 class CustomerController extends BaseController
 {
@@ -73,9 +74,11 @@ class CustomerController extends BaseController
             ->get()
             ->getResultArray();
 
+        $userId = session()->get('user_id');
+        $model = new UserModel();
         $data['user'] = [
-            'full_name' => session()->get('full_name'),
-            'email' => session()->get('email'),
+            'full_name' => $model->where('user_id', $userId)->get()->getRowArray()['full_name'],
+            'email' => $model->where('user_id', $userId)->get()->getRowArray()['email'],
             'role' => session()->get('role_name'),
         ];
 
