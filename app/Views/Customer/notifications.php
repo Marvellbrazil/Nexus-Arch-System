@@ -86,7 +86,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-white/80 text-sm mb-1">Total</div>
-                    <div class="text-3xl font-bold">24</div>
+                    <div class="text-3xl font-bold"><?= $data['stats']['total_notifications'] ?></div>
                 </div>
                 <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-bell text-xl"></i>
@@ -98,7 +98,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-gray-600 text-sm mb-1">Unread</div>
-                    <div class="text-3xl font-bold text-gray-800">5</div>
+                    <div class="text-3xl font-bold text-gray-800"><?= $data['stats']['unread_notifications'] ?></div>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-envelope text-blue-600 text-xl"></i>
@@ -110,7 +110,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-gray-600 text-sm mb-1">This Week</div>
-                    <div class="text-3xl font-bold text-gray-800">12</div>
+                    <div class="text-3xl font-bold text-gray-800"><?= $data['stats']['this_week_notifications'] ?></div>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-calendar-week text-green-600 text-xl"></i>
@@ -191,119 +191,37 @@
 
     <!-- Notifications Container -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-        <!-- Notifications List -->
-        <div class="p-4 md:p-6 space-y-4 custom-scrollbar" style="max-height: 500px; overflow-y: auto;">
-            <!-- Notification 1 -->
-            <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <h3 class="text-base md:text-lg font-bold text-text-dark">New ticket assigned to you</h3>
-                            <span class="text-xs md:text-sm text-gray-500">5 minutes ago</span>
-                        </div>
-                        <p class="text-sm md:text-base text-gray-700 mb-3">Ticket #2341 – Database Connection Error</p>
-                        <div class="flex items-center gap-2">
-                            <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
-                                <span class="text-xs font-bold text-white">Urgent</span>
+        <div class="p-4 md:p-6 space-y-4 custom-scrollbar" style="min-height: 400px; max-height: 500px; overflow-y: auto;">
+            <?php if (!empty($data['notifications'])): ?>
+                <?php foreach ($data['notifications'] as $notification): ?>
+                    <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                                    <h3 class="text-base md:text-lg font-bold text-text-dark"><?= $notification['title'] ?></h3>
+                                    <span class="text-xs md:text-sm text-gray-500"><?= $notification['created_at'] ?></span>
+                                </div>
+                                <p class="text-sm md:text-base text-gray-700 mb-3"><?= $notification['message'] ?></p>
+                                <div class="flex items-center gap-2">
+                                    <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
+                                        <span class="text-xs font-bold text-white"><?= $notification['notification_type'] ?></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                </div>
-            </div>
-
-            <!-- Notification 2 -->
-            <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <h3 class="text-base md:text-lg font-bold text-text-dark">Ticket #2338 updated by customer</h3>
-                            <span class="text-xs md:text-sm text-gray-500">30 minutes ago</span>
-                        </div>
-                        <p class="text-sm md:text-base text-gray-700 mb-3">UI broken on mobile</p>
-                        <div class="flex items-center gap-2">
-                            <div class="priority-badge px-3 py-1 bg-[#FFD2D2] rounded-lg">
-                                <span class="text-xs font-bold text-red-800">High</span>
-                            </div>
-                        </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="text-center py-24 items-center">
+                    <div class="bg-gray-100 p-4 rounded-full mb-4">
+                        <i class="fas fa-bell text-gray-400 text-2xl"></i>
                     </div>
-                    
+                    <p class="text-gray-500">There is no notification yet</p>
                 </div>
-            </div>
-
-            <!-- Notification 3 -->
-            <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <h3 class="text-base md:text-lg font-bold text-text-dark">Ticket waiting for your response</h3>
-                            <span class="text-xs md:text-sm text-gray-500">1 hour ago</span>
-                        </div>
-                        <p class="text-sm md:text-base text-gray-700 mb-3">Ticket #2329 – Payment page slow</p>
-                        <div class="flex items-center gap-2">
-                            <div class="priority-badge px-3 py-1 bg-[#FED7AA] rounded-lg">
-                                <span class="text-xs font-bold text-orange-800">Medium</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-
-            <!-- Notification 4 -->
-            <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <h3 class="text-base md:text-lg font-bold text-text-dark">Ticket #2315 marked as Resolved</h3>
-                            <span class="text-xs md:text-sm text-gray-500">Today, 09:15</span>
-                        </div>
-                        <p class="text-sm md:text-base text-gray-700 mb-3">Typo on dashboard page</p>
-                        <div class="flex items-center gap-2">
-                            <div class="priority-badge px-3 py-1 bg-[#C7D2FE] rounded-lg">
-                                <span class="text-xs font-bold text-blue-800">Low</span>
-                            </div>
-                        </div>
-                    </div>
-                  
-                </div>
-            </div>
-
-            <!-- Notification 5 -->
-            <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <h3 class="text-base md:text-lg font-bold text-text-dark">SLA nearly breached</h3>
-                            <span class="text-xs md:text-sm text-gray-500">Yesterday</span>
-                        </div>
-                        <p class="text-sm md:text-base text-gray-700 mb-3">Ticket #2308 – Server timeout issue</p>
-                        <div class="flex items-center gap-2">
-                            <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
-                                <span class="text-xs font-bold text-white">Urgent</span>
-                            </div>
-                        </div>
-                    </div>
-                  
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden p-8 md:p-12 text-center">
-            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-bell-slash text-gray-400 text-2xl md:text-3xl"></i>
-            </div>
-            <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">There are no other notifications yet</h3>
-            <p class="text-gray-500 max-w-md mx-auto">
-                When you have new notifications, they'll appear here
-            </p>
-        </div>
-
-
     </div>
 
-    
 </div>
 
 <script>

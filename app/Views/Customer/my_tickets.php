@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Total Tickets</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">12</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['total_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -62,7 +62,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Open</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">5</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['open_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -74,7 +74,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Resolved</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">7</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['resolved_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -86,7 +86,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">This Month</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">3</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['tickets_this_month'] ?></p>
                 </div>
             </div>
         </div>

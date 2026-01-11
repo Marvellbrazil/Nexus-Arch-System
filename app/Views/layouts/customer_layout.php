@@ -1,21 +1,20 @@
 <?php
 use App\Models\UserModel;
+use Config\Services;
+use Config\Database;
 
-$session = \Config\Services::session();
+$session = Services::session();
 $success = $session->getFlashdata('success');
 $error = $session->getFlashdata('error');
 $message = $session->getFlashdata('message');
 $search_message = $session->getFlashdata('search_message');
 
-$model = new UserModel();
-$username = $model->where('user_id', session()->get('user_id'))->get()->getRowArray()['full_name'];
+$userModel = new UserModel();
+$username = $userModel->where('user_id', session()->get('user_id'))->get()->getRowArray()['full_name'];
 
-$notification_count = 3;
-$notifications = [
-    ['id' => 1, 'title' => 'New message from support', 'message' => 'Your ticket #10421 has been updated', 'time' => '2 mins ago', 'read' => false, 'type' => 'message'],
-    ['id' => 2, 'title' => 'Ticket resolved', 'message' => 'Ticket #10422 has been resolved', 'time' => '1 hour ago', 'read' => true, 'type' => 'success'],
-    ['id' => 3, 'title' => 'New ticket assigned', 'message' => 'You have been assigned to ticket #10425', 'time' => '3 hours ago', 'read' => false, 'type' => 'assignment'],
-];
+$db = Database::connect();
+$notification_count = $db->table('notifications')->where('user_id', session()->get('user_id'))->countAllResults();
+$notifications = $db->table('notifications')->where('user_id', session()->get('user_id'))->get()->getResultArray();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -555,19 +554,19 @@ $notifications = [
             <!-- Desktop Navigation -->
             <div class="desktop-nav-container">
                 <a href="<?= base_url('customer/dashboard') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/dashboard') ? 'active' : '' ?>">
+                    class="nav-glass-item <?= current_url() == base_url('customer/dashboard') ? 'active' : '' ?>">
                     <i class="fas fa-home mr-2 text-sm"></i>
                     Dashboard
                 </a>
                 
                 <a href="<?= base_url('customer/my_tickets') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : '' ?>">
+                    class="nav-glass-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : '' ?>">
                     <i class="fas fa-ticket-alt mr-2 text-sm"></i>
                     My Tickets
                 </a>
                 
                 <a href="<?= base_url('customer/create_ticket') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : '' ?>">
+                    class="nav-glass-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : '' ?>">
                     <i class="fas fa-plus mr-2 text-sm"></i>
                     Create Ticket
                 </a>
@@ -599,7 +598,7 @@ $notifications = [
                             <?php else: ?>
                                 <?php foreach ($notifications as $notification): ?>
                                     <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
-                                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                         <div class="flex gap-3">
                                             <div class="flex-shrink-0">
                                                 <?php if ($notification['type'] == 'message'): ?>
@@ -668,7 +667,7 @@ $notifications = [
                         <?php else: ?>
                             <?php foreach ($notifications as $notification): ?>
                                 <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
-                                   class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                    class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                     <div class="flex gap-3">
                                         <div class="flex-shrink-0">
                                             <?php if ($notification['type'] == 'message'): ?>
@@ -749,37 +748,37 @@ $notifications = [
             <!-- Mobile Navigation Links -->
             <div class="p-3">
                 <a href="<?= base_url('customer/dashboard') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/dashboard') ? 'active' : 'text-primary' ?>">
+                    class="mobile-nav-item <?= current_url() == base_url('customer/dashboard') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-home text-secondary"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
                 
                 <a href="<?= base_url('customer/my_tickets') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : 'text-primary' ?>">
+                    class="mobile-nav-item <?= current_url() == base_url('customer/my_tickets') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-ticket-alt text-secondary"></i>
                     <span class="font-medium">My Tickets</span>
                 </a>
                 
                 <a href="<?= base_url('customer/create_ticket') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : 'text-primary' ?>">
+                    class="mobile-nav-item <?= current_url() == base_url('customer/create_ticket') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-plus text-secondary"></i>
                     <span class="font-medium">Create Ticket</span>
                 </a>
                 
                 <a href="<?= base_url('customer/notifications') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/notifications') ? 'active' : 'text-primary' ?>">
+                    class="mobile-nav-item <?= current_url() == base_url('customer/notifications') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-bell text-secondary"></i>
                     <span class="font-medium">Notifications</span>
                 </a>
                 
                 <a href="<?= base_url('customer/profile') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('customer/profile') ? 'active' : 'text-primary' ?>">
+                    class="mobile-nav-item <?= current_url() == base_url('customer/profile') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-user text-secondary"></i>
                     <span class="font-medium">Profile</span>
                 </a>
                 
                 <a href="<?= base_url('customer/logout') ?>" 
-                   class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
+                    class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="font-medium">Logout</span>
                 </a>
