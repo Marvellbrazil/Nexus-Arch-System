@@ -146,17 +146,64 @@ class AuthController extends BaseController
     }
 
     public function processForgotPassword()
-    {
-        $email = $this->request->getPost('email');
-        $userModel = new UserModel();
-        $user = $userModel->where('email', $email)->first();
+{
+    $email = $this->request->getPost('email');
+    $userModel = new UserModel();
+    $user = $userModel->where('email', $email)->first();
 
-        if ($user) {
-            // Generate reset token and send email
-            // Implement reset password logic here
-            return redirect()->to('/login')->with('success', 'Password reset instructions sent to your email');
-        }
+    // Jika email ditemukan di database
+    if ($user) {
+        // Generate reset token yang unik
+        $resetToken = bin2hex(random_bytes(16));  // Membuat token reset yang unik
+        $userModel->update($user['user_id'], ['reset_token' => $resetToken]); // Simpan token di database
 
-        return redirect()->to('/auth/forgot_password')->with('error', 'Email not found');
+        // Kirimkan email dengan link reset password
+        $this->sendResetEmail($email, $resetToken, $user['role_name']);
+
+        return redirect()->to('/login')->with('success', 'Password reset instructions sent to your email');
     }
+
+    // Jika email tidak ditemukan
+    return redirect()->to('/auth/forgot_password')->with('error', 'Email not found');
+}
+
+
+
+    private function sendResetEmail($email, $resetToken, $role)
+{
+    $fromEmail = '';
+    $fromName = 'Nexus Arch System';
+
+    switch ($role) {
+        case 'Admin':
+            $fromEmail = 'admin@nexus.com';  // Ganti dengan email untuk Admin
+            break;
+        case 'Support':
+            $fromEmail = 'support@nexus.com';  // Ganti dengan email untuk Support
+            break;
+        case 'Customer':
+            $fromEmail = 'customer@nexus.com';  // Ganti dengan email untuk Customer
+            break;
+        default:
+            $fromEmail = 'no-reply@nexus.com';  // Default email
+            break;
+    }
+
+    // Mengirimkan email reset password
+    $emailService = \Config\Services::email();
+    $emailService->setFrom($fromEmail, $fromName);
+    $emailService->setTo($email);
+    $emailService->setSubject('Password Reset Request');
+    $emailService->setMessage(
+        "Klik link berikut untuk mereset password Anda: \n" . 
+        base_url() . "/auth/reset_password/" . $resetToken
+    );
+
+    if (!$emailService->send()) {
+        log_message('error', 'Gagal mengirim email reset password');
+    }
+}
+
+
+
 }
