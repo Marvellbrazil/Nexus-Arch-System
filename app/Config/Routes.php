@@ -21,14 +21,12 @@ $routes->post('process_login', [AuthController::class, 'processLogin']);
 $routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
-$routes->get('auth/reset_password/(:segment)', 'AuthController::resetPassword/$1');
-$routes->post('auth/reset_password/(:segment)', 'AuthController::processResetPassword/$1');
 $routes->get('logout', [AuthController::class, 'logout']);
 
 // Admin Routes
 $routes->group('admin', function ($routes) {
     $routes->get('dashboard', [AdminController::class, 'dashboard']);
-
+    
     // Manage Users
     $routes->get('users', [AdminController::class, 'manageUsers']);
     $routes->post('users/add', [AdminController::class, 'addUser']);
@@ -36,10 +34,19 @@ $routes->group('admin', function ($routes) {
     $routes->post('users/reset-password/(:num)', [AdminController::class, 'resetPassword/$1']);
     $routes->post('users/change-status/(:num)', [AdminController::class, 'changeStatus/$1']);
     $routes->post('users/delete/(:num)', [AdminController::class, 'deleteUser/$1']);
-
+    
     $routes->get('roles', [AdminController::class, 'manageRoles']);
     $routes->get('departments', [AdminController::class, 'manageDepartments']);
     $routes->get('tickets', [AdminController::class, 'viewTickets']);
+    
+    // Tambahkan route untuk Manage Projects
+    $routes->get('projects', [AdminController::class, 'manageProjects']);
+    $routes->post('projects/add', [AdminController::class, 'addProject']);
+    $routes->post('projects/edit/(:num)', [AdminController::class, 'editProject/$1']);
+    $routes->post('projects/delete/(:num)', [AdminController::class, 'deleteProject/$1']);
+    $routes->post('projects/assign-users/(:num)', [AdminController::class, 'assignUsersToProject/$1']);
+    $routes->post('projects/change-status/(:num)', [AdminController::class, 'changeProjectStatus/$1']);
+    
     $routes->get('settings', [AdminController::class, 'systemSettings']);
     $routes->get('logout', [AuthController::class, 'logout']);
 });
@@ -50,10 +57,8 @@ $routes->group('customer', function ($routes) {
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', [CustomerController::class, 'projectDetail/$1']);
     $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-    $routes->post('create_ticket', [CustomerController::class, 'processCreateTicket']);
     $routes->get('ticket_detail/(:num)', [CustomerController::class, 'ticketDetail/$1']);
     $routes->get('profile', [CustomerController::class, 'profile']);
-    $routes->post('profile/update', 'CustomerController::profile');
     $routes->get('notifications', [CustomerController::class, 'notifications']);
     $routes->get('logout', [AuthController::class, 'logout']);
 });
