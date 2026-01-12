@@ -418,7 +418,7 @@ class CustomerController extends BaseController
                 COUNT(t.ticket_id) as ticket_count')
             ->join('tickets t', 't.project_id = p.project_id', 'left') 
             ->where('p.user_id', $this->userId) // Sekarang langsung filter ke kolom user_id di tabel projects
-            ->where('p.is_active', true)
+            ->where('p.is_active', value: true)
             ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
             ->orderBy('p.project_name', 'ASC')
             ->get()
@@ -453,80 +453,63 @@ class CustomerController extends BaseController
         $data['priorities'] = $this->db->table('priorities')->get()->getResultArray();
         $data['departments'] = $this->db->table('departments')->get()->getResultArray();
 
-        return view('Customer/create_ticket', $data);
+        return view('Customer/create_ticket', ['data' => $data]);
     }
 
     // Tambahkan method untuk menangani form submission:
     public function processCreateTicket()
     {
-        
-        // Get form data
-        $projectId = $this->request->getPost('project');
-        $title = $this->request->getPost('title');
+        // Ambil data sesuai atribut 'name' di view create_ticket.php
+        $projectId  = $this->request->getPost('project_id'); // Sesuai view
+        $title      = $this->request->getPost('title');
         $description = $this->request->getPost('description');
-        $priorityId = $this->request->getPost('priority');
-        $categoryId = $this->request->getPost('category');
-
-        // Validate required fields
+        $priorityId = $this->request->getPost('priority_id'); // Sesuai view
+        $categoryId = $this->request->getPost('category_id'); // Sesuai view
+        
+        // Validasi
         if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
             return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
         }
-
-        // Check if project is assigned to user
-        $isProjectAssigned = $this->db->table('project_assignments')
-            ->where('project_id', $projectId)
-            ->where('user_id', $this->userId)
-            ->countAllResults();
-
-        if (!$isProjectAssigned) {
-            return redirect()->back()->with('error', 'You are not assigned to this project');
-        }
-
-        // Get department based on category
-        $departmentMapping = $this->db->table('category_department_mapping')
-            ->where('category_id', $categoryId)
-            ->get()
-            ->getRowArray();
-
-        $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
-
-        // Generate ticket number
+        
+        // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
         $project = $this->db->table('projects')
             ->where('project_id', $projectId)
+            ->where('user_id', $this->userId)
             ->get()
             ->getRowArray();
-
-        $ticketCount = $this->db->table('tickets')
-            ->where('project_id', $projectId)
-            ->countAllResults();
-
+        
+        if (!$project) {
+            return redirect()->back()->with('error', 'Project not found or access denied');
+        }
+        
+        // Nomor Tiket & Mapping Departemen
+        $ticketCount = $this->db->table('tickets')->where('project_id', $projectId)->countAllResults();
         $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
-
-        // Prepare ticket data
+        
+        $departmentMapping = $this->db->table('category_department_mapping')->where('category_id', $categoryId)->get()->getRowArray();
+        $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
+        
         $ticketData = [
             'ticket_number' => $ticketNumber,
-            'project_id' => $projectId,
-            'customer_id' => $this->userId,
-            'category_id' => $categoryId,
-            'priority_id' => $priorityId,
-            'status_id' => 1, // Open
+            'project_id'    => $projectId,
+            'customer_id'   => $this->userId,
+            'category_id'   => $categoryId,
+            'priority_id'   => $priorityId,
+            'status_id'     => 1, // Open
             'department_id' => $departmentId,
-            'subject' => $title,
-            'description' => $description,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
+            'subject'       => $title,
+            'description'   => $description,
+            'created_at'    => date('Y-m-d H:i:s'),
+            'updated_at'    => date('Y-m-d H:i:s')
         ];
-
-        // Insert ticket
+        
         $this->db->table('tickets')->insert($ticketData);
         $ticketId = $this->db->insertID();
-
-        // Handle file attachments
+        
         $this->handleAttachments($ticketId);
-
-        // Create notification for support team
-        $this->createTicketNotification($ticketId);
-
+        // $this->createTicketNotification($ticketId);
+        
+        // Sekarang redirect akan bekerja dengan benar karena dikirim via Form HTML, bukan AJAX
         return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
     }
 

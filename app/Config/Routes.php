@@ -50,7 +50,7 @@ $routes->group('customer', function ($routes) {
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', [CustomerController::class, 'projectDetail/$1']);
     $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-    $routes->post('create_ticket', [CustomerController::class, 'processCreateTicket']);
+    $routes->post('process_create_ticket', [CustomerController::class, 'processCreateTicket']);
     $routes->get('ticket_detail/(:num)', [CustomerController::class, 'ticketDetail/$1']);
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', 'CustomerController::profile');
