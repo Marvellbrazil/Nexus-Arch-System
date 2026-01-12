@@ -19,7 +19,8 @@ class UserModel extends Model
         'photo_profile',
         'is_active',
         'last_login',
-        'created_at'
+        'created_at',
+        'updated_at'
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
@@ -75,13 +76,13 @@ class UserModel extends Model
         $builder->select('u.*, r.role_name, d.department_name');
         $builder->join('roles r', 'r.role_id = u.role_id', 'left');
         $builder->join('departments d', 'd.department_id = u.department_id', 'left');
-        
+
         if ($limit) {
             $builder->limit($limit, $offset);
         }
-        
+
         $builder->orderBy('u.created_at', 'DESC');
-        
+
         return $builder->get()->getResultArray();
     }
 
@@ -91,7 +92,7 @@ class UserModel extends Model
         $builder->select('r.role_name, COUNT(*) as count');
         $builder->join('roles r', 'r.role_id = u.role_id');
         $builder->groupBy('r.role_id', 'r.role_name');
-        
+
         return $builder->get()->getResultArray();
     }
 
@@ -101,7 +102,7 @@ class UserModel extends Model
         $builder->select('u.*, r.role_name, d.department_name');
         $builder->join('roles r', 'r.role_id = u.role_id', 'left');
         $builder->join('departments d', 'd.department_id = u.department_id', 'left');
-        
+
         if (!empty($keyword)) {
             $builder->groupStart();
             $builder->like('u.username', $keyword);
@@ -109,11 +110,11 @@ class UserModel extends Model
             $builder->orLike('u.email', $keyword);
             $builder->groupEnd();
         }
-        
+
         if (!empty($roleFilter)) {
             $builder->where('u.role_id', $roleFilter);
         }
-        
+
         if (!empty($statusFilter)) {
             if ($statusFilter === 'active') {
                 $builder->where('u.is_active', 1);
@@ -121,9 +122,9 @@ class UserModel extends Model
                 $builder->where('u.is_active', 0);
             }
         }
-        
+
         $builder->orderBy('u.created_at', 'DESC');
-        
+
         return $builder->get()->getResultArray();
     }
 }

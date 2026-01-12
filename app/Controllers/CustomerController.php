@@ -219,98 +219,155 @@ class CustomerController extends BaseController
         return view('Customer/project_detail', $data);
     }
 
+    // Di method updateProfile() - REPLACE dengan ini:
+
     public function updateProfile()
     {
-        // Get form data
-        $fullName = $this->request->getPost('full_name');
-        $phoneNumber = $this->request->getPost('phone_number');
-        $currentPassword = $this->request->getPost('current_password');
-        $newPassword = $this->request->getPost('new_password');
-        $confirmPassword = $this->request->getPost('confirm_password');
+        // Debug: Log semua input
+        $postData = $this->request->getPost();
+        log_message('debug', 'POST Data: ' . print_r($postData, true));
 
         // Validation rules
         $validationRules = [
             'full_name' => 'required|min_length[3]|max_length[100]',
             'phone_number' => 'permit_empty|min_length[10]|max_length[20]',
+            'current_password' => 'permit_empty',
+            'new_password' => 'permit_empty|min_length[6]',
+            'confirm_password' => 'matches[new_password]',
         ];
 
-        // Validate basic fields
+        // Validate
         if (!$this->validate($validationRules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            $errors = $this->validator->getErrors();
+            log_message('error', 'Validation errors: ' . print_r($errors, true));
+            return redirect()->back()->withInput()->with('errors', $errors);
         }
 
-        // Get current user data
-        $userData = $this->userModel->find($this->userId);
+        // Get current user
+        $userModel = new UserModel();
+        $currentUser = $userModel->find($this->userId);
 
-        // Prepare update data
+        if (!$currentUser) {
+            return redirect()->back()->with('error', 'User not found');
+        }
+
+        // Prepare update data - PERHATIKAN NAMA FIELD DATABASE
         $updateData = [
-            'full_name' => $fullName,
-            'phone_number' => $phoneNumber ?: null,
+            'full_name' => $postData['full_name'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        // Handle password change if provided
-        if (!empty($currentPassword) || !empty($newPassword) || !empty($confirmPassword)) {
-            // Validate password fields
-            if (empty($currentPassword)) {
-                return redirect()->back()->with('error', 'Current password is required to change password');
-            }
+        // Add phone number if provided
+        if (!empty($postData['phone_number'])) {
+            $updateData['phone_number'] = $postData['phone_number'];
+        } else {
+            $updateData['phone_number'] = null; // Set to null if empty
+        }
 
-            if (empty($newPassword)) {
-                return redirect()->back()->with('error', 'New password is required');
-            }
-
-            if ($newPassword !== $confirmPassword) {
-                return redirect()->back()->with('error', 'New password and confirmation do not match');
-            }
-
-            if (strlen($newPassword) < 6) {
-                return redirect()->back()->with('error', 'New password must be at least 6 characters');
-            }
-
-            // Verify current password
-            if (!password_verify($currentPassword, $userData['password'])) {
+        // Handle password change
+        if (!empty($postData['current_password'])) {
+            // Verify current password - CEK FIELD PASSWORD DI DATABASE
+            if (!password_verify($postData['current_password'], $currentUser['password'])) {
+                log_message('debug', 'Password verification failed');
                 return redirect()->back()->with('error', 'Current password is incorrect');
             }
 
-            // Update password
-            $updateData['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+            // Check new password
+            if (empty($postData['new_password'])) {
+                return redirect()->back()->with('error', 'New password is required');
+            }
+
+            if ($postData['new_password'] !== $postData['confirm_password']) {
+                return redirect()->back()->with('error', 'New password and confirmation do not match');
+            }
+
+            // Hash new password
+            $updateData['password'] = password_hash($postData['new_password'], PASSWORD_DEFAULT);
+            log_message('debug', 'Password will be updated');
         }
 
-        // Handle file upload (profile photo)
+        // Handle file upload
         $photo = $this->request->getFile('photo_profile');
+        log_message('debug', 'File upload check: ' . ($photo ? 'File exists' : 'No file'));
+
         if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+            log_message('debug', 'File is valid: ' . $photo->getName());
+
+            // Define upload directory
+            $uploadDir = WRITEPATH . 'uploads/profile/';
+
+            // Create directory if not exists
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
             // Delete old photo if exists
-            if (!empty($userData['photo_profile'])) {
-                $oldPhotoPath = WRITEPATH . 'uploads/profile/' . basename($userData['photo_profile']);
+            if (!empty($currentUser['photo_profile'])) {
+                $oldPhotoPath = WRITEPATH . $currentUser['photo_profile'];
                 if (file_exists($oldPhotoPath)) {
                     unlink($oldPhotoPath);
+                    log_message('debug', 'Old photo deleted: ' . $oldPhotoPath);
                 }
             }
 
-            // Upload new photo
+            // Generate new filename
             $newName = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/profile', $newName);
 
-            $updateData['photo_profile'] = 'uploads/profile/' . $newName;
+            // Move file
+            if ($photo->move($uploadDir, $newName)) {
+                $updateData['photo_profile'] = 'uploads/profile/' . $newName;
+                log_message('debug', 'File uploaded: ' . $updateData['photo_profile']);
+            } else {
+                log_message('error', 'File move failed: ' . $photo->getErrorString());
+                return redirect()->back()->with('error', 'Failed to upload profile photo');
+            }
         }
 
-        // Update user in database
-        if ($this->userModel->update($this->userId, $updateData)) {
-            // Update session data
-            $updatedUser = $this->userModel->find($this->userId);
-            session()->set([
-                'full_name' => $updatedUser['full_name'],
-                'photo_profile' => $updatedUser['photo_profile']
-            ]);
+        // Debug before update
+        log_message('debug', 'Final update data: ' . print_r($updateData, true));
 
-            return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
-        } else {
-            return redirect()->back()->with('error', 'Failed to update profile');
+        // Update database
+        try {
+            $result = $userModel->update($this->userId, $updateData);
+            log_message('debug', 'Update result: ' . ($result ? 'true' : 'false'));
+
+            if ($result) {
+                // Get updated user data
+                $updatedUser = $userModel->find($this->userId);
+                log_message('debug', 'Updated user phone: ' . ($updatedUser['phone_number'] ?? 'null'));
+
+                // Update session
+                session()->set([
+                    'full_name' => $updatedUser['full_name'],
+                    'photo_profile' => $updatedUser['photo_profile'] ?? null
+                ]);
+
+                // Also update phone in session if needed
+                if (isset($updatedUser['phone_number'])) {
+                    session()->set('phone_number', $updatedUser['phone_number']);
+                }
+
+                log_message('debug', 'Profile updated successfully');
+                return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
+            } else {
+                $error = $userModel->errors();
+                log_message('error', 'Model errors: ' . print_r($error, true));
+
+                // Check database error
+                $dbError = $this->db->error();
+                if ($dbError) {
+                    log_message('error', 'Database error: ' . print_r($dbError, true));
+                }
+
+                return redirect()->back()->with('error', 'Failed to update profile. Please try again.');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage());
+            log_message('error', 'Trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
 
-    // Update method profile() untuk menambahkan project data:
     public function profile()
     {
         $data = $this->loadCommonData();
@@ -416,7 +473,7 @@ class CustomerController extends BaseController
         return $this->db->table('projects p')
             ->select('p.project_id, p.project_code, p.project_name, p.description, p.created_at, 
                 COUNT(t.ticket_id) as ticket_count')
-            ->join('tickets t', 't.project_id = p.project_id', 'left') 
+            ->join('tickets t', 't.project_id = p.project_id', 'left')
             ->where('p.user_id', $this->userId) // Sekarang langsung filter ke kolom user_id di tabel projects
             ->where('p.is_active', value: true)
             ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
@@ -460,55 +517,55 @@ class CustomerController extends BaseController
     public function processCreateTicket()
     {
         // Ambil data sesuai atribut 'name' di view create_ticket.php
-        $projectId  = $this->request->getPost('project_id'); // Sesuai view
-        $title      = $this->request->getPost('title');
+        $projectId = $this->request->getPost('project_id'); // Sesuai view
+        $title = $this->request->getPost('title');
         $description = $this->request->getPost('description');
         $priorityId = $this->request->getPost('priority_id'); // Sesuai view
         $categoryId = $this->request->getPost('category_id'); // Sesuai view
-        
+
         // Validasi
         if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
             return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
         }
-        
+
         // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
         $project = $this->db->table('projects')
             ->where('project_id', $projectId)
             ->where('user_id', $this->userId)
             ->get()
             ->getRowArray();
-        
+
         if (!$project) {
             return redirect()->back()->with('error', 'Project not found or access denied');
         }
-        
+
         // Nomor Tiket & Mapping Departemen
         $ticketCount = $this->db->table('tickets')->where('project_id', $projectId)->countAllResults();
         $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
-        
+
         $departmentMapping = $this->db->table('category_department_mapping')->where('category_id', $categoryId)->get()->getRowArray();
         $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
-        
+
         $ticketData = [
             'ticket_number' => $ticketNumber,
-            'project_id'    => $projectId,
-            'customer_id'   => $this->userId,
-            'category_id'   => $categoryId,
-            'priority_id'   => $priorityId,
-            'status_id'     => 1, // Open
+            'project_id' => $projectId,
+            'customer_id' => $this->userId,
+            'category_id' => $categoryId,
+            'priority_id' => $priorityId,
+            'status_id' => 1, // Open
             'department_id' => $departmentId,
-            'subject'       => $title,
-            'description'   => $description,
-            'created_at'    => date('Y-m-d H:i:s'),
-            'updated_at'    => date('Y-m-d H:i:s')
+            'subject' => $title,
+            'description' => $description,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->table('tickets')->insert($ticketData);
         $ticketId = $this->db->insertID();
-        
+
         $this->handleAttachments($ticketId);
         // $this->createTicketNotification($ticketId);
-        
+
         // Sekarang redirect akan bekerja dengan benar karena dikirim via Form HTML, bukan AJAX
         return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
     }

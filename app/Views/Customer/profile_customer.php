@@ -343,14 +343,15 @@
                     2 Projects
                 </span>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Project 1 -->
                 <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
                     <div class="flex items-start justify-between mb-4">
                         <div>
                             <h4 class="text-lg font-semibold text-gray-800 mb-1">Nexus ERP - NXS-ERP</h4>
-                            <p class="text-gray-600 text-sm">Enterprise resource planning system for internal operations and reporting.</p>
+                            <p class="text-gray-600 text-sm">Enterprise resource planning system for internal operations
+                                and reporting.</p>
                         </div>
                         <div class="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
                             <i class="fas fa-cogs text-blue-600"></i>
@@ -366,13 +367,14 @@
                         </span>
                     </div>
                 </div>
-                
+
                 <!-- Project 2 -->
                 <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
                     <div class="flex items-start justify-between mb-4">
                         <div>
                             <h4 class="text-lg font-semibold text-gray-800 mb-1">Nova E-Commerce - NVC-ECOM</h4>
-                            <p class="text-gray-600 text-sm">Online shopping platform with payment gateway integration and order management.</p>
+                            <p class="text-gray-600 text-sm">Online shopping platform with payment gateway integration
+                                and order management.</p>
                         </div>
                         <div class="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center">
                             <i class="fas fa-shopping-cart text-purple-600"></i>
@@ -487,7 +489,7 @@
     <div class="flex items-center justify-center min-h-screen px-4 py-8">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl modal-content">
             <!-- Modal Header -->
-            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-2xl font-bold text-gray-800">Edit Profile</h3>
@@ -564,11 +566,16 @@
                             <label class="block text-gray-700 text-sm font-semibold">
                                 Email Address
                             </label>
-                            <div class="px-4 py-3.5 bg-gray-100 border border-gray-300 rounded-xl">
+                            <div class="px-4 py-3.5 bg-gray-100 border border-gray-300 rounded-2xl">
                                 <div class="flex items-center justify-between">
-                                    <span
-                                        class="text-gray-800 font-medium"><?= esc($data['user_details']['email']) ?></span>
-                                    <span class="text-xs text-gray-500">(Contact admin to change)</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-gray-800 font-medium">
+                                            <?= esc($data['user_details']['email']) ?>
+                                        </span>
+                                        <span class="text-gray-500 text-xs mt-0.5">
+                                            (Contact admin to change)
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -845,5 +852,37 @@
         }
     });
 
+    // Modal functions
+    function openEditModal() {
+        const modal = document.getElementById('editProfileModal');
+        const navbar = document.querySelector('.liquid-glass-navbar');
+
+        // Tampilkan modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Sembunyikan navbar
+        if (navbar) {
+            navbar.style.opacity = '0';
+            navbar.style.visibility = 'hidden';
+            navbar.style.pointerEvents = 'none';
+        }
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('editProfileModal');
+        const navbar = document.querySelector('.liquid-glass-navbar');
+
+        // Sembunyikan modal
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+
+        // Tampilkan kembali navbar
+        if (navbar) {
+            navbar.style.opacity = '';
+            navbar.style.visibility = '';
+            navbar.style.pointerEvents = '';
+        }
+    }
 </script>
 <?= $this->endSection() ?>
