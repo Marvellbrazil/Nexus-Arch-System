@@ -64,10 +64,11 @@ class CustomerController extends BaseController
             ->get()
             ->getResultArray();
 
-        $data['projects'] = $this->db->table('project_assignments pa')
-            ->select('p.*')
-            ->join('projects p', 'p.project_id = pa.project_id')
-            ->where('pa.user_id', $this->userId)
+        $data['projects'] = $this->db->table('projects p')
+            ->select('p.*, COUNT(t.ticket_id) as ticket_count')
+            ->join('tickets t', 't.project_id = p.project_id', 'left') // left untuk project tanpa ticket
+            ->where('p.user_id', $this->userId)
+            ->groupBy('p.project_id')
             ->get()
             ->getResultArray();
 

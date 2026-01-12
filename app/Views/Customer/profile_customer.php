@@ -149,8 +149,8 @@
                                 <i class="fas fa-clock"></i>
                             </div>
                             <div>
-                                <p class="text-white/80 text-sm">Active</p>
-                                <p class="text-2xl font-bold"><?= $data['stats']['active_tickets'] ?></p>
+                                <p class="text-white/80 text-sm">Open</p>
+                                <p class="text-2xl font-bold"><?= $data['stats']['open_tickets'] ?></p>
                             </div>
                         </div>
                     </div>
@@ -198,67 +198,6 @@
         </div>
     </div>
 
-    <!-- Projects Section -->
-    <div class="mb-8">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-project-diagram text-secondary"></i>
-                    My Projects
-                </h3>
-                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                    2 Projects
-                </span>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Project 1 -->
-                <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <h4 class="text-lg font-semibold text-gray-800 mb-1">Nexus ERP - NXS-ERP</h4>
-                            <p class="text-gray-600 text-sm">Enterprise resource planning system for internal operations and reporting.</p>
-                        </div>
-                        <div class="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-cogs text-blue-600"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-gray-500"></i>
-                            <span class="text-gray-700">12 tickets</span>
-                        </div>
-                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                            Active
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- Project 2 -->
-                <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <h4 class="text-lg font-semibold text-gray-800 mb-1">Nova E-Commerce - NVC-ECOM</h4>
-                            <p class="text-gray-600 text-sm">Online shopping platform with payment gateway integration and order management.</p>
-                        </div>
-                        <div class="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-shopping-cart text-purple-600"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-gray-500"></i>
-                            <span class="text-gray-700">8 tickets</span>
-                        </div>
-                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                            Active
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Ticket Statistics -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Ticket Statistics</h3>
@@ -270,8 +209,8 @@
             </div>
             
             <div class="bg-blue-50 rounded-xl p-4 text-center">
-                <p class="text-blue-600 text-sm mb-2">Active</p>
-                <p class="text-3xl font-bold text-blue-700"><?= $data['stats']['active_tickets'] ?></p>
+                <p class="text-blue-600 text-sm mb-2">Open</p>
+                <p class="text-3xl font-bold text-blue-700"><?= $data['stats']['open_tickets'] ?></p>
             </div>
             
             <div class="bg-yellow-50 rounded-xl p-4 text-center">
@@ -290,7 +229,7 @@
             <div>
                 <div class="flex justify-between text-sm mb-1">
                     <span class="text-gray-700">Open Tickets</span>
-                    <span class="text-gray-600">7 (23%)</span>
+                    <span class="text-gray-600"><?= $data['stats']['open_tickets'] ?></span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-blue-500 rounded-full" style="width: 23%"></div>
@@ -300,7 +239,7 @@
             <div>
                 <div class="flex justify-between text-sm mb-1">
                     <span class="text-gray-700">In Progress</span>
-                    <span class="text-gray-600">10 (33%)</span>
+                    <span class="text-gray-600"><?= $data['stats']['in_progress_tickets'] ?></span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-yellow-500 rounded-full" style="width: 33%"></div>
@@ -310,7 +249,7 @@
             <div>
                 <div class="flex justify-between text-sm mb-1">
                     <span class="text-gray-700">Resolved</span>
-                    <span class="text-gray-600">8 (27%)</span>
+                    <span class="text-gray-600"><?= $data['stats']['resolved_tickets'] ?></span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-green-500 rounded-full" style="width: 27%"></div>
@@ -319,8 +258,8 @@
             
             <div>
                 <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-700">Closed</span>
-                    <span class="text-gray-600">5 (17%)</span>
+                    <span class="text-gray-700">Cancelled</span>
+                    <span class="text-gray-600"><?= $data['stats']['cancelled_tickets'] ?></span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-gray-400 rounded-full" style="width: 17%"></div>

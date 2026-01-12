@@ -178,10 +178,10 @@
                                         <div>
                                             <div class="flex items-center mb-1">
                                                 <span class="text-xs md:text-sm font-medium px-2 py-0.5">
-                                                    <?= ucfirst($project['name']) ?>
+                                                    <?= ucfirst($project['project_name']) ?>
                                                 </span>
                                                 <span class="text-xs md:text-sm font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                                                    <?= ucfirst($project['status']) ?>
+                                                    Status
                                                 </span>
                                             </div>
                                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
@@ -197,14 +197,14 @@
                                 <!-- Project Name & Description -->
                                 <div class="mb-3 flex-1">
                                     <h4 class="text-text-dark text-base md:text-lg font-semibold mb-1 line-clamp-1">
-                                        <?= $project['name'] ?>
+                                        <?= $project['project_name'] ?>
                                     </h4>
                                     <p class="text-gray-600 text-xs md:text-sm mb-2 line-clamp-2">
                                         <?= $project['description'] ?>
                                     </p>
                                     <div class="flex items-center text-gray-500 text-xs mt-2">
                                         <i class="fas fa-calendar-alt mr-1"></i>
-                                        <span>Created: <?= $project['created_date'] ?></span>
+                                        <span>Created: <?= $project['created_at'] ?></span>
                                     </div>
                                 </div>
 
@@ -214,18 +214,18 @@
                                         <div class="flex items-center gap-1">
                                             <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
                                             <span class="text-gray-500">Open:</span>
-                                            <span class="font-medium text-gray-700"><?= $project['open_tickets'] ?></span>
+                                            <span class="font-medium text-gray-700"><?= $data['projects']['stats'][$project['project_id']]['open_tickets'] ?? 0 ?></span>
                                         </div>
                                         <div class="flex items-center gap-1">
                                             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                                             <span class="text-gray-500">Resolved:</span>
-                                            <span class="font-medium text-gray-700"><?= $project['resolved_tickets'] ?></span>
+                                            <span class="font-medium text-gray-700"><?= $data['projects']['stats'][$project['project_id']]['resolved_tickets'] ?? 0 ?></span>
                                         </div>
                                     </div>
                                     <!-- Progress Bar -->
                                     <?php 
-                                    $total = $project['tickets_count'];
-                                    $resolved = $project['resolved_tickets'];
+                                    $total = $data['projects']['stats'][$project['project_id']]['ticket_count'] ?? 0;
+                                    $resolved = $data['projects']['stats'][$project['project_id']]['resolved_tickets'] ?? 0;
                                     $progress = $total > 0 ? round(($resolved / $total) * 100) : 0;
                                     ?>
                                     <div class="w-full bg-gray-200 rounded-full h-1.5">
@@ -261,8 +261,8 @@
                                         <span class="font-medium"><?= $project['project_code'] ?></span>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <span class="text-gray-400">Owner:</span>
-                                        <span class="font-medium"><?= $project['owner'] ?></span>
+                                        <span class="text-gray-400">Created At:</span>
+                                        <span class="font-medium"><?= $data['projects']['stats'][$project['project_id']]['created_at'] ?? 'N/A' ?></span>
                                     </div>
                                 </div>
                                 <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
