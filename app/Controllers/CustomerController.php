@@ -206,12 +206,13 @@ class CustomerController extends BaseController
             ->get()
             ->getResultArray();
 
-        $data['team_members'] = $this->db->table('project_assignments pa')
+        $data['team_members'] = $this->db->table('tickets t')
             ->select('u.user_id, u.full_name, u.email, r.role_name, u.photo_profile')
-            ->join('users u', 'u.user_id = pa.user_id')
+            ->join('users u', 'u.user_id = t.assigned_to') // Ambil staf yang ditugaskan ke tiket
             ->join('roles r', 'r.role_id = u.role_id')
-            ->where('pa.project_id', $projectId)
-            ->where('u.user_id !=', $this->userId)
+            ->where('t.project_id', $projectId)
+            ->where('u.user_id !=', $this->userId) // Jangan masukkan diri sendiri
+            ->distinct() // Penting agar satu orang tidak muncul double jika pegang banyak tiket
             ->get()
             ->getResultArray();
 
@@ -325,17 +326,22 @@ class CustomerController extends BaseController
             ->getRowArray();
 
         // Get assigned projects with ticket counts
-        $data['assigned_projects'] = $this->db->table('project_assignments pa')
-            ->select('p.*, 
-            COUNT(t.ticket_id) as ticket_count,
-            SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets,
-            SUM(CASE WHEN t.status_id = 2 THEN 1 ELSE 0 END) as in_progress_tickets,
-            SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets')
-            ->join('projects p', 'p.project_id = pa.project_id')
-            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
-            ->where('pa.user_id', $this->userId)
+        $data['assigned_projects'] = $this->db->table('projects p')
+            ->select('
+                p.project_id, 
+                p.project_code, 
+                p.project_name, 
+                p.description, 
+                p.created_at,
+                COUNT(t.ticket_id) as ticket_count,
+                SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets,
+                SUM(CASE WHEN t.status_id = 2 THEN 1 ELSE 0 END) as in_progress_tickets,
+                SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
+            ')
+            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = p.user_id', 'left')
+            ->where('p.user_id', $this->userId)
             ->where('p.is_active', true)
-            ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
+            ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
             ->orderBy('p.project_name', 'ASC')
             ->get()
             ->getResultArray();
@@ -407,14 +413,13 @@ class CustomerController extends BaseController
 
     private function getAssignedProjects()
     {
-        return $this->db->table('project_assignments pa')
-            ->select('p.project_id, p.project_code, p.project_name, p.description, 
-                  COUNT(t.ticket_id) as ticket_count')
-            ->join('projects p', 'p.project_id = pa.project_id')
-            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
-            ->where('pa.user_id', $this->userId)
+        return $this->db->table('projects p')
+            ->select('p.project_id, p.project_code, p.project_name, p.description, p.created_at, 
+                COUNT(t.ticket_id) as ticket_count')
+            ->join('tickets t', 't.project_id = p.project_id', 'left') 
+            ->where('p.user_id', $this->userId) // Sekarang langsung filter ke kolom user_id di tabel projects
             ->where('p.is_active', true)
-            ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
+            ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
             ->orderBy('p.project_name', 'ASC')
             ->get()
             ->getResultArray();
