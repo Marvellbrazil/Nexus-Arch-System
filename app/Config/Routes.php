@@ -21,6 +21,8 @@ $routes->post('process_login', [AuthController::class, 'processLogin']);
 $routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
+$routes->get('auth/reset_password/(:segment)', 'AuthController::resetPassword/$1');
+$routes->post('auth/reset_password/(:segment)', 'AuthController::processResetPassword/$1');
 $routes->get('logout', [AuthController::class, 'logout']);
 
 // Admin Routes
@@ -48,8 +50,10 @@ $routes->group('customer', function ($routes) {
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', [CustomerController::class, 'projectDetail/$1']);
     $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
+    $routes->post('create_ticket', [CustomerController::class, 'processCreateTicket']);
     $routes->get('ticket_detail/(:num)', [CustomerController::class, 'ticketDetail/$1']);
     $routes->get('profile', [CustomerController::class, 'profile']);
+    $routes->post('profile/update', 'CustomerController::profile');
     $routes->get('notifications', [CustomerController::class, 'notifications']);
     $routes->get('logout', [AuthController::class, 'logout']);
 });

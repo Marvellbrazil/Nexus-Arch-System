@@ -88,6 +88,25 @@
         background-color: rgba(117, 110, 164, 0.05);
         box-shadow: 0 5px 15px rgba(117, 110, 164, 0.2);
     }
+
+    /* Project Selection Styles */
+    .project-card {
+        transition: all 0.3s ease;
+    }
+    
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .category-card {
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
     
     /* Mobile Responsive Adjustments */
     @media (max-width: 768px) {
@@ -96,7 +115,7 @@
             max-height: 250px;
         }
         
-        .priority-card {
+        .priority-card, .project-card, .category-card {
             padding: 0.5rem !important;
         }
         
@@ -106,6 +125,23 @@
     }
 </style>
 <?= $this->endSection() ?>
+
+<?php
+// Helper function for project colors
+function getProjectColor($id) {
+    $colors = [
+        'from-blue-500 to-blue-600',
+        'from-green-500 to-green-600', 
+        'from-purple-500 to-purple-600',
+        'from-orange-500 to-orange-600',
+        'from-pink-500 to-pink-600',
+        'from-red-500 to-red-600',
+        'from-indigo-500 to-indigo-600',
+        'from-teal-500 to-teal-600',
+    ];
+    return $colors[$id % count($colors)];
+}
+?>
 
 <?= $this->section('content') ?>
 <div class="mt-4 md:mt-[77px] px-4 md:px-[30px] py-4 md:py-[20px] relative z-10 max-w-6xl mx-auto">
@@ -129,104 +165,98 @@
         <!-- Form Container -->
         <div class="lg:w-2/3">
             <div class="bg-gradient-to-br from-white/90 to-card-bg/80 rounded-2xl p-4 md:p-6 shadow-lg border border-white/50 backdrop-blur-sm">
-                <form id="createTicketForm" action="<?= base_url('dashboard/tickets/create') ?>" method="POST" enctype="multipart/form-data">
+                <form id="createTicketForm" action="<?= base_url('customer/create_ticket') ?>" method="POST" enctype="multipart/form-data">
                     <?= csrf_field() ?>
                     
-                    <!-- Selected Project Display -->
-                    <?php
-                    // Get project from URL parameter
-                    $projectId = $_GET['project'] ?? 'proj1';
-                    
-                    // Define projects data (should come from database in real application)
-                    $projects = [
-                        'proj1' => [
-                            'name' => 'Project Alpha', 
-                            'description' => 'Main enterprise project', 
-                            'tickets' => 12, 
-                            'color' => 'from-blue-500 to-blue-600',
-                            'icon' => 'fa-project-diagram'
-                        ],
-                        'proj2' => [
-                            'name' => 'Project Beta', 
-                            'description' => 'E-commerce platform', 
-                            'tickets' => 8, 
-                            'color' => 'from-green-500 to-green-600',
-                            'icon' => 'fa-shopping-cart'
-                        ],
-                        'proj3' => [
-                            'name' => 'Project Gamma', 
-                            'description' => 'Mobile application', 
-                            'tickets' => 5, 
-                            'color' => 'from-purple-500 to-purple-600',
-                            'icon' => 'fa-mobile-alt'
-                        ],
-                        'proj4' => [
-                            'name' => 'Project Delta', 
-                            'description' => 'Database migration', 
-                            'tickets' => 3, 
-                            'color' => 'from-orange-500 to-orange-600',
-                            'icon' => 'fa-database'
-                        ],
-                        'proj5' => [
-                            'name' => 'Project Epsilon', 
-                            'description' => 'API development', 
-                            'tickets' => 7, 
-                            'color' => 'from-pink-500 to-pink-600',
-                            'icon' => 'fa-code'
-                        ],
-                        'proj6' => [
-                            'name' => 'Project Zeta', 
-                            'description' => 'Security audit', 
-                            'tickets' => 4, 
-                            'color' => 'from-red-500 to-red-600',
-                            'icon' => 'fa-shield-alt'
-                        ],
-                    ];
-                    
-                    $selectedProject = $projects[$projectId] ?? $projects['proj1'];
-                    ?>
-                    
+                    <!-- Project Selection -->
                     <div class="mb-6 md:mb-8">
                         <label class="block text-text-muted text-sm md:text-base font-semibold mb-3 md:mb-4 font-mulish">
-                            <i class="fas fa-project-diagram mr-1 md:mr-2 text-secondary"></i>Selected Project
+                            <i class="fas fa-project-diagram mr-1 md:mr-2 text-secondary"></i>Select Project
                         </label>
                         
-                        <div class="p-4 md:p-5 bg-gradient-to-br <?= $selectedProject['color'] ?> rounded-xl text-white shadow-lg selected-project-card">
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-start gap-3 md:gap-4">
-                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <i class="fas <?= $selectedProject['icon'] ?> text-white text-lg md:text-xl"></i>
+                        <?php if (!empty($projects)): ?>
+                            <!-- Project Selection Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6" id="projectSelectionGrid">
+                                <?php foreach ($projects as $project): 
+                                    $isSelected = isset($selected_project['project_id']) && $selected_project['project_id'] == $project['project_id'];
+                                    $projectColor = getProjectColor($project['project_id']);
+                                ?>
+                                    <div class="relative">
+                                        <input type="radio" 
+                                               id="project_<?= $project['project_id'] ?>" 
+                                               name="project_id" 
+                                               value="<?= $project['project_id'] ?>"
+                                               class="hidden peer project-radio"
+                                               <?= $isSelected ? 'checked' : '' ?>
+                                               required>
+                                        <label for="project_<?= $project['project_id'] ?>" 
+                                               class="block p-4 md:p-5 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br <?= $projectColor ?> peer-checked:text-white project-card">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex items-start gap-3 md:gap-4">
+                                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-project-diagram text-white text-lg md:text-xl"></i>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <h4 class="text-text-dark text-lg md:text-xl font-bold mb-1 peer-checked:text-white"><?= esc($project['project_name']) ?></h4>
+                                                        <p class="text-gray-600 text-sm md:text-base mb-2 peer-checked:text-white/90"><?= esc($project['description'] ?? 'No description') ?></p>
+                                                        <div class="flex items-center gap-4">
+                                                            <span class="inline-flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-xs md:text-sm">
+                                                                <i class="fas fa-ticket-alt"></i>
+                                                                <?= $project['ticket_count'] ?? 0 ?> tickets
+                                                            </span>
+                                                            <span class="text-xs md:text-sm font-medium">
+                                                                Code: <?= esc($project['project_code']) ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <?php if ($isSelected): ?>
+                                                    <div class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                                        <i class="fas fa-check text-white"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </label>
                                     </div>
+                                <?php endforeach; ?>
+                            </div>
+                            
+                            <!-- Selected Project Info -->
+                            <div id="selectedProjectInfo" class="<?= isset($selected_project) ? '' : 'hidden' ?> p-4 md:p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white shadow-lg mb-3">
+                                <div class="flex items-center justify-between mb-2">
                                     <div>
-                                        <h4 class="text-white text-lg md:text-xl font-bold mb-1"><?= $selectedProject['name'] ?></h4>
-                                        <p class="text-white/90 text-sm md:text-base mb-2"><?= $selectedProject['description'] ?></p>
-                                        <div class="flex items-center gap-4">
-                                            <span class="inline-flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-xs md:text-sm">
-                                                <i class="fas fa-ticket-alt"></i>
-                                                <?= $selectedProject['tickets'] ?> total tickets
-                                            </span>
-                                            <a href="<?= base_url('customer/dashboard') ?>" 
-                                               class="text-white/80 hover:text-white text-xs md:text-sm font-medium flex items-center gap-1">
-                                                <i class="fas fa-exchange-alt"></i>
-                                                Change Project
-                                            </a>
-                                        </div>
+                                        <h4 class="text-white text-lg md:text-xl font-bold">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            Ready to Create Ticket
+                                        </h4>
+                                        <p class="text-white/90 text-sm md:text-base">
+                                            Ticket will be created under: <span class="font-bold" id="selectedProjectName"><?= isset($selected_project) ? esc($selected_project['project_name']) : '' ?></span>
+                                        </p>
                                     </div>
-                                </div>
-                                <div class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-check text-white"></i>
+                                    <button type="button" 
+                                            onclick="showProjectSelection()"
+                                            class="px-3 md:px-4 py-1 md:py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 smooth-transition font-medium text-xs md:text-sm">
+                                        <i class="fas fa-exchange-alt mr-1 md:mr-2"></i>
+                                        Change Project
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <input type="hidden" name="project" value="<?= $projectId ?>">
-                        
-                        <div class="mt-3 text-gray-600 text-xs md:text-sm">
-                            <i class="fas fa-info-circle text-secondary mr-1"></i>
-                            This ticket will be created under <?= $selectedProject['name'] ?>. 
-                            <a href="<?= base_url('customer/dashboard') ?>" class="text-secondary font-medium hover:underline">Click here</a> 
-                            to select a different project.
-                        </div>
+                            
+                        <?php else: ?>
+                            <!-- No Projects Available -->
+                            <div class="p-6 md:p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-center">
+                                <i class="fas fa-folder-open text-3xl md:text-4xl text-gray-400 mb-3 md:mb-4"></i>
+                                <h4 class="text-text-dark text-lg md:text-xl font-bold mb-2">No Projects Assigned</h4>
+                                <p class="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
+                                    You don't have access to any projects yet. Please contact your administrator.
+                                </p>
+                                <a href="<?= base_url('customer/dashboard') ?>" 
+                                   class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] smooth-transition font-medium inline-flex items-center justify-center text-sm md:text-base">
+                                    <i class="fas fa-arrow-left mr-2"></i>
+                                    Back to Dashboard
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Ticket Title -->
@@ -247,71 +277,58 @@
                         </div>
                     </div>
 
+                    <!-- Category Selection -->
+                    <div class="mb-6 md:mb-8">
+                        <label class="block text-text-muted text-sm md:text-base font-semibold mb-3 md:mb-4 font-mulish">
+                            <i class="fas fa-tag mr-1 md:mr-2 text-secondary"></i>Category
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                            <?php foreach ($categories as $category): ?>
+                            <div class="relative">
+                                <input type="radio" 
+                                       id="cat_<?= $category['category_id'] ?>" 
+                                       name="category_id" 
+                                       value="<?= $category['category_id'] ?>"
+                                       class="hidden peer"
+                                       required>
+                                <label for="cat_<?= $category['category_id'] ?>" 
+                                       class="block p-3 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-secondary/10 category-card">
+                                    <div class="text-center">
+                                        <div class="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 rounded-full bg-secondary/20 flex items-center justify-center">
+                                            <i class="fas fa-folder text-secondary text-xs md:text-sm"></i>
+                                        </div>
+                                        <h4 class="text-text-dark text-xs md:text-sm font-bold mb-1 peer-checked:text-secondary"><?= esc($category['category_name']) ?></h4>
+                                    </div>
+                                </label>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
                     <!-- Priority Selection -->
                     <div class="mb-6 md:mb-8">
                         <label class="block text-text-muted text-sm md:text-base font-semibold mb-3 md:mb-4 font-mulish">
                             <i class="fas fa-flag mr-1 md:mr-2 text-secondary"></i>Priority Level
                         </label>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                            <?php 
-                            $priorities = [
-                                [
-                                    'id' => 'low',
-                                    'name' => 'Low',
-                                    'description' => 'Minor issue, no immediate impact',
-                                    'color' => 'from-blue-100 to-blue-300',
-                                    'textColor' => 'text-blue-800',
-                                    'icon' => 'fa-arrow-down',
-                                    'response' => 'Response within 24h'
-                                ],
-                                [
-                                    'id' => 'medium',
-                                    'name' => 'Medium',
-                                    'description' => 'Important but not urgent',
-                                    'color' => 'from-yellow-100 to-yellow-300',
-                                    'textColor' => 'text-yellow-800',
-                                    'icon' => 'fa-minus',
-                                    'response' => 'Response within 12h'
-                                ],
-                                [
-                                    'id' => 'high',
-                                    'name' => 'High',
-                                    'description' => 'Significant impact on work',
-                                    'color' => 'from-orange-100 to-orange-300',
-                                    'textColor' => 'text-orange-800',
-                                    'icon' => 'fa-arrow-up',
-                                    'response' => 'Response within 6h'
-                                ],
-                                [
-                                    'id' => 'urgent',
-                                    'name' => 'Urgent',
-                                    'description' => 'Critical, needs immediate attention',
-                                    'color' => 'from-red-100 to-red-300',
-                                    'textColor' => 'text-red-800',
-                                    'icon' => 'fa-exclamation-triangle',
-                                    'response' => 'Response within 2h'
-                                ],
-                            ];
-                            ?>
-                            
                             <?php foreach ($priorities as $priority): ?>
                             <div class="relative">
                                 <input type="radio" 
-                                       id="pri_<?= $priority['id'] ?>" 
-                                       name="priority" 
-                                       value="<?= $priority['id'] ?>"
+                                       id="pri_<?= $priority['priority_id'] ?>" 
+                                       name="priority_id" 
+                                       value="<?= $priority['priority_id'] ?>"
                                        class="hidden peer"
                                        required>
-                                <label for="pri_<?= $priority['id'] ?>" 
-                                       class="block p-2 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br peer-checked:<?= $priority['color'] ?> peer-checked:shadow-lg priority-card">
+                                <label for="pri_<?= $priority['priority_id'] ?>" 
+                                       class="block p-2 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br peer-checked:<?= getPriorityColor($priority['priority_id']) ?> peer-checked:text-white priority-card">
                                     <div class="text-center">
-                                        <div class="w-6 h-6 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 rounded-full <?= str_replace('from-', 'bg-', explode(' ', $priority['color'])[0]) ?> flex items-center justify-center">
-                                            <i class="fas <?= $priority['icon'] ?> <?= $priority['textColor'] ?> text-xs md:text-base"></i>
+                                        <div class="w-6 h-6 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 rounded-full <?= getPriorityBgColor($priority['priority_id']) ?> flex items-center justify-center">
+                                            <i class="fas <?= getPriorityIcon($priority['priority_name']) ?> <?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-base peer-checked:text-white"></i>
                                         </div>
-                                        <h4 class="<?= $priority['textColor'] ?> text-xs md:text-sm font-bold mb-1 peer-checked:text-current"><?= $priority['name'] ?></h4>
-                                        <p class="text-gray-600 text-xs mb-1 md:mb-2 peer-checked:text-current/80 hidden md:block"><?= $priority['description'] ?></p>
-                                        <span class="text-xs <?= $priority['textColor'] ?> font-medium hidden md:inline">
-                                            <?= $priority['response'] ?>
+                                        <h4 class="<?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-sm font-bold mb-1 peer-checked:text-white"><?= $priority['priority_name'] ?></h4>
+                                        <p class="text-gray-600 text-xs mb-1 md:mb-2 peer-checked:text-white/80 hidden md:block"><?= getPriorityDescription($priority['priority_name']) ?></p>
+                                        <span class="text-xs <?= getPriorityTextColor($priority['priority_id']) ?> font-medium hidden md:inline peer-checked:text-white">
+                                            <?= getPriorityResponseTime($priority['priority_name']) ?>
                                         </span>
                                     </div>
                                 </label>
@@ -382,7 +399,7 @@
                         <button type="submit" 
                                 id="submitBtn"
                                 class="px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-lg hover:from-[#665C9E] hover:to-[#756EA4] smooth-transition font-medium flex-1 flex items-center justify-center shadow-lg hover:shadow-xl text-sm md:text-base">
-                            <span id="btnText">Create Ticket for <?= $selectedProject['name'] ?></span>
+                            <span id="btnText">Create Ticket</span>
                             <svg id="loadingSpinner" class="hidden w-4 h-4 md:w-5 md:h-5 ml-1 md:ml-2 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -401,46 +418,53 @@
                     <i class="fas fa-project-diagram text-accent mr-1 md:mr-2"></i>Project Information
                 </h3>
                 
-                <div class="space-y-3 md:space-y-4">
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
+                <div class="space-y-3 md:space-y-4" id="projectInfoContent">
+                    <?php if (isset($selected_project)): ?>
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Total Tickets</h4>
+                                <p class="text-gray-300 text-xs"><?= $selected_project['ticket_count'] ?? 0 ?> tickets in this project</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Total Tickets</h4>
-                            <p class="text-gray-300 text-xs"><?= $selectedProject['tickets'] ?> tickets in this project</p>
+                        
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-code text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Project Code</h4>
+                                <p class="text-gray-300 text-xs"><?= esc($selected_project['project_code']) ?></p>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-clock text-accent text-xs md:text-sm"></i>
+                        
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Average Resolution</h4>
+                                <p class="text-gray-300 text-xs">24 hours for similar issues</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Average Resolution</h4>
-                            <p class="text-gray-300 text-xs">24 hours for similar issues</p>
+                        
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-users text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Assigned Team</h4>
+                                <p class="text-gray-300 text-xs">Development & Support Team</p>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-users text-accent text-xs md:text-sm"></i>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle text-gray-400 text-xl mb-2"></i>
+                            <p class="text-gray-300 text-sm">Select a project to see details</p>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Assigned Team</h4>
-                            <p class="text-gray-300 text-xs">Development & Support Team</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-history text-accent text-xs md:text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Recent Activity</h4>
-                            <p class="text-gray-300 text-xs">Last ticket: 2 days ago</p>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -702,6 +726,32 @@
             }, 4000);
         }
         
+        // Project selection functionality
+        function showProjectSelection() {
+            document.getElementById('projectSelectionGrid').classList.remove('hidden');
+            document.getElementById('selectedProjectInfo').classList.add('hidden');
+        }
+        
+        // Update project info when project is selected
+        document.querySelectorAll('.project-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const projectId = this.value;
+                const projectCard = this.closest('.project-card');
+                const projectName = projectCard.querySelector('h4').textContent;
+                
+                // Update selected project info
+                document.getElementById('selectedProjectName').textContent = projectName;
+                document.getElementById('selectedProjectInfo').classList.remove('hidden');
+                document.getElementById('projectSelectionGrid').classList.add('hidden');
+                
+                // Update button text
+                document.getElementById('btnText').textContent = `Create Ticket for ${projectName}`;
+                
+                // Load project details via AJAX (optional enhancement)
+                // loadProjectDetails(projectId);
+            });
+        });
+        
         // Form submission
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -717,7 +767,6 @@
             loadingSpinner.classList.remove('hidden');
             
             try {
-                // Create FormData
                 const formData = new FormData(form);
                 
                 // Add files to FormData
@@ -730,24 +779,31 @@
                     formData.set('description', editor.getData());
                 }
                 
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Send to server
+                const response = await fetch('<?= base_url('customer/create_ticket') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                // Show success message
-                showToast('Ticket created successfully! Redirecting...', 'success');
-                
-                // Redirect to my tickets after delay
-                setTimeout(() => {
-                    window.location.href = '<?= base_url('dashboard/my_tickets') ?>';
-                }, 2000);
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(result.message || 'Ticket created successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '<?= base_url('customer/my_tickets') ?>';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to create ticket');
+                }
                 
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Failed to create ticket. Please try again.', 'error');
+                showToast(error.message || 'Failed to create ticket. Please try again.', 'error');
                 
                 // Reset button
                 submitBtn.disabled = false;
-                btnText.textContent = 'Create Ticket for <?= $selectedProject['name'] ?>';
+                btnText.textContent = 'Create Ticket';
                 loadingSpinner.classList.add('hidden');
             }
         });
@@ -755,6 +811,13 @@
         function validateForm() {
             let isValid = true;
             const errors = [];
+            
+            // Project validation
+            const projectSelected = document.querySelector('input[name="project_id"]:checked');
+            if (!projectSelected) {
+                errors.push('Please select a project');
+                isValid = false;
+            }
             
             // Title validation
             if (!titleInput.value.trim()) {
@@ -767,6 +830,20 @@
                 isValid = false;
             } else {
                 titleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+            }
+            
+            // Category validation
+            const categorySelected = document.querySelector('input[name="category_id"]:checked');
+            if (!categorySelected) {
+                errors.push('Please select a category');
+                isValid = false;
+            }
+            
+            // Priority validation
+            const prioritySelected = document.querySelector('input[name="priority_id"]:checked');
+            if (!prioritySelected) {
+                errors.push('Please select a priority level');
+                isValid = false;
             }
             
             // Description validation
@@ -789,13 +866,6 @@
                 isValid = false;
             }
             
-            // Priority validation
-            const prioritySelected = document.querySelector('input[name="priority"]:checked');
-            if (!prioritySelected) {
-                errors.push('Please select a priority level');
-                isValid = false;
-            }
-            
             // Show errors
             if (errors.length > 0) {
                 const errorHtml = errors.map(error => `<li class="mb-1 text-xs">• ${error}</li>`).join('');
@@ -806,7 +876,7 @@
         }
         
         // Add priority selection feedback
-        const priorityInputs = document.querySelectorAll('input[name="priority"]');
+        const priorityInputs = document.querySelectorAll('input[name="priority_id"]');
         priorityInputs.forEach(input => {
             input.addEventListener('change', function() {
                 // Remove all selected classes first
@@ -821,6 +891,87 @@
                 }
             });
         });
+        
+        // Add category selection feedback
+        const categoryInputs = document.querySelectorAll('input[name="category_id"]');
+        categoryInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Remove all selected classes first
+                document.querySelectorAll('.category-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                // Add selected class to current
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                if (label) {
+                    label.classList.add('selected');
+                }
+            });
+        });
     });
 </script>
+
+<?php
+// Helper functions for priorities
+function getPriorityColor($priorityId) {
+    $colors = [
+        1 => 'from-blue-100 to-blue-300',      // Low
+        2 => 'from-yellow-100 to-yellow-300',  // Medium
+        3 => 'from-orange-100 to-orange-300',  // High
+        4 => 'from-red-100 to-red-300',        // Critical
+    ];
+    return $colors[$priorityId] ?? 'from-blue-100 to-blue-300';
+}
+
+function getPriorityBgColor($priorityId) {
+    $colors = [
+        1 => 'bg-blue-100',      // Low
+        2 => 'bg-yellow-100',    // Medium
+        3 => 'bg-orange-100',    // High
+        4 => 'bg-red-100',       // Critical
+    ];
+    return $colors[$priorityId] ?? 'bg-blue-100';
+}
+
+function getPriorityTextColor($priorityId) {
+    $colors = [
+        1 => 'text-blue-800',      // Low
+        2 => 'text-yellow-800',    // Medium
+        3 => 'text-orange-800',    // High
+        4 => 'text-red-800',       // Critical
+    ];
+    return $colors[$priorityId] ?? 'text-blue-800';
+}
+
+function getPriorityIcon($priorityName) {
+    $icons = [
+        'Low' => 'fa-arrow-down',
+        'Medium' => 'fa-minus',
+        'High' => 'fa-arrow-up',
+        'Critical' => 'fa-exclamation-triangle',
+    ];
+    return $icons[$priorityName] ?? 'fa-flag';
+}
+
+function getPriorityDescription($priorityName) {
+    $descriptions = [
+        'Low' => 'Minor issue, no immediate impact',
+        'Medium' => 'Important but not urgent',
+        'High' => 'Significant impact on work',
+        'Critical' => 'Critical, needs immediate attention',
+    ];
+    return $descriptions[$priorityName] ?? 'Standard priority';
+}
+
+function getPriorityResponseTime($priorityName) {
+    $responseTimes = [
+        'Low' => 'Response within 24h',
+        'Medium' => 'Response within 12h',
+        'High' => 'Response within 6h',
+        'Critical' => 'Response within 2h',
+    ];
+    return $responseTimes[$priorityName] ?? 'Standard response time';
+}
+?>
+
 <?= $this->endSection() ?>
