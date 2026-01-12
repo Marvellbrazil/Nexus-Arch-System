@@ -234,11 +234,11 @@
                 </div>
 
                 <!-- Edit Button -->
-<button onclick="openEditModal()"
-    class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-    <i class="fas fa-edit"></i>
-    Edit Profile Information
-</button>
+                <button onclick="openEditModal()"
+                    class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-edit"></i>
+                    Edit Profile Information
+                </button>
 
             </div>
         </div>
@@ -322,7 +322,8 @@
                         <div>
                             <p class="text-sm font-medium text-gray-800">Member Since</p>
                             <p class="text-xs text-gray-600">
-                                <?= date('F d, Y', strtotime($data['user_details']['created_at'])) ?></p>
+                                <?= date('F d, Y', strtotime($data['user_details']['created_at'])) ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -511,37 +512,41 @@
                         <h3 class="text-2xl font-bold text-gray-800">Edit Profile</h3>
                         <p class="text-gray-600 text-sm mt-1">Update your personal information and settings</p>
                     </div>
-                    <button onclick="closeEditModal()" 
-                            class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100">
+                    <button onclick="closeEditModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Modal Form -->
-            <form id="editProfileForm" action="<?= base_url('customer/profile/update') ?>" method="POST" enctype="multipart/form-data" class="p-6">
+            <form id="editProfileForm" action="<?= base_url('customer/profile/update') ?>" method="POST"
+                enctype="multipart/form-data" class="p-6">
                 <?= csrf_field() ?>
 
                 <div class="space-y-6">
                     <!-- Profile Photo Section -->
                     <div class="flex flex-col items-center text-center mb-8">
                         <div class="relative group mb-4">
-                            <div id="avatarPreview" class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                            <div id="avatarPreview"
+                                class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl">
                                 <?php if (!empty($data['user_details']['photo_profile'])): ?>
-                                    <img src="<?= base_url($data['user_details']['photo_profile']) ?>" 
-                                         alt="Profile" 
-                                         class="w-full h-full object-cover">
+                                    <img src="<?= base_url($data['user_details']['photo_profile']) ?>" alt="Profile"
+                                        class="w-full h-full object-cover">
                                 <?php else: ?>
-                                    <div class="w-full h-full bg-gradient-to-br from-secondary to-[#8A84C6] flex items-center justify-center text-white text-4xl font-bold">
+                                    <div
+                                        class="w-full h-full bg-gradient-to-br from-secondary to-[#8A84C6] flex items-center justify-center text-white text-4xl font-bold">
                                         <?= strtoupper(substr($data['user_details']['full_name'], 0, 1)) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <label for="photoInput" class="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer">
+                            <label for="photoInput"
+                                class="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer">
                                 <i class="fas fa-camera text-2xl text-white mb-2"></i>
                                 <span class="text-white text-sm font-medium">Change Photo</span>
                             </label>
-                            <input type="file" id="photoInput" name="photo_profile" accept="image/*" class="hidden" onchange="previewImage(event)">
+                            <input type="file" id="photoInput" name="photo_profile" accept="image/*" class="hidden"
+                                onchange="previewImage(event)">
                         </div>
                         <p class="text-gray-500 text-sm">Upload a clear photo of yourself. JPG, PNG or GIF. Max 5MB.</p>
                     </div>
@@ -553,13 +558,10 @@
                             <label for="full_name" class="block text-gray-700 text-sm font-semibold">
                                 Full Name *
                             </label>
-                            <input type="text" 
-                                   id="full_name" 
-                                   name="full_name" 
-                                   value="<?= esc($data['user_details']['full_name']) ?>"
-                                   class="w-full px-4 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                                   placeholder="Enter your full name"
-                                   required>
+                            <input type="text" id="full_name" name="full_name"
+                                value="<?= esc($data['user_details']['full_name']) ?>"
+                                class="w-full px-4 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                                placeholder="Enter your full name" required>
                         </div>
 
                         <!-- Username (Read Only) -->
@@ -569,7 +571,8 @@
                             </label>
                             <div class="px-4 py-3.5 bg-gray-100 border border-gray-300 rounded-xl">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-800 font-medium"><?= esc($data['user_details']['username']) ?></span>
+                                    <span
+                                        class="text-gray-800 font-medium"><?= esc($data['user_details']['username']) ?></span>
                                     <span class="text-xs text-gray-500">(Cannot be changed)</span>
                                 </div>
                             </div>
@@ -582,7 +585,8 @@
                             </label>
                             <div class="px-4 py-3.5 bg-gray-100 border border-gray-300 rounded-xl">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-800 font-medium"><?= esc($data['user_details']['email']) ?></span>
+                                    <span
+                                        class="text-gray-800 font-medium"><?= esc($data['user_details']['email']) ?></span>
                                     <span class="text-xs text-gray-500">(Contact admin to change)</span>
                                 </div>
                             </div>
@@ -597,12 +601,10 @@
                                 <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
                                     <i class="fas fa-phone"></i>
                                 </div>
-                                <input type="tel" 
-                                       id="phone_number" 
-                                       name="phone_number" 
-                                       value="<?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : '' ?>"
-                                       class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                                       placeholder="081234567890">
+                                <input type="tel" id="phone_number" name="phone_number"
+                                    value="<?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : '' ?>"
+                                    class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                                    placeholder="081234567890">
                             </div>
                         </div>
 
@@ -622,7 +624,8 @@
                                 Status
                             </label>
                             <div class="px-4 py-3.5 bg-gray-100 border border-gray-300 rounded-xl">
-                                <span class="<?= $data['user_details']['is_active'] ? 'text-green-600' : 'text-red-600' ?> font-medium">
+                                <span
+                                    class="<?= $data['user_details']['is_active'] ? 'text-green-600' : 'text-red-600' ?> font-medium">
                                     <?= $data['user_details']['is_active'] ? 'Active' : 'Inactive' ?>
                                 </span>
                             </div>
@@ -646,15 +649,13 @@
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
                                         <i class="fas fa-lock"></i>
                                     </div>
-                                    <input type="password" 
-                                           id="current_password" 
-                                           name="current_password"
-                                           class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                                           placeholder="Enter current password">
-                                    <button type="button" 
-                                            onclick="togglePassword('current_password', 'currentPasswordToggle')"
-                                            id="currentPasswordToggle"
-                                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
+                                    <input type="password" id="current_password" name="current_password"
+                                        class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                                        placeholder="Enter current password">
+                                    <button type="button"
+                                        onclick="togglePassword('current_password', 'currentPasswordToggle')"
+                                        id="currentPasswordToggle"
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -669,15 +670,12 @@
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
                                         <i class="fas fa-lock"></i>
                                     </div>
-                                    <input type="password" 
-                                           id="new_password" 
-                                           name="new_password"
-                                           class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                                           placeholder="Enter new password">
-                                    <button type="button" 
-                                            onclick="togglePassword('new_password', 'newPasswordToggle')"
-                                            id="newPasswordToggle"
-                                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
+                                    <input type="password" id="new_password" name="new_password"
+                                        class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                                        placeholder="Enter new password">
+                                    <button type="button" onclick="togglePassword('new_password', 'newPasswordToggle')"
+                                        id="newPasswordToggle"
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -693,15 +691,13 @@
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
                                         <i class="fas fa-lock"></i>
                                     </div>
-                                    <input type="password" 
-                                           id="confirm_password" 
-                                           name="confirm_password"
-                                           class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                                           placeholder="Confirm new password">
-                                    <button type="button" 
-                                            onclick="togglePassword('confirm_password', 'confirmPasswordToggle')"
-                                            id="confirmPasswordToggle"
-                                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
+                                    <input type="password" id="confirm_password" name="confirm_password"
+                                        class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-300 rounded-xl form-input focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                                        placeholder="Confirm new password">
+                                    <button type="button"
+                                        onclick="togglePassword('confirm_password', 'confirmPasswordToggle')"
+                                        id="confirmPasswordToggle"
+                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 password-toggle">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -732,14 +728,16 @@
                 <!-- Modal Footer -->
                 <div class="flex flex-col sm:flex-row gap-4 pt-8 mt-8 border-t border-gray-200">
                     <button type="button" onclick="closeEditModal()"
-                            class="px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold text-center">
+                        class="px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold text-center">
                         Cancel
                     </button>
                     <button type="submit" id="updateProfileBtn"
-                            class="flex-1 px-6 py-3.5 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-xl hover:opacity-90 transition-all font-semibold flex items-center justify-center gap-3 shadow-lg shadow-secondary/30">
+                        class="flex-1 px-6 py-3.5 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-xl hover:opacity-90 transition-all font-semibold flex items-center justify-center gap-3 shadow-lg shadow-secondary/30">
                         <i class="fas fa-save"></i>
                         Save All Changes
-                        <div id="updateSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div id="updateSpinner"
+                            class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin">
+                        </div>
                     </button>
                 </div>
             </form>
@@ -866,6 +864,5 @@
         }
     });
 
-    
 </script>
 <?= $this->endSection() ?>
