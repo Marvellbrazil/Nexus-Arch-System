@@ -99,13 +99,13 @@ class CustomerController extends BaseController
         return view('Customer/dashboard', ['data' => $data]);
     }
 
-    
+
 
     public function myTickets()
     {
         $data = $this->loadCommonData();
         $data['stats'] = $this->getTicketStats();
-        
+
         $data['tickets'] = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, cat.category_name, proj.project_name, d.department_name')
             ->join('priorities p', 'p.priority_id = t.priority_id')
@@ -117,14 +117,14 @@ class CustomerController extends BaseController
             ->orderBy('t.created_at', 'DESC')
             ->get()
             ->getResultArray();
-            
+
         return view('Customer/my_tickets', ['data' => $data]);
     }
 
     public function ticketDetail($id)
     {
         $data = $this->loadCommonData();
-        
+
         $ticket = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, cat.category_name, proj.project_name, d.department_name')
             ->join('priorities p', 'p.priority_id = t.priority_id')
@@ -136,13 +136,13 @@ class CustomerController extends BaseController
             ->where('t.customer_id', $this->userId)
             ->get()
             ->getRowArray();
-            
+
         if (!$ticket) {
             return redirect()->to('/customer/my_tickets')->with('error', 'Ticket not found');
         }
-        
+
         $data['ticket'] = $ticket;
-        
+
         $data['messages'] = $this->db->table('ticket_messages tm')
             ->select('tm.*, u.full_name, u.photo_profile')
             ->join('users u', 'u.user_id = tm.sender_id')
@@ -150,21 +150,21 @@ class CustomerController extends BaseController
             ->orderBy('tm.created_at', 'ASC')
             ->get()
             ->getResultArray();
-            
+
         $data['attachments'] = $this->db->table('ticket_attachments ta')
             ->select('ta.*, u.full_name')
             ->join('users u', 'u.user_id = ta.uploaded_by')
             ->where('ta.ticket_id', $id)
             ->get()
             ->getResultArray();
-            
+
         return view('Customer/ticket_detail', $data);
     }
 
     public function projectDetail($projectId)
     {
         $data = $this->loadCommonData();
-        
+
         $data['project'] = $this->db->table('projects p')
             ->select('p.*, 
                 COUNT(DISTINCT t.ticket_id) as total_tickets,
@@ -178,11 +178,11 @@ class CustomerController extends BaseController
             ->groupBy('p.project_id')
             ->get()
             ->getRowArray();
-            
+
         if (!$data['project']) {
             return redirect()->to('/customer/dashboard')->with('error', 'Project not found');
         }
-        
+
         $data['tickets'] = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, cat.category_name, d.department_name')
             ->join('priorities p', 'p.priority_id = t.priority_id')
@@ -194,7 +194,7 @@ class CustomerController extends BaseController
             ->orderBy('t.created_at', 'DESC')
             ->get()
             ->getResultArray();
-            
+
         $data['recent_activity'] = $this->db->table('ticket_messages tm')
             ->select('tm.*, t.subject, u.full_name, u.photo_profile')
             ->join('tickets t', 't.ticket_id = tm.ticket_id')
@@ -205,7 +205,7 @@ class CustomerController extends BaseController
             ->limit(5)
             ->get()
             ->getResultArray();
-            
+
         $data['team_members'] = $this->db->table('project_assignments pa')
             ->select('u.user_id, u.full_name, u.email, r.role_name, u.photo_profile')
             ->join('users u', 'u.user_id = pa.user_id')
@@ -214,160 +214,160 @@ class CustomerController extends BaseController
             ->where('u.user_id !=', $this->userId)
             ->get()
             ->getResultArray();
-        
+
         return view('Customer/project_detail', $data);
     }
 
-public function updateProfile()
-{
-    // Get form data
-    $fullName = $this->request->getPost('full_name');
-    $phoneNumber = $this->request->getPost('phone_number');
-    $currentPassword = $this->request->getPost('current_password');
-    $newPassword = $this->request->getPost('new_password');
-    $confirmPassword = $this->request->getPost('confirm_password');
-    
-    // Validation rules
-    $validationRules = [
-        'full_name' => 'required|min_length[3]|max_length[100]',
-        'phone_number' => 'permit_empty|min_length[10]|max_length[20]',
-    ];
-    
-    // Validate basic fields
-    if (!$this->validate($validationRules)) {
-        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-    }
-    
-    // Get current user data
-    $userData = $this->userModel->find($this->userId);
-    
-    // Prepare update data
-    $updateData = [
-        'full_name' => $fullName,
-        'phone_number' => $phoneNumber ?: null,
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-    
-    // Handle password change if provided
-    if (!empty($currentPassword) || !empty($newPassword) || !empty($confirmPassword)) {
-        // Validate password fields
-        if (empty($currentPassword)) {
-            return redirect()->back()->with('error', 'Current password is required to change password');
-        }
-        
-        if (empty($newPassword)) {
-            return redirect()->back()->with('error', 'New password is required');
-        }
-        
-        if ($newPassword !== $confirmPassword) {
-            return redirect()->back()->with('error', 'New password and confirmation do not match');
-        }
-        
-        if (strlen($newPassword) < 6) {
-            return redirect()->back()->with('error', 'New password must be at least 6 characters');
-        }
-        
-        // Verify current password
-        if (!password_verify($currentPassword, $userData['password'])) {
-            return redirect()->back()->with('error', 'Current password is incorrect');
-        }
-        
-        // Update password
-        $updateData['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
-    }
-    
-    // Handle file upload (profile photo)
-    $photo = $this->request->getFile('photo_profile');
-    if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-        // Delete old photo if exists
-        if (!empty($userData['photo_profile'])) {
-            $oldPhotoPath = WRITEPATH . 'uploads/profile/' . basename($userData['photo_profile']);
-            if (file_exists($oldPhotoPath)) {
-                unlink($oldPhotoPath);
-            }
-        }
-        
-        // Upload new photo
-        $newName = $photo->getRandomName();
-        $photo->move(WRITEPATH . 'uploads/profile', $newName);
-        
-        $updateData['photo_profile'] = 'uploads/profile/' . $newName;
-    }
-    
-    // Update user in database
-    if ($this->userModel->update($this->userId, $updateData)) {
-        // Update session data
-        $updatedUser = $this->userModel->find($this->userId);
-        session()->set([
-            'full_name' => $updatedUser['full_name'],
-            'photo_profile' => $updatedUser['photo_profile']
-        ]);
-        
-        return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
-    } else {
-        return redirect()->back()->with('error', 'Failed to update profile');
-    }
-}
+    public function updateProfile()
+    {
+        // Get form data
+        $fullName = $this->request->getPost('full_name');
+        $phoneNumber = $this->request->getPost('phone_number');
+        $currentPassword = $this->request->getPost('current_password');
+        $newPassword = $this->request->getPost('new_password');
+        $confirmPassword = $this->request->getPost('confirm_password');
 
-// Update method profile() untuk menambahkan project data:
-public function profile()
-{
-    $data = $this->loadCommonData();
-    $data['stats'] = $this->getTicketStats();
-    
-    // Get user details
-    $data['user_details'] = $this->db->table('users u')
-        ->select('u.*, r.role_name, d.department_name')
-        ->join('roles r', 'r.role_id = u.role_id', 'left')
-        ->join('departments d', 'd.department_id = u.department_id', 'left')
-        ->where('u.user_id', $this->userId)
-        ->get()
-        ->getRowArray();
-    
-    // Get assigned projects with ticket counts
-    $data['assigned_projects'] = $this->db->table('project_assignments pa')
-        ->select('p.*, 
+        // Validation rules
+        $validationRules = [
+            'full_name' => 'required|min_length[3]|max_length[100]',
+            'phone_number' => 'permit_empty|min_length[10]|max_length[20]',
+        ];
+
+        // Validate basic fields
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // Get current user data
+        $userData = $this->userModel->find($this->userId);
+
+        // Prepare update data
+        $updateData = [
+            'full_name' => $fullName,
+            'phone_number' => $phoneNumber ?: null,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        // Handle password change if provided
+        if (!empty($currentPassword) || !empty($newPassword) || !empty($confirmPassword)) {
+            // Validate password fields
+            if (empty($currentPassword)) {
+                return redirect()->back()->with('error', 'Current password is required to change password');
+            }
+
+            if (empty($newPassword)) {
+                return redirect()->back()->with('error', 'New password is required');
+            }
+
+            if ($newPassword !== $confirmPassword) {
+                return redirect()->back()->with('error', 'New password and confirmation do not match');
+            }
+
+            if (strlen($newPassword) < 6) {
+                return redirect()->back()->with('error', 'New password must be at least 6 characters');
+            }
+
+            // Verify current password
+            if (!password_verify($currentPassword, $userData['password'])) {
+                return redirect()->back()->with('error', 'Current password is incorrect');
+            }
+
+            // Update password
+            $updateData['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+        }
+
+        // Handle file upload (profile photo)
+        $photo = $this->request->getFile('photo_profile');
+        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+            // Delete old photo if exists
+            if (!empty($userData['photo_profile'])) {
+                $oldPhotoPath = WRITEPATH . 'uploads/profile/' . basename($userData['photo_profile']);
+                if (file_exists($oldPhotoPath)) {
+                    unlink($oldPhotoPath);
+                }
+            }
+
+            // Upload new photo
+            $newName = $photo->getRandomName();
+            $photo->move(WRITEPATH . 'uploads/profile', $newName);
+
+            $updateData['photo_profile'] = 'uploads/profile/' . $newName;
+        }
+
+        // Update user in database
+        if ($this->userModel->update($this->userId, $updateData)) {
+            // Update session data
+            $updatedUser = $this->userModel->find($this->userId);
+            session()->set([
+                'full_name' => $updatedUser['full_name'],
+                'photo_profile' => $updatedUser['photo_profile']
+            ]);
+
+            return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
+        } else {
+            return redirect()->back()->with('error', 'Failed to update profile');
+        }
+    }
+
+    // Update method profile() untuk menambahkan project data:
+    public function profile()
+    {
+        $data = $this->loadCommonData();
+        $data['stats'] = $this->getTicketStats();
+
+        // Get user details
+        $data['user_details'] = $this->db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $this->userId)
+            ->get()
+            ->getRowArray();
+
+        // Get assigned projects with ticket counts
+        $data['assigned_projects'] = $this->db->table('project_assignments pa')
+            ->select('p.*, 
             COUNT(t.ticket_id) as ticket_count,
             SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets,
             SUM(CASE WHEN t.status_id = 2 THEN 1 ELSE 0 END) as in_progress_tickets,
             SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets')
-        ->join('projects p', 'p.project_id = pa.project_id')
-        ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
-        ->where('pa.user_id', $this->userId)
-        ->where('p.is_active', true)
-        ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
-        ->orderBy('p.project_name', 'ASC')
-        ->get()
-        ->getResultArray();
-    
-    // Calculate ticket statistics for progress bars
-    $totalTickets = $data['stats']['total_tickets'];
-    $data['ticket_percentages'] = [
-        'open' => $totalTickets > 0 ? round(($data['stats']['open_tickets'] / $totalTickets) * 100, 1) : 0,
-        'in_progress' => $totalTickets > 0 ? round(($data['stats']['in_progress_tickets'] / $totalTickets) * 100, 1) : 0,
-        'resolved' => $totalTickets > 0 ? round(($data['stats']['resolved_tickets'] / $totalTickets) * 100, 1) : 0,
-        'closed' => $totalTickets > 0 ? round(($data['stats']['cancelled_tickets'] / $totalTickets) * 100, 1) : 0,
-    ];
-    
-    // Format last login time
-    if (!empty($data['user_details']['last_login'])) {
-        $lastLogin = new \DateTime($data['user_details']['last_login']);
-        $now = new \DateTime();
-        $interval = $lastLogin->diff($now);
-        
-        if ($interval->days == 0) {
-            $data['last_login_text'] = 'Today, ' . $lastLogin->format('h:i A');
-        } elseif ($interval->days == 1) {
-            $data['last_login_text'] = 'Yesterday, ' . $lastLogin->format('h:i A');
+            ->join('projects p', 'p.project_id = pa.project_id')
+            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
+            ->where('pa.user_id', $this->userId)
+            ->where('p.is_active', true)
+            ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
+            ->orderBy('p.project_name', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Calculate ticket statistics for progress bars
+        $totalTickets = $data['stats']['total_tickets'];
+        $data['ticket_percentages'] = [
+            'open' => $totalTickets > 0 ? round(($data['stats']['open_tickets'] / $totalTickets) * 100, 1) : 0,
+            'in_progress' => $totalTickets > 0 ? round(($data['stats']['in_progress_tickets'] / $totalTickets) * 100, 1) : 0,
+            'resolved' => $totalTickets > 0 ? round(($data['stats']['resolved_tickets'] / $totalTickets) * 100, 1) : 0,
+            'closed' => $totalTickets > 0 ? round(($data['stats']['cancelled_tickets'] / $totalTickets) * 100, 1) : 0,
+        ];
+
+        // Format last login time
+        if (!empty($data['user_details']['last_login'])) {
+            $lastLogin = new \DateTime($data['user_details']['last_login']);
+            $now = new \DateTime();
+            $interval = $lastLogin->diff($now);
+
+            if ($interval->days == 0) {
+                $data['last_login_text'] = 'Today, ' . $lastLogin->format('h:i A');
+            } elseif ($interval->days == 1) {
+                $data['last_login_text'] = 'Yesterday, ' . $lastLogin->format('h:i A');
+            } else {
+                $data['last_login_text'] = $lastLogin->format('M d, Y, h:i A');
+            }
         } else {
-            $data['last_login_text'] = $lastLogin->format('M d, Y, h:i A');
+            $data['last_login_text'] = 'Never logged in';
         }
-    } else {
-        $data['last_login_text'] = 'Never logged in';
+
+        return view('Customer/profile_customer', ['data' => $data]);
     }
-    
-    return view('Customer/profile_customer', ['data' => $data]);
-}
     public function notifications()
     {
         $data = $this->loadCommonData();
@@ -405,177 +405,173 @@ public function profile()
 
     // Di dalam CustomerController.php, tambahkan method ini:
 
-private function getAssignedProjects()
-{
-    return $this->db->table('project_assignments pa')
-        ->select('p.project_id, p.project_code, p.project_name, p.description, 
+    private function getAssignedProjects()
+    {
+        return $this->db->table('project_assignments pa')
+            ->select('p.project_id, p.project_code, p.project_name, p.description, 
                   COUNT(t.ticket_id) as ticket_count')
-        ->join('projects p', 'p.project_id = pa.project_id')
-        ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
-        ->where('pa.user_id', $this->userId)
-        ->where('p.is_active', true)
-        ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
-        ->orderBy('p.project_name', 'ASC')
-        ->get()
-        ->getResultArray();
-}
+            ->join('projects p', 'p.project_id = pa.project_id')
+            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
+            ->where('pa.user_id', $this->userId)
+            ->where('p.is_active', true)
+            ->groupBy('p.project_id, p.project_code, p.project_name, p.description')
+            ->orderBy('p.project_name', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 
-// Update method createTicket():
-public function createTicket()
-{
-    $data = $this->loadCommonData();
-    
-    // Get projects assigned to this customer
-    $data['projects'] = $this->getAssignedProjects();
-    
-    // Get selected project from query parameter or default to first project
-    $selectedProjectId = $this->request->getGet('project');
-    if ($selectedProjectId) {
-        $data['selected_project'] = $this->db->table('projects')
-            ->where('project_id', $selectedProjectId)
-            ->where('is_active', true)
+    // Update method createTicket():
+    public function createTicket()
+    {
+        $data = $this->loadCommonData();
+
+        // Get projects assigned to this customer
+        $data['projects'] = $this->getAssignedProjects();
+
+        // Get selected project from query parameter or default to first project
+        $selectedProjectId = $this->request->getGet('project');
+        if ($selectedProjectId) {
+            $data['selected_project'] = $this->db->table('projects')
+                ->where('project_id', $selectedProjectId)
+                ->where('is_active', true)
+                ->get()
+                ->getRowArray();
+        }
+
+        // If no selected project or project not found, use first assigned project
+        if (empty($data['selected_project']) && !empty($data['projects'])) {
+            $data['selected_project'] = $data['projects'][0];
+            $selectedProjectId = $data['projects'][0]['project_id'];
+        }
+
+        $data['categories'] = $this->db->table('categories')->get()->getResultArray();
+        $data['priorities'] = $this->db->table('priorities')->get()->getResultArray();
+        $data['departments'] = $this->db->table('departments')->get()->getResultArray();
+
+        return view('Customer/create_ticket', $data);
+    }
+
+    // Tambahkan method untuk menangani form submission:
+    public function processCreateTicket()
+    {
+        
+        // Get form data
+        $projectId = $this->request->getPost('project');
+        $title = $this->request->getPost('title');
+        $description = $this->request->getPost('description');
+        $priorityId = $this->request->getPost('priority');
+        $categoryId = $this->request->getPost('category');
+
+        // Validate required fields
+        if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
+            return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
+        }
+
+        // Check if project is assigned to user
+        $isProjectAssigned = $this->db->table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('user_id', $this->userId)
+            ->countAllResults();
+
+        if (!$isProjectAssigned) {
+            return redirect()->back()->with('error', 'You are not assigned to this project');
+        }
+
+        // Get department based on category
+        $departmentMapping = $this->db->table('category_department_mapping')
+            ->where('category_id', $categoryId)
             ->get()
             ->getRowArray();
-    }
-    
-    // If no selected project or project not found, use first assigned project
-    if (empty($data['selected_project']) && !empty($data['projects'])) {
-        $data['selected_project'] = $data['projects'][0];
-        $selectedProjectId = $data['projects'][0]['project_id'];
-    }
-    
-    $data['categories'] = $this->db->table('categories')->get()->getResultArray();
-    $data['priorities'] = $this->db->table('priorities')->get()->getResultArray();
-    $data['departments'] = $this->db->table('departments')->get()->getResultArray();
-    
-    return view('Customer/create_ticket', $data);
-}
 
-// Tambahkan method untuk menangani form submission:
-public function processCreateTicket()
-{
-    // Validate CSRF token
-    if (!csrf_hash_is_valid($this->request->getPost('csrf_token'))) {
-        return redirect()->back()->with('error', 'Invalid CSRF token');
-    }
-    
-    // Get form data
-    $projectId = $this->request->getPost('project');
-    $title = $this->request->getPost('title');
-    $description = $this->request->getPost('description');
-    $priorityId = $this->request->getPost('priority');
-    $categoryId = $this->request->getPost('category');
-    
-    // Validate required fields
-    if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
-        return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
-    }
-    
-    // Check if project is assigned to user
-    $isProjectAssigned = $this->db->table('project_assignments')
-        ->where('project_id', $projectId)
-        ->where('user_id', $this->userId)
-        ->countAllResults();
-    
-    if (!$isProjectAssigned) {
-        return redirect()->back()->with('error', 'You are not assigned to this project');
-    }
-    
-    // Get department based on category
-    $departmentMapping = $this->db->table('category_department_mapping')
-        ->where('category_id', $categoryId)
-        ->get()
-        ->getRowArray();
-    
-    $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
-    
-    // Generate ticket number
-    $project = $this->db->table('projects')
-        ->where('project_id', $projectId)
-        ->get()
-        ->getRowArray();
-    
-    $ticketCount = $this->db->table('tickets')
-        ->where('project_id', $projectId)
-        ->countAllResults();
-    
-    $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
-    
-    // Prepare ticket data
-    $ticketData = [
-        'ticket_number' => $ticketNumber,
-        'project_id' => $projectId,
-        'customer_id' => $this->userId,
-        'category_id' => $categoryId,
-        'priority_id' => $priorityId,
-        'status_id' => 1, // Open
-        'department_id' => $departmentId,
-        'subject' => $title,
-        'description' => $description,
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-    
-    // Insert ticket
-    $this->db->table('tickets')->insert($ticketData);
-    $ticketId = $this->db->insertID();
-    
-    // Handle file attachments
-    $this->handleAttachments($ticketId);
-    
-    // Create notification for support team
-    $this->createTicketNotification($ticketId);
-    
-    return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
-}
+        $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
 
-private function handleAttachments($ticketId)
-{
-    $files = $this->request->getFiles();
-    
-    if (!empty($files['attachments'])) {
-        foreach ($files['attachments'] as $file) {
-            if ($file->isValid() && !$file->hasMoved()) {
-                $newName = $file->getRandomName();
-                $file->move(WRITEPATH . 'uploads/tickets', $newName);
-                
-                $attachmentData = [
-                    'ticket_id' => $ticketId,
-                    'uploaded_by' => $this->userId,
-                    'file_name' => $file->getName(),
-                    'file_path' => 'uploads/tickets/' . $newName,
-                    'file_type' => $file->getClientMimeType(),
-                    'file_size' => $file->getSize(),
-                    'created_at' => date('Y-m-d H:i:s')
-                ];
-                
-                $this->db->table('ticket_attachments')->insert($attachmentData);
+        // Generate ticket number
+        $project = $this->db->table('projects')
+            ->where('project_id', $projectId)
+            ->get()
+            ->getRowArray();
+
+        $ticketCount = $this->db->table('tickets')
+            ->where('project_id', $projectId)
+            ->countAllResults();
+
+        $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
+
+        // Prepare ticket data
+        $ticketData = [
+            'ticket_number' => $ticketNumber,
+            'project_id' => $projectId,
+            'customer_id' => $this->userId,
+            'category_id' => $categoryId,
+            'priority_id' => $priorityId,
+            'status_id' => 1, // Open
+            'department_id' => $departmentId,
+            'subject' => $title,
+            'description' => $description,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        // Insert ticket
+        $this->db->table('tickets')->insert($ticketData);
+        $ticketId = $this->db->insertID();
+
+        // Handle file attachments
+        $this->handleAttachments($ticketId);
+
+        // Create notification for support team
+        $this->createTicketNotification($ticketId);
+
+        return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
+    }
+
+    private function handleAttachments($ticketId)
+    {
+        $files = $this->request->getFiles();
+
+        if (!empty($files['attachments'])) {
+            foreach ($files['attachments'] as $file) {
+                if ($file->isValid() && !$file->hasMoved()) {
+                    $newName = $file->getRandomName();
+                    $file->move(WRITEPATH . 'uploads/tickets', $newName);
+
+                    $attachmentData = [
+                        'ticket_id' => $ticketId,
+                        'uploaded_by' => $this->userId,
+                        'file_name' => $file->getName(),
+                        'file_path' => 'uploads/tickets/' . $newName,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+
+                    $this->db->table('ticket_attachments')->insert($attachmentData);
+                }
             }
         }
     }
-}
 
-private function createTicketNotification($ticketId)
-{
-    $ticket = $this->db->table('tickets')
-        ->select('t.*, p.project_name, u.full_name as customer_name')
-        ->join('projects p', 'p.project_id = t.project_id')
-        ->join('users u', 'u.user_id = t.customer_id')
-        ->where('t.ticket_id', $ticketId)
-        ->get()
-        ->getRowArray();
-    
-    // Create notification for support team
-    $notificationData = [
-        'user_id' => 3, // Support team user ID (adjust as needed)
-        'ticket_id' => $ticketId,
-        'title' => 'New Ticket Created',
-        'message' => $ticket['customer_name'] . ' created a new ticket in ' . $ticket['project_name'],
-        'notification_type' => 'ticket_created',
-        'created_at' => date('Y-m-d H:i:s')
-    ];
-    
-    $this->db->table('notifications')->insert($notificationData);
-}
+    private function createTicketNotification($ticketId)
+    {
+        $ticket = $this->db->table('tickets')
+            ->select('t.*, p.project_name, u.full_name as customer_name')
+            ->join('projects p', 'p.project_id = t.project_id')
+            ->join('users u', 'u.user_id = t.customer_id')
+            ->where('t.ticket_id', $ticketId)
+            ->get()
+            ->getRowArray();
+
+        // Create notification for support team
+        $notificationData = [
+            'user_id' => 3, // Support team user ID (adjust as needed)
+            'ticket_id' => $ticketId,
+            'title' => 'New Ticket Created',
+            'message' => $ticket['customer_name'] . ' created a new ticket in ' . $ticket['project_name'],
+            'notification_type' => 'ticket_created',
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('notifications')->insert($notificationData);
+    }
 
 }
