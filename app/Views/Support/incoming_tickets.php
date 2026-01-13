@@ -3,7 +3,7 @@
 <?= $this->section('title') ?>Incoming Tickets - NEXUS Support<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
-<!-- Background Effects -->
+<!-- Background Effects (tetap sama) -->
 <div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
 <div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
 <div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
@@ -37,7 +37,7 @@
                 <div class="px-4 py-2 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center gap-2">
                     <i class="fas fa-inbox"></i>
                     <span class="font-medium">
-                        <span class="font-bold">12</span> Pending
+                        <span class="font-bold"><?= $stats['pending_review'] ?? 0 ?></span> Pending
                     </span>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Total Incoming</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">24</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['total_incoming'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Pending Review</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">12</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['pending_review'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -77,7 +77,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Forwarded Today</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">8</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['forwarded_today'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -89,7 +89,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">High Priority</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">3</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['high_priority'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -107,23 +107,29 @@
                     <!-- Sort by -->
                     <div class="relative w-full md:w-auto">
                         <select id="sortBy" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary appearance-none bg-white pr-8">
-                            <option value="date-desc">Sort by: Newest First</option>
-                            <option value="date-asc">Sort by: Oldest First</option>
                             <option value="priority-desc">Sort by: Priority (High to Low)</option>
                             <option value="priority-asc">Sort by: Priority (Low to High)</option>
+                            <option value="date-desc">Sort by: Newest First</option>
+                            <option value="date-asc">Sort by: Oldest First</option>
+                            <option value="subject-asc">Sort by: Subject A-Z</option>
+                            <option value="subject-desc">Sort by: Subject Z-A</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                         </div>
                     </div>
                     
-                    <!-- Filter Options (Hidden on mobile, shown in dropdown) -->
+                    <!-- Filter Options -->
                     <div class="hidden md:flex gap-2">
                         <select id="filterProject" class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
                             <option value="all">All Projects</option>
-                            <option value="alpha">Project Alpha</option>
-                            <option value="beta">Project Beta</option>
-                            <option value="gamma">Project Gamma</option>
+                            <?php if (isset($projects) && !empty($projects)): ?>
+                                <?php foreach ($projects as $project): ?>
+                                    <option value="<?= strtolower(str_replace(' ', '-', $project['project_name'])) ?>">
+                                        <?= $project['project_name'] ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                         
                         <select id="filterPriority" class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
@@ -147,9 +153,13 @@
             <div id="mobileFilters" class="mt-3 md:hidden space-y-2 hidden">
                 <select id="filterProjectMobile" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
                     <option value="all">All Projects</option>
-                    <option value="alpha">Project Alpha</option>
-                    <option value="beta">Project Beta</option>
-                    <option value="gamma">Project Gamma</option>
+                    <?php if (isset($projects) && !empty($projects)): ?>
+                        <?php foreach ($projects as $project): ?>
+                            <option value="<?= strtolower(str_replace(' ', '-', $project['project_name'])) ?>">
+                                <?= $project['project_name'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
                 
                 <select id="filterPriorityMobile" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
@@ -209,75 +219,126 @@
                     </tr>
                 </thead>
                 <tbody id="ticketsTable" class="divide-y divide-gray-200">
-                    <?php 
-                    $incoming_tickets = [
-                        [
-                            'id' => '#10425', 
-                            'id_num' => 10425,
-                            'subject' => 'Fix mixizading app updates', 
-                            'customer' => 'John Smith',
-                            'customer_initials' => 'JS',
-                            'priority' => 'Urgent', 
-                            'priority_value' => 4,
-                            'priorityColor' => 'bg-red-100 text-red-800', 
-                            'time' => 'Yesterday, 9:50 PM', 
-                            'timestamp' => strtotime('-1 day -2 hours'),
-                            'project' => 'Project Alpha'
-                        ],
-                        [
-                            'id' => '#10421', 
-                            'id_num' => 10421,
-                            'subject' => 'Login issue causing error message', 
-                            'customer' => 'Sarah Johnson',
-                            'customer_initials' => 'SJ',
-                            'priority' => 'High', 
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800', 
-                            'time' => 'Today, 10:30 AM', 
-                            'timestamp' => strtotime('today 10:30'),
-                            'project' => 'Project Alpha'
-                        ],
-                        [
-                            'id' => '#10422', 
-                            'id_num' => 10422,
-                            'subject' => 'Feature request for new export option', 
-                            'customer' => 'Michael Chen',
-                            'customer_initials' => 'MC',
-                            'priority' => 'Medium', 
-                            'priority_value' => 2,
-                            'priorityColor' => 'bg-yellow-100 text-yellow-800', 
-                            'time' => 'Yesterday, 4:50 PM', 
-                            'timestamp' => strtotime('-1 day 16:50'),
-                            'project' => 'Project Beta'
-                        ],
-                        [
-                            'id' => '#10423', 
-                            'id_num' => 10423,
-                            'subject' => 'Fix firestorx issues neat issues', 
-                            'customer' => 'David Wilson',
-                            'customer_initials' => 'DW',
-                            'priority' => 'High', 
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800', 
-                            'time' => 'Today, 8:30 AM', 
-                            'timestamp' => strtotime('today 8:30'),
-                            'project' => 'Project Gamma'
-                        ],
-                        [
-                            'id' => '#10424', 
-                            'id_num' => 10424,
-                            'subject' => 'Fix safissax issues source log iss', 
-                            'customer' => 'Emma Thompson',
-                            'customer_initials' => 'ET',
-                            'priority' => 'Low', 
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800', 
-                            'time' => 'Jan. 22, 7:45 PM', 
-                            'timestamp' => strtotime('-2 days 19:45'),
-                            'project' => 'Project Beta'
-                        ],
-                    ];
-                    ?>
+                    <?php if (!empty($tickets)): ?>
+                        <?php foreach ($tickets as $ticket): ?>
+                            <?php
+                            // Tentukan warna priority
+                            $priorityColor = '';
+                            switch ($ticket['priority_name']) {
+                                case 'Urgent':
+                                    $priorityColor = 'bg-red-100 text-red-800';
+                                    break;
+                                case 'High':
+                                    $priorityColor = 'bg-orange-100 text-orange-800';
+                                    break;
+                                case 'Medium':
+                                    $priorityColor = 'bg-yellow-100 text-yellow-800';
+                                    break;
+                                case 'Low':
+                                    $priorityColor = 'bg-blue-100 text-blue-800';
+                                    break;
+                                default:
+                                    $priorityColor = 'bg-gray-100 text-gray-800';
+                            }
+                            
+                            // Format tanggal
+                            $createdDate = new DateTime($ticket['created_at']);
+                            $now = new DateTime();
+                            $interval = $now->diff($createdDate);
+                            
+                            if ($interval->days == 0) {
+                                $timeText = 'Today, ' . $createdDate->format('g:i A');
+                            } elseif ($interval->days == 1) {
+                                $timeText = 'Yesterday, ' . $createdDate->format('g:i A');
+                            } else {
+                                $timeText = $createdDate->format('M. d, g:i A');
+                            }
+                            
+                            // Initials customer
+                            $initials = '';
+                            $nameParts = explode(' ', $ticket['customer_name']);
+                            if (count($nameParts) >= 2) {
+                                $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
+                            } else {
+                                $initials = strtoupper(substr($ticket['customer_name'], 0, 2));
+                            }
+                            
+                            // Priority value untuk sorting
+                            $priorityValue = 0;
+                            switch ($ticket['priority_name']) {
+                                case 'Urgent': $priorityValue = 4; break;
+                                case 'High': $priorityValue = 3; break;
+                                case 'Medium': $priorityValue = 2; break;
+                                case 'Low': $priorityValue = 1; break;
+                            }
+                            ?>
+                            <tr class="bg-white hover-row transition-colors" 
+                                data-id="<?= $ticket['ticket_id'] ?>"
+                                data-subject="<?= htmlspecialchars($ticket['subject']) ?>"
+                                data-customer="<?= htmlspecialchars($ticket['customer_name']) ?>"
+                                data-priority="<?= $ticket['priority_name'] ?>"
+                                data-priority-value="<?= $priorityValue ?>"
+                                data-date="<?= strtotime($ticket['created_at']) ?>"
+                                data-project="<?= htmlspecialchars($ticket['project_name'] ?? 'No Project') ?>">
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <span class="font-bold text-gray-800 text-sm md:text-base">#<?= $ticket['ticket_id'] ?></span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <div>
+                                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none" title="<?= htmlspecialchars($ticket['subject']) ?>">
+                                            <?= htmlspecialchars($ticket['subject']) ?>
+                                        </p>
+                                        <p class="text-gray-500 text-xs mt-1 hidden md:block"><?= htmlspecialchars($ticket['customer_name']) ?></p>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 text-xs font-bold">
+                                            <?= $initials ?>
+                                        </div>
+                                        <span class="text-gray-700 text-sm"><?= htmlspecialchars($ticket['customer_name']) ?></span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $priorityColor ?> font-medium whitespace-nowrap">
+                                        <?= $ticket['priority_name'] ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
+                                    <span class="text-gray-600 text-sm" title="<?= $ticket['created_at'] ?>">
+                                        <?= $timeText ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
+                                    <span class="text-gray-700 text-sm"><?= $ticket['project_name'] ?? 'No Project' ?></span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <div class="flex items-center gap-2">
+                                        <a href="<?= site_url('support/ticket_detail/' . $ticket['ticket_id']) ?>" 
+                                           class="px-3 py-1 md:px-3 md:py-2 bg-blue-100 text-blue-700 text-xs md:text-sm rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                                            <i class="fas fa-eye text-xs"></i>
+                                            <span>View</span>
+                                        </a>
+                                        <a href="<?= site_url('support/ticket_summary/' . $ticket['ticket_id']) ?>" 
+                                           class="px-3 py-1 md:px-3 md:py-2 bg-secondary text-white text-xs md:text-sm rounded-lg hover:bg-[#817CB2] transition-colors whitespace-nowrap flex items-center gap-1">
+                                            <i class="fas fa-file-alt text-xs"></i>
+                                            <span>Summary</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
+                                    <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No incoming tickets</p>
+                                    <p class="text-xs md:text-sm text-gray-500">All tickets have been processed</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -286,15 +347,14 @@
         <div class="p-4 md:p-6 border-t border-gray-200">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="text-gray-600 text-xs md:text-sm">
-                    Showing <span id="showingCount">5</span> of <span id="totalCount">12</span> entries
+                    Showing <span id="showingCount"><?= count($tickets) ?></span> of <span id="totalCount"><?= $stats['total_incoming'] ?? 0 ?></span> entries
                 </div>
+                <!-- Pagination akan diimplementasikan nanti jika perlu -->
                 <div class="flex items-center gap-1 md:gap-2">
                     <button id="prevPage" class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs" disabled>
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <button class="px-2 md:px-3 py-1 md:py-2 bg-secondary text-white rounded-lg text-xs md:text-sm">1</button>
-                    <button class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">2</button>
-                    <button class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">3</button>
                     <button id="nextPage" class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">
                         <i class="fas fa-chevron-right"></i>
                     </button>
@@ -303,7 +363,7 @@
         </div>
     </div>
 
-    <!-- Help Cards -->
+    <!-- Help Cards (tetap sama) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <!-- Processing Guidelines -->
         <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
@@ -350,12 +410,10 @@
 </div>
 
 <style>
-    /* Custom styles for table */
     .hover-row:hover {
         background-color: #f9fafb;
     }
     
-    /* Animation for new tickets */
     @keyframes highlightNew {
         0% { background-color: rgba(117, 110, 164, 0.1); }
         100% { background-color: transparent; }
@@ -367,15 +425,62 @@
 </style>
 
 <script>
-    // Ticket data
-    const ticketsData = <?= json_encode($incoming_tickets) ?>;
+    // Ticket data dari PHP
+    const ticketsData = <?= !empty($tickets) ? json_encode($tickets) : '[]' ?>;
     
-    // Deteksi apakah menggunakan index.php atau tidak
-    const hasIndexPHP = window.location.pathname.includes('index.php');
-    const urlPrefix = hasIndexPHP ? 'index.php/' : '';
+    // Fungsi untuk mendapatkan priority value
+    function getPriorityValue(priorityName) {
+        const priorityMap = {
+            'Urgent': 4,
+            'High': 3,
+            'Medium': 2,
+            'Low': 1
+        };
+        return priorityMap[priorityName] || 0;
+    }
+    
+    // Fungsi untuk mendapatkan priority color class
+    function getPriorityColor(priorityName) {
+        const colorMap = {
+            'Urgent': 'bg-red-100 text-red-800',
+            'High': 'bg-orange-100 text-orange-800',
+            'Medium': 'bg-yellow-100 text-yellow-800',
+            'Low': 'bg-blue-100 text-blue-800'
+        };
+        return colorMap[priorityName] || 'bg-gray-100 text-gray-800';
+    }
+    
+    // Fungsi untuk format tanggal
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        const timeOptions = { hour: 'numeric', minute: '2-digit' };
+        const timeStr = date.toLocaleTimeString('en-US', timeOptions);
+        
+        if (diffDays === 0) {
+            return `Today, ${timeStr}`;
+        } else if (diffDays === 1) {
+            return `Yesterday, ${timeStr}`;
+        } else {
+            const month = date.toLocaleString('en-US', { month: 'short' });
+            return `${month}. ${date.getDate()}, ${timeStr}`;
+        }
+    }
+    
+    // Fungsi untuk mendapatkan initials
+    function getInitials(name) {
+        const parts = name.split(' ');
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
     
     // Sorting state
-    let currentSort = { column: 'date', direction: 'desc' };
+    let currentSort = { column: 'priority', direction: 'desc' };
     let currentFilters = {
         project: 'all',
         priority: 'all'
@@ -383,9 +488,6 @@
     
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        // Render initial table
-        renderTable(ticketsData);
-        
         // Search functionality
         const ticketSearch = document.getElementById('ticketSearch');
         ticketSearch.addEventListener('input', (e) => {
@@ -452,94 +554,92 @@
             });
         });
         
-        // Pagination
-        document.getElementById('prevPage').addEventListener('click', function() {
-            console.log('Previous page');
-        });
-        
-        document.getElementById('nextPage').addEventListener('click', function() {
-            console.log('Next page');
-        });
-        
         // Initialize sort icons
         updateSortIcons();
-        
-        // Mark new tickets with animation
-        setTimeout(() => {
-            document.querySelectorAll('tr').forEach((row, index) => {
-                if (index > 0 && index <= 2) { // First 2 tickets after header
-                    row.classList.add('new-ticket');
-                }
-            });
-        }, 500);
     });
     
     function filterAndSortTickets() {
-        let filteredTickets = [...ticketsData];
+        // Dapatkan semua baris tabel
+        const rows = Array.from(document.querySelectorAll('#ticketsTable tr[data-id]'));
         
-        // Apply search filter
+        // Terapkan filter pencarian
         const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
-        if (searchTerm) {
-            filteredTickets = filteredTickets.filter(ticket => 
-                ticket.subject.toLowerCase().includes(searchTerm) ||
-                ticket.id.toLowerCase().includes(searchTerm) ||
-                ticket.customer.toLowerCase().includes(searchTerm) ||
-                ticket.project.toLowerCase().includes(searchTerm)
-            );
-        }
         
-        // Apply project filter
-        if (currentFilters.project !== 'all') {
-            filteredTickets = filteredTickets.filter(ticket => 
-                ticket.project.toLowerCase().includes(currentFilters.project)
-            );
-        }
+        rows.forEach(row => {
+            const subject = row.getAttribute('data-subject').toLowerCase();
+            const customer = row.getAttribute('data-customer').toLowerCase();
+            const project = row.getAttribute('data-project').toLowerCase();
+            const priority = row.getAttribute('data-priority').toLowerCase();
+            const ticketId = row.querySelector('td:first-child span').textContent.toLowerCase();
+            
+            // Filter pencarian
+            let searchMatch = true;
+            if (searchTerm) {
+                searchMatch = subject.includes(searchTerm) || 
+                             customer.includes(searchTerm) || 
+                             project.includes(searchTerm) ||
+                             ticketId.includes(searchTerm);
+            }
+            
+            // Filter project
+            let projectMatch = true;
+            if (currentFilters.project !== 'all') {
+                const projectSlug = project.replace(/ /g, '-');
+                projectMatch = projectSlug.includes(currentFilters.project);
+            }
+            
+            // Filter priority
+            let priorityMatch = true;
+            if (currentFilters.priority !== 'all') {
+                priorityMatch = priority.includes(currentFilters.priority);
+            }
+            
+            // Tampilkan/sembunyikan baris
+            row.style.display = (searchMatch && projectMatch && priorityMatch) ? '' : 'none';
+        });
         
-        // Apply priority filter
-        if (currentFilters.priority !== 'all') {
-            const priorityMap = {
-                'urgent': 4,
-                'high': 3,
-                'medium': 2,
-                'low': 1
-            };
-            filteredTickets = filteredTickets.filter(ticket => 
-                ticket.priority_value === priorityMap[currentFilters.priority]
-            );
-        }
+        // Sortir baris yang terlihat
+        sortVisibleRows();
         
-        // Sort tickets
-        filteredTickets.sort((a, b) => {
+        // Update count
+        updateRowCount();
+    }
+    
+    function sortVisibleRows() {
+        const tbody = document.getElementById('ticketsTable');
+        const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+        
+        rows.sort((a, b) => {
             let aValue, bValue;
             
             switch(currentSort.column) {
                 case 'id':
-                    aValue = a.id_num;
-                    bValue = b.id_num;
+                    aValue = parseInt(a.getAttribute('data-id'));
+                    bValue = parseInt(b.getAttribute('data-id'));
                     break;
                 case 'subject':
-                    aValue = a.subject.toLowerCase();
-                    bValue = b.subject.toLowerCase();
+                    aValue = a.getAttribute('data-subject').toLowerCase();
+                    bValue = b.getAttribute('data-subject').toLowerCase();
                     break;
                 case 'customer':
-                    aValue = a.customer.toLowerCase();
-                    bValue = b.customer.toLowerCase();
+                    aValue = a.getAttribute('data-customer').toLowerCase();
+                    bValue = b.getAttribute('data-customer').toLowerCase();
                     break;
                 case 'priority':
-                    aValue = a.priority_value;
-                    bValue = b.priority_value;
+                    aValue = parseInt(a.getAttribute('data-priority-value'));
+                    bValue = parseInt(b.getAttribute('data-priority-value'));
                     break;
                 case 'date':
-                    aValue = a.timestamp;
-                    bValue = b.timestamp;
+                    aValue = parseInt(a.getAttribute('data-date'));
+                    bValue = parseInt(b.getAttribute('data-date'));
                     break;
                 case 'project':
-                    aValue = a.project.toLowerCase();
-                    bValue = b.project.toLowerCase();
+                    aValue = a.getAttribute('data-project').toLowerCase();
+                    bValue = b.getAttribute('data-project').toLowerCase();
                     break;
                 default:
-                    aValue = a.timestamp;
-                    bValue = b.timestamp;
+                    aValue = parseInt(a.getAttribute('data-priority-value'));
+                    bValue = parseInt(b.getAttribute('data-priority-value'));
             }
             
             if (currentSort.direction === 'asc') {
@@ -549,85 +649,16 @@
             }
         });
         
-        // Render filtered and sorted tickets
-        renderTable(filteredTickets);
-        
-        // Update counts
-        document.getElementById('showingCount').textContent = filteredTickets.length;
-        document.getElementById('totalCount').textContent = ticketsData.length;
+        // Reorder rows
+        rows.forEach(row => tbody.appendChild(row));
     }
     
-    function renderTable(tickets) {
-        const tbody = document.getElementById('ticketsTable');
-        tbody.innerHTML = '';
+    function updateRowCount() {
+        const visibleRows = document.querySelectorAll('#ticketsTable tr[data-id][style=""]').length;
+        const allRows = document.querySelectorAll('#ticketsTable tr[data-id]').length;
         
-        tickets.forEach((ticket, index) => {
-            const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-            const row = document.createElement('tr');
-            row.className = `${rowClass} hover-row transition-colors`;
-            row.innerHTML = `
-                <td class="py-3 px-3 md:py-4 md:px-6">
-                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6">
-                    <div>
-                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none">${ticket.subject}</p>
-                        <p class="text-gray-500 text-xs mt-1 hidden md:block">${ticket.customer}</p>
-                    </div>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 text-xs font-bold">
-                            ${ticket.customer_initials}
-                        </div>
-                        <span class="text-gray-700 text-sm">${ticket.customer}</span>
-                    </div>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6">
-                    <span class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
-                        ${ticket.priority}
-                    </span>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
-                    <span class="text-gray-600 text-sm">${ticket.time}</span>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
-                    <span class="text-gray-700 text-sm">${ticket.project}</span>
-                </td>
-                <td class="py-3 px-3 md:py-4 md:px-6">
-                    <div class="flex items-center gap-2">
-                        <!-- PERBAIKAN: Gunakan base_url langsung -->
-                        <a href="<?= base_url('support/ticket_detail/') ?>${ticket.id_num}" 
-                           class="px-3 py-1 md:px-3 md:py-2 bg-blue-100 text-blue-700 text-xs md:text-sm rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
-                            <i class="fas fa-eye text-xs"></i>
-                            <span>View</span>
-                        </a>
-                        <!-- PERBAIKAN: Gunakan base_url langsung -->
-                        <a href="<?= base_url('support/ticket_summary/') ?>${ticket.id_num}" 
-                           class="px-3 py-1 md:px-3 md:py-2 bg-secondary text-white text-xs md:text-sm rounded-lg hover:bg-[#817CB2] transition-colors whitespace-nowrap flex items-center gap-1">
-                            <i class="fas fa-file-alt text-xs"></i>
-                            <span>Summary</span>
-                        </a>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-        // If no tickets match filters
-        if (tickets.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
-                    <div class="flex flex-col items-center justify-center">
-                        <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
-                        <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
-                        <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        }
+        document.getElementById('showingCount').textContent = visibleRows;
+        document.getElementById('totalCount').textContent = allRows;
     }
     
     function updateSortDropdown() {
@@ -649,7 +680,6 @@
         }
     }
     
-    // Export report function
     function exportReport() {
         const btn = event.target.closest('button');
         const originalText = btn.innerHTML;
@@ -667,7 +697,6 @@
         }, 1500);
     }
     
-    // Toast notification function
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = `fixed top-24 right-4 p-4 rounded-lg shadow-lg z-50 ${

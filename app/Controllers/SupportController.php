@@ -68,171 +68,170 @@ class SupportController extends BaseController
     }
 
     public function dashboard()
-{
-    $data = $this->loadCommonData();
-    
-    $userId = session()->get('user_id');
-    $db = db_connect();
-    
-    // Load models
-    $userModel = new UserModel();
-    $roleModel = new RoleModel();
-    
-    // Get user details dengan departments
-    $data['user_details'] = $db->table('users u')
-        ->select('u.*, r.role_name')
-        ->join('roles r', 'r.role_id = u.role_id', 'left')
-        ->where('u.user_id', $userId)
-        ->get()
-        ->getRowArray();
-    
-    // Hitung active duration (logika sederhana)
-    $activeDuration = "8h 24m";
-    
-    // Get user departments
-    if ($data['user_details'] && $data['user_details']['department_id']) {
-        $department = $db->table('departments')
-            ->select('department_name')
-            ->where('department_id', $data['user_details']['department_id'])
+    {
+        $data = $this->loadCommonData();
+
+        $userId = session()->get('user_id');
+        $db = db_connect();
+
+        // Load models
+        $userModel = new UserModel();
+        $roleModel = new RoleModel();
+
+        // Get user details dengan departments
+        $data['user_details'] = $db->table('users u')
+            ->select('u.*, r.role_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('u.user_id', $userId)
             ->get()
             ->getRowArray();
-        
-        if ($department) {
-            $data['user_details']['department_name'] = $department['department_name'];
+
+        // Hitung active duration (logika sederhana)
+        $activeDuration = "8h 24m";
+
+        // Get user departments
+        if ($data['user_details'] && $data['user_details']['department_id']) {
+            $department = $db->table('departments')
+                ->select('department_name')
+                ->where('department_id', $data['user_details']['department_id'])
+                ->get()
+                ->getRowArray();
+
+            if ($department) {
+                $data['user_details']['department_name'] = $department['department_name'];
+            }
         }
-    }
-    
-    // ==================== STATISTIK DINAMIS ====================
-    
-    // 1. Tickets in Progress
-    $ticketsInProgress = $db->table('tickets t')
-        ->join('statuses s', 's.status_id = t.status_id')
-        ->where('t.assigned_to', $userId)
-        ->whereIn('s.status_name', ['In Progress', 'Processing'])
-        ->countAllResults();
-    
-    // Tickets need attention (priority tinggi)
-    $needsAttention = $db->table('tickets t')
-        ->join('priorities p', 'p.priority_id = t.priority_id')
-        ->join('statuses s', 's.status_id = t.status_id')
-        ->where('t.assigned_to', $userId)
-        ->whereIn('p.priority_name', ['Urgent', 'High'])
-        ->whereIn('s.status_name', ['Open', 'In Progress'])
-        ->countAllResults();
-    
-    // 2. Waiting Customer Reply
-    $waitingCustomerReply = $db->table('tickets t')
-        ->join('statuses s', 's.status_id = t.status_id')
-        ->where('t.assigned_to', $userId)
-        ->where('s.status_name', 'Waiting Customer Reply')
-        ->countAllResults();
-    
-    // 3. Incoming Tickets (belum diassign)
-    $incomingTickets = $db->table('tickets t')
-        ->join('statuses s', 's.status_id = t.status_id')
-        ->where('t.assigned_to IS NULL')
-        ->where('s.status_name', 'Open')
-        ->countAllResults();
-    
-    // New today
-    $newToday = $db->table('tickets t')
-        ->join('statuses s', 's.status_id = t.status_id')
-        ->where('t.assigned_to IS NULL')
-        ->where('s.status_name', 'Open')
-        ->where('DATE(t.created_at)', date('Y-m-d'))
-        ->countAllResults();
-    
-    // ==================== TEAM UPDATES ====================
-    
-    // Agents online
-    $agentsOnline = 0;
-    try {
-        $agentsOnlineQuery = $db->table('users u')
-            ->join('roles r', 'r.role_id = u.role_id')
-            ->where('r.role_name', 'Support');
-        
-        if ($db->fieldExists('is_active', 'users')) {
-            $agentsOnlineQuery->where('u.is_active', true);
-        }
-        
-        $agentsOnline = $agentsOnlineQuery->countAllResults();
-    } catch (Exception $e) {
-        $agentsOnline = 8;
-    }
-    
-    // Agents in meeting
-    $agentsInMeeting = 0;
-    try {
-        if ($db->fieldExists('in_meeting', 'users')) {
-            $agentsInMeeting = $db->table('users u')
+
+        // ==================== STATISTIK DINAMIS ====================
+
+        // 1. Tickets in Progress
+        $ticketsInProgress = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to', $userId)
+            ->whereIn('s.status_name', ['In Progress', 'Processing'])
+            ->countAllResults();
+
+        // Tickets need attention (priority tinggi)
+        $needsAttention = $db->table('tickets t')
+            ->join('priorities p', 'p.priority_id = t.priority_id')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to', $userId)
+            ->whereIn('p.priority_name', ['Urgent', 'High'])
+            ->whereIn('s.status_name', ['Open', 'In Progress'])
+            ->countAllResults();
+
+        // 2. Waiting Customer Reply
+        $waitingCustomerReply = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to', $userId)
+            ->where('s.status_name', 'Waiting Customer Reply')
+            ->countAllResults();
+
+        // 3. Incoming Tickets (belum diassign)
+        $incomingTickets = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NULL')
+            ->where('s.status_name', 'Open')
+            ->countAllResults();
+
+        // New today
+        $newToday = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NULL')
+            ->where('s.status_name', 'Open')
+            ->where('DATE(t.created_at)', date('Y-m-d'))
+            ->countAllResults();
+
+        // ==================== TEAM UPDATES ====================
+
+        // Agents online
+        $agentsOnline = 0;
+        try {
+            $agentsOnlineQuery = $db->table('users u')
                 ->join('roles r', 'r.role_id = u.role_id')
-                ->where('r.role_name', 'Support')
-                ->where('u.in_meeting', true)
-                ->countAllResults();
+                ->where('r.role_name', 'Support');
+
+            if ($db->fieldExists('is_active', 'users')) {
+                $agentsOnlineQuery->where('u.is_active', true);
+            }
+
+            $agentsOnline = $agentsOnlineQuery->countAllResults();
+        } catch (Exception $e) {
+            $agentsOnline = 8;
         }
-    } catch (Exception $e) {
-        $agentsInMeeting = 2;
-    }
-    
-    // ==================== RECENT TICKETS ====================
-    
-    $data['recent_tickets'] = $db->table('tickets t')
-        ->select('t.ticket_id, t.ticket_number, t.subject,
+
+        // Agents in meeting
+        $agentsInMeeting = 0;
+        try {
+            if ($db->fieldExists('in_meeting', 'users')) {
+                $agentsInMeeting = $db->table('users u')
+                    ->join('roles r', 'r.role_id = u.role_id')
+                    ->where('r.role_name', 'Support')
+                    ->where('u.in_meeting', true)
+                    ->countAllResults();
+            }
+        } catch (Exception $e) {
+            $agentsInMeeting = 2;
+        }
+
+        // ==================== RECENT TICKETS ====================
+
+        $data['recent_tickets'] = $db->table('tickets t')
+            ->select('t.ticket_id, t.ticket_number, t.subject,
                  p.priority_name,
                  s.status_name,
                  c.category_name,
                  u.full_name as customer_name,
                  proj.project_name,
                  t.created_at')
-        ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
-        ->join('statuses s', 's.status_id = t.status_id', 'left')
-        ->join('categories c', 'c.category_id = t.category_id', 'left')
-        ->join('users u', 'u.user_id = t.customer_id', 'left')
-        ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-        ->where('t.assigned_to IS NULL')
-        ->where('s.status_name', 'Open')
-        ->orderBy('t.created_at', 'DESC')
-        ->limit(3)
-        ->get()
-        ->getResultArray();
-    
-    // ==================== RECENT NOTIFICATIONS ====================
-    
-    $data['recent_notifications'] = [];
-    if ($db->tableExists('notifications')) {
-        try {
-            $data['recent_notifications'] = $db->table('notifications n')
-                ->select('n.*')
-                ->where('n.user_id', $userId)
-                ->where('n.read_status', 0)
-                ->orderBy('n.created_at', 'DESC')
-                ->limit(3)
-                ->get()
-                ->getResultArray();
-        } catch (Exception $e) {
-            $data['recent_notifications'] = [
-                ['title' => 'New ticket assigned #10425', 'created_at' => date('Y-m-d H:i:s', strtotime('-10 minutes')), 'type' => 'assignment'],
-                ['title' => 'Ticket #10422 needs follow up', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours')), 'type' => 'warning'],
-                ['title' => 'Customer replied to #10421', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day')), 'type' => 'message']
-            ];
+            ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
+            ->join('statuses s', 's.status_id = t.status_id', 'left')
+            ->join('categories c', 'c.category_id = t.category_id', 'left')
+            ->join('users u', 'u.user_id = t.customer_id', 'left')
+            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
+            ->where('t.assigned_to IS NULL')
+            ->where('s.status_name', 'Open')
+            ->orderBy('t.created_at', 'DESC')
+            ->limit(3)
+            ->get()
+            ->getResultArray();
+
+        // ==================== RECENT NOTIFICATIONS ====================
+
+        $data['recent_notifications'] = [];
+        if ($db->tableExists('notifications')) {
+            try {
+                $data['recent_notifications'] = $db->table('notifications n')
+                    ->select('n.*')
+                    ->where('n.user_id', $userId)
+                    ->where('n.read_status', 0)
+                    ->orderBy('n.created_at', 'DESC')
+                    ->limit(3)
+                    ->get()
+                    ->getResultArray();
+            } catch (Exception $e) {
+                $data['recent_notifications'] = [
+                    ['title' => 'New ticket assigned #10425', 'created_at' => date('Y-m-d H:i:s', strtotime('-10 minutes')), 'type' => 'assignment'],
+                    ['title' => 'Ticket #10422 needs follow up', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours')), 'type' => 'warning'],
+                    ['title' => 'Customer replied to #10421', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 day')), 'type' => 'message']
+                ];
+            }
         }
+
+        // ==================== PASS DATA KE VIEW ====================
+        $data['stats'] = [
+            'tickets_in_progress' => $ticketsInProgress,
+            'needs_attention' => $needsAttention,
+            'waiting_customer_reply' => $waitingCustomerReply,
+            'incoming_tickets' => $incomingTickets,
+            'new_today' => $newToday,
+            'agents_online' => $agentsOnline,
+            'agents_in_meeting' => $agentsInMeeting,
+            'active_duration' => $activeDuration
+        ];
+
+        return view('Support/dashboard', $data);
     }
-    
-    // ==================== PASS DATA KE VIEW ====================
-    
-    $data['stats'] = [
-        'tickets_in_progress' => $ticketsInProgress,
-        'needs_attention' => $needsAttention,
-        'waiting_customer_reply' => $waitingCustomerReply,
-        'incoming_tickets' => $incomingTickets,
-        'new_today' => $newToday,
-        'agents_online' => $agentsOnline,
-        'agents_in_meeting' => $agentsInMeeting,
-        'active_duration' => $activeDuration
-    ];
-    
-    return view('Support/dashboard', $data);
-}
 
     public function incomingTickets()
     {
@@ -240,17 +239,62 @@ class SupportController extends BaseController
 
         $db = db_connect();
 
-        // Get all incoming tickets
+        // ==================== STATISTIK DINAMIS ====================
+
+        // Total incoming (semua ticket yang belum diassign)
+        $totalIncoming = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NULL')
+            ->where('s.status_name', 'Open')
+            ->countAllResults();
+
+        // Pending review (yang masih Open)
+        $pendingReview = $totalIncoming; // atau logika khusus jika ada
+
+        // Forwarded today
+        $forwardedToday = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('s.status_name', 'Forwarded')
+            ->where('DATE(t.updated_at)', date('Y-m-d'))
+            ->countAllResults();
+
+        // High priority (Urgent/High)
+        $highPriority = $db->table('tickets t')
+            ->join('priorities p', 'p.priority_id = t.priority_id')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NULL')
+            ->where('s.status_name', 'Open')
+            ->whereIn('p.priority_name', ['Urgent', 'High'])
+            ->countAllResults();
+
+        $data['stats'] = [
+            'total_incoming' => $totalIncoming,
+            'pending_review' => $pendingReview,
+            'forwarded_today' => $forwardedToday,
+            'high_priority' => $highPriority
+        ];
+
+        // ==================== TIKET DINAMIS ====================
+
+        // Get all incoming tickets dengan semua relasi yang diperlukan
         $data['tickets'] = $db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, u.full_name as customer_name, proj.project_name')
+            ->select('t.*, 
+                p.priority_name, p.priority_id,
+                s.status_name, 
+                cat.category_name, 
+                u.full_name as customer_name, u.email as customer_email,
+                proj.project_name, proj.project_id,
+                d.department_name')
             ->join('priorities p', 'p.priority_id = t.priority_id')
             ->join('statuses s', 's.status_id = t.status_id')
             ->join('categories cat', 'cat.category_id = t.category_id')
             ->join('users u', 'u.user_id = t.customer_id')
             ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-            ->where('t.assigned_to', null)
+            ->join('departments d', 'd.department_id = t.department_id', 'left')
+            ->where('t.assigned_to IS NULL')
             ->where('s.status_name', 'Open')
-            ->orderBy('t.created_at', 'ASC')
+            ->orderBy('p.priority_id', 'DESC') // Urgent/High first
+            ->orderBy('t.created_at', 'ASC') // Oldest first
             ->get()
             ->getResultArray();
 
