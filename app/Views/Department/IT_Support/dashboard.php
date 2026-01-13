@@ -75,204 +75,163 @@
     </div>
 
     <!-- Recent Assigned Tickets Section -->
-    <div class="bg-card-bg/50 rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <!-- Section Header -->
         <div class="p-4 md:p-6 border-b border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 class="text-xl md:text-2xl font-semibold text-text-dark">Recent Assigned Tickets</h2>
-                <a href="<?= base_url('department/it-support/assigned_tickets') ?>" 
-                   class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium flex items-center gap-2">
-                    <span>View All Assigned Tickets</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="p-4 md:p-6 bg-card-bg">
-            <div class="relative">
-                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <i class="fas fa-search"></i>
+                <div class="flex-1">
+                    <h2 class="text-lg md:text-[20px] font-semibold text-gray-800">Recent Assigned Tickets</h2>
+                    <p class="text-sm text-gray-600 mt-1">Latest tickets assigned to IT Support department</p>
                 </div>
-                <input 
-                    type="text" 
-                    placeholder="Ticket src ...." 
-                    class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                >
+                
+                <!-- Search Bar -->
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-search text-sm"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        placeholder="Search tickets..." 
+                        class="w-full md:w-64 h-10 pl-10 pr-4 bg-white border border-gray-300 rounded-lg text-gray-700 text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                        id="recentSearch"
+                    >
+                </div>
             </div>
         </div>
 
-        <!-- Tickets Table -->
+        <!-- Table -->
         <div class="overflow-x-auto">
             <table class="w-full min-w-max">
-                <thead>
-                    <tr class="bg-gray-100/50 border-b border-gray-200">
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header" data-sort="id">
                             <div class="flex items-center gap-1">
-                                <span>Ticket ID</span>
-                                <i class="fas fa-sort text-gray-400"></i>
+                                <span class="hidden sm:inline">Ticket ID</span>
+                                <span class="sm:hidden">ID</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
                             </div>
                         </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
-                            <span>Subject</span>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header" data-sort="subject">
+                            <div class="flex items-center gap-1">
+                                <span>Subject</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
+                            </div>
                         </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
-                            <span>Project</span>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden md:table-cell" data-sort="project">
+                            <div class="flex items-center gap-1">
+                                <span>Project</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
+                            </div>
                         </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
-                            <span>Priority</span>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header" data-sort="priority">
+                            <div class="flex items-center gap-1">
+                                <span class="hidden xs:inline">Priority</span>
+                                <span class="xs:hidden">Pri</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
+                            </div>
                         </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
-                            <span>Status</span>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden sm:table-cell" data-sort="status">
+                            <div class="flex items-center gap-1">
+                                <span>Status</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
+                            </div>
                         </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">
-                            <span>Action</span>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden lg:table-cell" data-sort="updated">
+                            <div class="flex items-center gap-1">
+                                <span>Last Updated</span>
+                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
+                            </div>
                         </th>
+                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Ticket 1 -->
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4">
-                            <span class="text-text-dark font-semibold">#10421</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="max-w-xs truncate">
-                                <span class="text-gray-700">Login issue causing error message</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="text-gray-600">Project Alpha</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Medium</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Open</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <a href="<?= base_url('department/it-support/ticket/10421') ?>" class="px-3 py-1 bg-secondary text-white text-xs rounded hover:bg-[#817CB2] transition-colors no-underline">
-                                View Ticket
-                            </a>
-                        </td>
-                    </tr>
-
-                    <!-- Ticket 2 -->
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4">
-                            <span class="text-text-dark font-semibold">#10422</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="max-w-xs truncate">
-                                <span class="text-gray-700">Feature request for new export option</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="text-gray-600">Project Alpha</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">Low</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Resolved</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <a href="<?= base_url('department/it-support/ticket/10422') ?>" class="px-3 py-1 bg-secondary text-white text-xs rounded hover:bg-[#817CB2] transition-colors no-underline">
-                                View Ticket
-                            </a>
-                        </td>
-                    </tr>
-
-                    <!-- Ticket 3 -->
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4">
-                            <span class="text-text-dark font-semibold">#10423</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="max-w-xs truncate">
-                                <span class="text-gray-700">Fix firestorx issues neat issues</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="text-gray-600">Project Beta</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">High</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded">Need Info</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <a href="<?= base_url('department/it-support/ticket/10423') ?>" class="px-3 py-1 bg-secondary text-white text-xs rounded hover:bg-[#817CB2] transition-colors no-underline">
-                                View Ticket
-                            </a>
-                        </td>
-                    </tr>
-
-                    <!-- Ticket 4 -->
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4">
-                            <span class="text-text-dark font-semibold">#10424</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="max-w-xs truncate">
-                                <span class="text-gray-700">Fix safissax issues source log iss</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="text-gray-600">Project Beta</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">Low</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Closed</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <a href="<?= base_url('department/it-support/ticket/10424') ?>" class="px-3 py-1 bg-secondary text-white text-xs rounded hover:bg-[#817CB2] transition-colors no-underline">
-                                View Ticket
-                            </a>
-                        </td>
-                    </tr>
-
-                    <!-- Ticket 5 -->
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 px-4">
-                            <span class="text-text-dark font-semibold">#10425</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="max-w-xs truncate">
-                                <span class="text-gray-700">Fix mixizading app updates</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="text-gray-600">Project Alpha</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded">Urgent</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">On Progress</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <a href="<?= base_url('department/it-support/ticket/10425') ?>" class="px-3 py-1 bg-secondary text-white text-xs rounded hover:bg-[#817CB2] transition-colors no-underline">
-                                View Ticket
-                            </a>
-                        </td>
-                    </tr>
+                <tbody id="recentTicketsTable" class="divide-y divide-gray-200">
+                    <?php 
+                    $recent_tickets = [
+                        [
+                            'id' => '#10421', 
+                            'id_num' => 10421,
+                            'subject' => 'Login issue causing error message', 
+                            'project' => 'Project Alpha',
+                            'priority' => 'High', 
+                            'priority_value' => 3,
+                            'priorityColor' => 'bg-orange-100 text-orange-800 border border-orange-200', 
+                            'status' => 'Open',
+                            'statusColor' => 'bg-blue-100 text-blue-800 border border-blue-200',
+                            'time' => '5 minutes ago', 
+                            'timestamp' => strtotime('-5 minutes'),
+                        ],
+                        [
+                            'id' => '#10422', 
+                            'id_num' => 10422,
+                            'subject' => 'Feature request for new export option', 
+                            'project' => 'Project Alpha',
+                            'priority' => 'Low', 
+                            'priority_value' => 1,
+                            'priorityColor' => 'bg-blue-100 text-blue-800 border border-blue-200', 
+                            'status' => 'Resolved',
+                            'statusColor' => 'bg-green-100 text-green-800 border border-green-200',
+                            'time' => '1 hour ago', 
+                            'timestamp' => strtotime('-1 hour'),
+                        ],
+                        [
+                            'id' => '#10423', 
+                            'id_num' => 10423,
+                            'subject' => 'Fix firestorx issues neat issues', 
+                            'project' => 'Project Beta',
+                            'priority' => 'High', 
+                            'priority_value' => 3,
+                            'priorityColor' => 'bg-orange-100 text-orange-800 border border-orange-200', 
+                            'status' => 'Need Info',
+                            'statusColor' => 'bg-gray-100 text-gray-800 border border-gray-200',
+                            'time' => '2 hours ago', 
+                            'timestamp' => strtotime('-2 hours'),
+                        ],
+                        [
+                            'id' => '#10424', 
+                            'id_num' => 10424,
+                            'subject' => 'Fix safissax issues source log iss', 
+                            'project' => 'Project Beta',
+                            'priority' => 'Low', 
+                            'priority_value' => 1,
+                            'priorityColor' => 'bg-blue-100 text-blue-800 border border-blue-200', 
+                            'status' => 'Closed',
+                            'statusColor' => 'bg-gray-200 text-gray-800 border border-gray-300',
+                            'time' => '3 hours ago', 
+                            'timestamp' => strtotime('-3 hours'),
+                        ],
+                        [
+                            'id' => '#10425', 
+                            'id_num' => 10425,
+                            'subject' => 'Fix mixizading app updates', 
+                            'project' => 'Project Alpha',
+                            'priority' => 'Urgent', 
+                            'priority_value' => 4,
+                            'priorityColor' => 'bg-red-100 text-red-800 border border-red-200', 
+                            'status' => 'In Progress',
+                            'statusColor' => 'bg-purple-100 text-purple-800 border border-purple-200',
+                            'time' => '4 hours ago', 
+                            'timestamp' => strtotime('-4 hours'),
+                        ],
+                    ];
+                    ?>
                 </tbody>
             </table>
         </div>
 
-
-    </div>
-
-    <!-- Dashboard Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        
-
-        
-
-        
+        <!-- View All Footer -->
+        <div class="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+                <div class="text-gray-600 text-sm">
+                    Showing <span id="recentShowingCount">5</span> recent tickets
+                </div>
+                <a href="<?= base_url('department/it-support/assigned_tickets') ?>" 
+                   class="px-4 py-2 bg-secondary text-white text-sm font-medium rounded-lg hover:bg-[#817CB2] transition-colors flex items-center gap-2 no-underline">
+                    <span>View All Tickets</span>
+                    <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
     
@@ -290,10 +249,25 @@
         50% { opacity: 0.7; }
     }
     
-    .pulse-critical {
+    .urgent-pulse {
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     
+    .hover-row:hover {
+        background-color: #f9fafb;
+    }
+    
+    /* Table row animation */
+    @keyframes highlightNew {
+        0% { background-color: rgba(117, 110, 164, 0.1); }
+        100% { background-color: transparent; }
+    }
+    
+    .new-ticket {
+        animation: highlightNew 2s ease-out;
+    }
+    
+    /* Card hover effects */
     .card-hover {
         transition: all 0.2s ease;
     }
@@ -302,30 +276,39 @@
         transform: translateY(-4px);
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-    
-    /* Custom styles for stats cards */
-    .stats-card {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stats-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(to right, #8CEAC7, #FF8BA7, #FCD685, #82B4FF);
-    }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add pulse animation to critical priority badges
-        document.querySelectorAll('.bg-red-500\\/20').forEach(badge => {
-            badge.classList.add('pulse-critical');
+        // Render initial recent tickets table
+        renderRecentTable(<?= json_encode($recent_tickets) ?>);
+        
+        // Add urgent pulse animation to urgent tickets
+        setTimeout(() => {
+            document.querySelectorAll('.bg-red-100').forEach(badge => {
+                badge.classList.add('urgent-pulse');
+            });
+        }, 500);
+        
+        // Search functionality for recent tickets
+        const recentSearch = document.getElementById('recentSearch');
+        recentSearch.addEventListener('input', (e) => {
+            filterRecentTickets(e.target.value);
         });
+        
+        // Header click sorting for recent tickets
+        document.querySelectorAll('.sort-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.dataset.sort;
+                sortRecentTickets(column);
+                
+                // Update sort icons
+                updateRecentSortIcons(column);
+            });
+        });
+        
+        // Initialize sort icons for recent tickets
+        updateRecentSortIcons('id');
         
         // Add hover effects to cards
         document.querySelectorAll('.bg-card-bg.rounded-xl').forEach(card => {
@@ -340,31 +323,159 @@
             });
         });
         
-        // Mark all notifications as read
-        const markAllReadBtn = document.querySelector('button:contains("Mark All as Read")');
-        if (markAllReadBtn) {
-            markAllReadBtn.addEventListener('click', function() {
-                // Update UI
-                document.querySelectorAll('.w-2.h-2.bg-secondary').forEach(dot => {
-                    dot.classList.remove('bg-secondary');
-                    dot.classList.add('bg-gray-300');
-                });
-                
-                // Show message
-                showToast('All notifications marked as read', 'success');
-            });
-        }
-        
-        // Table row click
-        document.querySelectorAll('tbody tr').forEach(row => {
+        // Table row click for recent tickets
+        document.querySelectorAll('#recentTicketsTable tr').forEach(row => {
             row.addEventListener('click', function(e) {
-                if (!e.target.closest('button')) {
-                    const ticketId = this.querySelector('td:first-child span').textContent;
-                    showToast(`Opening ticket ${ticketId}`, 'info');
+                if (!e.target.closest('a') && !e.target.closest('button')) {
+                    const ticketId = this.querySelector('td:first-child span')?.textContent;
+                    if (ticketId) {
+                        window.location.href = `<?= base_url('department/it-support/ticket_detail/') ?>${ticketId.replace('#', '')}`;
+                    }
                 }
             });
         });
     });
+    
+    // Recent tickets data
+    const recentTicketsData = <?= json_encode($recent_tickets) ?>;
+    
+    function renderRecentTable(tickets) {
+        const tbody = document.getElementById('recentTicketsTable');
+        tbody.innerHTML = '';
+        
+        tickets.forEach((ticket, index) => {
+            const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            const row = document.createElement('tr');
+            row.className = `${rowClass} hover-row transition-colors cursor-pointer`;
+            
+            // Single View button for all tickets
+            const actionButtons = `
+                <a href="<?= base_url('department/it-support/ticket_detail/') ?>${ticket.id_num}" 
+                   class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                    <i class="fas fa-eye text-xs"></i>
+                    <span>View</span>
+                </a>
+            `;
+            
+            row.innerHTML = `
+                <td class="py-3 px-4">
+                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <div>
+                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-xs">${ticket.subject}</p>
+                        <p class="text-gray-500 text-xs mt-1 md:hidden">${ticket.project}</p>
+                    </div>
+                </td>
+                <td class="py-3 px-4 hidden md:table-cell">
+                    <span class="text-gray-700 text-sm">${ticket.project}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
+                        ${ticket.priority}
+                    </span>
+                </td>
+                <td class="py-3 px-4 hidden sm:table-cell">
+                    <span class="px-2 py-1 text-xs rounded-full ${ticket.statusColor} font-medium whitespace-nowrap">
+                        ${ticket.status}
+                    </span>
+                </td>
+                <td class="py-3 px-4 hidden lg:table-cell">
+                    <span class="text-gray-600 text-sm">${ticket.time}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                        ${actionButtons}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Update showing count
+        document.getElementById('recentShowingCount').textContent = tickets.length;
+    }
+    
+    function filterRecentTickets(searchTerm) {
+        const filtered = recentTicketsData.filter(ticket => {
+            const term = searchTerm.toLowerCase();
+            return (
+                ticket.subject.toLowerCase().includes(term) ||
+                ticket.id.toLowerCase().includes(term) ||
+                ticket.project.toLowerCase().includes(term) ||
+                ticket.status.toLowerCase().includes(term) ||
+                ticket.priority.toLowerCase().includes(term)
+            );
+        });
+        renderRecentTable(filtered);
+    }
+    
+    let recentSortDirection = 'desc';
+    let recentSortColumn = 'id';
+    
+    function sortRecentTickets(column) {
+        if (recentSortColumn === column) {
+            recentSortDirection = recentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            recentSortColumn = column;
+            recentSortDirection = 'desc';
+        }
+        
+        const sorted = [...recentTicketsData].sort((a, b) => {
+            let aValue, bValue;
+            
+            switch(column) {
+                case 'id':
+                    aValue = a.id_num;
+                    bValue = b.id_num;
+                    break;
+                case 'subject':
+                    aValue = a.subject.toLowerCase();
+                    bValue = b.subject.toLowerCase();
+                    break;
+                case 'project':
+                    aValue = a.project.toLowerCase();
+                    bValue = b.project.toLowerCase();
+                    break;
+                case 'priority':
+                    aValue = a.priority_value;
+                    bValue = b.priority_value;
+                    break;
+                case 'status':
+                    aValue = a.status.toLowerCase();
+                    bValue = b.status.toLowerCase();
+                    break;
+                case 'updated':
+                    aValue = a.timestamp;
+                    bValue = b.timestamp;
+                    break;
+                default:
+                    aValue = a.timestamp;
+                    bValue = b.timestamp;
+            }
+            
+            if (recentSortDirection === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+        
+        renderRecentTable(sorted);
+    }
+    
+    function updateRecentSortIcons(activeColumn) {
+        // Reset all icons
+        document.querySelectorAll('.sort-header i').forEach(icon => {
+            icon.className = 'fas fa-sort text-gray-400 ml-1 text-xs';
+        });
+        
+        // Set active sort icon
+        const activeHeader = document.querySelector(`.sort-header[data-sort="${activeColumn}"] i`);
+        if (activeHeader) {
+            activeHeader.className = `fas fa-sort-${recentSortDirection === 'asc' ? 'up' : 'down'} text-secondary ml-1 text-xs`;
+        }
+    }
     
     // Toast notification function
     function showToast(message, type = 'info') {
