@@ -706,39 +706,248 @@ class SupportController extends BaseController
         $userId = session()->get('user_id');
         $db = db_connect();
 
-        // Get tickets in progress
+        // ==================== STATISTIK DINAMIS ====================
+
+        // Get current date for PostgreSQL
+        $currentDate = date('Y-m-d');
+        $firstDayOfWeek = date('Y-m-d', strtotime('monday this week'));
+        $lastDayOfWeek = date('Y-m-d', strtotime('sunday this week'));
+
+        // Tickets in progress
+        $inProgressCount = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NOT NULL')
+            ->whereIn('s.status_name', ['In Progress', 'Processing'])
+            ->countAllResults();
+
+        // Waiting for customer
+        $waitingCount = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NOT NULL')
+            ->where('s.status_name', 'Waiting Customer Reply')
+            ->countAllResults();
+
+        // Resolved (this week) - FIXED for PostgreSQL
+        $resolvedCount = $db->table('tickets t')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->where('t.assigned_to IS NOT NULL')
+            ->where('s.status_name', 'Resolved')
+            ->where("DATE(t.resolved_at) >= '{$firstDayOfWeek}'")
+            ->where("DATE(t.resolved_at) <= '{$lastDayOfWeek}'")
+            ->countAllResults();
+
+        $data['stats'] = [
+            'in_progress' => $inProgressCount,
+            'waiting_customer' => $waitingCount,
+            'resolved_week' => $resolvedCount
+        ];
+
+        // ==================== TICKETS DINAMIS ====================
+
+        // Get tickets in progress dengan semua relasi
         $data['tickets'] = $db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
-                     u.full_name as customer_name, proj.project_name,
-                     d.department_name')
+            ->select('t.*, 
+                p.priority_name, p.priority_id,
+                s.status_name, 
+                cat.category_name, 
+                u.full_name as customer_name, u.email as customer_email,
+                proj.project_name, proj.project_id,
+                d.department_name, d.department_id,
+                a.full_name as assigned_to_name, a.email as assigned_to_email')
             ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
             ->join('statuses s', 's.status_id = t.status_id', 'left')
             ->join('categories cat', 'cat.category_id = t.category_id', 'left')
             ->join('users u', 'u.user_id = t.customer_id', 'left')
             ->join('projects proj', 'proj.project_id = t.project_id', 'left')
             ->join('departments d', 'd.department_id = t.department_id', 'left')
+            ->join('users a', 'a.user_id = t.assigned_to', 'left')
             ->where('t.assigned_to IS NOT NULL')
-            ->whereIn('s.status_name', ['In Progress', 'Pending', 'Processing'])
+            ->whereIn('s.status_name', ['In Progress', 'Processing', 'Waiting Customer Reply', 'Pending', 'Forwarded'])
+            ->orderBy('p.priority_id', 'DESC') // Priority first
             ->orderBy('t.created_at', 'DESC')
             ->get()
             ->getResultArray();
 
+        // ==================== DEPARTMENT PERFORMANCE ====================
+
+        // Get department statistics - FIXED for PostgreSQL
+        $departmentStats = $db->table('tickets t')
+            ->select('d.department_name,
+                COUNT(t.ticket_id) as total_tickets,
+                SUM(CASE WHEN s.status_name IN (\'In Progress\', \'Processing\') THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN s.status_name = \'Resolved\' THEN 1 ELSE 0 END) as resolved,
+                EXTRACT(EPOCH FROM AVG(t.resolved_at - t.created_at)) / 3600 as avg_time_hours')
+            ->join('departments d', 'd.department_id = t.department_id', 'left')
+            ->join('statuses s', 's.status_id = t.status_id', 'left')
+            ->where('t.assigned_to IS NOT NULL')
+            ->where('t.department_id IS NOT NULL')
+            ->whereIn('s.status_name', ['In Progress', 'Processing', 'Resolved', 'Waiting Customer Reply'])
+            ->groupBy('d.department_id, d.department_name')
+            ->orderBy('total_tickets', 'DESC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
+
+        $data['department_stats'] = $departmentStats;
+
+        // ==================== RECENT ACTIVITIES ====================
+
+        // Get recent ticket activities
+        try {
+            if ($db->tableExists('ticket_activities')) {
+                $data['recent_activities'] = $db->table('ticket_activities ta')
+                    ->select('ta.*, t.ticket_id, t.subject, 
+                         u.full_name as user_name,
+                         d.department_name')
+                    ->join('tickets t', 't.ticket_id = ta.ticket_id')
+                    ->join('users u', 'u.user_id = ta.user_id')
+                    ->join('departments d', 'd.department_id = ta.department_id', 'left')
+                    ->orderBy('ta.created_at', 'DESC')
+                    ->limit(10)
+                    ->get()
+                    ->getResultArray();
+            } else {
+                // Fallback jika tabel tidak ada
+                $data['recent_activities'] = [];
+            }
+        } catch (Exception $e) {
+            $data['recent_activities'] = [];
+        }
+
         return view('Support/ticket_in_progress', $data);
+    }
+
+    // Add this method to SupportController.php
+    public function loadMoreTickets()
+    {
+        $db = db_connect();
+
+        // Get filter parameters
+        $search = $this->request->getPost('search');
+        $priority = $this->request->getPost('priority');
+        $status = $this->request->getPost('status');
+        $department = $this->request->getPost('department');
+        $offset = $this->request->getPost('offset') ?? 0;
+
+        $query = $db->table('tickets t')
+            ->select('t.*, 
+                p.priority_name,
+                s.status_name,
+                u.full_name as customer_name,
+                proj.project_name,
+                d.department_name,
+                a.full_name as assigned_to_name')
+            ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
+            ->join('statuses s', 's.status_id = t.status_id', 'left')
+            ->join('users u', 'u.user_id = t.customer_id', 'left')
+            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
+            ->join('departments d', 'd.department_id = t.department_id', 'left')
+            ->join('users a', 'a.user_id = t.assigned_to', 'left')
+            ->where('t.assigned_to IS NOT NULL')
+            ->limit(10, $offset);
+
+        // Apply filters
+        if ($priority !== 'all' && $priority) {
+            $query->where('p.priority_name', ucfirst($priority));
+        }
+
+        if ($status !== 'all' && $status) {
+            $status = str_replace('-', ' ', $status);
+            $query->where('s.status_name', ucfirst($status));
+        }
+
+        if ($department !== 'all' && $department) {
+            $department = str_replace('-', ' ', $department);
+            $query->where('d.department_name', ucfirst($department));
+        }
+
+        if ($search) {
+            $query->groupStart()
+                ->like('t.subject', $search)
+                ->orLike('u.full_name', $search)
+                ->orLike('d.department_name', $search)
+                ->orLike('proj.project_name', $search)
+                ->groupEnd();
+        }
+
+        $tickets = $query->get()->getResultArray();
+
+        // Format tickets for frontend
+        $formattedTickets = [];
+        foreach ($tickets as $ticket) {
+            // Calculate time ago
+            $created = new DateTime($ticket['created_at']);
+            $now = new DateTime();
+            $interval = $now->diff($created);
+
+            if ($interval->days == 0 && $interval->h == 0 && $interval->i < 1) {
+                $timeAgo = 'Just now';
+            } elseif ($interval->days == 0 && $interval->h == 0) {
+                $timeAgo = $interval->i . ' minutes ago';
+            } elseif ($interval->days == 0 && $interval->h == 1) {
+                $timeAgo = '1 hour ago';
+            } elseif ($interval->days == 0) {
+                $timeAgo = $interval->h . ' hours ago';
+            } elseif ($interval->days == 1) {
+                $timeAgo = 'Yesterday';
+            } else {
+                $timeAgo = $created->format('M d');
+            }
+
+            $formattedTickets[] = [
+                'ticket_id' => $ticket['ticket_id'],
+                'subject' => $ticket['subject'],
+                'priority' => strtolower($ticket['priority_name'] ?? 'medium'),
+                'status' => strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'in-progress')),
+                'customer_name' => $ticket['customer_name'],
+                'project_name' => $ticket['project_name'],
+                'department_name' => $ticket['department_name'],
+                'assigned_to_name' => $ticket['assigned_to_name'],
+                'department_id' => $ticket['department_id'],
+                'time_ago' => $timeAgo
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'tickets' => $formattedTickets
+        ]);
     }
 
     public function forwardTicket($ticketId)
     {
         $departmentId = $this->request->getPost('department_id');
+        $notes = $this->request->getPost('notes');
 
         $db = db_connect();
 
-        $db->table('tickets')
+        $result = $db->table('tickets')
             ->where('ticket_id', $ticketId)
             ->update([
                 'department_id' => $departmentId,
                 'status_id' => 2, // In Progress status
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
+
+        // Add activity log
+        if ($db->tableExists('ticket_activities')) {
+            $db->table('ticket_activities')->insert([
+                'ticket_id' => $ticketId,
+                'user_id' => session()->get('user_id'),
+                'activity_type' => 'department_assigned',
+                'description' => 'Ticket assigned to department',
+                'notes' => $notes,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        // Return JSON for AJAX requests
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Ticket forwarded to department'
+            ]);
+        }
 
         return redirect()->to(site_url('support/ticket_in_progress'))->with('success', 'Ticket forwarded to department');
     }
