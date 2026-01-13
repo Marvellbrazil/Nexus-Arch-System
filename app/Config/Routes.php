@@ -33,10 +33,10 @@ $routes->group('admin', function ($routes) {
     // Manage Users
     $routes->get('users', [AdminController::class, 'manageUsers']);
     $routes->post('users/add', [AdminController::class, 'addUser']);
-        $routes->post('users/edit/(:num)', 'AdminController::editUser/$1');
-        $routes->post('users/reset-password/(:num)', 'AdminController::resetPassword/$1');
-        $routes->post('users/change-status/(:num)', 'AdminController::changeStatus/$1');
-        $routes->post('users/delete/(:num)', 'AdminController::deleteUser/$1');
+    $routes->post('users/edit/(:num)', 'AdminController::editUser/$1');
+    $routes->post('users/reset-password/(:num)', 'AdminController::resetPassword/$1');
+    $routes->post('users/change-status/(:num)', 'AdminController::changeStatus/$1');
+    $routes->post('users/delete/(:num)', 'AdminController::deleteUser/$1');
 
     $routes->get('roles', [AdminController::class, 'manageRoles']);
     $routes->get('departments', [AdminController::class, 'manageDepartments']);
@@ -45,10 +45,10 @@ $routes->group('admin', function ($routes) {
     // Tambahkan route untuk Manage Projects
     $routes->get('projects', [AdminController::class, 'manageProjects']);
     $routes->post('projects/add', [AdminController::class, 'addProject']);
-        $routes->post('projects/edit/(:num)', 'AdminController::editProject/$1');
-        $routes->post('projects/delete/(:num)', 'AdminController::deleteProject/$1');
-        $routes->post('projects/assign-users/(:num)', 'AdminController::assignUsersToProject/$1');
-        $routes->post('projects/change-status/(:num)', 'AdminController::changeProjectStatus/$1');
+    $routes->post('projects/edit/(:num)', 'AdminController::editProject/$1');
+    $routes->post('projects/delete/(:num)', 'AdminController::deleteProject/$1');
+    $routes->post('projects/assign-users/(:num)', 'AdminController::assignUsersToProject/$1');
+    $routes->post('projects/change-status/(:num)', 'AdminController::changeProjectStatus/$1');
 
     $routes->get('settings', [AdminController::class, 'systemSettings']);
     $routes->get('logout', [AuthController::class, 'logout']);
@@ -58,9 +58,9 @@ $routes->group('admin', function ($routes) {
 $routes->group('customer', function ($routes) {
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
-        $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
-        $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-        $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
+    $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
+    $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
+    $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', [CustomerController::class, 'updateProfile']);
     $routes->get('notifications', [CustomerController::class, 'notifications']);
@@ -76,6 +76,8 @@ $routes->group('support', function ($routes) {
     $routes->get('ticket_in_progress', [SupportController::class, 'ticketInProgress']);
     $routes->get('department_conversation/(:num)', [SupportController::class, 'departmentConversation/$1']);
     $routes->get('notifications', [SupportController::class, 'notifications']);
+    // Dalam group support routes
+    $routes->get('notifications/load_more', [SupportController::class, 'loadMoreNotifications']);
     $routes->get('profile', [SupportController::class, 'profile']);
     $routes->get('logout', [AuthController::class, 'logout']);
 
@@ -84,6 +86,12 @@ $routes->group('support', function ($routes) {
     $routes->post('ticket/assign/(:num)', [SupportController::class, 'assignTicket/$1']);
     $routes->post('ticket/forward/(:num)', [SupportController::class, 'forwardTicket/$1']);
     $routes->post('ticket/mark_resolved/(:num)', [SupportController::class, 'markTicketResolved/$1']);
+
+    // 🔥 NEW: Notification API routes
+    $routes->post('mark_notification_read', [SupportController::class, 'markNotificationRead']);
+    $routes->get('get_notifications', [SupportController::class, 'getNotifications']);
+    $routes->get('get_unread_count', [SupportController::class, 'getUnreadCount']);
+    $routes->post('load_more_notifications', [SupportController::class, 'loadMoreNotifications']);
 });
 
 // Department Routes
