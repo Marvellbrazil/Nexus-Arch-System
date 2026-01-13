@@ -65,8 +65,13 @@ class CustomerController extends BaseController
             ->getResultArray();
 
         $data['projects'] = $this->db->table('projects p')
-            ->select('p.*, COUNT(t.ticket_id) as ticket_count')
-            ->join('tickets t', 't.project_id = p.project_id', 'left') // left untuk project tanpa ticket
+            ->select('
+                p.*, 
+                COUNT(t.ticket_id) as ticket_count, 
+                SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets, 
+                SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
+            ')
+            ->join('tickets t', 't.project_id = p.project_id', 'left')
             ->where('p.user_id', $this->userId)
             ->groupBy('p.project_id')
             ->get()
