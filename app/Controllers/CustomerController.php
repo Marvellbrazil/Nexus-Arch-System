@@ -808,4 +808,13 @@ class CustomerController extends BaseController
         $this->db->table('notifications')->insert($notificationData);
     }
 
+    public function markedAsRead($id)
+    {
+        $this->db->table('notifications')
+            ->where('user_id', $this->userId)
+            ->where('notification_id', $id)
+            ->update(['is_read' => true]);
+
+        return redirect()->back()->with('success', 'All notifications marked as read');
+    }
 }

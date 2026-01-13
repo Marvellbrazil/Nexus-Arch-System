@@ -145,25 +145,6 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                <?php 
-                $user_projects = [
-                    [
-                        'project_id' => 1,
-                        'name' => 'Project Alpha',
-                        'description' => 'Main enterprise project with multiple modules',
-                        'tickets_count' => 12,
-                        'open_tickets' => 3,
-                        'resolved_tickets' => 9,
-                        'color' => 'from-blue-500 to-blue-600',
-                        'icon' => 'fa-project-diagram',
-                        'project_code' => 'PRJ-ALPHA-2024',
-                        'created_date' => 'Jan 15, 2024',
-                        'status' => 'active',
-                        'owner' => 'Admin Team',
-                    ],
-                ];
-                ?>
-                
                 <?php if (!empty($data['projects'])): ?>
                     <?php foreach($data['projects'] as $project): ?>
                         <div class="relative group">
@@ -204,7 +185,7 @@
                                     </p>
                                     <div class="flex items-center text-gray-500 text-xs mt-2">
                                         <i class="fas fa-calendar-alt mr-1"></i>
-                                        <span>Created: <?= $project['created_at'] ?></span>
+                                        <span>Created: <?= date('F d, Y H:i', strtotime($project['created_at'])) ?></span>
                                     </div>
                                 </div>
 
@@ -311,17 +292,17 @@
                     <?php foreach($data['notifications'] as $notification): ?>
                     <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                         <div class="flex-shrink-0 mt-1">
-                            <?php if($notification['unread']): ?>
+                            <?php if($notification['is_read']): ?>
                                 <div class="w-2 h-2 bg-secondary rounded-full unread-indicator"></div>
                             <?php else: ?>
                                 <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
                             <?php endif; ?>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-text-dark text-sm md:text-[14px] font-medium <?= $notification['unread'] ? 'font-semibold' : '' ?> truncate">
+                            <p class="text-text-dark text-sm md:text-[14px] font-medium <?= $notification['is_read'] ? 'font-semibold' : '' ?> truncate">
                                 <?= $notification['title'] ?>
                             </p>
-                            <p class="text-gray-500 text-xs md:text-[12px] mt-1"><?= $notification['time'] ?></p>
+                            <p class="text-gray-500 text-xs md:text-[12px] mt-1"><?= date('F d, Y H:i', strtotime($notification['created_at'])) ?></p>
                         </div>
                     </div>
                     <?php endforeach; ?>

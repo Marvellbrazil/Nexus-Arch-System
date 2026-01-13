@@ -597,15 +597,15 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($notifications as $notification): ?>
-                                    <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
-                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                    <a href="<?= base_url('customer/notifications/' . $notification['notification_id']) ?>" 
+                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['is_read'] ? 'notification-unread' : '' ?>">
                                         <div class="flex gap-3">
                                             <div class="flex-shrink-0">
-                                                <?php if ($notification['type'] == 'message'): ?>
+                                                <?php if ($notification['notification_type'] == 'message'): ?>
                                                     <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                                                         <i class="fas fa-comment text-blue-600"></i>
                                                     </div>
-                                                <?php elseif ($notification['type'] == 'success'): ?>
+                                                <?php elseif ($notification['notification_type'] == 'success'): ?>
                                                     <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                                                         <i class="fas fa-check-circle text-green-600"></i>
                                                     </div>
@@ -618,9 +618,9 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
                                             <div class="flex-1 min-w-0">
                                                 <p class="font-semibold text-gray-800 text-sm truncate"><?= esc($notification['title']) ?></p>
                                                 <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
-                                                <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
+                                                <p class="text-gray-500 text-xs mt-2"><?= esc($notification['created_at']) ?></p>
                                             </div>
-                                            <?php if (!$notification['read']): ?>
+                                            <?php if (!$notification['is_read']): ?>
                                                 <div class="flex-shrink-0 mt-1">
                                                     <span class="w-2 h-2 bg-secondary rounded-full"></span>
                                                 </div>
@@ -666,15 +666,15 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
                             </div>
                         <?php else: ?>
                             <?php foreach ($notifications as $notification): ?>
-                                <a href="<?= base_url('customer/notifications/' . $notification['id']) ?>" 
-                                    class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                <a href="<?= base_url('customer/notifications/' . $notification['notification_id']) ?>" 
+                                    class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['is_read'] ? 'notification-unread' : '' ?>">
                                     <div class="flex gap-3">
                                         <div class="flex-shrink-0">
-                                            <?php if ($notification['type'] == 'message'): ?>
+                                            <?php if ($notification['notification_type'] == 'message'): ?>
                                                 <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                                     <i class="fas fa-comment text-blue-600 text-xs"></i>
                                                 </div>
-                                            <?php elseif ($notification['type'] == 'success'): ?>
+                                            <?php elseif ($notification['notification_type'] == 'success' || $notification['notification_type'] == 'notification' || $notification['notification_type'] == 'success'): ?>
                                                 <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                                                     <i class="fas fa-check-circle text-green-600 text-xs"></i>
                                                 </div>
@@ -687,7 +687,7 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-gray-800 text-xs truncate"><?= esc($notification['title']) ?></p>
                                             <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
-                                            <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
+                                            <p class="text-gray-500 text-xs mt-2"><?= esc($notification['created_at']) ?></p>
                                         </div>
                                     </div>
                                 </a>
@@ -716,7 +716,8 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
         <div class="hidden md:flex items-center gap-3">
             <!-- User Avatar (Desktop) -->
             <div title="Logout">
-                <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors ml-4" onclick="location.href = '/logout'">
+                <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors ml-4"
+                onclick="location.href = 'customer/logout'">
                     <i class="fa-solid fa-arrow-right-from-bracket text-lg active"></i>
                 </button>
             </div>
