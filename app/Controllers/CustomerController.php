@@ -99,26 +99,210 @@ class CustomerController extends BaseController
         return view('Customer/dashboard', ['data' => $data]);
     }
 
-
+    private function getQueryString($excludeParams = [])
+{
+    $request = \Config\Services::request();
+    $queryParams = $request->getGet();
+    
+    foreach ($excludeParams as $param) {
+        unset($queryParams[$param]);
+    }
+    
+    return $queryParams ? '&' . http_build_query($queryParams) : '';
+}
 
     public function myTickets()
     {
-        $data = $this->loadCommonData();
-        $data['stats'] = $this->getTicketStats();
+       $data = $this->loadCommonData();
+    $data['stats'] = $this->getTicketStats();
 
-        $data['tickets'] = $this->db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, proj.project_name, d.department_name')
+        // Get tickets with pagination and dynamic filters
+        $perPage = 10; // Items per page
+        $page = $this->request->getGet('page') ?? 1;
+        $offset = ($page - 1) * $perPage;
+
+        // Build query
+        $builder = $this->db->table('tickets t')
+            ->select('t.*, p.priority_name, s.status_name, 
+                 cat.category_name, proj.project_name, 
+                 d.department_name,
+                 t.ticket_number as display_id,
+                 t.ticket_id as id_num,
+                 t.created_at as timestamp,
+                 t.subject,
+                 proj.project_code as project_key')
             ->join('priorities p', 'p.priority_id = t.priority_id')
             ->join('statuses s', 's.status_id = t.status_id')
             ->join('categories cat', 'cat.category_id = t.category_id')
             ->join('projects proj', 'proj.project_id = t.project_id', 'left')
             ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->where('t.customer_id', $this->userId)
-            ->orderBy('t.created_at', 'DESC')
+            ->where('t.customer_id', $this->userId);
+
+        // Apply search filter if exists
+        $search = $this->request->getGet('search');
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('t.ticket_number', $search)
+                ->orLike('t.subject', $search)
+                ->orLike('proj.project_name', $search)
+                ->groupEnd();
+        }
+
+        // Apply status filter
+        $statusFilter = $this->request->getGet('status');
+        if (!empty($statusFilter) && $statusFilter !== 'all') {
+            $builder->where('s.status_name', $statusFilter);
+        }
+
+        // Apply priority filter
+        $priorityFilter = $this->request->getGet('priority');
+        if (!empty($priorityFilter) && $priorityFilter !== 'all') {
+            $builder->where('p.priority_name', $priorityFilter);
+        }
+
+        // Apply project filter
+        $projectFilter = $this->request->getGet('project');
+        if (!empty($projectFilter) && $projectFilter !== 'all') {
+            $builder->where('proj.project_id', $projectFilter);
+        }
+
+        // Get total count for pagination
+        $totalRows = $builder->countAllResults(false);
+
+        // Apply sorting
+        $sortBy = $this->request->getGet('sort') ?? 'date-desc';
+        $sortParts = explode('-', $sortBy);
+        $sortColumn = $sortParts[0] ?? 'date';
+        $sortDirection = $sortParts[1] ?? 'desc';
+
+        // Map sort column to database column
+        $sortMap = [
+            'id' => 't.ticket_number',
+            'subject' => 't.subject',
+            'project' => 'proj.project_name',
+            'priority' => 'p.priority_id', // Using ID for correct priority order
+            'date' => 't.created_at',
+            'status' => 's.status_id'
+        ];
+
+        $orderColumn = $sortMap[$sortColumn] ?? 't.created_at';
+        $builder->orderBy($orderColumn, strtoupper($sortDirection));
+
+        // Apply pagination
+        $builder->limit($perPage, $offset);
+
+        // Execute query
+        $data['tickets'] = $builder->get()->getResultArray();
+
+        // Format tickets for frontend
+        foreach ($data['tickets'] as &$ticket) {
+            $ticket = $this->formatTicketForDisplay($ticket);
+        }
+
+        // Pagination data
+        $pager = service('pager');
+        $data['pager'] = $pager->makeLinks($page, $perPage, $totalRows, 'default_full');
+        $data['total_tickets'] = $totalRows;
+        $data['showing_count'] = count($data['tickets']);
+        $data['current_page'] = $page;
+        $data['total_pages'] = ceil($totalRows / $perPage);
+
+        // Get filter options
+        $data['projects'] = $this->db->table('projects')
+            ->select('project_id, project_name, project_code')
+            ->where('user_id', $this->userId)
+            ->where('is_active', true)
             ->get()
             ->getResultArray();
 
+        $data['priorities'] = $this->db->table('priorities')
+            ->select('priority_name')
+            ->orderBy('priority_id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $data['statuses'] = $this->db->table('statuses')
+            ->select('status_name')
+            ->orderBy('status_id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Pass filter values to view
+        $data['current_filters'] = [
+            'search' => $search,
+            'status' => $statusFilter,
+            'priority' => $priorityFilter,
+            'project' => $projectFilter,
+            'sort' => $sortBy
+        ];
+
+        $data['query_string_helper'] = function($excludeParams = []) {
+        return $this->getQueryString($excludeParams);
+    };
+
         return view('Customer/my_tickets', ['data' => $data]);
+    }
+
+    // Helper method to format ticket data
+    private function formatTicketForDisplay($ticket)
+    {
+        // Format ID
+        $ticket['id'] = '#' . $ticket['display_id'] ?? $ticket['ticket_number'];
+
+        // Map priority to colors
+        $priorityColors = [
+            'Urgent' => 'bg-red-100 text-red-800',
+            'High' => 'bg-orange-100 text-orange-800',
+            'Medium' => 'bg-yellow-100 text-yellow-800',
+            'Low' => 'bg-blue-100 text-blue-800',
+            'Normal' => 'bg-gray-100 text-gray-800'
+        ];
+
+        $ticket['priorityColor'] = $priorityColors[$ticket['priority_name']] ?? 'bg-gray-100 text-gray-800';
+        $ticket['priority_value'] = array_search(
+            $ticket['priority_name'],
+            ['Low', 'Medium', 'High', 'Urgent']
+        ) + 1;
+
+        // Map status to colors
+        $statusColors = [
+            'Open' => 'bg-gray-100 text-gray-800',
+            'In Progress' => 'bg-blue-100 text-blue-800',
+            'Resolved' => 'bg-green-100 text-green-800',
+            'Closed' => 'bg-purple-100 text-purple-800',
+            'Cancelled' => 'bg-red-100 text-red-800'
+        ];
+
+        $ticket['statusColor'] = $statusColors[$ticket['status_name']] ?? 'bg-gray-100 text-gray-800';
+        $ticket['status_key'] = strtolower(str_replace(' ', '-', $ticket['status_name']));
+
+        // Format time
+        $createdTime = strtotime($ticket['timestamp']);
+        $ticket['time'] = $this->formatTimeAgo($createdTime);
+        $ticket['timestamp'] = $createdTime;
+
+        // Project key for filtering
+        $ticket['project_key'] = strtolower(str_replace(' ', '-', $ticket['project_name'] ?? ''));
+
+        return $ticket;
+    }
+
+    // Helper method for relative time
+    private function formatTimeAgo($timestamp)
+    {
+        $now = time();
+        $diff = $now - $timestamp;
+
+        if ($diff < 60)
+            return 'Just now';
+        if ($diff < 3600)
+            return floor($diff / 60) . ' min ago';
+        if ($diff < 86400)
+            return floor($diff / 3600) . ' hours ago';
+        if ($diff < 604800)
+            return floor($diff / 86400) . ' days ago';
+
+        return date('M d, Y, h:i A', $timestamp);
     }
 
     public function ticketDetail($id)

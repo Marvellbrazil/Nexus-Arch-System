@@ -27,15 +27,29 @@
 
             <!-- Search and Add Ticket -->
             <div class="flex flex-col sm:flex-row gap-3 md:gap-[15px]">
-                <div class="relative">
+                <form method="get" action="<?= base_url('customer/my_tickets') ?>" class="relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                         <i class="fas fa-search"></i>
                     </div>
-                    <input type="text" placeholder="Search tickets..."
+                    <input type="text" name="search" placeholder="Search tickets..."
+                        value="<?= esc($data['current_filters']['search'] ?? '') ?>"
                         class="w-full h-10 md:h-[44px] pl-10 pr-4 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm md:text-[14px] focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                         id="ticketSearch">
-                </div>
-                <a href="<?= base_url('dashboard/create_ticket') ?>"
+                    <!-- Hidden inputs to preserve other filters -->
+                    <?php if (isset($data['current_filters']['status']) && $data['current_filters']['status'] !== ''): ?>
+                        <input type="hidden" name="status" value="<?= esc($data['current_filters']['status']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($data['current_filters']['priority']) && $data['current_filters']['priority'] !== ''): ?>
+                        <input type="hidden" name="priority" value="<?= esc($data['current_filters']['priority']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($data['current_filters']['project']) && $data['current_filters']['project'] !== ''): ?>
+                        <input type="hidden" name="project" value="<?= esc($data['current_filters']['project']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($data['current_filters']['sort']) && $data['current_filters']['sort'] !== ''): ?>
+                        <input type="hidden" name="sort" value="<?= esc($data['current_filters']['sort']) ?>">
+                    <?php endif; ?>
+                </form>
+                <a href="<?= base_url('customer/create_ticket') ?>"
                     class="h-10 md:h-[44px] px-4 md:px-[20px] bg-secondary text-white rounded-xl flex items-center justify-center gap-2 hover:bg-[#817CB2] transition-colors font-medium text-sm md:text-base">
                     <i class="fas fa-plus"></i>
                     <span>New Ticket</span>
@@ -106,48 +120,75 @@
                 <!-- Filter & Sort Options -->
                 <div class="flex flex-wrap gap-2 md:gap-3">
                     <!-- Sort by -->
-                    <div class="relative w-full md:w-auto">
-                        <select id="sortBy"
+                    <form method="get" action="<?= base_url('customer/my_tickets') ?>" class="relative" id="sortForm">
+                        <select name="sort" onchange="this.form.submit()"
                             class="w-full md:w-auto border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary appearance-none bg-white pr-8">
-                            <option value="date-desc">Sort by: Date (Newest)</option>
-                            <option value="date-asc">Sort by: Date (Oldest)</option>
-                            <option value="priority-desc">Sort by: Priority (High to Low)</option>
-                            <option value="priority-asc">Sort by: Priority (Low to High)</option>
-                            <option value="id-desc">Sort by: Ticket ID (Descending)</option>
-                            <option value="id-asc">Sort by: Ticket ID (Ascending)</option>
+                            <option value="date-desc" <?= ($data['current_filters']['sort'] ?? 'date-desc') == 'date-desc' ? 'selected' : '' ?>>Sort by: Date (Newest)</option>
+                            <option value="date-asc" <?= ($data['current_filters']['sort'] ?? '') == 'date-asc' ? 'selected' : '' ?>>Sort by: Date (Oldest)</option>
+                            <option value="priority-desc" <?= ($data['current_filters']['sort'] ?? '') == 'priority-desc' ? 'selected' : '' ?>>Sort by: Priority (High to Low)</option>
+                            <option value="priority-asc" <?= ($data['current_filters']['sort'] ?? '') == 'priority-asc' ? 'selected' : '' ?>>Sort by: Priority (Low to High)</option>
+                            <option value="id-desc" <?= ($data['current_filters']['sort'] ?? '') == 'id-desc' ? 'selected' : '' ?>>Sort by: Ticket ID (Desc)</option>
+                            <option value="id-asc" <?= ($data['current_filters']['sort'] ?? '') == 'id-asc' ? 'selected' : '' ?>>Sort by: Ticket ID (Asc)</option>
                         </select>
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                         </div>
-                    </div>
+                        <!-- Preserve other filter parameters -->
+                        <?php if (isset($data['current_filters']['search']) && $data['current_filters']['search'] !== ''): ?>
+                            <input type="hidden" name="search" value="<?= esc($data['current_filters']['search']) ?>">
+                        <?php endif; ?>
+                        <?php if (isset($data['current_filters']['status']) && $data['current_filters']['status'] !== ''): ?>
+                            <input type="hidden" name="status" value="<?= esc($data['current_filters']['status']) ?>">
+                        <?php endif; ?>
+                        <?php if (isset($data['current_filters']['priority']) && $data['current_filters']['priority'] !== ''): ?>
+                            <input type="hidden" name="priority" value="<?= esc($data['current_filters']['priority']) ?>">
+                        <?php endif; ?>
+                        <?php if (isset($data['current_filters']['project']) && $data['current_filters']['project'] !== ''): ?>
+                            <input type="hidden" name="project" value="<?= esc($data['current_filters']['project']) ?>">
+                        <?php endif; ?>
+                    </form>
 
                     <!-- Filter Options (Hidden on mobile, shown in dropdown) -->
                     <div class="hidden md:flex gap-2">
-                        <select id="filterProject"
-                            class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
-                            <option value="all">All Projects</option>
-                            <option value="alpha">Project Alpha</option>
-                            <option value="beta">Project Beta</option>
-                            <option value="gamma">Project Gamma</option>
-                        </select>
+                        <form method="get" action="<?= base_url('customer/my_tickets') ?>" id="filterForm">
+                            <select name="project" onchange="this.form.submit()"
+                                class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
+                                <option value="all" <?= ($data['current_filters']['project'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Projects</option>
+                                <?php foreach ($data['projects'] as $project): ?>
+                                    <option value="<?= $project['project_id'] ?>" <?= ($data['current_filters']['project'] ?? '') == $project['project_id'] ? 'selected' : '' ?>>
+                                        <?= esc($project['project_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
 
-                        <select id="filterStatus"
-                            class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
-                            <option value="all">All Status</option>
-                            <option value="open">Open</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="closed">Closed</option>
-                        </select>
+                            <select name="status" onchange="this.form.submit()"
+                                class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
+                                <option value="all" <?= ($data['current_filters']['status'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Status</option>
+                                <?php foreach ($data['statuses'] as $status): ?>
+                                    <option value="<?= $status['status_name'] ?>" <?= ($data['current_filters']['status'] ?? '') == $status['status_name'] ? 'selected' : '' ?>>
+                                        <?= esc($status['status_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
 
-                        <select id="filterPriority"
-                            class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
-                            <option value="all">All Priority</option>
-                            <option value="urgent">Urgent</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                        </select>
+                            <select name="priority" onchange="this.form.submit()"
+                                class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
+                                <option value="all" <?= ($data['current_filters']['priority'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Priority</option>
+                                <?php foreach ($data['priorities'] as $priority): ?>
+                                    <option value="<?= $priority['priority_name'] ?>"
+                                        <?= ($data['current_filters']['priority'] ?? '') == $priority['priority_name'] ? 'selected' : '' ?>>
+                                        <?= esc($priority['priority_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <!-- Preserve other filter parameters -->
+                            <?php if (isset($data['current_filters']['search']) && $data['current_filters']['search'] !== ''): ?>
+                                <input type="hidden" name="search" value="<?= esc($data['current_filters']['search']) ?>">
+                            <?php endif; ?>
+                            <?php if (isset($data['current_filters']['sort']) && $data['current_filters']['sort'] !== ''): ?>
+                                <input type="hidden" name="sort" value="<?= esc($data['current_filters']['sort']) ?>">
+                            <?php endif; ?>
+                        </form>
                     </div>
 
                     <!-- Mobile Filter Button -->
@@ -161,171 +202,297 @@
 
             <!-- Mobile Filter Dropdown -->
             <div id="mobileFilters" class="mt-3 md:hidden space-y-2 hidden">
-                <select id="filterProjectMobile"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
-                    <option value="all">All Projects</option>
-                    <option value="alpha">Project Alpha</option>
-                    <option value="beta">Project Beta</option>
-                    <option value="gamma">Project Gamma</option>
-                </select>
+                <form method="get" action="<?= base_url('customer/my_tickets') ?>" id="mobileFilterForm">
+                    <select name="project" onchange="this.form.submit()"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
+                        <option value="all" <?= ($data['current_filters']['project'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Projects</option>
+                        <?php foreach ($data['projects'] as $project): ?>
+                            <option value="<?= $project['project_id'] ?>" <?= ($data['current_filters']['project'] ?? '') == $project['project_id'] ? 'selected' : '' ?>>
+                                <?= esc($project['project_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
 
-                <select id="filterStatusMobile"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
-                    <option value="all">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                </select>
+                    <select name="status" onchange="this.form.submit()"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
+                        <option value="all" <?= ($data['current_filters']['status'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Status</option>
+                        <?php foreach ($data['statuses'] as $status): ?>
+                            <option value="<?= $status['status_name'] ?>" <?= ($data['current_filters']['status'] ?? '') == $status['status_name'] ? 'selected' : '' ?>>
+                                <?= esc($status['status_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
 
-                <select id="filterPriorityMobile"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
-                    <option value="all">All Priority</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                </select>
+                    <select name="priority" onchange="this.form.submit()"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
+                        <option value="all" <?= ($data['current_filters']['priority'] ?? 'all') == 'all' ? 'selected' : '' ?>>All Priority</option>
+                        <?php foreach ($data['priorities'] as $priority): ?>
+                            <option value="<?= $priority['priority_name'] ?>" <?= ($data['current_filters']['priority'] ?? '') == $priority['priority_name'] ? 'selected' : '' ?>>
+                                <?= esc($priority['priority_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <!-- Preserve other filter parameters -->
+                    <?php if (isset($data['current_filters']['search']) && $data['current_filters']['search'] !== ''): ?>
+                        <input type="hidden" name="search" value="<?= esc($data['current_filters']['search']) ?>">
+                    <?php endif; ?>
+                    <?php if (isset($data['current_filters']['sort']) && $data['current_filters']['sort'] !== ''): ?>
+                        <input type="hidden" name="sort" value="<?= esc($data['current_filters']['sort']) ?>">
+                    <?php endif; ?>
+                </form>
             </div>
         </div>
 
         <!-- Table -->
         <div class="overflow-x-auto">
             <table class="w-full min-w-max">
+                <!-- GANTI semua link sorting dengan kode berikut: -->
+
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header"
-                            data-sort="id">
-                            <div class="flex items-center gap-1">
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
+                            <?php
+                            $currentSort = $data['current_filters']['sort'] ?? '';
+                            $newSort = (strpos($currentSort, 'id-asc') !== false) ? 'id-desc' : 'id-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span class="hidden sm:inline">Ticket ID</span>
                                 <span class="sm:hidden">ID</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header"
-                            data-sort="subject">
-                            <div class="flex items-center gap-1">
+
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
+                            <?php
+                            $newSort = (strpos($currentSort, 'subject-asc') !== false) ? 'subject-desc' : 'subject-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span>Subject</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header hidden md:table-cell"
-                            data-sort="project">
-                            <div class="flex items-center gap-1">
+
+                        <th
+                            class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 hidden md:table-cell">
+                            <?php
+                            $newSort = (strpos($currentSort, 'project-asc') !== false) ? 'project-desc' : 'project-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span>Project</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header"
-                            data-sort="priority">
-                            <div class="flex items-center gap-1">
+
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
+                            <?php
+                            $newSort = (strpos($currentSort, 'priority-asc') !== false) ? 'priority-desc' : 'priority-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span class="hidden xs:inline">Priority</span>
                                 <span class="xs:hidden">Pri</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header hidden sm:table-cell"
-                            data-sort="date">
-                            <div class="flex items-center gap-1">
+
+                        <th
+                            class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                            <?php
+                            $newSort = (strpos($currentSort, 'date-asc') !== false) ? 'date-desc' : 'date-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span>Created</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
-                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 sort-header"
-                            data-sort="status">
-                            <div class="flex items-center gap-1">
+
+                        <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
+                            <?php
+                            $newSort = (strpos($currentSort, 'status-asc') !== false) ? 'status-desc' : 'status-asc';
+                            $queryString = http_build_query(array_merge(
+                                $data['current_filters'],
+                                ['sort' => $newSort]
+                            ));
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . $queryString) ?>"
+                                class="flex items-center gap-1 no-underline text-gray-700 hover:text-secondary">
                                 <span>Status</span>
                                 <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
+                            </a>
                         </th>
+
                         <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
                             Actions</th>
                     </tr>
                 </thead>
                 <tbody id="ticketsTable" class="divide-y divide-gray-200">
-                    <?php if (!empty($data['tickets'])) : ?>
-                        <?php foreach ($tickets as $ticket) : ?>
-                            <tr>
+                    <?php if (!empty($data['tickets'])): ?>
+                        <?php foreach ($data['tickets'] as $ticket): ?>
+                            <tr class="bg-white hover:bg-gray-100 transition-colors">
                                 <td class="py-3 px-3 md:py-4 md:px-6">
-                                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
+                                    <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['id']) ?></span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <div>
                                         <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none">
-                                            ${ticket.subject}</p>
-                                        <p class="text-gray-500 text-xs mt-1 hidden md:block">Last updated:
-                                            ${getRelativeTime(ticket.timestamp)}</p>
+                                            <?= esc($ticket['subject']) ?>
+                                        </p>
+                                        <p class="text-gray-500 text-xs mt-1 hidden md:block">
+                                            Last updated: <?= $this->getRelativeTime($ticket['timestamp']) ?>
+                                        </p>
                                     </div>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
-                                    <span class="text-gray-700 text-sm">${ticket.project}</span>
+                                    <span class="text-gray-700 text-sm"><?= esc($ticket['project_name'] ?? 'N/A') ?></span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <span
-                                        class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
-                                        ${ticket.priority}
+                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['priority_name']) ?>
                                     </span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
-                                    <span class="text-gray-600 text-sm">${ticket.time}</span>
+                                    <span class="text-gray-600 text-sm"><?= $ticket['time'] ?></span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <span
-                                        class="px-2 py-1 text-xs rounded-full ${ticket.statusColor} font-medium whitespace-nowrap">
-                                        ${ticket.status}
+                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['status_name']) ?>
                                     </span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <div class="flex items-center gap-1 md:gap-2">
-                                        <a href="<?= base_url('dashboard/ticket_detail/') ?>${ticket.id_num}"
+                                        <a href="<?= base_url('customer/ticket_detail/' . $ticket['ticket_id']) ?>"
                                             class="px-3 py-1 md:px-4 md:py-2 bg-secondary text-white text-xs md:text-sm rounded-lg hover:bg-[#817CB2] transition-colors whitespace-nowrap">
                                             View
                                         </a>
-                                        <button class="p-1 md:p-2 text-gray-400 hover:text-gray-600">
-                                            <i class="fas fa-ellipsis-v text-xs"></i>
-                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1 md:p-2 text-gray-400 hover:text-gray-600 dropdown-toggle"
+                                                data-ticket-id="<?= $ticket['ticket_id'] ?>">
+                                                <i class="fas fa-ellipsis-v text-xs"></i>
+                                            </button>
+                                            <div
+                                                class="absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden dropdown-menu">
+                                                <a href="<?= base_url('customer/ticket_detail/' . $ticket['ticket_id']) ?>"
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    <i class="fas fa-eye mr-2"></i>View Details
+                                                </a>
+                                                <?php if ($ticket['status_name'] == 'Open'): ?>
+                                                    <a href="#"
+                                                        class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cancel-ticket"
+                                                        data-ticket-id="<?= $ticket['ticket_id'] ?>">
+                                                        <i class="fas fa-times mr-2"></i>Cancel Ticket
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
-                            <div class="flex flex-col items-center justify-center">
-                                <i class="fas fa-ticket-alt text-2xl md:text-3xl text-gray-300 mb-3"></i>
-                                <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
-                                <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
-                            </div>
-                        </td>
+                        <tr>
+                            <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-ticket-alt text-2xl md:text-3xl text-gray-300 mb-3"></i>
+                                    <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
+                                    <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
+                                    <a href="<?= base_url('customer/create_ticket') ?>"
+                                        class="mt-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors text-sm">
+                                        Create Your First Ticket
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
-        <div class="p-4 md:p-6 border-t border-gray-200">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="text-gray-600 text-xs md:text-sm">
-                    Showing <span id="showingCount">5</span> of <span id="totalCount">12</span> entries
-                </div>
-                <div class="flex items-center gap-1 md:gap-2">
-                    <button id="prevPage"
-                        class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                        disabled>
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button
-                        class="px-2 md:px-3 py-1 md:py-2 bg-secondary text-white rounded-lg text-xs md:text-sm">1</button>
-                    <button
-                        class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">2</button>
-                    <button
-                        class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">3</button>
-                    <button id="nextPage"
-                        class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs md:text-sm">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+        <?php if (!empty($data['tickets']) && $data['pagination']['total_pages'] > 1): ?>
+            <div class="p-4 md:p-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="text-gray-600 text-xs md:text-sm">
+                        Showing <?= (($data['pagination']['current_page'] - 1) * $data['pagination']['per_page']) + 1 ?>
+                        to
+                        <?= min($data['pagination']['current_page'] * $data['pagination']['per_page'], $data['pagination']['total_items']) ?>
+                        of <?= $data['pagination']['total_items'] ?> entries
+                    </div>
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <!-- Previous -->
+                        <?php if ($data['pagination']['has_previous']):
+                            $prevQuery = array_merge($data['current_filters'], ['page' => $data['pagination']['previous_page']]);
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . http_build_query($prevQuery)) ?>"
+                                class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        <?php else: ?>
+                            <button
+                                class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-400 cursor-not-allowed text-xs"
+                                disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        <?php endif; ?>
+
+                        <!-- Page Numbers -->
+                        <?php
+                        $startPage = max(1, $data['pagination']['current_page'] - 2);
+                        $endPage = min($data['pagination']['total_pages'], $data['pagination']['current_page'] + 2);
+
+                        for ($i = $startPage; $i <= $endPage; $i++):
+                            $pageQuery = array_merge($data['current_filters'], ['page' => $i]);
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . http_build_query($pageQuery)) ?>"
+                                class="px-2 md:px-3 py-1 md:py-2 border <?= $data['pagination']['current_page'] == $i ? 'bg-secondary text-white border-secondary' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?> rounded-lg text-xs md:text-sm">
+                                <?= $i ?>
+                            </a>
+                        <?php endfor; ?>
+
+                        <!-- Next -->
+                        <?php if ($data['pagination']['has_next']):
+                            $nextQuery = array_merge($data['current_filters'], ['page' => $data['pagination']['next_page']]);
+                            ?>
+                            <a href="<?= base_url('customer/my_tickets?' . http_build_query($nextQuery)) ?>"
+                                class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-xs">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        <?php else: ?>
+                            <button
+                                class="px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-lg text-gray-400 cursor-not-allowed text-xs"
+                                disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Help Cards -->
@@ -378,256 +545,146 @@
 </div>
 
 <script>
-// Ticket data
-const ticketsData = <?= json_encode($tickets) ?>;
+    // Helper function to build query string
+    function buildQueryString(excludeParams = []) {
+        const params = new URLSearchParams(window.location.search);
+        excludeParams.forEach(param => params.delete(param));
+        return params.toString() ? '&' + params.toString() : '';
+    }
 
-// Sorting state
-let currentSort = {
-    column: 'date',
-    direction: 'desc'
-};
-let currentFilters = {
-    project: 'all',
-    status: 'all',
-    priority: 'all'
-};
+    // Get relative time for last updated
+    function getRelativeTime(timestamp) {
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - timestamp;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    // Render initial table
-    renderTable(ticketsData);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
+        return Math.floor(diff / 604800) + ' weeks ago';
+    }
 
-    // Search functionality
-    const ticketSearch = document.getElementById('ticketSearch');
-    ticketSearch.addEventListener('input', (e) => {
-        filterAndSortTickets();
-    });
-
-    // Sort by dropdown
-    document.getElementById('sortBy').addEventListener('change', function() {
-        const value = this.value.split('-');
-        currentSort.column = value[0];
-        currentSort.direction = value[1];
-        filterAndSortTickets();
-    });
-
-    // Filter dropdowns (Desktop)
-    document.getElementById('filterProject').addEventListener('change', function() {
-        currentFilters.project = this.value;
-        filterAndSortTickets();
-    });
-
-    document.getElementById('filterStatus').addEventListener('change', function() {
-        currentFilters.status = this.value;
-        filterAndSortTickets();
-    });
-
-    document.getElementById('filterPriority').addEventListener('change', function() {
-        currentFilters.priority = this.value;
-        filterAndSortTickets();
-    });
-
-    // Mobile filter dropdowns
-    document.getElementById('filterProjectMobile').addEventListener('change', function() {
-        currentFilters.project = this.value;
-        filterAndSortTickets();
-    });
-
-    document.getElementById('filterStatusMobile').addEventListener('change', function() {
-        currentFilters.status = this.value;
-        filterAndSortTickets();
-    });
-
-    document.getElementById('filterPriorityMobile').addEventListener('change', function() {
-        currentFilters.priority = this.value;
-        filterAndSortTickets();
-    });
-
-    // Mobile filter button
-    document.getElementById('mobileFilterBtn').addEventListener('click', function() {
-        const filters = document.getElementById('mobileFilters');
-        filters.classList.toggle('hidden');
-    });
-
-    // Header click sorting
-    document.querySelectorAll('.sort-header').forEach(header => {
-        header.addEventListener('click', function() {
-            const column = this.dataset.sort;
-
-            // Toggle direction if same column
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = column;
-                currentSort.direction = 'desc';
-            }
-
-            // Update dropdown to match
-            updateSortDropdown();
-
-            // Sort and render
-            filterAndSortTickets();
-
-            // Update sort icons
-            updateSortIcons();
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mobile filter toggle
+        document.getElementById('mobileFilterBtn').addEventListener('click', function () {
+            const filters = document.getElementById('mobileFilters');
+            filters.classList.toggle('hidden');
         });
-    });
 
-    // Pagination
-    document.getElementById('prevPage').addEventListener('click', function() {
-        console.log('Previous page');
-    });
+        // Dropdown menu for ticket actions
+        document.querySelectorAll('.dropdown-toggle').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const dropdown = this.nextElementSibling;
+                const isVisible = !dropdown.classList.contains('hidden');
 
-    document.getElementById('nextPage').addEventListener('click', function() {
-        console.log('Next page');
-    });
+                // Close all other dropdowns
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
 
-    // Initialize sort icons
-    updateSortIcons();
-});
+                if (!isVisible) {
+                    dropdown.classList.remove('hidden');
+                }
+            });
+        });
 
-function filterAndSortTickets() {
-    let filteredTickets = [...ticketsData];
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });
 
-    // Apply search filter
-    const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
-    if (searchTerm) {
-        filteredTickets = filteredTickets.filter(ticket =>
-            ticket.subject.toLowerCase().includes(searchTerm) ||
-            ticket.id.toLowerCase().includes(searchTerm) ||
-            ticket.project.toLowerCase().includes(searchTerm)
-        );
-    }
+        // Cancel ticket functionality
+        document.querySelectorAll('.cancel-ticket').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const ticketId = this.dataset.ticketId;
 
-    // Apply project filter
-    if (currentFilters.project !== 'all') {
-        filteredTickets = filteredTickets.filter(ticket =>
-            ticket.project_key === currentFilters.project
-        );
-    }
+                if (confirm('Are you sure you want to cancel this ticket?')) {
+                    fetch('<?= base_url("customer/cancel_ticket/") ?>' + ticketId, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                location.reload();
+                            } else {
+                                alert(data.message || 'Failed to cancel ticket');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred');
+                        });
+                }
+            });
+        });
 
-    // Apply status filter
-    if (currentFilters.status !== 'all') {
-        filteredTickets = filteredTickets.filter(ticket =>
-            ticket.status_key === currentFilters.status
-        );
-    }
-
-    // Apply priority filter
-    if (currentFilters.priority !== 'all') {
-        const priorityMap = {
-            'urgent': 4,
-            'high': 3,
-            'medium': 2,
-            'low': 1
-        };
-        filteredTickets = filteredTickets.filter(ticket =>
-            ticket.priority_value === priorityMap[currentFilters.priority]
-        );
-    }
-
-    // Sort tickets
-    filteredTickets.sort((a, b) => {
-        let aValue, bValue;
-
-        switch (currentSort.column) {
-            case 'id':
-                aValue = a.id_num;
-                bValue = b.id_num;
-                break;
-            case 'subject':
-                aValue = a.subject.toLowerCase();
-                bValue = b.subject.toLowerCase();
-                break;
-            case 'project':
-                aValue = a.project.toLowerCase();
-                bValue = b.project.toLowerCase();
-                break;
-            case 'priority':
-                aValue = a.priority_value;
-                bValue = b.priority_value;
-                break;
-            case 'date':
-                aValue = a.timestamp;
-                bValue = b.timestamp;
-                break;
-            case 'status':
-                aValue = a.status.toLowerCase();
-                bValue = b.status.toLowerCase();
-                break;
-            default:
-                aValue = a.timestamp;
-                bValue = b.timestamp;
+        // Real-time search with debounce
+        let searchTimeout;
+        const searchInput = document.getElementById('ticketSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    this.form.submit();
+                }, 500);
+            });
         }
 
-        if (currentSort.direction === 'asc') {
-            return aValue > bValue ? 1 : -1;
-        } else {
-            return aValue < bValue ? 1 : -1;
+        // Update last updated times dynamically
+        function updateLastUpdatedTimes() {
+            document.querySelectorAll('.last-updated').forEach(element => {
+                const timestamp = element.dataset.timestamp;
+                if (timestamp) {
+                    element.textContent = 'Last updated: ' + getRelativeTime(parseInt(timestamp));
+                }
+            });
         }
+
+        // Update every minute
+        updateLastUpdatedTimes();
+        setInterval(updateLastUpdatedTimes, 60000);
     });
-
-    // Render filtered and sorted tickets
-    renderTable(filteredTickets);
-
-    // Update counts
-    document.getElementById('showingCount').textContent = filteredTickets.length;
-    document.getElementById('totalCount').textContent = ticketsData.length;
-}
-
-function renderTable(tickets) {
-    const tbody = document.getElementById('ticketsTable');
-    tbody.innerHTML = '';
-
-    tickets.forEach((ticket, index) => {
-        const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-        const row = document.createElement('tr');
-        row.className = `${rowClass} hover:bg-gray-100 transition-colors`;
-        row.innerHTML = `
-                
-            `;
-        tbody.appendChild(row);
-    });
-
-    // If no tickets match filters
-    if (tickets.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-                
-            `;
-        tbody.appendChild(row);
-    }
-}
-
-function updateSortDropdown() {
-    const dropdown = document.getElementById('sortBy');
-    const value = `${currentSort.column}-${currentSort.direction}`;
-    dropdown.value = value;
-}
-
-function updateSortIcons() {
-    // Reset all icons
-    document.querySelectorAll('.sort-header i').forEach(icon => {
-        icon.className = 'fas fa-sort text-gray-400 ml-1 text-xs';
-    });
-
-    // Set active sort icon
-    const activeHeader = document.querySelector(`.sort-header[data-sort="${currentSort.column}"] i`);
-    if (activeHeader) {
-        activeHeader.className =
-            `fas fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'} text-secondary ml-1 text-xs`;
-    }
-}
-
-function getRelativeTime(timestamp) {
-    const now = Math.floor(Date.now() / 1000);
-    const diff = now - timestamp;
-
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
-    if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
-    return Math.floor(diff / 604800) + ' weeks ago';
-}
 </script>
+
 <?= $this->endSection() ?>
+
+<?php
+// Helper function to build query string for links
+helper('url');
+function buildQueryString($excludeParams = [])
+{
+    $request = \Config\Services::request();
+    $queryParams = $request->getGet();
+
+    foreach ($excludeParams as $param) {
+        unset($queryParams[$param]);
+    }
+
+    return $queryParams ? '&' . http_build_query($queryParams) : '';
+}
+
+// Helper function for relative time
+function getRelativeTime($timestamp)
+{
+    $now = time();
+    $diff = $now - $timestamp;
+
+    if ($diff < 60)
+        return 'just now';
+    if ($diff < 3600)
+        return floor($diff / 60) . ' min ago';
+    if ($diff < 86400)
+        return floor($diff / 3600) . ' hours ago';
+    if ($diff < 604800)
+        return floor($diff / 86400) . ' days ago';
+    return floor($diff / 604800) . ' weeks ago';
+}
+?>
