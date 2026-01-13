@@ -362,7 +362,7 @@
                                             <?= esc($ticket['subject']) ?>
                                         </p>
                                         <p class="text-gray-500 text-xs mt-1 hidden md:block">
-                                            Last updated: <?= $this->getRelativeTime($ticket['timestamp']) ?>
+                                            Last updated: <?= getRelativeTime($ticket['timestamp']) ?>
                                         </p>
                                     </div>
                                 </td>
@@ -434,7 +434,7 @@
         </div>
 
         <!-- Pagination -->
-        <?php if (!empty($data['tickets']) && $data['pagination']['total_pages'] > 1): ?>
+        <?php if (!empty($data['tickets']) && $data['total_pages'] > 1): ?>
             <div class="p-4 md:p-6 border-t border-gray-200">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="text-gray-600 text-xs md:text-sm">
@@ -496,7 +496,7 @@
     </div>
 
     <!-- Help Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+    <div class="grid grid-cols-1">
         <!-- Need Help Card -->
         <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
             <div class="flex items-center gap-3 md:gap-[15px] mb-4">
@@ -514,30 +514,9 @@
                     Open Ticket
                 </a>
                 <button
-                    class="px-4 md:px-6 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm md:text-base">
+                    class="px-4 md:px-6 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm md:text-base"
+                    onclick="window.open('https://github.com/Yohan9822/Nexus-Arch-System/blob/production/README.md', '_blank')">
                     Knowledge Base
-                </button>
-            </div>
-        </div>
-
-        <!-- Quick Actions Card -->
-        <div class="bg-gradient-to-r from-secondary to-[#8A84C6] rounded-xl p-4 md:p-6 text-white">
-            <h3 class="text-lg md:text-[20px] font-semibold mb-3 md:mb-4">Quick Actions</h3>
-            <p class="text-white/80 text-sm md:text-base mb-4 md:mb-6">
-                Quick links for ordering and addons
-            </p>
-
-            <div class="flex flex-col sm:flex-row gap-3">
-                <button
-                    class="px-4 md:px-6 py-2 md:py-3 bg-white text-secondary rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    <span>Place New Order</span>
-                </button>
-
-                <button
-                    class="px-4 md:px-6 py-2 md:py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
-                    <i class="fas fa-cube"></i>
-                    <span>View Addons</span>
                 </button>
             </div>
         </div>

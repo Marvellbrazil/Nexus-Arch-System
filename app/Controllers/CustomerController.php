@@ -100,21 +100,21 @@ class CustomerController extends BaseController
     }
 
     private function getQueryString($excludeParams = [])
-{
-    $request = \Config\Services::request();
-    $queryParams = $request->getGet();
-    
-    foreach ($excludeParams as $param) {
-        unset($queryParams[$param]);
+    {
+        $request = \Config\Services::request();
+        $queryParams = $request->getGet();
+
+        foreach ($excludeParams as $param) {
+            unset($queryParams[$param]);
+        }
+
+        return $queryParams ? '&' . http_build_query($queryParams) : '';
     }
-    
-    return $queryParams ? '&' . http_build_query($queryParams) : '';
-}
 
     public function myTickets()
     {
-       $data = $this->loadCommonData();
-    $data['stats'] = $this->getTicketStats();
+        $data = $this->loadCommonData();
+        $data['stats'] = $this->getTicketStats();
 
         // Get tickets with pagination and dynamic filters
         $perPage = 10; // Items per page
