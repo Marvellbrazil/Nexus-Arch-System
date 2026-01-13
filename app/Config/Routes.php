@@ -12,16 +12,19 @@ use App\Controllers\HomeController;
  * @var RouteCollection $routes
  */
 
-// Default route
+// Default route (Customer Login)
 $routes->get('/', [HomeController::class, 'index']);
-
-// Auth Routes
-$routes->get('login', [AuthController::class, 'login']);
+$routes->get('login', [AuthController::class, 'loginCustomer']); // Customer login page
 $routes->post('process_login', [AuthController::class, 'processLogin']);
+
+// Auth Routes - Login untuk setiap role
+$routes->get('admin/login', [AuthController::class, 'loginAdmin']);
+$routes->get('support/login', [AuthController::class, 'loginSupport']);
+$routes->get('department/login', [AuthController::class, 'loginDepartment']);
+
 $routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
-$routes->get('logout', [AuthController::class, 'logout']);
 
 // Admin Routes
 $routes->group('admin', function ($routes) {
@@ -30,10 +33,10 @@ $routes->group('admin', function ($routes) {
     // Manage Users
     $routes->get('users', [AdminController::class, 'manageUsers']);
     $routes->post('users/add', [AdminController::class, 'addUser']);
-    $routes->post('users/edit/(:num)', [AdminController::class, 'editUser/$1']);
-    $routes->post('users/reset-password/(:num)', [AdminController::class, 'resetPassword/$1']);
-    $routes->post('users/change-status/(:num)', [AdminController::class, 'changeStatus/$1']);
-    $routes->post('users/delete/(:num)', [AdminController::class, 'deleteUser/$1']);
+        $routes->post('users/edit/(:num)', 'AdminController::editUser/$1');
+        $routes->post('users/reset-password/(:num)', 'AdminController::resetPassword/$1');
+        $routes->post('users/change-status/(:num)', 'AdminController::changeStatus/$1');
+        $routes->post('users/delete/(:num)', 'AdminController::deleteUser/$1');
 
     $routes->get('roles', [AdminController::class, 'manageRoles']);
     $routes->get('departments', [AdminController::class, 'manageDepartments']);
@@ -42,10 +45,10 @@ $routes->group('admin', function ($routes) {
     // Tambahkan route untuk Manage Projects
     $routes->get('projects', [AdminController::class, 'manageProjects']);
     $routes->post('projects/add', [AdminController::class, 'addProject']);
-    $routes->post('projects/edit/(:num)', [AdminController::class, 'editProject/$1']);
-    $routes->post('projects/delete/(:num)', [AdminController::class, 'deleteProject/$1']);
-    $routes->post('projects/assign-users/(:num)', [AdminController::class, 'assignUsersToProject/$1']);
-    $routes->post('projects/change-status/(:num)', [AdminController::class, 'changeProjectStatus/$1']);
+        $routes->post('projects/edit/(:num)', 'AdminController::editProject/$1');
+        $routes->post('projects/delete/(:num)', 'AdminController::deleteProject/$1');
+        $routes->post('projects/assign-users/(:num)', 'AdminController::assignUsersToProject/$1');
+        $routes->post('projects/change-status/(:num)', 'AdminController::changeProjectStatus/$1');
 
     $routes->get('settings', [AdminController::class, 'systemSettings']);
     $routes->get('logout', [AuthController::class, 'logout']);
@@ -55,9 +58,9 @@ $routes->group('admin', function ($routes) {
 $routes->group('customer', function ($routes) {
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
-    $routes->get('project_detail/(:num)', [CustomerController::class, 'projectDetail/$1']);
-    $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-    $routes->get('ticket_detail/(:num)', [CustomerController::class, 'ticketDetail/$1']);
+        $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
+        $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
+        $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', [CustomerController::class, 'updateProfile']);
     $routes->get('notifications', [CustomerController::class, 'notifications']);

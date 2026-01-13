@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <title>NEXUS - Customer Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS - Login</title>
-    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script>
         tailwind.config = {
             theme: {
@@ -33,10 +31,8 @@
             }
         }
     </script>
-    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
     <style>
         .checkbox-container {
             width: 18px;
@@ -49,12 +45,10 @@
             border: 2px solid rgba(204, 221, 255, 0.12);
             cursor: pointer;
         }
-        
         .checkbox-container.checked {
             background: #756EA4;
             border-color: #756EA4;
         }
-        
         .checkbox-container.checked::after {
             content: '';
             position: absolute;
@@ -66,21 +60,28 @@
             top: 3px;
             left: 3px;
         }
-        
         .form-input:focus {
             border-color: rgba(204, 221, 255, 0.6);
             box-shadow: 0 0 0 2px rgba(204, 221, 255, 0.2);
         }
+        /* Style untuk pesan error dengan link */
+        .error-message a {
+            color: #ffcccb;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .error-message a:hover {
+            color: #ff9999;
+        }
     </style>
 </head>
 <body class="bg-light-bg min-h-screen flex justify-center items-center overflow-hidden relative font-roboto px-4">
-    
     <!-- Background Effects -->
     <div class="absolute w-full h-full top-0 left-0 z-1">
         <div class="w-[40vw] h-[40vw] absolute -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.26)] via-[#D6D3EE] to-[#817CB2] blur-[60px] md:blur-80 opacity-80"></div>
         <div class="w-[35vw] h-[25vw] absolute -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.31)] via-[#D6D3EE] to-[#817CB2] blur-[60px] md:blur-80 opacity-70"></div>
     </div>
-    
+
     <!-- Login Container -->
     <div class="relative z-2 w-full max-w-[400px] md:max-w-[450px] min-w-[280px] p-4 md:p-5 flex flex-col items-center">
         <!-- Logo -->
@@ -92,6 +93,8 @@
                 NEXUS
             </div>
         </div>
+        
+
         
         <!-- Login Card -->
         <div class="w-full bg-primary rounded-xl md:rounded-[19px] p-4 md:p-[25px_30px] shadow-lg md:shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
@@ -106,9 +109,8 @@
                     <?= session()->getFlashdata('success') ?>
                 </div>
             <?php endif; ?>
-            
             <?php if(session()->getFlashdata('error')): ?>
-                <div class="bg-[rgba(244,67,54,0.15)] text-[#f44336] p-3 md:p-[12px_20px] rounded md:rounded-[6px] mb-4 md:mb-[20px] text-xs md:text-[14px] font-semibold text-center border border-[rgba(244,67,54,0.3)]">
+                <div class="bg-[rgba(244,67,54,0.15)] text-[#f44336] p-3 md:p-[12px_20px] rounded md:rounded-[6px] mb-4 md:mb-[20px] text-xs md:text-[14px] font-semibold text-center border border-[rgba(244,67,54,0.3)] error-message">
                     <i class="fas fa-exclamation-circle mr-2"></i>
                     <?= session()->getFlashdata('error') ?>
                 </div>
@@ -118,11 +120,13 @@
             <form id="loginForm" action="<?= base_url('process_login') ?>" method="POST">
                 <!-- CSRF Token -->
                 <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                <!-- Hidden field untuk identifikasi login type -->
+                <input type="hidden" name="login_type" value="customer">
                 
                 <!-- Email Field -->
                 <div class="mb-4 md:mb-[20px] w-full">
                     <label for="email" class="block text-text-light text-xs md:text-[14px] font-bold mb-2 md:mb-[8px]">
-                        Email Address
+                        Email
                     </label>
                     <div class="relative">
                         <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-light/70">
@@ -134,11 +138,12 @@
                             name="email" 
                             value="<?= old('email') ?>"
                             class="w-full h-12 md:h-[54px] pl-12 pr-4 bg-[rgba(204,221,255,0.12)] border border-border-light rounded md:rounded-[6px] text-text-light text-sm md:text-[17px] font-bold outline-none form-input transition-all duration-300 placeholder:text-text-light/50"
-                            placeholder="Enter your email"
+                            placeholder="enter your email"
                             required
                             autocomplete="email"
                         >
                     </div>
+                    <p class="text-text-light/70 text-xs mt-1">Use your registered email</p>
                 </div>
                 
                 <!-- Password Field -->
@@ -184,19 +189,25 @@
                     type="submit" 
                     class="w-full h-12 md:h-[45px] bg-secondary hover:bg-[#817CB2] text-[#C1D1F3] text-sm md:text-[16px] font-extrabold rounded md:rounded-[6px] border-none cursor-pointer transition-all duration-300 my-4 md:my-[20px] hover:-translate-y-[2px] hover:shadow-lg"
                 >
-                    Login
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
                 </button>
+                
+                
             </form>
         </div>
+        
+        <!-- Footer -->
+        <div class="mt-4 text-center text-[#817CB2] text-xs md:text-[12px]">
+            <p>© 2024 NEXUS Arch System. Customer Portal v1.0</p>
+            <p class="mt-1 text-xs opacity-70">Only customers can login through this portal</p>
+        </div>
     </div>
-    
-    <!-- Simple JavaScript -->
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Toggle password visibility
             const togglePassword = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
-            
             if (togglePassword && passwordInput) {
                 togglePassword.addEventListener('click', function() {
                     const type = passwordInput.type === 'password' ? 'text' : 'password';
@@ -208,7 +219,6 @@
             // Toggle remember me
             const rememberCheckbox = document.getElementById('rememberCheckbox');
             const rememberInput = document.getElementById('remember');
-            
             function toggleRemember() {
                 if (rememberCheckbox) {
                     rememberCheckbox.classList.toggle('checked');
@@ -217,9 +227,17 @@
                     }
                 }
             }
-            
             if (rememberCheckbox) {
                 rememberCheckbox.addEventListener('click', toggleRemember);
+            }
+            
+            // Form validation untuk memastikan hanya customer yang bisa login
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    const email = document.getElementById('email').value;
+                    // Bisa ditambahkan validasi frontend tambahan di sini jika perlu
+                });
             }
         });
     </script>
