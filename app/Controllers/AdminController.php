@@ -3,32 +3,25 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
-use App\Models\ProjectModel;
-use App\Models\ProjectAssignmentModel;
-use App\Models\TicketModel;
 use App\Models\RoleModel;
 use App\Models\DepartmentModel;
+use App\Models\ProjectAssignmentModel;
 
 class AdminController extends BaseController
 {
     protected $userModel;
-    protected $projectModel;
-    protected $projectAssignmentModel;
-    protected $ticketModel;
     protected $roleModel;
     protected $departmentModel;
+    protected $projectAssignmentModel;
 
     public function __construct()
     {
         // Initialize models
         $this->userModel = new UserModel();
-        $this->projectModel = new ProjectModel();
-        $this->projectAssignmentModel = new ProjectAssignmentModel();
-        $this->ticketModel = new TicketModel();
         $this->roleModel = new RoleModel();
         $this->departmentModel = new DepartmentModel();
+        $this->projectAssignmentModel = new ProjectAssignmentModel();
     }
-
     /**
      * Dashboard dengan data dinamis
      */
@@ -474,27 +467,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Format time ago
-     */
-    private function formatTimeAgo(string $datetime): string
-    {
-        $time = strtotime($datetime);
-        $now = time();
-        $diff = $now - $time;
-
-        if ($diff < 60)
-            return 'Just now';
-        if ($diff < 3600)
-            return floor($diff / 60) . ' minutes ago';
-        if ($diff < 86400)
-            return floor($diff / 3600) . ' hours ago';
-        if ($diff < 604800)
-            return floor($diff / 86400) . ' days ago';
-
-        return date('M d, Y', $time);
-    }
-
-    /**
      * Get default status color
      */
     private function getDefaultStatusColor(int $statusId): string
@@ -526,6 +498,464 @@ class AdminController extends BaseController
     }
 
     /**
+     * Manage Users - Main method
+     */
+    public function manageUsers()
+    {
+        $data = $this->loadCommonData();
+        $data['title'] = 'Manage Users - NEXUS Admin';
+
+        // Get roles and departments for filters
+        $data['roles'] = $this->roleModel->findAll();
+        $data['departments'] = $this->departmentModel->findAll();
+
+        // Get user statistics
+        $data['userStats'] = $this->userModel->getUserStatistics();
+
+        // Check if AJAX request for table data
+        if ($this->request->isAJAX() && $this->request->getMethod() === 'post') {
+            return $this->getUsersTableData();
+        }
+
+        return view('Admin/manage_users', $data);
+    }
+
+    /**
+     * Get users data for DataTable (AJAX)
+     */
+    private function getUsersTableData()
+    {
+        try {
+            // Get DataTable parameters
+            $draw = $this->request->getPost('draw');
+            $start = $this->request->getPost('start') ?? 0;
+            $length = $this->request->getPost('length') ?? 10;
+            $search = $this->request->getPost('search')['value'] ?? '';
+            
+            // Get filters
+            $filters = [
+                'search' => $search,
+                'role_id' => $this->request->getPost('role_id'),
+                'department_id' => $this->request->getPost('department_id'),
+                'is_active' => $this->request->getPost('is_active'),
+                'date_from' => $this->request->getPost('date_from'),
+                'date_to' => $this->request->getPost('date_to'),
+                'sort' => $this->request->getPost('order')[0]['column'] ?? 0,
+                'order' => $this->request->getPost('order')[0]['dir'] ?? 'desc'
+            ];
+
+            // Get users data with pagination
+            $users = $this->userModel->getUsersWithRole($filters, $length, $start);
+            $totalRecords = $this->userModel->countAll();
+            $filteredRecords = $this->userModel->countFilteredUsers($filters);
+
+            // Format response for DataTable
+            $data = [];
+            foreach ($users as $user) {
+                $data[] = [
+                    'DT_RowId' => 'user_' . $user['user_id'],
+                    'user_id' => $user['user_id'],
+                    'full_name' => $user['full_name'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'role_name' => $user['role_name'] ?? 'N/A',
+                    'department_name' => $user['department_name'] ?? 'N/A',
+                    'is_active' => (bool)$user['is_active'],
+                    'created_at' => date('M d, Y', strtotime($user['created_at'])),
+                    'actions' => $this->getUserActionsHtml($user['user_id'])
+                ];
+            }
+
+            return $this->response->setJSON([
+                'draw' => $draw,
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Users AJAX error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'draw' => $this->request->getPost('draw'),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Failed to load users data'
+            ]);
+        }
+    }
+
+    /**
+     * Get user details for AJAX
+     */
+    public function getUserDetails($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            $userId = $id ?: $this->request->getPost('user_id');
+            
+            if (!$userId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User ID is required'
+                ]);
+            }
+
+            $user = $this->userModel->getUserWithDetails($userId);
+            
+            if (!$user) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+            }
+
+            // Get user's assigned projects
+            $projects = $this->userModel->getUserProjects($userId);
+            $projectNames = array_column($projects, 'project_name');
+
+            // Format response
+            $response = [
+                'success' => true,
+                'user' => [
+                    'user_id' => $user['user_id'],
+                    'full_name' => $user['full_name'],
+                    'email' => $user['email'],
+                    'username' => $user['username'],
+                    'role_name' => $user['role_name'] ?? 'N/A',
+                    'department_name' => $user['department_name'] ?? 'N/A',
+                    'phone_number' => $user['phone_number'] ?? 'N/A',
+                    'is_active' => (bool)$user['is_active'],
+                    'created_at' => date('F d, Y', strtotime($user['created_at'])),
+                    'last_login' => $user['last_login'] ? 
+                        $this->formatTimeAgo($user['last_login']) : 'Never logged in',
+                    'total_tickets' => $user['total_tickets'] ?? 0,
+                    'total_projects' => $user['total_projects'] ?? 0,
+                    'avatar_initials' => $this->getAvatarInitials($user['full_name']),
+                    'projects' => $projectNames
+                ]
+            ];
+
+            return $this->response->setJSON($response);
+
+        } catch (\Exception $e) {
+            log_message('error', 'User details error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load user details'
+            ]);
+        }
+    }
+
+    /**
+     * Add new user (AJAX)
+     */
+    public function addUser()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'username' => 'required|min_length[3]|max_length[50]',
+                'full_name' => 'required|min_length[3]|max_length[100]',
+                'email' => 'required|valid_email',
+                'password' => 'required|min_length[6]',
+                'role_id' => 'required|integer',
+                'department_id' => 'permit_empty|integer',
+                'phone_number' => 'permit_empty|max_length[20]'
+            ]);
+
+            // Custom validation for unique fields
+            $validation->setRule('username', 'Username', 'is_unique[users.username]');
+            $validation->setRule('email', 'Email', 'is_unique[users.email]');
+
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
+            $userData = [
+                'username' => $this->request->getPost('username'),
+                'full_name' => $this->request->getPost('full_name'),
+                'email' => $this->request->getPost('email'),
+                'password' => $this->request->getPost('password'),
+                'role_id' => $this->request->getPost('role_id'),
+                'department_id' => $this->request->getPost('department_id') ?: null,
+                'phone_number' => $this->request->getPost('phone_number'),
+                'is_active' => $this->request->getPost('is_active') ? true : false
+            ];
+
+            if ($this->userModel->save($userData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User added successfully',
+                    'user_id' => $this->userModel->getInsertID()
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to add user'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Add user error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Edit user (AJAX)
+     */
+    public function editUser($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'username' => 'required|min_length[3]|max_length[50]',
+                'full_name' => 'required|min_length[3]|max_length[100]',
+                'email' => 'required|valid_email',
+                'role_id' => 'required|integer',
+                'department_id' => 'permit_empty|integer',
+                'phone_number' => 'permit_empty|max_length[20]'
+            ]);
+
+            // Custom validation for unique fields (excluding current user)
+            $validation->setRule('username', 'Username', "is_unique[users.username,user_id,{$id}]");
+            $validation->setRule('email', 'Email', "is_unique[users.email,user_id,{$id}]");
+
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
+            $userData = [
+                'user_id' => $id,
+                'username' => $this->request->getPost('username'),
+                'full_name' => $this->request->getPost('full_name'),
+                'email' => $this->request->getPost('email'),
+                'role_id' => $this->request->getPost('role_id'),
+                'department_id' => $this->request->getPost('department_id') ?: null,
+                'phone_number' => $this->request->getPost('phone_number'),
+                'is_active' => $this->request->getPost('is_active') ? true : false
+            ];
+
+            // Update password only if provided
+            if ($this->request->getPost('password')) {
+                $userData['password'] = $this->request->getPost('password');
+            }
+
+            if ($this->userModel->save($userData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User updated successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update user'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Edit user error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Reset password (AJAX)
+     */
+    public function resetPassword($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'new_password' => 'required|min_length[6]',
+                'confirm_password' => 'required|matches[new_password]'
+            ]);
+
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
+            $newPassword = $this->request->getPost('new_password');
+
+            if ($this->userModel->update($id, ['password' => $newPassword])) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Password reset successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to reset password'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Reset password error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Change user status (AJAX)
+     */
+    public function changeStatus($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            $status = $this->request->getPost('status');
+            $isActive = ($status === 'active' || $status === '1') ? true : false;
+            
+            if ($this->userModel->changeStatus($id, $isActive)) {
+                $statusText = $isActive ? 'activated' : 'deactivated';
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => "User {$statusText} successfully"
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to change user status'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Change status error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete user (AJAX)
+     */
+    public function deleteUser($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/admin/users');
+        }
+
+        try {
+            // Prevent deleting yourself
+            if ($id == session()->get('user_id')) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Cannot delete your own account'
+                ]);
+            }
+
+            if ($this->userModel->delete($id)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User deleted successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to delete user'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Delete user error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Export users to CSV
+     */
+    public function exportUsers()
+    {
+        try {
+            // Get filters from query string
+            $filters = [
+                'search' => $this->request->getGet('search'),
+                'role_id' => $this->request->getGet('role_id'),
+                'department_id' => $this->request->getGet('department_id'),
+                'is_active' => $this->request->getGet('is_active'),
+                'date_from' => $this->request->getGet('date_from'),
+                'date_to' => $this->request->getGet('date_to')
+            ];
+
+            // Get all users (no pagination for export)
+            $users = $this->userModel->getUsersWithRole($filters, 0, 0);
+
+            // Set headers for CSV download
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="users_' . date('Y-m-d') . '.csv"');
+
+            $output = fopen('php://output', 'w');
+            
+            // CSV headers
+            fputcsv($output, ['ID', 'Username', 'Full Name', 'Email', 'Role', 'Department', 'Status', 'Created At', 'Last Login']);
+
+            // CSV data
+            foreach ($users as $user) {
+                fputcsv($output, [
+                    $user['user_id'],
+                    $user['username'],
+                    $user['full_name'],
+                    $user['email'],
+                    $user['role_name'] ?? 'N/A',
+                    $user['department_name'] ?? 'N/A',
+                    $user['is_active'] ? 'Active' : 'Inactive',
+                    date('Y-m-d H:i:s', strtotime($user['created_at'])),
+                    $user['last_login'] ? date('Y-m-d H:i:s', strtotime($user['last_login'])) : 'Never'
+                ]);
+            }
+
+            fclose($output);
+            exit;
+
+        } catch (\Exception $e) {
+            log_message('error', 'Export users error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export users');
+        }
+    }
+
+    /**
      * Load common data for all views
      */
     protected function loadCommonData(): array
@@ -541,148 +971,136 @@ class AdminController extends BaseController
         ];
     }
 
-    public function manageUsers()
+    /**
+     * Get user actions HTML for DataTable
+     */
+    private function getUserActionsHtml(int $userId): string
     {
-        $data = $this->loadCommonData();
-
-        // Get all users with roles and departments
-        $data['users'] = $this->userModel->getUsersWithRole();
-
-        // Get roles and departments for filters
-        $db = db_connect();
-        $data['roles'] = $db->table('roles')->get()->getResultArray();
-        $data['departments'] = $db->table('departments')->get()->getResultArray();
-
-        return view('Admin/manage_users', $data);
+        return '
+        <div class="flex items-center gap-2">
+            <button class="btn-view-user p-2 text-blue-600 hover:text-blue-800 transition-colors" 
+                    data-user-id="' . $userId . '" 
+                    title="View Details">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn-edit-user p-2 text-secondary hover:text-[#817CB2] transition-colors" 
+                    data-user-id="' . $userId . '" 
+                    title="Edit User">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-reset-password p-2 text-green-600 hover:text-green-800 transition-colors" 
+                    data-user-id="' . $userId . '" 
+                    title="Reset Password">
+                <i class="fas fa-key"></i>
+            </button>
+            <button class="btn-delete-user p-2 text-red-600 hover:text-red-800 transition-colors" 
+                    data-user-id="' . $userId . '" 
+                    title="Delete User">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>';
     }
 
-    public function addUser()
+    /**
+     * Get avatar initials from full name
+     */
+    private function getAvatarInitials(string $fullName): string
     {
-        if ($this->request->getMethod() === 'post') {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'username' => 'required|min_length[3]|max_length[50]|is_unique[users.username]',
-                'full_name' => 'required|min_length[3]|max_length[100]',
-                'email' => 'required|valid_email|is_unique[users.email]',
-                'password' => 'required|min_length[6]',
-                'role_id' => 'required|integer',
-                'department_id' => 'permit_empty|integer'
-            ]);
-
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        $initials = '';
+        $names = explode(' ', $fullName);
+        
+        foreach ($names as $name) {
+            if (strlen($initials) < 2) {
+                $initials .= strtoupper(substr($name, 0, 1));
             }
+        }
+        
+        return $initials;
+    }
 
-            $userData = [
-                'username' => $this->request->getPost('username'),
-                'full_name' => $this->request->getPost('full_name'),
-                'email' => $this->request->getPost('email'),
-                'password' => $this->request->getPost('password'),
+     /**
+     * Format time ago
+     */
+    private function formatTimeAgo(string $datetime): string
+    {
+        $time = strtotime($datetime);
+        $now = time();
+        $diff = $now - $time;
+
+        if ($diff < 60)
+            return 'Just now';
+        if ($diff < 3600)
+            return floor($diff / 60) . ' minutes ago';
+        if ($diff < 86400)
+            return floor($diff / 3600) . ' hours ago';
+        if ($diff < 604800)
+            return floor($diff / 86400) . ' days ago';
+
+        return date('M d, Y', $time);
+    }
+
+    /**
+     * Handle AJAX requests for users data
+     */
+    private function getUsersAjax()
+    {
+        try {
+            // Get request parameters
+            $draw = $this->request->getPost('draw');
+            $start = $this->request->getPost('start') ?? 0;
+            $length = $this->request->getPost('length') ?? 10;
+            $search = $this->request->getPost('search')['value'] ?? '';
+            
+            // Get filters
+            $filters = [
+                'search' => $search,
                 'role_id' => $this->request->getPost('role_id'),
-                'department_id' => $this->request->getPost('department_id') ?: null,
-                'phone_number' => $this->request->getPost('phone_number'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0
+                'department_id' => $this->request->getPost('department_id'),
+                'is_active' => $this->request->getPost('is_active'),
+                'date_from' => $this->request->getPost('date_from'),
+                'date_to' => $this->request->getPost('date_to'),
+                'sort' => $this->request->getPost('sort') ?? 'created_at',
+                'order' => $this->request->getPost('order') ?? 'DESC'
             ];
 
-            if ($this->userModel->save($userData)) {
-                return redirect()->to('/admin/users')->with('success', 'User added successfully!');
-            } else {
-                return redirect()->back()->withInput()->with('error', 'Failed to add user');
+            // Get users data
+            $users = $this->userModel->getUsersWithRole($filters, $length, $start);
+            $totalRecords = $this->userModel->countAll();
+            $filteredRecords = $this->userModel->countFilteredUsers($filters);
+
+            // Format response data
+            $data = [];
+            foreach ($users as $user) {
+                $data[] = [
+                    'user_id' => $user['user_id'],
+                    'username' => $user['username'],
+                    'full_name' => $user['full_name'],
+                    'email' => $user['email'],
+                    'role_name' => $user['role_name'] ?? 'N/A',
+                    'department_name' => $user['department_name'] ?? 'N/A',
+                    'is_active' => (bool)$user['is_active'],
+                    'created_at' => date('M d, Y', strtotime($user['created_at'])),
+                    'last_login' => $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never',
+                    'actions' => $this->getUserActionsHtml($user['user_id'])
+                ];
             }
-        }
 
-        return redirect()->to('/admin/users');
-    }
-
-    public function editUser($id)
-    {
-        if ($this->request->getMethod() === 'post') {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'username' => "required|min_length[3]|max_length[50]|is_unique[users.username,user_id,$id]",
-                'full_name' => 'required|min_length[3]|max_length[100]',
-                'email' => "required|valid_email|is_unique[users.email,user_id,$id]",
-                'role_id' => 'required|integer',
-                'department_id' => 'permit_empty|integer'
+            return $this->response->setJSON([
+                'draw' => $draw,
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
             ]);
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->withInput()->with('errors', $validation->getErrors());
-            }
-
-            $userData = [
-                'user_id' => $id,
-                'username' => $this->request->getPost('username'),
-                'full_name' => $this->request->getPost('full_name'),
-                'email' => $this->request->getPost('email'),
-                'role_id' => $this->request->getPost('role_id'),
-                'department_id' => $this->request->getPost('department_id') ?: null,
-                'phone_number' => $this->request->getPost('phone_number'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0
-            ];
-
-            // Only update password if provided
-            if ($this->request->getPost('password')) {
-                $userData['password'] = $this->request->getPost('password');
-            }
-
-            if ($this->userModel->save($userData)) {
-                return redirect()->to('/admin/users')->with('success', 'User updated successfully!');
-            } else {
-                return redirect()->back()->withInput()->with('error', 'Failed to update user');
-            }
-        }
-
-        return redirect()->to('/admin/users');
-    }
-
-    public function resetPassword($id)
-    {
-        if ($this->request->getMethod() === 'post') {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'new_password' => 'required|min_length[6]',
-                'confirm_password' => 'required|matches[new_password]'
+        } catch (\Exception $e) {
+            log_message('error', 'Users AJAX error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'draw' => $this->request->getPost('draw'),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Failed to load users data'
             ]);
-
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->withInput()->with('errors', $validation->getErrors());
-            }
-
-            $newPassword = $this->request->getPost('new_password');
-
-            if ($this->userModel->update($id, ['password' => $newPassword])) {
-                return redirect()->to('/admin/users')->with('success', 'Password reset successfully!');
-            } else {
-                return redirect()->back()->with('error', 'Failed to reset password');
-            }
-        }
-
-        return redirect()->to('/admin/users');
-    }
-
-    public function changeStatus($id)
-    {
-        $status = $this->request->getPost('status') === 'active' ? 1 : 0;
-
-        if ($this->userModel->update($id, ['is_active' => $status])) {
-            return redirect()->to('/admin/users')->with('success', "User status updated successfully!");
-        } else {
-            return redirect()->back()->with('error', 'Failed to update status');
-        }
-    }
-
-    public function deleteUser($id)
-    {
-        // Prevent deleting yourself
-        if ($id == session()->get('user_id')) {
-            return redirect()->to('/admin/users')->with('error', 'Cannot delete your own account');
-        }
-
-        if ($this->userModel->delete($id)) {
-            return redirect()->to('/admin/users')->with('success', 'User deleted successfully!');
-        } else {
-            return redirect()->back()->with('error', 'Failed to delete user');
         }
     }
 

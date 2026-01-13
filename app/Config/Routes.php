@@ -26,17 +26,20 @@ $routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
 
-// Admin Routes
+// app/Config/Routes.php
 $routes->group('admin', function ($routes) {
     $routes->get('dashboard', [AdminController::class, 'dashboard']);
 
     // Manage Users
     $routes->get('users', [AdminController::class, 'manageUsers']);
+    $routes->post('users', [AdminController::class, 'manageUsers']); // AJAX endpoint for DataTable
+    $routes->post('users/details', [AdminController::class, 'getUserDetails']); // AJAX endpoint for user details
     $routes->post('users/add', [AdminController::class, 'addUser']);
     $routes->post('users/edit/(:num)', 'AdminController::editUser/$1');
     $routes->post('users/reset-password/(:num)', 'AdminController::resetPassword/$1');
     $routes->post('users/change-status/(:num)', 'AdminController::changeStatus/$1');
     $routes->post('users/delete/(:num)', 'AdminController::deleteUser/$1');
+    $routes->get('users/export', [AdminController::class, 'exportUsers']);
 
     $routes->get('roles', [AdminController::class, 'manageRoles']);
     $routes->get('departments', [AdminController::class, 'manageDepartments']);
@@ -56,12 +59,10 @@ $routes->group('admin', function ($routes) {
 
 // Customer Routes
 $routes->group('customer', function ($routes) {
-    $routes->get('', function() { return redirect()->to('customer/dashboard'); });
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
     $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-    $routes->post('process_create_ticket', [CustomerController::class, 'processCreateTicket']);
     $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', [CustomerController::class, 'updateProfile']);
