@@ -1,4 +1,3 @@
-
 <?= $this->extend('layouts/support_layout') ?>
 
 <?= $this->section('title') ?>Profile - NEXUS Support<?= $this->endSection() ?>
@@ -11,6 +10,29 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?php
+// Ambil inisial dari nama
+function getInitials($name) {
+    $words = explode(' ', $name);
+    $initials = '';
+    foreach ($words as $word) {
+        $initials .= strtoupper(substr($word, 0, 1));
+    }
+    return substr($initials, 0, 2);
+}
+
+$userName = $user_details['full_name'] ?? 'Support Agent';
+$userEmail = $user_details['email'] ?? 'agent@nexus.com';
+$userRole = $user_details['role_name'] ?? 'Support Agent';
+$department = $user_details['department_name'] ?? 'Support Department';
+$phone = $user_details['phone'] ?? '09:00 - 18:00 (Mon-Fri)';
+$initials = getInitials($userName);
+
+// Format angka dengan koma
+function formatNumber($num) {
+    return number_format($num);
+}
+?>
 <div class="mt-[77px] p-[30px] relative z-10">
     <!-- Page Header -->
     <div class="mb-8">
@@ -41,30 +63,32 @@
                     <!-- Avatar -->
                     <div class="relative">
                         <div class="w-24 h-24 bg-gradient-to-br from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                            SA
+                            <?= $initials ?>
                         </div>
-                        <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+                        <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full" id="statusIndicator"></div>
                     </div>
                     
                     <!-- Support Agent Info -->
                     <div class="flex-1">
                         <div class="flex flex-wrap items-center gap-3 mb-3">
-                            <h2 class="text-2xl font-bold text-gray-800">Support Agent</h2>
-                           
+                            <h2 class="text-2xl font-bold text-gray-800"><?= esc($userName) ?></h2>
+                            <span class="px-3 py-1 bg-secondary/10 text-secondary text-sm rounded-full">
+                                <?= esc($userRole) ?>
+                            </span>
                         </div>
                         
                         <div class="space-y-2">
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-envelope text-gray-400"></i>
-                                <span class="text-gray-700">agent@nexus.com</span>
+                                <span class="text-gray-700"><?= esc($userEmail) ?></span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-id-badge text-gray-400"></i>
-                                <span class="text-gray-700">ID: SUP-2025-001</span>
+                                <span class="text-gray-700">ID: <?= $support_id ?? 'SUP-2025-001' ?></span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-calendar-alt text-gray-400"></i>
-                                <span class="text-gray-700">Joined: January 10, 2025</span>
+                                <span class="text-gray-700">Joined: <?= $join_date ?? 'January 10, 2025' ?></span>
                             </div>
                         </div>
                     </div>
@@ -81,38 +105,46 @@
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Full Name</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">Alex Johnson</span>
+                                <span class="text-gray-800"><?= esc($userName) ?></span>
                             </div>
                         </div>
-                        
-
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Email Address</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">agent@nexus.com</span>
+                                <span class="text-gray-800"><?= esc($userEmail) ?></span>
                             </div>
                         </div>
-                        
-
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Role</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">Senior Support Agent</span>
+                                <span class="text-gray-800"><?= esc($userRole) ?></span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-600 text-sm mb-1">Department</label>
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <span class="text-gray-800"><?= esc($department) ?></span>
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Phone Number</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800">09:00 - 18:00 (Mon-Fri)</span>
+                                <span class="text-gray-800"><?= esc($phone) ?></span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-600 text-sm mb-1">Status</label>
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <span class="text-gray-800" id="currentStatusText"><?= $current_status ?? 'Available' ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                
                 
                 <!-- Edit Button -->
                 <div class="border-t border-gray-200 pt-6">
@@ -138,7 +170,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Total Tickets</p>
-                                <p class="text-2xl font-bold">158</p>
+                                <p class="text-2xl font-bold"><?= formatNumber($stats['total_tickets'] ?? 158) ?></p>
                             </div>
                         </div>
                     </div>
@@ -150,7 +182,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Avg. Response</p>
-                                <p class="text-2xl font-bold">12m</p>
+                                <p class="text-2xl font-bold"><?= $stats['avg_response_time'] ?? '12m' ?></p>
                             </div>
                         </div>
                     </div>
@@ -162,7 +194,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Resolved</p>
-                                <p class="text-2xl font-bold">142</p>
+                                <p class="text-2xl font-bold"><?= formatNumber($stats['resolved_tickets'] ?? 142) ?></p>
                             </div>
                         </div>
                     </div>
@@ -174,7 +206,7 @@
                             </div>
                             <div>
                                 <p class="text-white/80 text-sm">Satisfaction</p>
-                                <p class="text-2xl font-bold">94%</p>
+                                <p class="text-2xl font-bold"><?= $stats['satisfaction_rate'] ?? 94 ?>%</p>
                             </div>
                         </div>
                     </div>
@@ -192,7 +224,9 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">Last Login</p>
-                            <p class="text-xs text-gray-600" id="lastLoginTime">Today, 08:30 AM</p>
+                            <p class="text-xs text-gray-600" id="lastLoginTime">
+                                <?= $last_login ?? 'Today, ' . date('g:i A') ?>
+                            </p>
                         </div>
                     </div>
                     
@@ -202,7 +236,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">Member Since</p>
-                            <p class="text-xs text-gray-600">January 10, 2025</p>
+                            <p class="text-xs text-gray-600"><?= $join_date ?? 'January 10, 2025' ?></p>
                         </div>
                     </div>
                     
@@ -212,13 +246,13 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">Current Status</p>
-                            <p class="text-xs text-green-600 font-medium">● Available</p>
+                            <p class="text-xs text-green-600 font-medium cursor-pointer" id="statusText" onclick="toggleStatus()">
+                                ● <?= $current_status ?? 'Available' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            
         </div>
     </div>
 
@@ -227,89 +261,101 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-chart-line text-secondary"></i>
-                    Performance Metrics (Last 30 Days)
-                </h3>
-                <span class="px-3 py-1 bg-secondary/10 text-secondary text-sm rounded-full">
-                    Updated: Today
-                </span>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gray-50 rounded-xl p-4 text-center">
-                    <p class="text-gray-600 text-sm mb-2">Tickets Handled</p>
-                    <p class="text-3xl font-bold text-gray-800">42</p>
-                    <p class="text-xs text-green-600 mt-1">
-                        <i class="fas fa-arrow-up mr-1"></i>8% increase
-                    </p>
-                </div>
-                
-                <div class="bg-blue-50 rounded-xl p-4 text-center">
-                    <p class="text-blue-600 text-sm mb-2">Avg. Response Time</p>
-                    <p class="text-3xl font-bold text-blue-700">12m</p>
-                    <p class="text-xs text-green-600 mt-1">
-                        <i class="fas fa-arrow-down mr-1"></i>2m faster
-                    </p>
-                </div>
-                
-                <div class="bg-yellow-50 rounded-xl p-4 text-center">
-                    <p class="text-yellow-600 text-sm mb-2">First Contact Resolution</p>
-                    <p class="text-3xl font-bold text-yellow-700">78%</p>
-                    <p class="text-xs text-green-600 mt-1">
-                        <i class="fas fa-arrow-up mr-1"></i>5% increase
-                    </p>
-                </div>
-                
-                <div class="bg-green-50 rounded-xl p-4 text-center">
-                    <p class="text-green-600 text-sm mb-2">Customer Satisfaction</p>
-                    <p class="text-3xl font-bold text-green-700">94%</p>
-                    <p class="text-xs text-green-600 mt-1">
-                        <i class="fas fa-arrow-up mr-1"></i>3% increase
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Performance Breakdown -->
-            <div class="space-y-4">
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-700 font-medium">Ticket Resolution Rate</span>
-                        <span class="text-gray-600">90%</span>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-chart-line text-secondary"></i>
+                            Performance Metrics (Last 30 Days)
+                        </h3>
+                        <span class="px-3 py-1 bg-secondary/10 text-secondary text-sm rounded-full">
+                            Updated: <?= date('F j') ?>
+                        </span>
                     </div>
-                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-green-500 rounded-full" style="width: 90%"></div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gray-50 rounded-xl p-4 text-center">
+                            <p class="text-gray-600 text-sm mb-2">Tickets Handled</p>
+                            <p class="text-3xl font-bold text-gray-800">
+                                <?= $metrics['tickets_handled'] ?? 42 ?>
+                            </p>
+                            <p class="text-xs <?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' ?> mt-1">
+                                <i class="fas fa-arrow-<?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'up' : 'down' ?> mr-1"></i>
+                                <?= abs($metrics['ticket_change_percent'] ?? 8) ?>% 
+                                <?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'increase' : 'decrease' ?>
+                            </p>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p class="text-blue-600 text-sm mb-2">Avg. Response Time</p>
+                            <p class="text-3xl font-bold text-blue-700">
+                                <?= $metrics['avg_response_time'] ?? '12m' ?>
+                            </p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-down mr-1"></i>2m faster
+                            </p>
+                        </div>
+                        
+                        <div class="bg-yellow-50 rounded-xl p-4 text-center">
+                            <p class="text-yellow-600 text-sm mb-2">First Contact Resolution</p>
+                            <p class="text-3xl font-bold text-yellow-700">
+                                <?= $metrics['first_contact_rate'] ?? 78 ?>%
+                            </p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-up mr-1"></i>5% increase
+                            </p>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                            <p class="text-green-600 text-sm mb-2">Customer Satisfaction</p>
+                            <p class="text-3xl font-bold text-green-700">
+                                <?= $metrics['satisfaction_rate'] ?? 94 ?>%
+                            </p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <?= $metrics['satisfaction_change_percent'] ?? 3 ?>% increase
+                            </p>
+                        </div>
                     </div>
-                </div>
-                
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-700 font-medium">SLA Compliance</span>
-                        <span class="text-gray-600">96%</span>
+                    
+                    <!-- Performance Breakdown -->
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-700 font-medium">Ticket Resolution Rate</span>
+                                <span class="text-gray-600"><?= $stats['resolution_rate'] ?? 90 ?>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 rounded-full progress-bar" 
+                                     data-width="<?= $stats['resolution_rate'] ?? 90 ?>%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-700 font-medium">SLA Compliance</span>
+                                <span class="text-gray-600"><?= $stats['sla_compliance'] ?? 96 ?>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full progress-bar" 
+                                     data-width="<?= $stats['sla_compliance'] ?? 96 ?>%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-700 font-medium">Quality Score</span>
+                                <span class="text-gray-600"><?= $stats['quality_score'] ?? 88 ?>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-purple-500 rounded-full progress-bar" 
+                                     data-width="<?= $stats['quality_score'] ?? 88 ?>%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-500 rounded-full" style="width: 96%"></div>
-                    </div>
-                </div>
-                
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-700 font-medium">Quality Score</span>
-                        <span class="text-gray-600">88%</span>
-                    </div>
-                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-purple-500 rounded-full" style="width: 88%"></div>
-                    </div>
-                </div>
-            </div>
                 </div>
             </div>
             <div class="hidden lg:block"></div>
         </div>
     </div>
-
-    
 </div>
 
 <style>
@@ -333,40 +379,10 @@
             }
         };
         
-        // Update last login time
-        function updateLastLogin() {
-            const now = new Date();
-            const options = { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            };
-            const timeString = now.toLocaleTimeString('en-US', options);
-            const dateString = now.toLocaleDateString('en-US', { 
-                weekday: 'long',
-                month: 'short', 
-                day: 'numeric' 
-            });
-            
-            const lastLoginElement = document.getElementById('lastLoginTime');
-            if (lastLoginElement) {
-                lastLoginElement.textContent = `${dateString}, ${timeString}`;
-            }
-        }
-        
-        // Update on load
-        updateLastLogin();
-        
-        // Edit profile button
-        document.getElementById('editProfileBtn').addEventListener('click', function() {
-            // Simulate opening edit modal
-            showEditProfileModal();
-        });
-        
         // Animate progress bars on load
         setTimeout(() => {
-            document.querySelectorAll('.h-2.bg-gray-200 > div').forEach(bar => {
-                const width = bar.style.width;
+            document.querySelectorAll('.progress-bar').forEach(bar => {
+                const width = bar.getAttribute('data-width');
                 bar.style.setProperty('--target-width', width);
                 bar.style.width = '0';
                 bar.classList.add('progress-bar-animated');
@@ -374,28 +390,67 @@
         }, 500);
         
         // Status toggle functionality
-        const statusElement = document.querySelector('.text-xs.text-green-600.font-medium');
-        if (statusElement) {
-            statusElement.addEventListener('click', function() {
-                const currentStatus = this.textContent.includes('Available') ? 'Available' : 'Away';
-                const newStatus = currentStatus === 'Available' ? 'Away' : 'Available';
-                const newColor = newStatus === 'Available' ? 'green' : 'yellow';
-                
-                this.textContent = `● ${newStatus}`;
-                this.className = `text-xs text-${newColor}-600 font-medium cursor-pointer`;
-                
-                showToast(`Status changed to ${newStatus}`, 'info');
-            });
-        }
+        window.toggleStatus = function() {
+            const statusElement = document.getElementById('statusText');
+            const indicatorElement = document.getElementById('statusIndicator');
+            const statusTextElement = document.getElementById('currentStatusText');
+            
+            const currentStatus = statusElement.textContent.includes('Available') ? 'Available' : 'Away';
+            const newStatus = currentStatus === 'Available' ? 'Away' : 'Available';
+            const newColor = newStatus === 'Available' ? 'green' : 'yellow';
+            
+            // Update status text
+            statusElement.textContent = `● ${newStatus}`;
+            statusElement.className = `text-xs text-${newColor}-600 font-medium cursor-pointer`;
+            
+            // Update status indicator
+            indicatorElement.className = `absolute bottom-2 right-2 w-6 h-6 bg-${newColor}-500 border-2 border-white rounded-full`;
+            
+            // Update current status in agent info
+            if (statusTextElement) {
+                statusTextElement.textContent = newStatus;
+            }
+            
+            // Update status via AJAX
+            updateAgentStatus(newStatus);
+            
+            showToast(`Status changed to ${newStatus}`, 'info');
+        };
         
-        // Skills click functionality
-        document.querySelectorAll('.px-3.py-1.rounded-full').forEach(skill => {
-            skill.addEventListener('click', function() {
-                const skillName = this.textContent;
-                showToast(`Skill: ${skillName}`, 'info');
-            });
+        // Edit profile button
+        document.getElementById('editProfileBtn').addEventListener('click', function() {
+            showEditProfileModal();
         });
+        
+        // Initialize with current status
+        const currentStatus = '<?= $current_status ?? "Available" ?>';
+        if (currentStatus === 'Away') {
+            toggleStatus(); // Switch to Away if needed
+        }
     });
+    
+    function updateAgentStatus(status) {
+        fetch('<?= base_url("support/update_status") ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                status: status,
+                csrf_token: '<?= csrf_hash() ?>'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Failed to update status:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating status:', error);
+        });
+    }
     
     function showEditProfileModal() {
         // Create modal
@@ -403,62 +458,94 @@
         modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
         modal.innerHTML = `
             <div class="bg-white rounded-2xl w-full max-w-md animate-fadeInUp">
-                <div class="p-6 border-b border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xl font-semibold text-gray-800">Edit Profile</h3>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times"></i>
+                <form id="editProfileForm" action="<?= base_url('support/update_profile') ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-800">Edit Profile</h3>
+                            <button type="button" onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-2">Full Name</label>
+                                <input type="text" name="full_name" value="<?= esc($userName) ?>" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-2">Email Address</label>
+                                <input type="email" name="email" value="<?= esc($userEmail) ?>" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                <input type="text" name="phone" value="<?= esc($phone) ?>" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                            </div>
+                            
+                            <?php 
+                            // Get departments for dropdown
+                            $db = db_connect();
+                            $departments = $db->table('departments')
+                                ->select('department_id, department_name')
+                                ->get()
+                                ->getResultArray();
+                            ?>
+                            
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                <select name="department_id" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                                    <option value="">Select Department</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                        <option value="<?= $dept['department_id'] ?>" <?= ($dept['department_name'] === $department) ? 'selected' : '' ?>>
+                                            <?= esc($dept['department_name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 border-t border-gray-200 flex gap-3">
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2]">
+                            Save Changes
                         </button>
                     </div>
-                </div>
-                
-                <div class="p-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-2">Full Name</label>
-                            <input type="text" value="Alex Johnson" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-2">Email Address</label>
-                            <input type="email" value="agent@nexus.com" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-2">Department</label>
-                            <select class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                                <option>Technical Support</option>
-                                <option>IT Infrastructure</option>
-                                <option>Customer Service</option>
-                                <option>Quality Assurance</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="p-6 border-t border-gray-200 flex gap-3">
-                    <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                        Cancel
-                    </button>
-                    <button onclick="saveProfileChanges()" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2]">
-                        Save Changes
-                    </button>
-                </div>
+                </form>
             </div>
         `;
         
         document.body.appendChild(modal);
         document.body.style.overflow = 'hidden';
+        
+        // Handle form submission
+        modal.querySelector('#editProfileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveProfileChanges(this);
+        });
     }
     
-    function saveProfileChanges() {
-        // Simulate saving
-        const saveBtn = document.querySelector('button:contains("Save Changes")');
+    function saveProfileChanges(form) {
+        const saveBtn = form.querySelector('button[type="submit"]');
         const originalText = saveBtn.textContent;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
         saveBtn.disabled = true;
         
-        setTimeout(() => {
+        // Submit form data
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => {
             // Close modal
             document.querySelector('.fixed.inset-0').remove();
             document.body.style.overflow = 'auto';
@@ -466,11 +553,17 @@
             // Show success message
             showToast('Profile updated successfully!', 'success');
             
-            // In a real app, you would update the UI with new data
-            // For now, just reset the button
+            // Reload page to see changes
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error updating profile. Please try again.', 'error');
             saveBtn.innerHTML = originalText;
             saveBtn.disabled = false;
-        }, 1500);
+        });
     }
     
     function showToast(message, type = 'info') {

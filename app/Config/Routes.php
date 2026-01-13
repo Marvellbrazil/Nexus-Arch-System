@@ -69,6 +69,7 @@ $routes->group('customer', function ($routes) {
 
 // Support Routes
 $routes->group('support', function ($routes) {
+    // GET routes
     $routes->get('dashboard', [SupportController::class, 'dashboard']);
     $routes->get('incoming', [SupportController::class, 'incomingTickets']);
     $routes->get('ticket_detail/(:num)', [SupportController::class, 'ticketDetail/$1']);
@@ -76,22 +77,29 @@ $routes->group('support', function ($routes) {
     $routes->get('ticket_in_progress', [SupportController::class, 'ticketInProgress']);
     $routes->get('department_conversation/(:num)', [SupportController::class, 'departmentConversation/$1']);
     $routes->get('notifications', [SupportController::class, 'notifications']);
-    // Dalam group support routes
-    $routes->get('notifications/load_more', [SupportController::class, 'loadMoreNotifications']);
     $routes->get('profile', [SupportController::class, 'profile']);
     $routes->get('logout', [AuthController::class, 'logout']);
-
+    
     // POST routes
-    $routes->post('notifications/mark_read', [SupportController::class, 'markNotificationsRead']);
+    $routes->post('notifications/mark_all_read', [SupportController::class, 'markAllRead']); // NEW: untuk mark all
     $routes->post('ticket/assign/(:num)', [SupportController::class, 'assignTicket/$1']);
     $routes->post('ticket/forward/(:num)', [SupportController::class, 'forwardTicket/$1']);
     $routes->post('ticket/mark_resolved/(:num)', [SupportController::class, 'markTicketResolved/$1']);
-
-    // 🔥 NEW: Notification API routes
-    $routes->post('mark_notification_read', [SupportController::class, 'markNotificationRead']);
-    $routes->get('get_notifications', [SupportController::class, 'getNotifications']);
-    $routes->get('get_unread_count', [SupportController::class, 'getUnreadCount']);
-    $routes->post('load_more_notifications', [SupportController::class, 'loadMoreNotifications']);
+    $routes->post('tickets/load_more', [SupportController::class, 'loadMoreTickets']); // For tickets in progress
+    $routes->post('update_profile', [SupportController::class, 'updateProfile']); // NEW: update profile
+    $routes->post('update_status', [SupportController::class, 'updateStatus']); // NEW: update agent status
+    
+    $routes->group('notifications', function ($routes) {
+        $routes->post('mark_read', [SupportController::class, 'markNotificationRead']);
+        $routes->post('load_more', [SupportController::class, 'loadMoreNotifications']);
+        $routes->get('get', [SupportController::class, 'getNotifications']);
+        $routes->get('unread_count', [SupportController::class, 'getUnreadCount']);
+    });
+    
+    $routes->group('ajax', function ($routes) {
+        $routes->post('update_agent_status', [SupportController::class, 'updateAgentStatus']);
+        $routes->get('get_agent_stats', [SupportController::class, 'getAgentStats']);
+    });
 });
 
 // Department Routes
