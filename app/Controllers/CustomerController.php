@@ -294,7 +294,7 @@ class CustomerController extends BaseController
             log_message('debug', 'File is valid: ' . $photo->getName());
 
             // Define upload directory
-            $uploadDir = WRITEPATH . 'uploads/profile/';
+            $uploadDir = FCPATH . 'uploads/profile/'; // FCPATH = public/
 
             // Create directory if not exists
             if (!is_dir($uploadDir)) {

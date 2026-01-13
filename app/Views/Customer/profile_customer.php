@@ -130,119 +130,131 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Profile Card -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <!-- Profile Header -->
-                <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
-                    <!-- Avatar -->
-                    <div class="relative">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 h-full flex flex-col">
+                <!-- Profile Header - KURANGI MARGIN -->
+                <div class="flex flex-col md:flex-row md:items-center gap-6 p-8 pb-6">
+                    <!-- Avatar - PROPORTIONAL -->
+                    <div class="relative" style="flex-shrink: 0;">
                         <?php if (!empty($data['user_details']['photo_profile'])): ?>
                             <img src="<?= base_url($data['user_details']['photo_profile']) ?>" alt="Profile Photo"
-                                class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg profile-avatar">
+                                class="w-[180px] h-[180px] rounded-full object-cover border-[6px] border-white shadow-2xl profile-avatar">
                         <?php else: ?>
                             <div
-                                class="w-24 h-24 bg-gradient-to-br from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg profile-avatar">
+                                class="w-[180px] h-[180px] bg-gradient-to-br from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white text-[72px] font-bold border-[6px] border-white shadow-2xl profile-avatar">
                                 <?= strtoupper(substr($data['user_details']['full_name'], 0, 1)) ?>
                             </div>
                         <?php endif; ?>
-                        <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full">
+
+                        <!-- Status indicator -->
+                        <div
+                            class="absolute bottom-5 right-5 w-10 h-10 bg-green-500 border-[3px] border-white rounded-full shadow-md">
                         </div>
+
+                        <!-- Edit button -->
                         <button onclick="openEditModal()"
-                            class="absolute bottom-0 left-0 w-8 h-8 bg-secondary text-white rounded-full flex items-center justify-center hover:bg-[#665C9E] transition-colors">
-                            <i class="fas fa-camera text-xs"></i>
+                            class="absolute bottom-0 left-0 w-12 h-12 bg-secondary text-white rounded-full flex items-center justify-center hover:bg-[#665C9E] transition-colors shadow-lg border-[3px] border-white">
+                            <i class="fas fa-camera text-base"></i>
                         </button>
                     </div>
 
-                    <!-- User Info -->
+                    <!-- User Info - TAMBAHKAN PADDING -->
                     <div class="flex-1">
-                        <div class="flex flex-wrap items-center gap-3 mb-3">
-                            <h2 class="text-2xl font-bold text-gray-800"><?= esc($data['user_details']['full_name']) ?>
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <h2 class="text-3xl font-bold text-gray-800"><?= esc($data['user_details']['full_name']) ?>
                             </h2>
                             <div class="flex items-center gap-2">
                                 <span
-                                    class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-semibold rounded-full">
+                                    class="px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-semibold rounded-full">
                                     <?= $data['user_details']['role_name'] ?>
                                 </span>
                                 <span
-                                    class="px-3 py-1 <?= $data['user_details']['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?> text-xs font-semibold rounded-full">
+                                    class="px-4 py-1.5 <?= $data['user_details']['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?> text-sm font-semibold rounded-full">
                                     <?= $data['user_details']['is_active'] ? 'Active' : 'Inactive' ?>
                                 </span>
                             </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-envelope text-gray-400"></i>
-                                <span class="text-gray-700"><?= esc($data['user_details']['email']) ?></span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-phone text-gray-400"></i>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 text-base">
+                                <i class="fas fa-envelope text-gray-400 text-lg"></i>
                                 <span
-                                    class="text-gray-700"><?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : 'Not Set' ?></span>
+                                    class="text-gray-700 font-medium"><?= esc($data['user_details']['email']) ?></span>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-calendar-alt text-gray-400"></i>
-                                <span class="text-gray-700">Joined
-                                    <?= date('F d, Y', strtotime($data['user_details']['created_at'])) ?></span>
+                            <div class="flex items-center gap-3 text-base">
+                                <i class="fas fa-phone text-gray-400 text-lg"></i>
+                                <span class="text-gray-700 font-medium">
+                                    <?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : 'Not Set' ?>
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3 text-base">
+                                <i class="fas fa-calendar-alt text-gray-400 text-lg"></i>
+                                <span class="text-gray-700 font-medium">Joined
+                                    <?= date('F d, Y', strtotime($data['user_details']['created_at'])) ?>
+                                </span>
                             </div>
                             <?php if (!empty($data['user_details']['department_name'])): ?>
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-building text-gray-400"></i>
-                                    <span class="text-gray-700"><?= esc($data['user_details']['department_name']) ?></span>
+                                <div class="flex items-center gap-3 text-base">
+                                    <i class="fas fa-building text-gray-400 text-lg"></i>
+                                    <span
+                                        class="text-gray-700 font-medium"><?= esc($data['user_details']['department_name']) ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
 
-                <!-- Personal Information -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fas fa-user text-secondary"></i>
+                <!-- Personal Information - ATUR SPACING -->
+                <div class="px-8 pb-8 flex-grow">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                        <i class="fas fa-user text-secondary text-lg"></i>
                         Personal Information
                     </h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-1">Full Name</label>
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800"><?= esc($data['user_details']['full_name']) ?></span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-1">Username</label>
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800"><?= esc($data['user_details']['username']) ?></span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-1">Email Address</label>
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800"><?= esc($data['user_details']['email']) ?></span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-600 text-sm mb-1">Phone Number</label>
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-gray-600 text-sm font-medium">Full Name</label>
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
                                 <span
-                                    class="text-gray-800"><?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : 'Not Set' ?></span>
+                                    class="text-gray-800 text-base"><?= esc($data['user_details']['full_name']) ?></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-gray-600 text-sm font-medium">Username</label>
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <span
+                                    class="text-gray-800 text-base"><?= esc($data['user_details']['username']) ?></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-gray-600 text-sm font-medium">Email Address</label>
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <span class="text-gray-800 text-base"><?= esc($data['user_details']['email']) ?></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-gray-600 text-sm font-medium">Phone Number</label>
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <span class="text-gray-800 text-base">
+                                    <?= !empty($data['user_details']['phone_number']) ? esc($data['user_details']['phone_number']) : 'Not Set' ?>
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Edit Button -->
-                <button onclick="openEditModal()"
-                    class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-                    <i class="fas fa-edit"></i>
-                    Edit Profile Information
-                </button>
-
+                <!-- Edit Button - TARUH DI BAWAH -->
+                <div class="px-8 pb-8 pt-6 border-t border-gray-100">
+                    <button onclick="openEditModal()"
+                        class="w-full py-4 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-xl hover:opacity-90 transition-all font-semibold text-base flex items-center justify-center gap-3 shadow-lg shadow-secondary/30">
+                        <i class="fas fa-edit text-lg"></i>
+                        Edit Profile Information
+                    </button>
+                </div>
             </div>
         </div>
-
         <!-- Sidebar Stats -->
         <div class="space-y-6">
             <!-- Account Stats -->
