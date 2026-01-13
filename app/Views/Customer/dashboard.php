@@ -185,7 +185,7 @@
                                                 </span>
                                             </div>
                                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                                                0 tickets
+                                                <?= $project['ticket_count'] ?> tickets
                                             </span>
                                         </div>
                                     </div>
@@ -214,12 +214,12 @@
                                         <div class="flex items-center gap-1">
                                             <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
                                             <span class="text-gray-500">Open:</span>
-                                            <span class="font-medium text-gray-700"><?= $data['projects']['stats'][$project['project_id']]['open_tickets'] ?? 0 ?></span>
+                                            <span class="font-medium text-gray-700"><?= $project['open_tickets'] ?? 0 ?></span>
                                         </div>
                                         <div class="flex items-center gap-1">
                                             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                                             <span class="text-gray-500">Resolved:</span>
-                                            <span class="font-medium text-gray-700"><?= $data['projects']['stats'][$project['project_id']]['resolved_tickets'] ?? 0 ?></span>
+                                            <span class="font-medium text-gray-700"><?= $project['resolved_tickets'] ?? 0 ?></span>
                                         </div>
                                     </div>
                                     <!-- Progress Bar -->
