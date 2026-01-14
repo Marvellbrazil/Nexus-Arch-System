@@ -97,10 +97,10 @@ class AuthController extends BaseController
 
         // Validasi role sesuai dengan halaman login
         $roleName = $role ? $role['role_name'] : 'Unknown';
-        
+
         // Validasi ketat berdasarkan halaman login
         $isValidLogin = false;
-        
+
         switch ($loginType) {
             case 'admin':
                 $isValidLogin = ($roleName === 'Admin');
@@ -115,7 +115,7 @@ class AuthController extends BaseController
                 $isValidLogin = ($roleName === 'Department');
                 break;
         }
-        
+
         if (!$isValidLogin) {
             // Tentukan halaman login yang benar berdasarkan role
             $correctLoginPages = [
@@ -124,12 +124,12 @@ class AuthController extends BaseController
                 'Customer' => '/login',
                 'Department' => '/department/login'
             ];
-            
+
             $correctPage = $correctLoginPages[$roleName] ?? '/login';
-            
+
             // Kembalikan dengan pesan error yang spesifik
             $errorMessage = "Access denied. You are a <strong>{$roleName}</strong>. Please login through the ";
-            
+
             if ($roleName === 'Customer') {
                 $errorMessage .= "<a href='{$correctPage}' class='underline'>Customer Login Portal</a>";
             } elseif ($roleName === 'Admin') {
@@ -139,7 +139,7 @@ class AuthController extends BaseController
             } elseif ($roleName === 'Department') {
                 $errorMessage .= "<a href='{$correctPage}' class='underline'>Department Login Portal</a>";
             }
-            
+
             return redirect()->back()->withInput()->with('error', $errorMessage);
         }
 
@@ -252,7 +252,7 @@ class AuthController extends BaseController
         $emailService->setTo($email);
         $emailService->setSubject('Password Reset Request');
         $emailService->setMessage(
-            "Klik link berikut untuk mereset password Anda: \n" . 
+            "Klik link berikut untuk mereset password Anda: \n" .
             base_url() . "/auth/reset_password/" . $resetToken
         );
 

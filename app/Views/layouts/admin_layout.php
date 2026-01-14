@@ -16,14 +16,15 @@ $notifications = [
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Admin Dashboard - NEXUS') ?></title>
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Custom Configuration -->
     <script>
         tailwind.config = {
@@ -64,51 +65,81 @@ $notifications = [
             }
         }
     </script>
-    
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <style>
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        
+
         @keyframes slideDown {
-            from { transform: translateY(-10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
-        
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         @keyframes slideInLeft {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        
+
         .animate-slide-in {
             animation: slideIn 0.3s ease-out;
         }
-        
+
         .animate-slide-down {
             animation: slideDown 0.2s ease-out;
         }
-        
+
         .animate-fade-in {
             animation: fadeIn 0.5s ease-out;
         }
-        
+
         .animate-slide-in-left {
             animation: slideInLeft 0.3s ease-out;
         }
-        
+
         .notification-badge {
             position: absolute;
             top: -6px;
@@ -124,34 +155,34 @@ $notifications = [
             font-size: 10px;
             font-weight: bold;
         }
-        
+
         .notification-unread {
             background-color: rgba(117, 110, 164, 0.1);
             border-left: 3px solid #756EA4;
         }
-        
+
         .notification-dropdown {
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.2s ease;
         }
-        
+
         .notification-dropdown.show {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
         }
-        
+
         /* Liquid Glass Sidebar Styles - Desktop */
         .liquid-glass-sidebar {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.25) 0%, 
-                rgba(255, 255, 255, 0.15) 100%);
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.25) 0%,
+                    rgba(255, 255, 255, 0.15) 100%);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-right: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 
+            box-shadow:
                 0 8px 32px 0 rgba(31, 38, 135, 0.15),
                 0 4px 16px 0 rgba(0, 0, 0, 0.08),
                 inset 2px 0 0 rgba(255, 255, 255, 0.2),
@@ -168,7 +199,7 @@ $notifications = [
             overflow-y: auto;
             transition: all 0.3s ease;
         }
-        
+
         /* Sidebar Navigation Items */
         .sidebar-nav-item {
             background: transparent;
@@ -184,25 +215,25 @@ $notifications = [
             gap: 14px;
             border-left: 3px solid transparent;
         }
-        
+
         .sidebar-nav-item:hover {
             background: rgba(117, 110, 164, 0.15);
             color: #756EA4;
         }
-        
+
         .sidebar-nav-item.active {
-            background: linear-gradient(90deg, 
-                rgba(117, 110, 164, 0.25) 0%, 
-                rgba(117, 110, 164, 0.15) 100%) !important;
+            background: linear-gradient(90deg,
+                    rgba(117, 110, 164, 0.25) 0%,
+                    rgba(117, 110, 164, 0.15) 100%) !important;
             color: #756EA4 !important;
             border-left: 3px solid #756EA4;
             box-shadow: inset 4px 0 12px rgba(117, 110, 164, 0.1);
         }
-        
+
         .sidebar-nav-item.active i {
             color: #756EA4 !important;
         }
-        
+
         .sidebar-section-title {
             color: rgba(67, 66, 100, 0.7);
             font-size: 12px;
@@ -212,7 +243,7 @@ $notifications = [
             padding: 20px 24px 8px 24px;
             margin-top: 8px;
         }
-        
+
         /* User Profile in Sidebar */
         .sidebar-user-profile {
             padding: 30px 24px;
@@ -222,7 +253,7 @@ $notifications = [
             align-items: center;
             gap: 15px;
         }
-        
+
         .sidebar-user-avatar {
             background: linear-gradient(135deg, #756EA4, #8A84C6);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -238,24 +269,24 @@ $notifications = [
             font-size: 18px;
             flex-shrink: 0;
         }
-        
+
         .user-info {
             flex: 1;
             min-width: 0;
         }
-        
+
         .user-name {
             color: #434264;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 4px;
         }
-        
+
         .user-role {
             color: rgba(67, 66, 100, 0.7);
             font-size: 12px;
         }
-        
+
         /* Notification Bell in Sidebar */
         .sidebar-notification-bell {
             background: rgba(255, 255, 255, 0.15);
@@ -274,13 +305,13 @@ $notifications = [
             flex-shrink: 0;
             cursor: pointer;
         }
-        
+
         .sidebar-notification-bell:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(117, 110, 164, 0.2);
         }
-        
+
         /* Main Content Area */
         .main-content {
             margin-left: 280px;
@@ -290,7 +321,7 @@ $notifications = [
             overflow: hidden;
             padding: 30px;
         }
-        
+
         /* Mobile Menu Button (Only visible on mobile) */
         .mobile-menu-button {
             display: none;
@@ -302,7 +333,7 @@ $notifications = [
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
+            box-shadow:
                 0 8px 32px 0 rgba(31, 38, 135, 0.07),
                 0 4px 16px 0 rgba(0, 0, 0, 0.05),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -317,11 +348,11 @@ $notifications = [
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .mobile-menu-button:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .hamburger-line {
             width: 20px;
             height: 2px;
@@ -329,7 +360,7 @@ $notifications = [
             border-radius: 1px;
             transition: all 0.3s ease;
         }
-        
+
         /* Mobile Sidebar Menu */
         .mobile-sidebar-menu {
             position: fixed;
@@ -345,11 +376,11 @@ $notifications = [
             transition: all 0.3s ease;
             box-shadow: 20px 0 40px rgba(0, 0, 0, 0.1);
         }
-        
+
         .mobile-sidebar-menu.open {
             left: 0;
         }
-        
+
         /* Mobile Menu Items */
         .mobile-menu-item {
             padding: 14px 24px;
@@ -362,17 +393,17 @@ $notifications = [
             color: #434264;
             border-left: 3px solid transparent;
         }
-        
+
         .mobile-menu-item:hover {
             background: rgba(117, 110, 164, 0.15);
         }
-        
+
         .mobile-menu-item.active {
             background: rgba(117, 110, 164, 0.25);
             color: #756EA4;
             border-left: 3px solid #756EA4;
         }
-        
+
         .mobile-menu-section {
             color: rgba(67, 66, 100, 0.7);
             font-size: 12px;
@@ -382,7 +413,7 @@ $notifications = [
             padding: 20px 24px 8px 24px;
             margin-top: 8px;
         }
-        
+
         /* Mobile Logo */
         .mobile-logo {
             padding: 30px 24px;
@@ -392,7 +423,7 @@ $notifications = [
             gap: 12px;
             background: rgba(255, 255, 255, 0.05);
         }
-        
+
         .mobile-logo-icon {
             width: 32px;
             height: 32px;
@@ -404,14 +435,14 @@ $notifications = [
             color: white;
             font-size: 16px;
         }
-        
+
         .mobile-logo-text {
             color: #434264;
             font-size: 20px;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-        
+
         /* Mobile User Profile */
         .mobile-user-profile {
             padding: 30px 24px;
@@ -421,7 +452,7 @@ $notifications = [
             align-items: center;
             gap: 15px;
         }
-        
+
         .mobile-user-avatar {
             background: linear-gradient(135deg, #756EA4, #8A84C6);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -437,7 +468,7 @@ $notifications = [
             font-size: 18px;
             flex-shrink: 0;
         }
-        
+
         /* Mobile Notification Bell */
         .mobile-notification-bell {
             position: fixed;
@@ -448,7 +479,7 @@ $notifications = [
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
+            box-shadow:
                 0 8px 32px 0 rgba(31, 38, 135, 0.07),
                 0 4px 16px 0 rgba(0, 0, 0, 0.05),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -462,30 +493,30 @@ $notifications = [
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .mobile-notification-bell:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        
+
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 3px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(117, 110, 164, 0.4);
             border-radius: 3px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(117, 110, 164, 0.6);
         }
-        
+
         /* Overlay for mobile */
         .sidebar-overlay {
             display: none;
@@ -498,11 +529,11 @@ $notifications = [
             z-index: 39;
             backdrop-filter: blur(3px);
         }
-        
+
         .sidebar-overlay.show {
             display: block;
         }
-        
+
         /* Notification Dropdown Positioning */
         .notification-dropdown-sidebar {
             position: absolute;
@@ -510,13 +541,13 @@ $notifications = [
             top: 0;
             margin-left: 10px;
         }
-        
+
         .notification-dropdown-mobile {
             position: fixed;
             top: 90px;
             right: 20px;
         }
-        
+
         /* Sidebar Logo */
         .sidebar-logo {
             padding: 24px;
@@ -525,7 +556,7 @@ $notifications = [
             align-items: center;
             gap: 12px;
         }
-        
+
         .logo-icon {
             width: 32px;
             height: 32px;
@@ -537,27 +568,27 @@ $notifications = [
             color: white;
             font-size: 16px;
         }
-        
+
         .logo-text {
             color: #434264;
             font-size: 20px;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-        
+
         /* Sidebar Navigation Container */
         .sidebar-nav-container {
             flex: 1;
             padding: 16px 0;
         }
-        
+
         /* Sidebar Bottom Section */
         .sidebar-bottom {
             padding: 20px 24px;
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             margin-top: auto;
         }
-        
+
         /* Stats Card Styles */
         .stat-card {
             background: #3D3C5E;
@@ -570,7 +601,7 @@ $notifications = [
             flex-direction: column;
             justify-content: center;
         }
-        
+
         .stat-icon {
             width: 40px;
             height: 40px;
@@ -583,7 +614,7 @@ $notifications = [
             top: 50%;
             transform: translateY(-50%);
         }
-        
+
         /* Dashboard Card Styles */
         .dashboard-card {
             background: #EFE9F9;
@@ -594,14 +625,14 @@ $notifications = [
             backdrop-filter: blur(2px);
             padding: 20px;
         }
-        
+
         .dashboard-card-header {
             background: #E3DAEE;
             border-radius: 7.73px;
             padding: 12px 20px;
             margin: -20px -20px 20px -20px;
         }
-        
+
         /* Quick Access Item */
         .quick-access-item {
             background: white;
@@ -612,12 +643,12 @@ $notifications = [
             gap: 12px;
             transition: all 0.3s ease;
         }
-        
+
         .quick-access-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
+
         .quick-access-icon {
             width: 32px;
             height: 32px;
@@ -629,7 +660,7 @@ $notifications = [
             color: #9155FD;
             font-size: 14px;
         }
-        
+
         /* Activity Item */
         .activity-item {
             display: flex;
@@ -637,7 +668,7 @@ $notifications = [
             gap: 16px;
             padding: 8px 0;
         }
-        
+
         .activity-avatar {
             width: 32px;
             height: 32px;
@@ -647,7 +678,7 @@ $notifications = [
             justify-content: center;
             flex-shrink: 0;
         }
-        
+
         /* Project Row */
         .project-row {
             padding: 8px;
@@ -656,11 +687,11 @@ $notifications = [
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .project-row:hover {
             background: rgba(0, 0, 0, 0.02);
         }
-        
+
         /* Notification Item */
         .notification-item-card {
             background: #FFF4E5;
@@ -670,58 +701,58 @@ $notifications = [
             padding: 13px;
             margin-bottom: 12px;
         }
-        
+
         .notification-item-card.info {
             background: #F4F5FA;
             outline: 1px solid #F3F4F6;
         }
-        
+
         /* Responsive Styles */
         @media (max-width: 1024px) {
             .liquid-glass-sidebar {
                 display: none;
             }
-            
+
             .mobile-menu-button {
                 display: flex;
             }
-            
+
             .mobile-notification-bell {
                 display: flex;
             }
-            
+
             .main-content {
                 margin-left: 0;
                 padding: 20px;
                 padding-top: 30px;
             }
         }
-        
+
         @media (max-width: 768px) {
             .main-content {
                 padding: 15px;
                 padding-top: 30px;
             }
-            
+
             .mobile-menu-button {
                 top: 15px;
                 left: 15px;
                 width: 45px;
                 height: 45px;
             }
-            
+
             .mobile-notification-bell {
                 top: 15px;
                 right: 15px;
                 width: 45px;
                 height: 45px;
             }
-            
+
             .mobile-sidebar-menu {
                 width: 260px;
                 left: -260px;
             }
-            
+
             .notification-dropdown-mobile {
                 right: 15px;
                 top: 75px;
@@ -729,35 +760,40 @@ $notifications = [
             }
         }
     </style>
-    
+
     <?= $this->renderSection('styles') ?>
 </head>
+
 <body class="bg-light-bg font-roboto relative overflow-x-hidden">
-    
+
     <!-- Background Effects -->
     <?= $this->renderSection('background_effects') ?>
-    
+
     <!-- Alert Messages -->
     <?php if ($success): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-green-500 text-white border-l-4 border-green-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-green-500 text-white border-l-4 border-green-600">
             <i class="fas fa-check-circle mr-2"></i> <?= esc($success) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($error): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-red-500 text-white border-l-4 border-red-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-red-500 text-white border-l-4 border-red-600">
             <i class="fas fa-exclamation-circle mr-2"></i> <?= esc($error) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($message): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
             <i class="fas fa-info-circle mr-2"></i> <?= esc($message) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($search_message): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
             <i class="fas fa-search mr-2"></i> <?= esc($search_message) ?>
         </div>
     <?php endif; ?>
@@ -800,54 +836,53 @@ $notifications = [
                 <div class="user-role">Administrator</div>
             </div>
         </div>
-        
+
         <!-- Navigation Container -->
         <div class="sidebar-nav-container">
             <!-- Navigation Links -->
-            <a href="<?= base_url('admin/dashboard') ?>" 
-               class="mobile-menu-item <?= current_url() == base_url('admin/dashboard') ? 'active' : '' ?>">
+            <a href="<?= base_url('admin/dashboard') ?>"
+                class="mobile-menu-item <?= current_url() == base_url('admin/dashboard') ? 'active' : '' ?>">
                 <i class="fas fa-home text-sm"></i>
                 <span class="text-sm">Dashboard</span>
             </a>
-            
+
             <div class="mobile-menu-section">Management</div>
-            
-            <a href="<?= base_url('admin/users') ?>" 
-               class="mobile-menu-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/users') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
                 <i class="fas fa-users text-sm"></i>
                 <span class="text-sm">Manage Users</span>
             </a>
-            
-            <a href="<?= base_url('admin/roles') ?>" 
-               class="mobile-menu-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/roles') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
                 <i class="fas fa-user-tag text-sm"></i>
                 <span class="text-sm">Manage Roles</span>
             </a>
-            
-            <a href="<?= base_url('admin/departments') ?>" 
-               class="mobile-menu-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/departments') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
                 <i class="fas fa-sitemap text-sm"></i>
                 <span class="text-sm">Manage Departments</span>
             </a>
-            
-            <a href="<?= base_url('admin/tickets') ?>" 
-               class="mobile-menu-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/tickets') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
                 <i class="fas fa-ticket-alt text-sm"></i>
                 <span class="text-sm">View Tickets</span>
             </a>
-            <a href="<?= base_url('admin/projects') ?>" 
-   class="sidebar-nav-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
-    <i class="fas fa-project-diagram text-sm"></i>
-    <span class="text-sm">Manage Projects</span>
-</a>
-            
+            <a href="<?= base_url('admin/projects') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
+                <i class="fas fa-project-diagram text-sm"></i>
+                <span class="text-sm">Manage Projects</span>
+            </a>
+
 
         </div>
-        
+
         <!-- Bottom Section -->
         <div class="sidebar-bottom">
-            <a href="<?= base_url('admin/logout') ?>" 
-               class="mobile-menu-item">
+            <a href="<?= base_url('admin/logout') ?>" class="mobile-menu-item">
                 <i class="fas fa-sign-out-alt text-sm"></i>
                 <span class="text-sm">Logout</span>
             </a>
@@ -873,10 +908,11 @@ $notifications = [
                 <div class="user-name"><?= esc($username) ?></div>
                 <div class="user-role">Administrator</div>
             </div>
-            
+
             <!-- Notification Bell -->
             <div class="relative">
-                <button id="sidebarNotificationButton" class="sidebar-notification-bell text-primary hover:text-secondary transition-colors">
+                <button id="sidebarNotificationButton"
+                    class="sidebar-notification-bell text-primary hover:text-secondary transition-colors">
                     <i class="fas fa-bell text-lg"></i>
                     <?php if ($notification_count > 0): ?>
                         <span class="notification-badge"><?= $notification_count ?></span>
@@ -884,54 +920,53 @@ $notifications = [
                 </button>
             </div>
         </div>
-        
+
         <!-- Navigation Container -->
         <div class="sidebar-nav-container">
             <!-- Navigation Links -->
-            <a href="<?= base_url('admin/dashboard') ?>" 
-               class="sidebar-nav-item <?= current_url() == base_url('admin/dashboard') ? 'active' : '' ?>">
+            <a href="<?= base_url('admin/dashboard') ?>"
+                class="sidebar-nav-item <?= current_url() == base_url('admin/dashboard') ? 'active' : '' ?>">
                 <i class="fas fa-home text-sm"></i>
                 <span class="text-sm">Dashboard</span>
             </a>
-            
+
             <div class="sidebar-section-title">Management</div>
-            
-            <a href="<?= base_url('admin/users') ?>" 
-               class="sidebar-nav-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/users') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
                 <i class="fas fa-users text-sm"></i>
                 <span class="text-sm">Manage Users</span>
             </a>
-            
-            <a href="<?= base_url('admin/roles') ?>" 
-               class="sidebar-nav-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/roles') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
                 <i class="fas fa-user-tag text-sm"></i>
                 <span class="text-sm">Manage Roles</span>
             </a>
-            
-            <a href="<?= base_url('admin/departments') ?>" 
-               class="sidebar-nav-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/departments') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
                 <i class="fas fa-sitemap text-sm"></i>
                 <span class="text-sm">Manage Departments</span>
             </a>
-            
-            <a href="<?= base_url('admin/tickets') ?>" 
-               class="sidebar-nav-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
+
+            <a href="<?= base_url('admin/tickets') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
                 <i class="fas fa-ticket-alt text-sm"></i>
                 <span class="text-sm">View Tickets</span>
             </a>
-            <a href="<?= base_url('admin/projects') ?>" 
-   class="mobile-menu-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
-    <i class="fas fa-project-diagram text-sm"></i>
-    <span class="text-sm">Manage Projects</span>
-</a>
-            
+            <a href="<?= base_url('admin/projects') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
+                <i class="fas fa-project-diagram text-sm"></i>
+                <span class="text-sm">Manage Projects</span>
+            </a>
+
 
         </div>
-        
+
         <!-- Bottom Section -->
         <div class="sidebar-bottom">
-            <a href="<?= base_url('logout') ?>" 
-               class="sidebar-nav-item">
+            <a href="<?= base_url('logout') ?>" class="sidebar-nav-item">
                 <i class="fas fa-sign-out-alt text-sm"></i>
                 <span class="text-sm">Logout</span>
             </a>
@@ -944,7 +979,9 @@ $notifications = [
     </main>
 
     <!-- Notification Dropdown (Desktop) -->
-    <div id="sidebarNotificationDropdown" class="notification-dropdown notification-dropdown-sidebar w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden" style="display: none;">
+    <div id="sidebarNotificationDropdown"
+        class="notification-dropdown notification-dropdown-sidebar w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+        style="display: none;">
         <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-sm">Notifications</h3>
@@ -959,8 +996,8 @@ $notifications = [
                 </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
-                    <a href="#" 
-                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                    <a href="#"
+                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                         <div class="flex gap-3">
                             <div class="flex-shrink-0">
                                 <?php if ($notification['type'] == 'warning'): ?>
@@ -993,14 +1030,17 @@ $notifications = [
             <?php endif; ?>
         </div>
         <div class="p-3 border-t border-gray-200 bg-gray-50">
-            <a href="#" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
+            <a href="#"
+                class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
                 View All Notifications
             </a>
         </div>
     </div>
 
     <!-- Notification Dropdown (Mobile) -->
-    <div id="mobileNotificationDropdown" class="notification-dropdown notification-dropdown-mobile w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden" style="display: none;">
+    <div id="mobileNotificationDropdown"
+        class="notification-dropdown notification-dropdown-mobile w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+        style="display: none;">
         <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-sm">Notifications</h3>
@@ -1015,8 +1055,8 @@ $notifications = [
                 </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
-                    <a href="#" 
-                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                    <a href="#"
+                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                         <div class="flex gap-3">
                             <div class="flex-shrink-0">
                                 <?php if ($notification['type'] == 'warning'): ?>
@@ -1049,7 +1089,8 @@ $notifications = [
             <?php endif; ?>
         </div>
         <div class="p-3 border-t border-gray-200 bg-gray-50">
-            <a href="#" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
+            <a href="#"
+                class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
                 View All Notifications
             </a>
         </div>
@@ -1057,7 +1098,7 @@ $notifications = [
 
     <!-- JavaScript -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Auto-hide alerts
             const alerts = document.querySelectorAll('.fixed.top-32');
             alerts.forEach(alert => {
@@ -1073,11 +1114,11 @@ $notifications = [
             const mobileSidebarMenu = document.getElementById('mobileSidebarMenu');
             const hamburgerLines = mobileMenuButton?.querySelectorAll('.hamburger-line');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
+
             if (mobileMenuButton && hamburgerLines) {
-                mobileMenuButton.addEventListener('click', function(e) {
+                mobileMenuButton.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    
+
                     if (mobileSidebarMenu.classList.contains('open')) {
                         // Close menu
                         mobileSidebarMenu.classList.remove('open');
@@ -1094,9 +1135,9 @@ $notifications = [
                         sidebarOverlay.classList.add('show');
                     }
                 });
-                
+
                 // Close mobile menu when clicking overlay
-                sidebarOverlay.addEventListener('click', function() {
+                sidebarOverlay.addEventListener('click', function () {
                     mobileSidebarMenu.classList.remove('open');
                     if (hamburgerLines) {
                         hamburgerLines[0].style.transform = 'none';
@@ -1105,11 +1146,11 @@ $notifications = [
                     }
                     sidebarOverlay.classList.remove('show');
                 });
-                
+
                 // Close mobile menu when clicking a link
                 if (mobileSidebarMenu) {
                     mobileSidebarMenu.querySelectorAll('a').forEach(link => {
-                        link.addEventListener('click', function() {
+                        link.addEventListener('click', function () {
                             mobileSidebarMenu.classList.remove('open');
                             if (hamburgerLines) {
                                 hamburgerLines[0].style.transform = 'none';
@@ -1121,12 +1162,12 @@ $notifications = [
                     });
                 }
             }
-            
+
             // Desktop sidebar notification dropdown
             const sidebarNotificationButton = document.getElementById('sidebarNotificationButton');
             const sidebarNotificationDropdown = document.getElementById('sidebarNotificationDropdown');
             let desktopNotificationVisible = false;
-            
+
             if (sidebarNotificationButton && sidebarNotificationDropdown) {
                 // Position dropdown relative to button
                 function positionDesktopDropdown() {
@@ -1134,10 +1175,10 @@ $notifications = [
                     sidebarNotificationDropdown.style.top = buttonRect.top + 'px';
                     sidebarNotificationDropdown.style.left = (buttonRect.right + 10) + 'px';
                 }
-                
-                sidebarNotificationButton.addEventListener('click', function(e) {
+
+                sidebarNotificationButton.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    
+
                     if (desktopNotificationVisible) {
                         // Close dropdown
                         sidebarNotificationDropdown.classList.remove('show');
@@ -1153,16 +1194,16 @@ $notifications = [
                             sidebarNotificationDropdown.classList.add('show');
                         }, 10);
                         desktopNotificationVisible = true;
-                        
+
                         // Mark notifications as read
                         markNotificationsAsRead();
                     }
                 });
-                
+
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (desktopNotificationVisible && 
-                        !sidebarNotificationButton.contains(e.target) && 
+                document.addEventListener('click', function (e) {
+                    if (desktopNotificationVisible &&
+                        !sidebarNotificationButton.contains(e.target) &&
                         !sidebarNotificationDropdown.contains(e.target)) {
                         sidebarNotificationDropdown.classList.remove('show');
                         setTimeout(() => {
@@ -1171,21 +1212,21 @@ $notifications = [
                         desktopNotificationVisible = false;
                     }
                 });
-                
+
                 // Update position on scroll/resize
                 window.addEventListener('scroll', positionDesktopDropdown);
                 window.addEventListener('resize', positionDesktopDropdown);
             }
-            
+
             // Mobile notification dropdown
             const mobileNotificationButton = document.getElementById('mobileNotificationButton');
             const mobileNotificationDropdown = document.getElementById('mobileNotificationDropdown');
             let mobileNotificationVisible = false;
-            
+
             if (mobileNotificationButton && mobileNotificationDropdown) {
-                mobileNotificationButton.addEventListener('click', function(e) {
+                mobileNotificationButton.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    
+
                     if (mobileNotificationVisible) {
                         // Close dropdown
                         mobileNotificationDropdown.classList.remove('show');
@@ -1200,16 +1241,16 @@ $notifications = [
                             mobileNotificationDropdown.classList.add('show');
                         }, 10);
                         mobileNotificationVisible = true;
-                        
+
                         // Mark notifications as read
                         markNotificationsAsRead();
                     }
                 });
-                
+
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (mobileNotificationVisible && 
-                        !mobileNotificationButton.contains(e.target) && 
+                document.addEventListener('click', function (e) {
+                    if (mobileNotificationVisible &&
+                        !mobileNotificationButton.contains(e.target) &&
                         !mobileNotificationDropdown.contains(e.target)) {
                         mobileNotificationDropdown.classList.remove('show');
                         setTimeout(() => {
@@ -1219,36 +1260,36 @@ $notifications = [
                     }
                 });
             }
-            
+
             // Function to mark notifications as read
             function markNotificationsAsRead() {
                 const badges = document.querySelectorAll('.notification-badge');
                 badges.forEach(badge => {
                     badge.style.display = 'none';
                 });
-                
+
                 const unreadIndicators = document.querySelectorAll('.notification-unread');
                 unreadIndicators.forEach(indicator => {
                     indicator.classList.remove('notification-unread');
                 });
             }
-            
+
             // Set active nav item based on current URL
             function setActiveNavItem() {
                 const currentPath = window.location.pathname;
-                
+
                 // Desktop sidebar items
                 const desktopNavItems = document.querySelectorAll('.sidebar-nav-item');
                 desktopNavItems.forEach(item => {
                     item.classList.remove('active');
                 });
-                
+
                 // Mobile menu items
                 const mobileNavItems = document.querySelectorAll('.mobile-menu-item');
                 mobileNavItems.forEach(item => {
                     item.classList.remove('active');
                 });
-                
+
                 if (currentPath.includes('/admin/dashboard')) {
                     document.querySelector('a[href*="dashboard"].sidebar-nav-item')?.classList.add('active');
                     document.querySelector('a[href*="dashboard"].mobile-menu-item')?.classList.add('active');
@@ -1269,9 +1310,9 @@ $notifications = [
                     document.querySelector('a[href*="settings"].mobile-menu-item')?.classList.add('active');
                 }
             }
-            
+
             setActiveNavItem();
-            
+
             // Handle window resize
             function handleResize() {
                 if (window.innerWidth > 1024) {
@@ -1285,22 +1326,23 @@ $notifications = [
                         hamburgerLines[2].style.transform = 'none';
                     }
                     if (sidebarOverlay) sidebarOverlay.classList.remove('show');
-                    
+
                     // Update notification dropdown position if visible
                     if (desktopNotificationVisible && sidebarNotificationDropdown) {
                         positionDesktopDropdown();
                     }
                 }
             }
-            
+
             // Initial call
             handleResize();
-            
+
             // Listen for resize events
             window.addEventListener('resize', handleResize);
         });
     </script>
-    
+
     <?= $this->renderSection('scripts') ?>
 </body>
+
 </html>

@@ -1,4 +1,3 @@
-
 <?php
 $session = \Config\Services::session();
 $success = $session->getFlashdata('success');
@@ -18,14 +17,15 @@ $notifications = [
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'IT Support Dashboard - NEXUS') ?></title>
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Custom Configuration -->
     <script>
         tailwind.config = {
@@ -66,56 +66,91 @@ $notifications = [
             }
         }
     </script>
-    
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <style>
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        
+
         @keyframes slideDown {
-            from { transform: translateY(-10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
-        
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         @keyframes float {
-            0%, 100% { transform: translateX(-50%) translateY(0px); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0px);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-5px);
+            }
         }
-        
+
         @keyframes backgroundTransition {
-            from { background-color: transparent; }
-            to { background-color: #756EA4; }
+            from {
+                background-color: transparent;
+            }
+
+            to {
+                background-color: #756EA4;
+            }
         }
-        
+
         .animate-slide-in {
             animation: slideIn 0.3s ease-out;
         }
-        
+
         .animate-slide-down {
             animation: slideDown 0.2s ease-out;
         }
-        
+
         .animate-fade-in {
             animation: fadeIn 0.5s ease-out;
         }
-        
+
         .animate-background-transition {
             animation: backgroundTransition 0.3s ease-out;
         }
-        
+
         .notification-badge {
             position: absolute;
             top: -6px;
@@ -131,32 +166,32 @@ $notifications = [
             font-size: 10px;
             font-weight: bold;
         }
-        
+
         .notification-unread {
             background-color: rgba(117, 110, 164, 0.1);
             border-left: 3px solid #756EA4;
         }
-        
+
         .notification-dropdown {
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.2s ease;
         }
-        
+
         .notification-dropdown.show {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
         }
-        
+
         /* Liquid Glass Navbar Styles - FIXED CENTER */
         .liquid-glass-navbar {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
+            box-shadow:
                 0 8px 32px 0 rgba(31, 38, 135, 0.07),
                 0 4px 16px 0 rgba(0, 0, 0, 0.05),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -176,7 +211,7 @@ $notifications = [
             animation: float 6s ease-in-out infinite;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         /* Scrolled State - Solid Background */
         .liquid-glass-navbar.scrolled {
             background: #756EA4 !important;
@@ -186,48 +221,48 @@ $notifications = [
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             animation: none;
         }
-        
+
         .liquid-glass-navbar.scrolled .nav-glass-item {
             color: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .nav-glass-item:hover {
             background: rgba(255, 255, 255, 0.2) !important;
             color: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .nav-glass-item.active {
             background: rgba(255, 255, 255, 0.25) !important;
             color: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .logo-glass {
             background: rgba(255, 255, 255, 0.2) !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .notification-bell-glass {
             background: rgba(255, 255, 255, 0.2) !important;
             color: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .hamburger-glass {
             background: rgba(255, 255, 255, 0.2) !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .hamburger-line {
             background: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .text-primary {
             color: white !important;
         }
-        
+
         .liquid-glass-navbar.scrolled .user-avatar-glass {
             background: white !important;
             color: #756EA4 !important;
             border: 2px solid rgba(255, 255, 255, 0.5) !important;
         }
-        
+
         @media (max-width: 768px) {
             .liquid-glass-navbar {
                 padding: 0 16px;
@@ -242,7 +277,7 @@ $notifications = [
                 width: auto;
                 margin: 20px 0;
             }
-            
+
             .liquid-glass-navbar.scrolled {
                 left: 0;
                 right: 0;
@@ -253,7 +288,7 @@ $notifications = [
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             }
         }
-        
+
         .nav-glass-item {
             background: transparent;
             color: #434264;
@@ -265,19 +300,19 @@ $notifications = [
             text-decoration: none;
             white-space: nowrap;
         }
-        
+
         .nav-glass-item:hover {
             background: rgba(255, 255, 255, 0.2);
             color: #756EA4;
             transform: translateY(-2px);
         }
-        
+
         .nav-glass-item.active {
             background: rgba(117, 110, 164, 0.15);
             color: #756EA4;
             box-shadow: 0 4px 12px rgba(117, 110, 164, 0.15);
         }
-        
+
         .nav-glass-item.active::after {
             content: '';
             position: absolute;
@@ -289,32 +324,32 @@ $notifications = [
             background: #756EA4;
             border-radius: 50%;
         }
-        
+
         .user-avatar-glass {
             background: linear-gradient(135deg, #756EA4, #8A84C6);
             border: 2px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 4px 15px rgba(117, 110, 164, 0.2);
             transition: all 0.3s ease;
         }
-        
+
         .user-avatar-glass:hover {
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(117, 110, 164, 0.3);
         }
-        
+
         /* Desktop Navigation Container */
         .desktop-nav-container {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         @media (max-width: 768px) {
             .desktop-nav-container {
                 display: none;
             }
         }
-        
+
         /* Mobile Glass Menu */
         .mobile-glass-menu {
             background: rgba(255, 255, 255, 0.95);
@@ -325,7 +360,7 @@ $notifications = [
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
-        
+
         .mobile-nav-item {
             padding: 14px 20px;
             border-radius: 16px;
@@ -336,17 +371,17 @@ $notifications = [
             align-items: center;
             gap: 12px;
         }
-        
+
         .mobile-nav-item:hover {
             background: rgba(117, 110, 164, 0.1);
         }
-        
+
         .mobile-nav-item.active {
             background: rgba(117, 110, 164, 0.15);
             color: #756EA4;
             font-weight: 600;
         }
-        
+
         /* Logo Glass Effect */
         .logo-glass {
             background: linear-gradient(135deg, rgba(117, 110, 164, 0.9), rgba(138, 132, 198, 0.9));
@@ -360,7 +395,7 @@ $notifications = [
         .navbar-left {
             margin-right: 48px;
         }
-        
+
         /* Notification Bell Glass */
         .notification-bell-glass {
             background: rgba(255, 255, 255, 0.1);
@@ -374,12 +409,12 @@ $notifications = [
             align-items: center;
             justify-content: center;
         }
-        
+
         .notification-bell-glass:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
         }
-        
+
         /* Navbar Separator */
         .nav-separator {
             height: 24px;
@@ -387,18 +422,18 @@ $notifications = [
             background: rgba(67, 66, 100, 0.2);
             margin: 0 16px;
         }
-        
+
         /* Main Content Padding for Floating Navbar */
         .main-content {
             padding-top: 100px;
         }
-        
+
         @media (max-width: 768px) {
             .main-content {
                 padding-top: 96px;
             }
         }
-        
+
         /* Hamburger button for mobile */
         .hamburger-glass {
             background: rgba(255, 255, 255, 0.1);
@@ -415,11 +450,11 @@ $notifications = [
             gap: 4px;
             transition: all 0.3s ease;
         }
-        
+
         .hamburger-glass:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .hamburger-line {
             width: 20px;
             height: 2px;
@@ -427,64 +462,65 @@ $notifications = [
             border-radius: 1px;
             transition: all 0.3s ease;
         }
-        
+
         /* Mobile Layout Specific */
         .mobile-navbar-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
+
         .mobile-navbar-right {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
+
         @media (min-width: 769px) {
+
             .mobile-navbar-left,
             .mobile-navbar-right {
                 display: none;
             }
         }
-        
+
         /* Desktop Layout Specific */
         .desktop-layout {
             display: flex;
             align-items: center;
             gap: 30px;
         }
-        
+
         @media (max-width: 768px) {
             .desktop-layout {
                 display: none;
             }
         }
-        
+
         /* Username display in navbar */
         .username-display {
             font-weight: 500;
             color: #434264;
             transition: all 0.3s ease;
         }
-        
+
         .liquid-glass-navbar.scrolled .username-display {
             color: white !important;
         }
-        
+
         /* Mobile profile section */
         .mobile-profile-section {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         @media (min-width: 769px) {
             .mobile-profile-section {
                 display: none;
             }
         }
-        
+
         /* Department Specific Styles */
         .department-badge {
             background: linear-gradient(135deg, #756EA4, #8A84C6);
@@ -495,35 +531,40 @@ $notifications = [
             font-weight: 600;
         }
     </style>
-    
+
     <?= $this->renderSection('styles') ?>
 </head>
+
 <body class="bg-light-bg min-h-screen relative overflow-x-hidden font-roboto">
-    
+
     <!-- Background Effects -->
     <?= $this->renderSection('background_effects') ?>
-    
+
     <!-- Alert Messages -->
     <?php if ($success): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-green-500 text-white border-l-4 border-green-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-green-500 text-white border-l-4 border-green-600">
             <i class="fas fa-check-circle mr-2"></i> <?= esc($success) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($error): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-red-500 text-white border-l-4 border-red-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-red-500 text-white border-l-4 border-red-600">
             <i class="fas fa-exclamation-circle mr-2"></i> <?= esc($error) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($message): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
             <i class="fas fa-info-circle mr-2"></i> <?= esc($message) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($search_message): ?>
-        <div class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
+        <div
+            class="fixed top-32 right-4 md:right-6 p-4 rounded-lg z-[1000] max-w-xs md:max-w-sm animate-slide-in shadow-lg bg-blue-500 text-white border-l-4 border-blue-600">
             <i class="fas fa-search mr-2"></i> <?= esc($search_message) ?>
         </div>
     <?php endif; ?>
@@ -538,7 +579,7 @@ $notifications = [
                 <div class="hamburger-line"></div>
                 <div class="hamburger-line"></div>
             </button>
-            
+
             <!-- Logo (Mobile) -->
             <a href="<?= base_url('department/it-support/dashboard') ?>" class="flex items-center gap-3 no-underline">
                 <div class="w-8 h-8 logo-glass rounded-xl flex items-center justify-center">
@@ -549,12 +590,13 @@ $notifications = [
                 </div>
             </a>
         </div>
-        
+
         <!-- Desktop Layout (Center Navigation) -->
         <div class="desktop-layout">
             <!-- Logo (Desktop) -->
             <div class="hidden md:flex items-center gap-3 navbar-left">
-                <a href="<?= base_url('department/it-support/dashboard') ?>" class="flex items-center gap-3 no-underline">
+                <a href="<?= base_url('department/it-support/dashboard') ?>"
+                    class="flex items-center gap-3 no-underline">
                     <div class="w-8 h-8 logo-glass rounded-xl flex items-center justify-center">
                         <i class="fas fa-server text-white text-sm"></i>
                     </div>
@@ -564,34 +606,39 @@ $notifications = [
             </div>
             <!-- Desktop Navigation -->
             <div class="desktop-nav-container">
-                <a href="<?= base_url('department/it-support/dashboard') ?>" 
-                   class="nav-glass-item <?= current_url() == base_url('department/it-support/dashboard') ? 'active' : '' ?>">
+                <a href="<?= base_url('department/it-support/dashboard') ?>"
+                    class="nav-glass-item <?= current_url() == base_url('department/it-support/dashboard') ? 'active' : '' ?>">
                     <i class="fas fa-tachometer-alt mr-2 text-sm"></i>
                     Dashboard
                 </a>
-                
-                <a href="<?= base_url('department/it-support/assigned_tickets') ?>" 
-                   class="nav-glass-item <?= strpos(current_url(), 'assigned_tickets') !== false ? 'active' : '' ?>">
+
+                <a href="<?= base_url('department/it-support/assigned_tickets') ?>"
+                    class="nav-glass-item <?= strpos(current_url(), 'assigned_tickets') !== false ? 'active' : '' ?>">
                     <i class="fas fa-ticket-alt mr-2 text-sm"></i>
                     Assigned Tickets
                 </a>
-                
+
                 <div class="nav-separator"></div>
 
                 <!-- Notification placed next to Profile in center nav -->
                 <div class="relative">
-                    <button id="notificationButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
+                    <button id="notificationButton"
+                        class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
                         <i class="fas fa-bell text-lg"></i>
                         <?php if ($notification_count > 0): ?>
                             <span class="notification-badge"><?= $notification_count ?></span>
                         <?php endif; ?>
                     </button>
 
-                    <div id="notificationDropdown" class="notification-dropdown absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-                        <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
+                    <div id="notificationDropdown"
+                        class="notification-dropdown absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                        <div
+                            class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-sm md:text-base">IT Support Notifications</h3>
-                                <span class="text-xs md:text-sm bg-white/20 px-2 py-1 rounded-full"><?= $notification_count ?> new</span>
+                                <span
+                                    class="text-xs md:text-sm bg-white/20 px-2 py-1 rounded-full"><?= $notification_count ?>
+                                    new</span>
                             </div>
                         </div>
                         <div class="max-h-64 md:max-h-96 overflow-y-auto">
@@ -602,12 +649,13 @@ $notifications = [
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($notifications as $notification): ?>
-                                    <a href="#" 
-                                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                    <a href="#"
+                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                         <div class="flex gap-3">
                                             <div class="flex-shrink-0">
                                                 <?php if ($notification['type'] == 'server'): ?>
-                                                    <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                                    <div
+                                                        class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                                                         <i class="fas fa-server text-purple-600"></i>
                                                     </div>
                                                 <?php elseif ($notification['type'] == 'network'): ?>
@@ -625,8 +673,10 @@ $notifications = [
                                                 <?php endif; ?>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="font-semibold text-gray-800 text-sm truncate"><?= esc($notification['title']) ?></p>
-                                                <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
+                                                <p class="font-semibold text-gray-800 text-sm truncate">
+                                                    <?= esc($notification['title']) ?></p>
+                                                <p class="text-gray-600 text-xs mt-1 truncate">
+                                                    <?= esc($notification['message']) ?></p>
                                                 <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
                                             </div>
                                             <?php if (!$notification['read']): ?>
@@ -640,36 +690,41 @@ $notifications = [
                             <?php endif; ?>
                         </div>
                         <div class="p-3 border-t border-gray-200 bg-gray-50">
-                            <a href="<?= base_url('department/it-support/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
+                            <a href="<?= base_url('department/it-support/notifications') ?>"
+                                class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-sm">
                                 View All Notifications
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <a href="<?= base_url('department/it-support/profile') ?>" 
-                   class="nav-glass-item <?= strpos(current_url(), 'profile') !== false ? 'active' : '' ?>">
+                <a href="<?= base_url('department/it-support/profile') ?>"
+                    class="nav-glass-item <?= strpos(current_url(), 'profile') !== false ? 'active' : '' ?>">
                     <?= esc($username) ?>
                 </a>
             </div>
         </div>
-        
+
         <!-- Mobile Right Section (Visible only on mobile) -->
         <div class="mobile-navbar-right">
             <!-- Notification Bell (Mobile) -->
             <div class="relative">
-                <button id="mobileNotificationButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
+                <button id="mobileNotificationButton"
+                    class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
                     <i class="fas fa-bell text-lg"></i>
                     <?php if ($notification_count > 0): ?>
                         <span class="notification-badge"><?= $notification_count ?></span>
                     <?php endif; ?>
                 </button>
 
-                <div id="mobileNotificationDropdown" class="notification-dropdown absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-                    <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
+                <div id="mobileNotificationDropdown"
+                    class="notification-dropdown absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                    <div
+                        class="p-4 border-b border-gray-200 bg-gradient-to-r from-secondary to-[#8A84C6] text-white rounded-t-2xl">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-sm">Notifications</h3>
-                            <span class="text-xs bg-white/20 px-2 py-1 rounded-full"><?= $notification_count ?> new</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded-full"><?= $notification_count ?>
+                                new</span>
                         </div>
                     </div>
                     <div class="max-h-64 overflow-y-auto">
@@ -680,8 +735,8 @@ $notifications = [
                             </div>
                         <?php else: ?>
                             <?php foreach ($notifications as $notification): ?>
-                                <a href="#" 
-                                   class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                <a href="#"
+                                    class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
                                     <div class="flex gap-3">
                                         <div class="flex-shrink-0">
                                             <?php if ($notification['type'] == 'server'): ?>
@@ -703,8 +758,10 @@ $notifications = [
                                             <?php endif; ?>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="font-semibold text-gray-800 text-xs truncate"><?= esc($notification['title']) ?></p>
-                                            <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
+                                            <p class="font-semibold text-gray-800 text-xs truncate">
+                                                <?= esc($notification['title']) ?></p>
+                                            <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?>
+                                            </p>
                                             <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
                                         </div>
                                     </div>
@@ -713,32 +770,35 @@ $notifications = [
                         <?php endif; ?>
                     </div>
                     <div class="p-3 border-t border-gray-200 bg-gray-50">
-                        <a href="<?= base_url('department/it-support/notifications') ?>" class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-xs">
+                        <a href="<?= base_url('department/it-support/notifications') ?>"
+                            class="block text-center text-secondary font-medium hover:text-[#665C9E] transition-colors text-xs">
                             View All
                         </a>
                     </div>
                 </div>
             </div>
-            
+
             <!-- User Profile Section (Mobile) -->
             <div class="mobile-profile-section">
                 <span class="username-display text-sm font-medium hidden xs:inline">
                     <?= esc($username) ?>
                 </span>
                 <a href="<?= base_url('department/it-support/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                    <div
+                        class="user-avatar-glass w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs">
                         IT
                     </div>
                 </a>
             </div>
         </div>
-        
+
         <!-- Desktop Right Section (Hidden on mobile) -->
         <div class="hidden md:flex items-center gap-3">
             <!-- User Avatar (Desktop) -->
             <div>
                 <a href="<?= base_url('department/it-support/profile') ?>" class="no-underline">
-                    <div class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div
+                        class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         IT
                     </div>
                 </a>
@@ -747,11 +807,14 @@ $notifications = [
     </header>
 
     <!-- Mobile Navigation Menu -->
-    <div id="mobileNav" class="md:hidden fixed top-24 left-0 w-full h-0 overflow-hidden transition-all duration-300 z-40">
+    <div id="mobileNav"
+        class="md:hidden fixed top-24 left-0 w-full h-0 overflow-hidden transition-all duration-300 z-40">
         <div class="mobile-glass-menu animate-fade-in">
             <!-- Mobile User Info -->
-            <a href="<?= base_url('department/it-support/profile') ?>" class="flex items-center gap-3 p-4 mb-2 border-b border-gray-100 no-underline hover:bg-gray-50 rounded-t-2xl">
-                <div class="w-12 h-12 user-avatar-glass rounded-full flex items-center justify-center text-white font-bold">
+            <a href="<?= base_url('department/it-support/profile') ?>"
+                class="flex items-center gap-3 p-4 mb-2 border-b border-gray-100 no-underline hover:bg-gray-50 rounded-t-2xl">
+                <div
+                    class="w-12 h-12 user-avatar-glass rounded-full flex items-center justify-center text-white font-bold">
                     IT
                 </div>
                 <div>
@@ -759,35 +822,34 @@ $notifications = [
                     <div class="text-primary/70 text-xs">IT Infrastructure Department</div>
                 </div>
             </a>
-            
+
             <!-- Mobile Navigation Links -->
             <div class="p-3">
-                <a href="<?= base_url('department/it-support/dashboard') ?>" 
-                   class="mobile-nav-item <?= current_url() == base_url('department/it-support/dashboard') ? 'active' : 'text-primary' ?>">
+                <a href="<?= base_url('department/it-support/dashboard') ?>"
+                    class="mobile-nav-item <?= current_url() == base_url('department/it-support/dashboard') ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-tachometer-alt text-secondary"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                
-                <a href="<?= base_url('department/it-support/assigned_tickets') ?>" 
-                   class="mobile-nav-item <?= strpos(current_url(), 'assigned_tickets') !== false ? 'active' : 'text-primary' ?>">
+
+                <a href="<?= base_url('department/it-support/assigned_tickets') ?>"
+                    class="mobile-nav-item <?= strpos(current_url(), 'assigned_tickets') !== false ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-ticket-alt text-secondary"></i>
                     <span class="font-medium">Assigned Tickets</span>
                 </a>
-                
-                <a href="<?= base_url('department/it-support/profile') ?>" 
-                   class="mobile-nav-item <?= strpos(current_url(), 'profile') !== false ? 'active' : 'text-primary' ?>">
+
+                <a href="<?= base_url('department/it-support/profile') ?>"
+                    class="mobile-nav-item <?= strpos(current_url(), 'profile') !== false ? 'active' : 'text-primary' ?>">
                     <i class="fas fa-user text-secondary"></i>
                     <span class="font-medium">Profile</span>
                 </a>
-                
-                <a href="<?= base_url('department/it-support/notifications') ?>" 
-                   class="mobile-nav-item text-primary">
+
+                <a href="<?= base_url('department/it-support/notifications') ?>" class="mobile-nav-item text-primary">
                     <i class="fas fa-bell text-secondary"></i>
                     <span class="font-medium">Notifications</span>
                 </a>
-                
-                <a href="<?= base_url('department/it-support/logout') ?>" 
-                   class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
+
+                <a href="<?= base_url('department/it-support/logout') ?>"
+                    class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="font-medium">Logout</span>
                 </a>
@@ -809,7 +871,7 @@ $notifications = [
 
     <!-- JavaScript -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Auto-hide alerts
             const alerts = document.querySelectorAll('.fixed.top-32');
             alerts.forEach(alert => {
@@ -824,11 +886,11 @@ $notifications = [
             const hamburgerButton = document.getElementById('hamburgerButton');
             const mobileNav = document.getElementById('mobileNav');
             const hamburgerLines = hamburgerButton?.querySelectorAll('.hamburger-line');
-            
+
             if (hamburgerButton && hamburgerLines) {
-                hamburgerButton.addEventListener('click', function(e) {
+                hamburgerButton.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    
+
                     if (mobileNav.style.height === '0px' || !mobileNav.style.height) {
                         // Open menu
                         mobileNav.style.height = 'auto';
@@ -846,7 +908,7 @@ $notifications = [
             }
 
             // Close mobile menu when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (hamburgerButton && !hamburgerButton.contains(e.target) && !mobileNav.contains(e.target)) {
                     mobileNav.style.height = '0';
                     if (hamburgerLines) {
@@ -860,7 +922,7 @@ $notifications = [
             // Close mobile menu when clicking a link
             if (mobileNav) {
                 mobileNav.querySelectorAll('a').forEach(link => {
-                    link.addEventListener('click', function() {
+                    link.addEventListener('click', function () {
                         mobileNav.style.height = '0';
                         if (hamburgerLines) {
                             hamburgerLines[0].style.transform = 'none';
@@ -874,57 +936,57 @@ $notifications = [
             // Notification dropdown toggle (Desktop)
             const notificationButton = document.getElementById('notificationButton');
             const notificationDropdown = document.getElementById('notificationDropdown');
-            
+
             if (notificationButton && notificationDropdown) {
-                notificationButton.addEventListener('click', function(e) {
+                notificationButton.addEventListener('click', function (e) {
                     e.stopPropagation();
                     notificationDropdown.classList.toggle('show');
                 });
-                
+
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     if (!notificationButton.contains(e.target) && !notificationDropdown.contains(e.target)) {
                         notificationDropdown.classList.remove('show');
                     }
                 });
-                
+
                 // Prevent dropdown from closing when clicking inside
-                notificationDropdown.addEventListener('click', function(e) {
+                notificationDropdown.addEventListener('click', function (e) {
                     e.stopPropagation();
                 });
             }
-            
+
             // Notification dropdown toggle (Mobile)
             const mobileNotificationButton = document.getElementById('mobileNotificationButton');
             const mobileNotificationDropdown = document.getElementById('mobileNotificationDropdown');
-            
+
             if (mobileNotificationButton && mobileNotificationDropdown) {
-                mobileNotificationButton.addEventListener('click', function(e) {
+                mobileNotificationButton.addEventListener('click', function (e) {
                     e.stopPropagation();
                     mobileNotificationDropdown.classList.toggle('show');
                 });
-                
+
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     if (!mobileNotificationButton.contains(e.target) && !mobileNotificationDropdown.contains(e.target)) {
                         mobileNotificationDropdown.classList.remove('show');
                     }
                 });
-                
+
                 // Prevent dropdown from closing when clicking inside
-                mobileNotificationDropdown.addEventListener('click', function(e) {
+                mobileNotificationDropdown.addEventListener('click', function (e) {
                     e.stopPropagation();
                 });
             }
-            
+
             // Scroll effect with smooth background transition
             let lastScrollTop = 0;
             const navbar = document.querySelector('.liquid-glass-navbar');
-            
+
             if (navbar) {
-                window.addEventListener('scroll', function() {
+                window.addEventListener('scroll', function () {
                     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    
+
                     if (scrollTop > 50) {
                         if (!navbar.classList.contains('scrolled')) {
                             navbar.classList.add('scrolled');
@@ -936,7 +998,7 @@ $notifications = [
                             navbar.classList.remove('animate-background-transition');
                         }
                     }
-                    
+
                     // Smooth hide/show on scroll
                     if (scrollTop > lastScrollTop && scrollTop > 100) {
                         // Scroll down
@@ -947,23 +1009,23 @@ $notifications = [
                         navbar.style.opacity = '1';
                         navbar.style.transform = window.innerWidth <= 768 ? 'translateY(0)' : 'translateX(-50%) translateY(0)';
                     }
-                    
+
                     lastScrollTop = scrollTop;
                 });
             }
-            
+
             // Handle window resize for navbar positioning
             function handleResize() {
                 const navbar = document.querySelector('.liquid-glass-navbar');
                 if (!navbar) return;
-                
+
                 if (window.innerWidth <= 768) {
                     // Mobile layout
                     navbar.style.left = '20px';
                     navbar.style.right = '20px';
                     navbar.style.transform = 'none';
                     navbar.style.animation = 'none';
-                    
+
                     if (navbar.classList.contains('scrolled')) {
                         navbar.style.left = '0';
                         navbar.style.right = '0';
@@ -974,21 +1036,22 @@ $notifications = [
                     navbar.style.right = 'auto';
                     navbar.style.transform = 'translateX(-50%)';
                     navbar.style.animation = 'float 6s ease-in-out infinite';
-                    
+
                     if (navbar.classList.contains('scrolled')) {
                         navbar.style.transform = 'translateX(-50%)';
                     }
                 }
             }
-            
+
             // Initial call
             handleResize();
-            
+
             // Listen for resize events
             window.addEventListener('resize', handleResize);
         });
     </script>
-    
+
     <?= $this->renderSection('scripts') ?>
 </body>
+
 </html>

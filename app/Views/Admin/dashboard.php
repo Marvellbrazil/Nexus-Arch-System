@@ -4,9 +4,15 @@
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
-<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
-<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
-<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
+<div
+    class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0">
+</div>
+<div
+    class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0">
+</div>
+<div
+    class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0">
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -63,6 +69,7 @@
     .stat-card .stat-icon.users {
         background: rgba(145, 85, 253, 0.30);
     }
+
     .stat-card .stat-icon.users i {
         color: #C7A8FF;
     }
@@ -70,6 +77,7 @@
     .stat-card .stat-icon.tickets {
         background: rgba(255, 180, 0, 0.37);
     }
+
     .stat-card .stat-icon.tickets i {
         color: #FEE29E;
     }
@@ -77,6 +85,7 @@
     .stat-card .stat-icon.projects {
         background: rgba(51.59, 185.49, 252.87, 0.27);
     }
+
     .stat-card .stat-icon.projects i {
         color: #74CAF5;
     }
@@ -84,6 +93,7 @@
     .stat-card .stat-icon.open-tickets {
         background: rgba(192.65, 69.87, 73.30, 0.51);
     }
+
     .stat-card .stat-icon.open-tickets i {
         color: #FF4C51;
     }
@@ -398,6 +408,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -433,11 +444,11 @@
             padding: 20px;
             min-height: 160px;
         }
-        
+
         .stat-card .stat-value {
             font-size: 32px;
         }
-        
+
         .stat-card .stat-icon {
             width: 48px;
             height: 48px;
@@ -445,17 +456,17 @@
             right: 20px;
             bottom: 20px;
         }
-        
+
         .donut-chart-container {
             width: 160px;
             height: 160px;
         }
-        
+
         .donut-center {
             width: 96px;
             height: 96px;
         }
-        
+
         .donut-total {
             font-size: 24px;
         }
@@ -465,11 +476,13 @@
 
 <?php
 // Helper functions
-function getStatValue($stats, $key) {
+function getStatValue($stats, $key)
+{
     return isset($stats[$key]) ? number_format($stats[$key]) : '0';
 }
 
-function getTrendValue($stats, $key) {
+function getTrendValue($stats, $key)
+{
     return isset($stats[$key]) ? $stats[$key] : '0%';
 }
 
@@ -487,15 +500,16 @@ $projectOverview = $projectOverview ?? [];
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex-1">
                 <h1 class="text-2xl md:text-3xl lg:text-[34px] font-semibold mb-2 text-text-dark">Admin Dashboard</h1>
-                <p class="text-sm md:text-base text-gray-600">Welcome back, Administrator. Here's what's happening with your system.</p>
+                <p class="text-sm md:text-base text-gray-600">Welcome back, Administrator. Here's what's happening with
+                    your system.</p>
             </div>
-            
+
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-600 hidden md:inline">
                     <i class="fas fa-clock mr-2"></i>Last updated: <?= date('h:i A') ?>
                 </span>
-                <button onclick="refreshDashboard()" 
-                        class="px-4 py-2.5 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-secondary/20">
+                <button onclick="refreshDashboard()"
+                    class="px-4 py-2.5 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-secondary/20">
                     <i class="fas fa-sync-alt"></i>
                     <span>Refresh</span>
                 </button>
@@ -571,17 +585,18 @@ $projectOverview = $projectOverview ?? [];
                         <!-- Donut Chart -->
                         <div class="donut-chart-container">
                             <div class="donut-chart" style="background: conic-gradient(
-                                <?php 
+                                <?php
                                 $totalDeg = 0;
                                 if (!empty($ticket_status)) {
                                     foreach ($ticket_status as $index => $status) {
                                         $color = $status['color'] ?? '#756EA4';
                                         $percentage = $status['percentage'] ?? 0;
                                         $deg = ($percentage / 100) * 360;
-                                        
+
                                         echo $color . ' ' . $totalDeg . 'deg ' . ($totalDeg + $deg) . 'deg';
                                         $totalDeg += $deg;
-                                        if ($index < count($ticket_status) - 1) echo ', ';
+                                        if ($index < count($ticket_status) - 1)
+                                            echo ', ';
                                     }
                                 } else {
                                     echo '#E5E7EB 0deg 360deg';
@@ -600,7 +615,8 @@ $projectOverview = $projectOverview ?? [];
                                 <div class="space-y-3">
                                     <?php foreach ($ticket_status as $status): ?>
                                         <div class="status-item">
-                                            <div class="status-color" style="background: <?= $status['color'] ?? '#756EA4' ?>"></div>
+                                            <div class="status-color" style="background: <?= $status['color'] ?? '#756EA4' ?>">
+                                            </div>
                                             <div class="status-info">
                                                 <div class="status-name"><?= $status['status_name'] ?? 'Unknown' ?></div>
                                             </div>
@@ -613,7 +629,8 @@ $projectOverview = $projectOverview ?? [];
                                 </div>
                             <?php else: ?>
                                 <div class="text-center py-12">
-                                    <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <div
+                                        class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                                         <i class="fas fa-chart-pie text-gray-400 text-2xl"></i>
                                     </div>
                                     <p class="text-gray-500">No ticket data available</p>
@@ -645,12 +662,14 @@ $projectOverview = $projectOverview ?? [];
                         <div class="space-y-4">
                             <?php foreach ($recentActivities as $activity): ?>
                                 <div class="activity-item">
-                                    <div class="activity-avatar" style="background: <?= $activity['avatar_color'] ?? 'linear-gradient(135deg, #F0E9F9, #E4DFF6)' ?>;">
+                                    <div class="activity-avatar"
+                                        style="background: <?= $activity['avatar_color'] ?? 'linear-gradient(135deg, #F0E9F9, #E4DFF6)' ?>;">
                                         <i class="fas fa-user text-secondary"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex justify-between items-start mb-2">
-                                            <span class="font-semibold text-gray-800"><?= $activity['user'] ?? 'Unknown User' ?></span>
+                                            <span
+                                                class="font-semibold text-gray-800"><?= $activity['user'] ?? 'Unknown User' ?></span>
                                             <span class="text-gray-500 text-xs"><?= $activity['time'] ?? 'Recently' ?></span>
                                         </div>
                                         <p class="text-gray-600 text-sm mb-2">
@@ -660,7 +679,8 @@ $projectOverview = $projectOverview ?? [];
                                             <?php endif; ?>
                                         </p>
                                         <div class="flex items-center gap-2">
-                                            <span class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-medium rounded-full">
+                                            <span
+                                                class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-medium rounded-full">
                                                 <?= $activity['role'] ?? 'User' ?>
                                             </span>
                                         </div>
@@ -701,23 +721,28 @@ $projectOverview = $projectOverview ?? [];
                     <?php else: ?>
                         <div class="space-y-4">
                             <?php foreach ($projectOverview as $project): ?>
-                                <a href="<?= base_url('admin/projects/edit/' . ($project['project_id'] ?? '')) ?>" class="project-row">
+                                <a href="<?= base_url('admin/projects/edit/' . ($project['project_id'] ?? '')) ?>"
+                                    class="project-row">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                        <div
+                                            class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
                                             <i class="fas fa-project-diagram text-blue-600 text-lg"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <div class="font-semibold text-gray-800 truncate"><?= $project['project_name'] ?? 'Unnamed Project' ?></div>
+                                            <div class="font-semibold text-gray-800 truncate">
+                                                <?= $project['project_name'] ?? 'Unnamed Project' ?></div>
                                             <div class="text-gray-500 text-sm"><?= $project['project_code'] ?? '' ?></div>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-6">
                                         <div class="text-center">
-                                            <div class="font-bold text-gray-800 text-lg"><?= $project['total_tickets'] ?? 0 ?></div>
+                                            <div class="font-bold text-gray-800 text-lg"><?= $project['total_tickets'] ?? 0 ?>
+                                            </div>
                                             <div class="text-gray-500 text-xs">Tickets</div>
                                         </div>
                                         <div class="text-center">
-                                            <div class="font-bold text-gray-800 text-lg"><?= $project['open_tickets'] ?? 0 ?></div>
+                                            <div class="font-bold text-gray-800 text-lg"><?= $project['open_tickets'] ?? 0 ?>
+                                            </div>
                                             <div class="text-gray-500 text-xs">Open</div>
                                         </div>
                                         <div class="text-gray-400">
@@ -743,7 +768,7 @@ $projectOverview = $projectOverview ?? [];
 
                 <div class="p-6">
                     <div class="space-y-4">
-                        <?php 
+                        <?php
                         // Define quick links with the structure from original code
                         $quickLinks = [
                             [
@@ -772,7 +797,7 @@ $projectOverview = $projectOverview ?? [];
                             ]
                         ];
                         ?>
-                        
+
                         <?php foreach ($quickLinks as $link): ?>
                             <a href="<?= $link['url'] ?>" class="quick-access-item">
                                 <div class="quick-access-icon <?= $link['color'] ?>">
@@ -780,7 +805,8 @@ $projectOverview = $projectOverview ?? [];
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-semibold text-gray-800 truncate"><?= $link['title'] ?></div>
-                                    <div class="text-gray-500 text-sm truncate">Quick access to <?= strtolower($link['title']) ?></div>
+                                    <div class="text-gray-500 text-sm truncate">Quick access to
+                                        <?= strtolower($link['title']) ?></div>
                                 </div>
                                 <div class="text-gray-400">
                                     <i class="fas fa-chevron-right"></i>
@@ -804,7 +830,7 @@ $projectOverview = $projectOverview ?? [];
                 </div>
 
                 <div class="p-6 max-h-[300px] overflow-y-auto custom-scrollbar">
-                    <?php 
+                    <?php
                     // Define notifications with the structure from original code
                     $systemNotifications = [
                         [
@@ -833,7 +859,7 @@ $projectOverview = $projectOverview ?? [];
                         ]
                     ];
                     ?>
-                    
+
                     <?php if (empty($systemNotifications)): ?>
                         <div class="text-center py-8">
                             <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -844,7 +870,8 @@ $projectOverview = $projectOverview ?? [];
                     <?php else: ?>
                         <div class="space-y-4">
                             <?php foreach ($systemNotifications as $notification): ?>
-                                <div class="notification-item <?= $notification['type'] ?>" style="border-left-color: <?= $notification['color'] ?>;">
+                                <div class="notification-item <?= $notification['type'] ?>"
+                                    style="border-left-color: <?= $notification['color'] ?>;">
                                     <div class="flex items-start gap-4">
                                         <div class="text-lg mt-1" style="color: <?= $notification['color'] ?>">
                                             <i class="fas fa-<?= $notification['icon'] ?>"></i>
@@ -868,14 +895,14 @@ $projectOverview = $projectOverview ?? [];
 
 <!-- JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Initialize animations
         initDashboardAnimations();
-        
+
         // Auto-refresh dashboard every 30 seconds
         setInterval(refreshDashboard, 30000);
     });
-    
+
     function initDashboardAnimations() {
         setTimeout(() => {
             const elements = document.querySelectorAll('.stat-card, .dashboard-card');
@@ -885,7 +912,7 @@ $projectOverview = $projectOverview ?? [];
             });
         }, 100);
     }
-    
+
     function showStatModal(statType) {
         const statData = {
             'Total Users': {
@@ -909,10 +936,10 @@ $projectOverview = $projectOverview ?? [];
                 description: 'Tickets that need immediate review and action'
             }
         };
-        
+
         const data = statData[statType];
         if (!data) return;
-        
+
         // Create modal
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
@@ -950,50 +977,50 @@ $projectOverview = $projectOverview ?? [];
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
     }
-    
+
     function refreshDashboard() {
         const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
         const originalContent = refreshBtn.innerHTML;
-        
+
         refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
         refreshBtn.disabled = true;
-        
+
         // Simulate API call
         setTimeout(() => {
             // Update timestamp
             const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
                 minute: '2-digit',
-                hour12: true 
+                hour12: true
             });
-            
+
             const timeElement = document.querySelector('.text-gray-600.text-sm .fa-clock')?.parentElement;
             if (timeElement) {
                 timeElement.innerHTML = `<i class="fas fa-clock mr-2"></i>Last updated: ${timeString}`;
             }
-            
+
             showToast('Dashboard refreshed successfully', 'success');
-            
+
             setTimeout(() => {
                 refreshBtn.innerHTML = originalContent;
                 refreshBtn.disabled = false;
             }, 1000);
         }, 1500);
     }
-    
+
     function markAllAsRead() {
         document.querySelectorAll('.notification-item').forEach(item => {
             item.style.opacity = '0.6';
             item.style.transform = 'scale(0.98)';
         });
-        
+
         // Show toast
         showToast('All notifications marked as read', 'success');
-        
+
         // Reset after 2 seconds
         setTimeout(() => {
             document.querySelectorAll('.notification-item').forEach(item => {
@@ -1002,32 +1029,30 @@ $projectOverview = $projectOverview ?? [];
             });
         }, 2000);
     }
-    
+
     function showToast(message, type = 'info') {
         // Remove existing toast
         const existingToast = document.querySelector('.custom-toast');
         if (existingToast) {
             existingToast.remove();
         }
-        
+
         const toast = document.createElement('div');
-        toast.className = `custom-toast fixed top-6 right-6 px-4 py-3 rounded-xl shadow-xl z-50 animate-fadeInUp ${
-            type === 'success' ? 'bg-green-500 text-white' :
-            type === 'error' ? 'bg-red-500 text-white' :
-            'bg-blue-500 text-white'
-        }`;
+        toast.className = `custom-toast fixed top-6 right-6 px-4 py-3 rounded-xl shadow-xl z-50 animate-fadeInUp ${type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                    'bg-blue-500 text-white'
+            }`;
         toast.innerHTML = `
             <div class="flex items-center gap-3">
-                <i class="fas ${
-                    type === 'success' ? 'fa-check-circle' :
-                    type === 'error' ? 'fa-exclamation-circle' :
+                <i class="fas ${type === 'success' ? 'fa-check-circle' :
+                type === 'error' ? 'fa-exclamation-circle' :
                     'fa-info-circle'
-                }"></i>
+            }"></i>
                 <span class="text-sm font-medium">${message}</span>
             </div>
         `;
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(-20px)';

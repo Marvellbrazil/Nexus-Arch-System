@@ -310,9 +310,9 @@ class SupportController extends BaseController
         $db->table('tickets')
             ->where('ticket_id', $ticketId)
             ->update([
-                'assigned_to' => $userId,
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+                    'assigned_to' => $userId,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
 
         return redirect()->back()->with('success', 'Ticket assigned to you');
     }
@@ -1644,10 +1644,10 @@ class SupportController extends BaseController
         $result = $db->table('tickets')
             ->where('ticket_id', $ticketId)
             ->update([
-                'department_id' => $departmentId,
-                'status_id' => 2, // In Progress status
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+                    'department_id' => $departmentId,
+                    'status_id' => 2, // In Progress status
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
 
         // Add activity log
         if ($db->tableExists('ticket_activities')) {
@@ -1686,10 +1686,10 @@ class SupportController extends BaseController
         $db->table('tickets')
             ->where('ticket_id', $ticketId)
             ->update([
-                'status_id' => $status ? $status['status_id'] : 3,
-                'updated_at' => date('Y-m-d H:i:s'),
-                'resolved_at' => date('Y-m-d H:i:s')
-            ]);
+                    'status_id' => $status ? $status['status_id'] : 3,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                    'resolved_at' => date('Y-m-d H:i:s')
+                ]);
 
         return redirect()->to(site_url('support/ticket_detail/' . $ticketId))->with('success', 'Ticket marked as resolved');
     }

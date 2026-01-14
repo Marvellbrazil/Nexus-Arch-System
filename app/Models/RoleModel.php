@@ -9,11 +9,11 @@ class RoleModel extends Model
     protected $table = 'roles';
     protected $primaryKey = 'role_id';
     protected $allowedFields = [
-        'role_name', 
-        'description', 
-        'access_level', 
-        'color_class', 
-        'is_core', 
+        'role_name',
+        'description',
+        'access_level',
+        'color_class',
+        'is_core',
         'permissions',
         'user_count'
     ];
@@ -22,14 +22,14 @@ class RoleModel extends Model
     protected $updatedField = 'updated_at';
     protected $beforeInsert = ['beforeInsert'];
     protected $beforeUpdate = ['beforeUpdate'];
-    
+
     /**
      * Get all roles with user count
      */
     public function getAllRolesWithCount()
     {
         $db = db_connect();
-        
+
         return $db->table('roles r')
             ->select('r.*, COUNT(u.user_id) as user_count')
             ->join('users u', 'u.role_id = r.role_id', 'left')
@@ -38,14 +38,14 @@ class RoleModel extends Model
             ->get()
             ->getResultArray();
     }
-    
+
     /**
      * Get role by ID with user count
      */
     public function getRoleById($roleId)
     {
         $db = db_connect();
-        
+
         return $db->table('roles r')
             ->select('r.*, COUNT(u.user_id) as user_count')
             ->join('users u', 'u.role_id = r.role_id', 'left')
@@ -54,30 +54,30 @@ class RoleModel extends Model
             ->get()
             ->getRowArray();
     }
-    
+
     /**
      * Get permissions for a role
      */
     public function getRolePermissions($roleId)
     {
         $db = db_connect();
-        
+
         return $db->table('role_permissions')
             ->where('role_id', $roleId)
             ->get()
             ->getResultArray();
     }
-    
+
     /**
      * Update role permissions
      */
     public function updateRolePermissions($roleId, $permissions)
     {
         $db = db_connect();
-        
+
         // Delete existing permissions
         $db->table('role_permissions')->where('role_id', $roleId)->delete();
-        
+
         // Insert new permissions
         $permissionData = [];
         foreach ($permissions as $permission) {
@@ -90,24 +90,24 @@ class RoleModel extends Model
                 'created_at' => date('Y-m-d H:i:s')
             ];
         }
-        
+
         if (!empty($permissionData)) {
             return $db->table('role_permissions')->insertBatch($permissionData);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Get role templates (core roles)
      */
     public function getRoleTemplates()
     {
         return $this->where('is_core', true)
-                    ->orderBy('role_name', 'ASC')
-                    ->findAll();
+            ->orderBy('role_name', 'ASC')
+            ->findAll();
     }
-    
+
     /**
      * Get all permissions grouped by module
      */
@@ -151,7 +151,7 @@ class RoleModel extends Model
             ]
         ];
     }
-    
+
     /**
      * Get role rules
      */
@@ -159,14 +159,14 @@ class RoleModel extends Model
     {
         $rules = [];
         $role = $this->find($roleId);
-        
+
         if ($role) {
             if ($role['is_core']) {
                 $rules[] = 'This is a core system role';
                 $rules[] = 'Cannot be deleted';
                 $rules[] = 'Some permissions are locked';
             }
-            
+
             switch ($role['access_level']) {
                 case 'external':
                     $rules[] = 'Access limited to own data only';
@@ -181,13 +181,13 @@ class RoleModel extends Model
                     $rules[] = 'Can manage all aspects of the system';
                     break;
             }
-            
+
             $rules[] = 'Changes affect all users with this role';
         }
-        
+
         return $rules;
     }
-    
+
     /**
      * Get core responsibilities
      */
@@ -219,10 +219,10 @@ class RoleModel extends Model
                 'Generate reports and analytics'
             ]
         ];
-        
+
         return $responsibilities[$roleName] ?? ['Custom responsibilities based on role needs'];
     }
-    
+
     /**
      * Generate color class based on access level
      */
@@ -234,10 +234,10 @@ class RoleModel extends Model
             'full' => 'role-color-full',
             'technical' => 'role-color-technical'
         ];
-        
+
         return $colors[$accessLevel] ?? 'role-color-internal';
     }
-    
+
     /**
      * Before insert callback
      */
@@ -246,14 +246,14 @@ class RoleModel extends Model
         if (!isset($data['data']['color_class'])) {
             $data['data']['color_class'] = $this->generateColorClass($data['data']['access_level'] ?? 'internal');
         }
-        
+
         if (!isset($data['data']['is_core'])) {
             $data['data']['is_core'] = false;
         }
-        
+
         return $data;
     }
-    
+
     /**
      * Before update callback
      */
@@ -262,10 +262,10 @@ class RoleModel extends Model
         if (isset($data['data']['access_level']) && !isset($data['data']['color_class'])) {
             $data['data']['color_class'] = $this->generateColorClass($data['data']['access_level']);
         }
-        
+
         return $data;
     }
-    
+
     /**
      * Get access level name
      */
@@ -277,7 +277,7 @@ class RoleModel extends Model
             'full' => 'Full Access',
             'technical' => 'Technical Access'
         ];
-        
+
         return $levels[$level] ?? $level;
     }
 }

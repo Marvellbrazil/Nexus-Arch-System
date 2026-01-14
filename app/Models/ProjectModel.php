@@ -79,6 +79,22 @@ class ProjectModel extends Model
     }
 
     /**
+     * Get projects assigned to a specific user (FIXED - sesuai struktur tabel)
+     */
+    public function getAssignedProjects(int $userId): array
+    {
+        $db = db_connect();
+
+        return $db->table('projects p')
+            ->select('p.*, pa.assigned_at') // Hanya ambil assigned_at
+            ->join('project_assignments pa', 'pa.project_id = p.project_id')
+            ->where('pa.user_id', $userId)
+            ->where('p.is_active', true)
+            ->orderBy('pa.assigned_at', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
+    /**
      * Get projects with ticket counts (FIXED VERSION)
      */
     public function getProjectsWithTicketCounts(): array
@@ -190,97 +206,97 @@ class ProjectModel extends Model
     }
 
     /**
- * Get all users assigned to a project
- */
-public function getAssignedUsers(int $projectId): array
-{
-    $db = db_connect();
-    
-    return $db->table('project_assignments pa')
-        ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
-        ->join('users u', 'u.user_id = pa.user_id')
-        ->join('roles r', 'r.role_id = u.role_id', 'left')
-        ->where('pa.project_id', $projectId)
-        ->where('u.is_active', true)
-        ->orderBy('u.full_name', 'ASC')
-        ->get()
-        ->getResultArray();
-}
+     * Get all users assigned to a project
+     */
+    public function getAssignedUsers(int $projectId): array
+    {
+        $db = db_connect();
 
-/**
- * Check if user is assigned to project
- */
-public function isUserAssigned(int $projectId, int $userId): bool
-{
-    $db = db_connect();
-    
-    $result = $db->table('project_assignments')
-        ->where('project_id', $projectId)
-        ->where('user_id', $userId)
-        ->countAllResults();
-    
-    return $result > 0;
-}
-
-/**
- * Assign user to project
- */
-public function assignUser(int $projectId, int $userId, int $assignedBy): bool
-{
-    $db = db_connect();
-    
-    // Check if already assigned
-    if ($this->isUserAssigned($projectId, $userId)) {
-        return true; // Already assigned
+        return $db->table('project_assignments pa')
+            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+            ->join('users u', 'u.user_id = pa.user_id')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('pa.project_id', $projectId)
+            ->where('u.is_active', true)
+            ->orderBy('u.full_name', 'ASC')
+            ->get()
+            ->getResultArray();
     }
-    
-    $data = [
-        'project_id' => $projectId,
-        'user_id' => $userId,
-        'assigned_by' => $assignedBy,
-        'assigned_at' => date('Y-m-d H:i:s')
-    ];
-    
-    return $db->table('project_assignments')->insert($data);
-}
 
-/**
- * Remove user from project
- */
-public function removeUser(int $projectId, int $userId): bool
-{
-    $db = db_connect();
-    
-    return $db->table('project_assignments')
-        ->where('project_id', $projectId)
-        ->where('user_id', $userId)
-        ->delete();
-}
+    /**
+     * Check if user is assigned to project
+     */
+    public function isUserAssigned(int $projectId, int $userId): bool
+    {
+        $db = db_connect();
 
-/**
- * Get projects by status
- */
-public function getProjectsByStatus(bool $isActive = true, ?int $limit = null): array
-{
-    $builder = $this->builder();
-    $builder->where('is_active', $isActive);
-    $builder->orderBy('created_at', 'DESC');
-    
-    if ($limit) {
-        $builder->limit($limit);
+        $result = $db->table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('user_id', $userId)
+            ->countAllResults();
+
+        return $result > 0;
     }
-    
-    return $builder->get()->getResultArray();
-}
 
-/**
- * Get project statistics dashboard
- */
-public function getDashboardStatistics(): array
-{
-    $db = db_connect();
-    
-    $stats = $db->query("
+    /**
+     * Assign user to project
+     */
+    public function assignUser(int $projectId, int $userId, int $assignedBy): bool
+    {
+        $db = db_connect();
+
+        // Check if already assigned
+        if ($this->isUserAssigned($projectId, $userId)) {
+            return true; // Already assigned
+        }
+
+        $data = [
+            'project_id' => $projectId,
+            'user_id' => $userId,
+            'assigned_by' => $assignedBy,
+            'assigned_at' => date('Y-m-d H:i:s')
+        ];
+
+        return $db->table('project_assignments')->insert($data);
+    }
+
+    /**
+     * Remove user from project
+     */
+    public function removeUser(int $projectId, int $userId): bool
+    {
+        $db = db_connect();
+
+        return $db->table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('user_id', $userId)
+            ->delete();
+    }
+
+    /**
+     * Get projects by status
+     */
+    public function getProjectsByStatus(bool $isActive = true, ?int $limit = null): array
+    {
+        $builder = $this->builder();
+        $builder->where('is_active', $isActive);
+        $builder->orderBy('created_at', 'DESC');
+
+        if ($limit) {
+            $builder->limit($limit);
+        }
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Get project statistics dashboard
+     */
+    public function getDashboardStatistics(): array
+    {
+        $db = db_connect();
+
+        $stats = $db->query("
         SELECT 
             COUNT(*) as total_projects,
             COUNT(CASE WHEN is_active THEN 1 END) as active_projects,
@@ -294,13 +310,15 @@ public function getDashboardStatistics(): array
             ) as total_assigned_users
         FROM projects
     ")->getRowArray();
-    
-    return $stats ?: [
-        'total_projects' => 0,
-        'active_projects' => 0,
-        'inactive_projects' => 0,
-        'managers_with_projects' => 0,
-        'total_assigned_users' => 0
-    ];
-}
+
+        return $stats ?: [
+            'total_projects' => 0,
+            'active_projects' => 0,
+            'inactive_projects' => 0,
+            'managers_with_projects' => 0,
+            'total_assigned_users' => 0
+        ];
+    }
+
+
 }

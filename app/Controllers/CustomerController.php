@@ -245,9 +245,9 @@ class CustomerController extends BaseController
             'sort' => $sortBy
         ];
 
-        $data['query_string_helper'] = function($excludeParams = []) {
-        return $this->getQueryString($excludeParams);
-    };
+        $data['query_string_helper'] = function ($excludeParams = []) {
+            return $this->getQueryString($excludeParams);
+        };
 
         return view('Customer/my_tickets', ['data' => $data]);
     }

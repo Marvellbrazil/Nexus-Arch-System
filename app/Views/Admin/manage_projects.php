@@ -1460,7 +1460,7 @@
 
             // Setup event listeners
             setupBulkAssignModalEvents();
-            
+
             // Load initial data
             await loadBulkProjects();
             await loadBulkUsers();
@@ -1468,7 +1468,7 @@
 
         function setupBulkAssignModalEvents() {
             const modal = document.querySelector('.bulk-assign-modal');
-            
+
             // Close modal
             modal.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1519,7 +1519,7 @@
 
         function setupImportModalEvents() {
             const modal = document.querySelector('.import-projects-modal');
-            
+
             // Close modal
             modal.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1540,12 +1540,12 @@
             }
 
             if (fileInput) {
-                fileInput.addEventListener('change', function() {
+                fileInput.addEventListener('change', function () {
                     if (this.files.length > 0) {
                         const file = this.files[0];
                         const fileName = modal.querySelector('#fileName');
                         const fileInfo = modal.querySelector('#selectedFileInfo');
-                        
+
                         if (fileName) fileName.textContent = file.name;
                         if (fileInfo) fileInfo.classList.remove('hidden');
                         if (confirmBtn) confirmBtn.disabled = false;
@@ -1580,7 +1580,7 @@
 
             const selectedProjects = Array.from(modal.querySelectorAll('.project-checkbox:checked'))
                 .map(cb => parseInt(cb.value));
-            
+
             const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked'))
                 .map(cb => parseInt(cb.value));
 
@@ -1611,7 +1611,7 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     modal.querySelector('.close-modal').click();
-                    
+
                     // Reload projects to update counts
                     loadProjectsData();
                 } else {
@@ -1638,7 +1638,7 @@
             }
 
             const file = fileInput.files[0];
-            
+
             // Validate file size (10MB)
             if (file.size > 10 * 1024 * 1024) {
                 showToast('File size must be less than 10MB', 'error');
@@ -1666,10 +1666,10 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     modal.querySelector('.close-modal').click();
-                    
+
                     // Reload projects
                     loadProjectsData();
-                    
+
                     // Show import summary if there were errors
                     if (data.error_count > 0) {
                         setTimeout(() => {
@@ -2003,10 +2003,10 @@ API Integration,PROJ004,Third-party API integration,true`;
                 if (data.success) {
                     showToast('Project created successfully', 'success');
                     modal.querySelector('.close-modal').click();
-                    
+
                     // Reload projects
                     loadProjectsData();
-                    
+
                     // Select the new project
                     if (data.project_id) {
                         setTimeout(() => {
@@ -2111,8 +2111,8 @@ API Integration,PROJ004,Third-party API integration,true`;
 
             const toast = document.createElement('div');
             toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
+                type === 'success' ? 'bg-green-500 text-white' :
+                    'bg-blue-500 text-white'
                 }`;
             toast.innerHTML = `
                 <div class="flex items-center gap-2">

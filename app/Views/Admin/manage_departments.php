@@ -4,9 +4,15 @@
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
-<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
-<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
-<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
+<div
+    class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0">
+</div>
+<div
+    class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0">
+</div>
+<div
+    class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0">
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -25,28 +31,30 @@
                 <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-muted">
                     <i class="fas fa-search"></i>
                 </div>
-                <input type="text" 
-                       placeholder="Search by department name" 
-                       id="departmentSearch"
-                       class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
+                <input type="text" placeholder="Search by department name" id="departmentSearch"
+                    class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
             </div>
         </div>
 
         <!-- Status Filter Tabs -->
         <div class="bg-[#F3F4F6] rounded-lg p-1 flex items-center">
-            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all active" data-filter="all">
+            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all active"
+                data-filter="all">
                 All
             </button>
-            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all" data-filter="active">
+            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all"
+                data-filter="active">
                 Active
             </button>
-            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all" data-filter="inactive">
+            <button class="department-filter px-4 py-2 rounded-md font-medium text-sm transition-all"
+                data-filter="inactive">
                 Inactive
             </button>
         </div>
 
         <!-- Add New Department Button -->
-        <button id="addDepartmentBtn" class="w-full md:w-auto h-12 px-6 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+        <button id="addDepartmentBtn"
+            class="w-full md:w-auto h-12 px-6 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
             <i class="fas fa-plus text-lg"></i>
             Add New Department
         </button>
@@ -67,7 +75,8 @@
                 <!-- Departments Table -->
                 <div class="overflow-x-auto">
                     <!-- Table Header -->
-                    <div class="grid grid-cols-12 gap-4 py-4 px-6 bg-[#E3DAEE] rounded-lg text-sm font-semibold text-text-dark/80">
+                    <div
+                        class="grid grid-cols-12 gap-4 py-4 px-6 bg-[#E3DAEE] rounded-lg text-sm font-semibold text-text-dark/80">
                         <div class="col-span-3">Department Name</div>
                         <div class="col-span-4">Description</div>
                         <div class="col-span-2 text-center">Total Members</div>
@@ -80,7 +89,7 @@
                         <!-- Departments will be loaded here -->
                     </div>
                 </div>
-                
+
                 <!-- Empty State -->
                 <div id="emptyState" class="hidden py-12 text-center">
                     <i class="fas fa-building text-gray-300 text-4xl mb-4"></i>
@@ -95,13 +104,15 @@
                             <span id="paginationInfo">Page 1 of 1</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button id="prevPage" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="prevPage"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="fas fa-chevron-left text-sm"></i>
                             </button>
                             <div id="pageNumbers" class="flex items-center gap-1">
                                 <!-- Page numbers will be populated here -->
                             </div>
-                            <button id="nextPage" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="nextPage"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="fas fa-chevron-right text-sm"></i>
                             </button>
                         </div>
@@ -129,7 +140,7 @@
                         </div>
                         <p class="text-text-dark/60 text-sm">Select a department to view details</p>
                     </div>
-                    
+
                     <!-- Department details will be loaded here -->
                 </div>
             </div>
@@ -174,32 +185,39 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="p-6">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Department Name</label>
-                        <input type="text" id="departmentName" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" placeholder="e.g., IT Support">
+                        <input type="text" id="departmentName"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
+                            placeholder="e.g., IT Support">
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Description</label>
-                        <textarea id="departmentDescription" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" rows="3" placeholder="Describe the department's purpose and responsibilities"></textarea>
+                        <textarea id="departmentDescription"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
+                            rows="3" placeholder="Describe the department's purpose and responsibilities"></textarea>
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Status</label>
-                        <select id="departmentStatus" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                        <select id="departmentStatus"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Department Head</label>
-                        <input type="text" id="departmentHead" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" placeholder="Optional">
+                        <input type="text" id="departmentHead"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
+                            placeholder="Optional">
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Default Ticket Categories</label>
                         <div class="space-y-2">
@@ -219,12 +237,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <button
+                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button id="confirmAddDepartment" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
+                <button id="confirmAddDepartment"
+                    class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
                     Add Department
                 </button>
             </div>
@@ -243,32 +263,37 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="p-6">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Department Name</label>
-                        <input type="text" id="editDepartmentName" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                        <input type="text" id="editDepartmentName"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Description</label>
-                        <textarea id="editDepartmentDescription" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" rows="3"></textarea>
+                        <textarea id="editDepartmentDescription"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
+                            rows="3"></textarea>
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Status</label>
-                        <select id="editDepartmentStatus" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                        <select id="editDepartmentStatus"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Department Head</label>
-                        <input type="text" id="editDepartmentHead" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                        <input type="text" id="editDepartmentHead"
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
                     </div>
-                    
+
                     <div>
                         <label class="block text-gray-600 text-sm mb-2">Ticket Categories</label>
                         <div class="space-y-2">
@@ -288,12 +313,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <button
+                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button id="confirmEditDepartment" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
+                <button id="confirmEditDepartment"
+                    class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
                     Save Changes
                 </button>
             </div>
@@ -328,29 +355,35 @@
 <style>
     /* Custom animations */
     @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
-    
+
     @keyframes slideInUp {
-        from { 
+        from {
             opacity: 0;
             transform: translateY(10px);
         }
-        to { 
+
+        to {
             opacity: 1;
             transform: translateY(0);
         }
     }
-    
+
     .animate-fadeIn {
         animation: fadeIn 0.3s ease-out;
     }
-    
+
     .animate-slideInUp {
         animation: slideInUp 0.3s ease-out;
     }
-    
+
     /* Department item styling */
     .department-item {
         display: grid;
@@ -360,17 +393,17 @@
         transition: all 0.2s ease;
         align-items: center;
     }
-    
+
     .department-item:hover {
         background: rgba(117, 110, 164, 0.05);
         cursor: pointer;
     }
-    
+
     .department-item.selected {
         background: rgba(102, 92, 158, 0.1);
         border-left: 3px solid #665C9E;
     }
-    
+
     /* Status badges */
     .status-badge {
         padding: 4px 12px;
@@ -379,28 +412,28 @@
         font-weight: 500;
         display: inline-block;
     }
-    
+
     .status-active {
         background: #C4E3AC;
         color: #15803D;
     }
-    
+
     .status-inactive {
         background: #ECDCD3;
         color: #93867E;
     }
-    
+
     /* Filter tabs */
     .department-filter {
         transition: all 0.2s ease;
     }
-    
+
     .department-filter.active {
         background: #DEDBF8;
         color: #7E22CE;
         box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
     }
-    
+
     /* Department details */
     .department-avatar {
         width: 80px;
@@ -414,7 +447,7 @@
         margin: 0 auto 16px;
         background: linear-gradient(135deg, #5952A3, #8A84C6);
     }
-    
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -424,38 +457,38 @@
         border-radius: 12px;
         margin-bottom: 1rem;
     }
-    
+
     .stat-item {
         text-align: center;
     }
-    
+
     .stat-value {
         font-size: 20px;
         font-weight: 400;
         color: #374151;
         line-height: 1.2;
     }
-    
+
     .stat-label {
         font-size: 10px;
         color: #434264;
         text-transform: uppercase;
         margin-top: 2px;
     }
-    
+
     .member-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 8px 0;
     }
-    
+
     .member-info {
         display: flex;
         align-items: center;
         gap: 12px;
     }
-    
+
     .member-avatar {
         width: 32px;
         height: 32px;
@@ -468,7 +501,7 @@
         font-size: 12px;
         font-weight: bold;
     }
-    
+
     .view-badge {
         padding: 2px 8px;
         background: #C1E0A9;
@@ -477,18 +510,18 @@
         font-size: 10px;
         text-transform: uppercase;
     }
-    
+
     .category-item {
         padding: 4px 0;
         font-size: 12px;
         color: #6B7280;
     }
-    
+
     /* Action menu */
     .department-actions-menu {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
-    
+
     .menu-item {
         width: 100%;
         padding: 12px 16px;
@@ -502,11 +535,11 @@
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
-    
+
     .menu-item:hover {
         background: #F9FAFB;
     }
-    
+
     /* Action buttons */
     .action-buttons {
         display: grid;
@@ -514,7 +547,7 @@
         gap: 12px;
         margin-top: 1rem;
     }
-    
+
     .action-btn {
         padding: 12px;
         border-radius: 8px;
@@ -524,28 +557,28 @@
         transition: all 0.2s ease;
         border: 1px solid transparent;
     }
-    
+
     .action-btn.primary {
         background: #6D4ACA;
         color: white;
     }
-    
+
     .action-btn.primary:hover {
         background: #5A3FB8;
         transform: translateY(-1px);
     }
-    
+
     .action-btn.secondary {
         background: white;
         color: #EF4444;
         border-color: #EF4444;
     }
-    
+
     .action-btn.secondary:hover {
         background: #FEF2F2;
         transform: translateY(-1px);
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 1024px) {
         .department-item {
@@ -553,33 +586,47 @@
             gap: 0.75rem;
             padding: 0.75rem 1rem;
         }
-        
-        .department-item > div:nth-child(1) { grid-column: span 2; }
-        .department-item > div:nth-child(2) { grid-column: span 3; }
-        .department-item > div:nth-child(3) { grid-column: span 1; }
-        .department-item > div:nth-child(4) { grid-column: span 1; }
-        .department-item > div:nth-child(5) { grid-column: span 1; }
-        
+
+        .department-item>div:nth-child(1) {
+            grid-column: span 2;
+        }
+
+        .department-item>div:nth-child(2) {
+            grid-column: span 3;
+        }
+
+        .department-item>div:nth-child(3) {
+            grid-column: span 1;
+        }
+
+        .department-item>div:nth-child(4) {
+            grid-column: span 1;
+        }
+
+        .department-item>div:nth-child(5) {
+            grid-column: span 1;
+        }
+
         .stats-grid {
             grid-template-columns: 1fr;
         }
     }
-    
+
     @media (max-width: 768px) {
         .department-item {
             grid-template-columns: 1fr;
             gap: 0.5rem;
         }
-        
-        .department-item > div {
+
+        .department-item>div {
             grid-column: span 1 !important;
         }
-        
+
         .action-buttons {
             grid-template-columns: 1fr;
         }
     }
-    
+
     /* Loading skeleton */
     .skeleton-loader {
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -587,39 +634,44 @@
         animation: loading 1.5s infinite;
         border-radius: 4px;
     }
-    
+
     @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
     }
-    
+
     /* Scrollbar styling */
     .departments-container {
         max-height: 500px;
         overflow-y: auto;
     }
-    
+
     .departments-container::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     .departments-container::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 3px;
     }
-    
+
     .departments-container::-webkit-scrollbar-thumb {
         background: rgba(102, 92, 158, 0.4);
         border-radius: 3px;
     }
-    
+
     .departments-container::-webkit-scrollbar-thumb:hover {
         background: rgba(102, 92, 158, 0.6);
     }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Initial data
         let departmentsData = [
             {
@@ -693,13 +745,13 @@
                 created: "May 15, 2024"
             }
         ];
-        
+
         let filteredDepartments = [...departmentsData];
         let selectedDepartmentId = null;
         let currentFilter = "all";
         let currentPage = 1;
         let itemsPerPage = 5;
-        
+
         // DOM Elements
         const departmentSearch = document.getElementById('departmentSearch');
         const filterButtons = document.querySelectorAll('.department-filter');
@@ -719,16 +771,16 @@
         const activeDepartments = document.getElementById('activeDepartments');
         const inactiveDepartments = document.getElementById('inactiveDepartments');
         const totalMembers = document.getElementById('totalMembers');
-        
+
         // Initialize
         init();
-        
+
         function init() {
             renderDepartments();
             updateQuickStats();
             setupEventListeners();
         }
-        
+
         function setupEventListeners() {
             // Search functionality
             if (departmentSearch) {
@@ -736,10 +788,10 @@
                     filterDepartments();
                 }, 300));
             }
-            
+
             // Filter buttons
             filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     // Remove active class from all buttons
                     filterButtons.forEach(btn => btn.classList.remove('active'));
                     // Add active class to clicked button
@@ -749,37 +801,37 @@
                     filterDepartments();
                 });
             });
-            
+
             // Add department button
             if (addDepartmentBtn) {
                 addDepartmentBtn.addEventListener('click', showAddDepartmentModal);
             }
-            
+
             // Close details button
             if (closeDetailsBtn) {
                 closeDetailsBtn.addEventListener('click', clearSelectedDepartment);
             }
-            
+
             // Pagination
             if (prevPage) {
                 prevPage.addEventListener('click', () => changePage(currentPage - 1));
             }
-            
+
             if (nextPage) {
                 nextPage.addEventListener('click', () => changePage(currentPage + 1));
             }
         }
-        
+
         function renderDepartments() {
             if (!departmentsList) return;
-            
+
             departmentsList.innerHTML = '';
-            
+
             // Get current page departments
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const pageDepartments = filteredDepartments.slice(startIndex, endIndex);
-            
+
             if (pageDepartments.length === 0) {
                 emptyState.classList.remove('hidden');
                 departmentsList.classList.add('hidden');
@@ -787,15 +839,15 @@
                 updateShowingCount();
                 return;
             }
-            
+
             emptyState.classList.add('hidden');
             departmentsList.classList.remove('hidden');
-            
+
             pageDepartments.forEach(dept => {
                 const deptElement = document.createElement('div');
                 deptElement.className = `department-item ${selectedDepartmentId === dept.id ? 'selected' : ''}`;
                 deptElement.dataset.departmentId = dept.id;
-                
+
                 deptElement.innerHTML = `
                     <div class="col-span-3">
                         <div class="font-medium text-[#5A516B]">${dept.name}</div>
@@ -818,57 +870,57 @@
                         </button>
                     </div>
                 `;
-                
+
                 // Add click event for selecting department
                 deptElement.addEventListener('click', (e) => {
                     if (!e.target.closest('.department-action-btn')) {
                         selectDepartment(dept.id);
                     }
                 });
-                
+
                 // Add action menu event
                 const actionBtn = deptElement.querySelector('.department-action-btn');
                 actionBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     showDepartmentActionsMenu(e.target.closest('button'), dept);
                 });
-                
+
                 departmentsList.appendChild(deptElement);
             });
-            
+
             updatePagination();
             updateShowingCount();
         }
-        
+
         function filterDepartments() {
             const searchTerm = departmentSearch ? departmentSearch.value.toLowerCase().trim() : '';
-            
+
             filteredDepartments = departmentsData.filter(dept => {
                 // Apply search filter
                 if (searchTerm) {
-                    if (!dept.name.toLowerCase().includes(searchTerm) && 
+                    if (!dept.name.toLowerCase().includes(searchTerm) &&
                         !dept.description.toLowerCase().includes(searchTerm) &&
                         !dept.detailedDescription.toLowerCase().includes(searchTerm)) {
                         return false;
                     }
                 }
-                
+
                 // Apply status filter
                 if (currentFilter !== 'all' && dept.status !== currentFilter) {
                     return false;
                 }
-                
+
                 return true;
             });
-            
+
             currentPage = 1;
             renderDepartments();
             updateQuickStats();
         }
-        
+
         function selectDepartment(departmentId) {
             selectedDepartmentId = departmentId;
-            
+
             // Update selected row styling
             document.querySelectorAll('.department-item').forEach(row => {
                 row.classList.remove('selected');
@@ -876,19 +928,19 @@
                     row.classList.add('selected');
                 }
             });
-            
+
             // Load department details
             loadDepartmentDetails(departmentId);
         }
-        
+
         function clearSelectedDepartment() {
             selectedDepartmentId = null;
-            
+
             // Clear selected styling
             document.querySelectorAll('.department-item').forEach(row => {
                 row.classList.remove('selected');
             });
-            
+
             // Clear details panel
             departmentDetails.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-8 text-center">
@@ -899,11 +951,11 @@
                 </div>
             `;
         }
-        
+
         function loadDepartmentDetails(departmentId) {
             const dept = departmentsData.find(d => d.id === departmentId);
             if (!dept) return;
-            
+
             const detailsHtml = `
                 <div class="animate-fadeIn">
                     <!-- Department Header -->
@@ -981,10 +1033,10 @@
                         <div class="flex items-start gap-2">
                             <i class="fas fa-sticky-note text-[#434264] mt-1"></i>
                             <p class="text-[10px] text-text-dark/70 leading-tight">
-                                ${dept.name === 'IT Support' 
-                                    ? 'New Technical Support tickets are assigned to this department by default.'
-                                    : `${dept.name} handles specialized tickets related to their expertise.`
-                                }
+                                ${dept.name === 'IT Support'
+                    ? 'New Technical Support tickets are assigned to this department by default.'
+                    : `${dept.name} handles specialized tickets related to their expertise.`
+                }
                             </p>
                         </div>
                     </div>
@@ -1000,45 +1052,45 @@
                     </div>
                 </div>
             `;
-            
+
             departmentDetails.innerHTML = detailsHtml;
-            
+
             // Add event listeners to action buttons
             setTimeout(() => {
                 const editBtn = departmentDetails.querySelector('.edit-department-btn');
                 const toggleBtn = departmentDetails.querySelector('.toggle-status-btn');
-                
+
                 if (editBtn) {
                     editBtn.addEventListener('click', () => editDepartment(dept.id));
                 }
-                
+
                 if (toggleBtn) {
                     toggleBtn.addEventListener('click', () => toggleDepartmentStatus(dept.id));
                 }
             }, 100);
         }
-        
+
         function showDepartmentActionsMenu(button, department) {
             // Remove existing menus
             document.querySelectorAll('.department-actions-menu').forEach(menu => menu.remove());
-            
+
             // Create menu from template
             const template = document.getElementById('departmentActionsMenuTemplate');
             const menu = template.content.cloneNode(true);
             const menuElement = menu.querySelector('.department-actions-menu');
-            
+
             // Update toggle status text
             const toggleText = menuElement.querySelector('.toggle-status-text');
             if (toggleText) {
                 toggleText.textContent = department.status === 'active' ? 'Deactivate' : 'Activate';
             }
-            
+
             // Position menu
             const rect = button.getBoundingClientRect();
             menuElement.style.position = 'fixed';
             menuElement.style.top = `${rect.bottom + window.scrollY + 5}px`;
             menuElement.style.left = `${rect.left + window.scrollX - 180}px`;
-            
+
             // Add event listeners to menu items
             const menuItems = menuElement.querySelectorAll('.menu-item');
             menuItems.forEach(item => {
@@ -1047,9 +1099,9 @@
                     handleDepartmentAction(department, item.classList);
                 });
             });
-            
+
             document.body.appendChild(menuElement);
-            
+
             // Close menu when clicking outside
             setTimeout(() => {
                 const closeMenu = (e) => {
@@ -1061,7 +1113,7 @@
                 document.addEventListener('click', closeMenu);
             });
         }
-        
+
         function handleDepartmentAction(department, classList) {
             if (classList.contains('view-details')) {
                 selectDepartment(department.id);
@@ -1073,15 +1125,15 @@
                 toggleDepartmentStatus(department.id);
             }
         }
-        
+
         function showAddDepartmentModal() {
             // Create modal from template
             const template = document.getElementById('addDepartmentModalTemplate');
             const modal = document.importNode(template.content, true);
-            
+
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
-            
+
             // Add event listeners
             const closeButtons = modal.querySelectorAll('.close-modal');
             closeButtons.forEach(btn => {
@@ -1090,27 +1142,27 @@
                     document.body.style.overflow = 'auto';
                 });
             });
-            
+
             const confirmBtn = modal.querySelector('#confirmAddDepartment');
             confirmBtn.addEventListener('click', () => {
                 createNewDepartment(modal);
             });
         }
-        
+
         function editDepartment(departmentId) {
             const dept = departmentsData.find(d => d.id === departmentId);
             if (!dept) return;
-            
+
             // Create modal from template
             const template = document.getElementById('editDepartmentModalTemplate');
             const modal = document.importNode(template.content, true);
-            
+
             // Fill modal data
             modal.querySelector('#editDepartmentName').value = dept.name;
             modal.querySelector('#editDepartmentDescription').value = dept.description;
             modal.querySelector('#editDepartmentStatus').value = dept.status;
             modal.querySelector('#editDepartmentHead').value = dept.head || '';
-            
+
             // Set category checkboxes
             dept.categories.forEach(cat => {
                 const checkboxId = `editCat${cat.replace(/\s+/g, '')}`;
@@ -1119,10 +1171,10 @@
                     checkbox.checked = true;
                 }
             });
-            
+
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
-            
+
             // Add event listeners
             const closeButtons = modal.querySelectorAll('.close-modal');
             closeButtons.forEach(btn => {
@@ -1131,30 +1183,30 @@
                     document.body.style.overflow = 'auto';
                 });
             });
-            
+
             const confirmBtn = modal.querySelector('#confirmEditDepartment');
             confirmBtn.addEventListener('click', () => {
                 updateDepartment(departmentId, modal);
             });
         }
-        
+
         function createNewDepartment(modal) {
             const name = modal.querySelector('#departmentName').value.trim();
             const description = modal.querySelector('#departmentDescription').value.trim();
             const status = modal.querySelector('#departmentStatus').value;
             const head = modal.querySelector('#departmentHead').value.trim();
-            
+
             if (!name || !description) {
                 alert('Please fill in all required fields');
                 return;
             }
-            
+
             // Get selected categories
             const categories = [];
             if (modal.querySelector('#catBug').checked) categories.push('Bug');
             if (modal.querySelector('#catTechnical').checked) categories.push('Technical Support');
             if (modal.querySelector('#catFeature').checked) categories.push('Feature Request');
-            
+
             // Create new department
             const newDept = {
                 id: Math.max(...departmentsData.map(d => d.id)) + 1,
@@ -1168,47 +1220,47 @@
                 categories: categories.length > 0 ? categories : ['General'],
                 icon: getRandomIcon(),
                 head: head || 'Not assigned',
-                created: new Date().toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                created: new Date().toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                 })
             };
-            
+
             // Add to departments data
             departmentsData.push(newDept);
-            
+
             // Close modal
             document.body.removeChild(modal.querySelector('.fixed'));
             document.body.style.overflow = 'auto';
-            
+
             // Update UI
             filterDepartments();
             selectDepartment(newDept.id);
-            
+
             showToast(`Department "${name}" created successfully!`, 'success');
         }
-        
+
         function updateDepartment(departmentId, modal) {
             const dept = departmentsData.find(d => d.id === departmentId);
             if (!dept) return;
-            
+
             const name = modal.querySelector('#editDepartmentName').value.trim();
             const description = modal.querySelector('#editDepartmentDescription').value.trim();
             const status = modal.querySelector('#editDepartmentStatus').value;
             const head = modal.querySelector('#editDepartmentHead').value.trim();
-            
+
             if (!name || !description) {
                 alert('Please fill in all required fields');
                 return;
             }
-            
+
             // Get selected categories
             const categories = [];
             if (modal.querySelector('#editCatBug').checked) categories.push('Bug');
             if (modal.querySelector('#editCatTechnical').checked) categories.push('Technical Support');
             if (modal.querySelector('#editCatFeature').checked) categories.push('Feature Request');
-            
+
             // Update department data
             dept.name = name;
             dept.description = description;
@@ -1216,82 +1268,82 @@
             dept.status = status;
             dept.head = head || 'Not assigned';
             dept.categories = categories.length > 0 ? categories : ['General'];
-            
+
             // Close modal
             document.body.removeChild(modal.querySelector('.fixed'));
             document.body.style.overflow = 'auto';
-            
+
             // Update UI
             renderDepartments();
             if (selectedDepartmentId === departmentId) {
                 loadDepartmentDetails(departmentId);
             }
-            
+
             showToast('Department updated successfully!', 'success');
         }
-        
+
         function toggleDepartmentStatus(departmentId) {
             const dept = departmentsData.find(d => d.id === departmentId);
             if (!dept) return;
-            
+
             const newStatus = dept.status === 'active' ? 'inactive' : 'active';
             const action = newStatus === 'active' ? 'activate' : 'deactivate';
-            
+
             if (confirm(`Are you sure you want to ${action} this department?`)) {
                 // Update department status
                 dept.status = newStatus;
-                
+
                 // Update UI
                 renderDepartments();
                 if (selectedDepartmentId === departmentId) {
                     loadDepartmentDetails(departmentId);
                 }
-                
+
                 updateQuickStats();
-                
+
                 showToast(`Department ${action}d successfully`, 'success');
             }
         }
-        
+
         function manageDepartmentMembers(departmentId) {
             const dept = departmentsData.find(d => d.id === departmentId);
             if (!dept) return;
-            
+
             showToast(`Manage members for ${dept.name} department`, 'info');
             // In a real app, this would open a member management interface
         }
-        
+
         function updateQuickStats() {
             const total = departmentsData.length;
             const active = departmentsData.filter(d => d.status === 'active').length;
             const inactive = total - active;
             const members = departmentsData.reduce((sum, dept) => sum + dept.members, 0);
-            
+
             totalDepartments.textContent = total;
             activeDepartments.textContent = active;
             inactiveDepartments.textContent = inactive;
             totalMembers.textContent = members;
         }
-        
+
         function updatePagination() {
             const totalPages = Math.max(1, Math.ceil(filteredDepartments.length / itemsPerPage));
-            
+
             if (currentPage > totalPages) {
                 currentPage = totalPages;
             }
-            
+
             // Update pagination info
             if (paginationInfo) {
                 paginationInfo.textContent = `Page ${currentPage} of ${totalPages}`;
             }
-            
+
             // Update page numbers
             if (pageNumbers) {
                 pageNumbers.innerHTML = '';
-                
+
                 // Always show first page
                 addPageButton(1);
-                
+
                 // Show ellipsis if needed
                 if (currentPage > 3) {
                     const ellipsis = document.createElement('span');
@@ -1299,15 +1351,15 @@
                     ellipsis.textContent = '...';
                     pageNumbers.appendChild(ellipsis);
                 }
-                
+
                 // Show pages around current page
                 const startPage = Math.max(2, currentPage - 1);
                 const endPage = Math.min(totalPages - 1, currentPage + 1);
-                
+
                 for (let i = startPage; i <= endPage; i++) {
                     addPageButton(i);
                 }
-                
+
                 // Show ellipsis if needed
                 if (currentPage < totalPages - 2) {
                     const ellipsis = document.createElement('span');
@@ -1315,23 +1367,23 @@
                     ellipsis.textContent = '...';
                     pageNumbers.appendChild(ellipsis);
                 }
-                
+
                 // Always show last page if not first
                 if (totalPages > 1) {
                     addPageButton(totalPages);
                 }
             }
-            
+
             // Update prev/next buttons
             if (prevPage) {
                 prevPage.disabled = currentPage === 1;
             }
-            
+
             if (nextPage) {
                 nextPage.disabled = currentPage === totalPages;
             }
         }
-        
+
         function addPageButton(page) {
             const button = document.createElement('button');
             button.className = `w-8 h-8 flex items-center justify-center rounded-lg ${currentPage === page ? 'bg-secondary text-white' : 'bg-white/20 hover:bg-secondary/20'} transition-colors`;
@@ -1339,32 +1391,32 @@
             button.addEventListener('click', () => changePage(page));
             pageNumbers.appendChild(button);
         }
-        
+
         function changePage(page) {
             if (page < 1 || page > Math.ceil(filteredDepartments.length / itemsPerPage)) return;
-            
+
             currentPage = page;
             renderDepartments();
-            
+
             // Scroll to top of list
             if (departmentsList) {
                 departmentsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
-        
+
         function updateShowingCount() {
             const startIndex = (currentPage - 1) * itemsPerPage + 1;
             const endIndex = Math.min(startIndex + itemsPerPage - 1, filteredDepartments.length);
-            
+
             if (showingCount) {
                 showingCount.textContent = `${startIndex}-${endIndex}`;
             }
-            
+
             if (totalCount) {
                 totalCount.textContent = filteredDepartments.length;
             }
         }
-        
+
         // Utility functions
         function getRandomIcon() {
             const icons = [
@@ -1381,7 +1433,7 @@
             ];
             return icons[Math.floor(Math.random() * icons.length)];
         }
-        
+
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -1393,36 +1445,34 @@
                 timeout = setTimeout(later, wait);
             };
         }
-        
+
         function showToast(message, type = 'info') {
             // Remove existing toasts
             document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-            
+
             const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${
-                type === 'error' ? 'bg-red-500 text-white' : 
-                type === 'success' ? 'bg-green-500 text-white' : 
-                'bg-blue-500 text-white'
-            }`;
+            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
+                    type === 'success' ? 'bg-green-500 text-white' :
+                        'bg-blue-500 text-white'
+                }`;
             toast.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <i class="fas ${
-                        type === 'error' ? 'fa-exclamation-circle' : 
-                        type === 'success' ? 'fa-check-circle' : 
+                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                    type === 'success' ? 'fa-check-circle' :
                         'fa-info-circle'
-                    }"></i>
+                }"></i>
                     <span class="text-sm">${message}</span>
                 </div>
             `;
             document.body.appendChild(toast);
-            
+
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-10px)';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-        
+
         // Auto-select first department on load
         setTimeout(() => {
             if (departmentsData.length > 0) {

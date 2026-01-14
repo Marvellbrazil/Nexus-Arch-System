@@ -59,7 +59,8 @@ $routes->group('admin', function ($routes) {
 
 // Customer Routes
 $routes->group('customer', function ($routes) {
-    $routes->get('', function() { return redirect()->to('customer/dashboard'); });
+    $routes->get('', function () {
+        return redirect()->to('customer/dashboard'); });
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
@@ -84,7 +85,7 @@ $routes->group('support', function ($routes) {
     $routes->get('notifications', [SupportController::class, 'notifications']);
     $routes->get('profile', [SupportController::class, 'profile']);
     $routes->get('logout', [AuthController::class, 'logout']);
-    
+
     // POST routes
     $routes->post('notifications/mark_all_read', [SupportController::class, 'markAllRead']); // NEW: untuk mark all
     $routes->post('ticket/assign/(:num)', [SupportController::class, 'assignTicket/$1']);
@@ -93,14 +94,14 @@ $routes->group('support', function ($routes) {
     $routes->post('tickets/load_more', [SupportController::class, 'loadMoreTickets']); // For tickets in progress
     $routes->post('update_profile', [SupportController::class, 'updateProfile']); // NEW: update profile
     $routes->post('update_status', [SupportController::class, 'updateStatus']); // NEW: update agent status
-    
+
     $routes->group('notifications', function ($routes) {
         $routes->post('mark_read', [SupportController::class, 'markNotificationRead']);
         $routes->post('load_more', [SupportController::class, 'loadMoreNotifications']);
         $routes->get('get', [SupportController::class, 'getNotifications']);
         $routes->get('unread_count', [SupportController::class, 'getUnreadCount']);
     });
-    
+
     $routes->group('ajax', function ($routes) {
         $routes->post('update_agent_status', [SupportController::class, 'updateAgentStatus']);
         $routes->get('get_agent_stats', [SupportController::class, 'getAgentStats']);

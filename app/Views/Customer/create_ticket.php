@@ -19,118 +19,118 @@
 <!-- CKEditor 5 CDN -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <style>
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
 
-::-webkit-scrollbar-track {
-    background: #F0E9F9;
-    border-radius: 10px;
-}
+    ::-webkit-scrollbar-track {
+        background: #F0E9F9;
+        border-radius: 10px;
+    }
 
-::-webkit-scrollbar-thumb {
-    background: #756EA4;
-    border-radius: 10px;
-}
+    ::-webkit-scrollbar-thumb {
+        background: #756EA4;
+        border-radius: 10px;
+    }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #665C9E;
-}
+    ::-webkit-scrollbar-thumb:hover {
+        background: #665C9E;
+    }
 
-/* Smooth transitions */
-.smooth-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    /* Smooth transitions */
+    .smooth-transition {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* CKEditor Custom Styling */
-.ck-editor__editable {
-    min-height: 150px;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 0.5rem !important;
-    padding: 0.75rem !important;
-}
-
-.ck-editor__editable:focus {
-    border-color: #756EA4 !important;
-    box-shadow: 0 0 0 3px rgba(117, 110, 164, 0.1) !important;
-}
-
-.ck.ck-editor {
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-.ck.ck-toolbar {
-    background: #f9fafb !important;
-    border: 1px solid #e5e7eb !important;
-    border-bottom: none !important;
-    border-radius: 0.5rem 0.5rem 0 0 !important;
-}
-
-.ck.ck-toolbar .ck-button {
-    color: #6b7280 !important;
-}
-
-.ck.ck-toolbar .ck-button:hover {
-    background: #e5e7eb !important;
-}
-
-/* Priority Selection Styles */
-.priority-card {
-    transition: all 0.3s ease;
-}
-
-.priority-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.priority-card.selected {
-    border-color: #756EA4;
-    background-color: rgba(117, 110, 164, 0.05);
-    box-shadow: 0 5px 15px rgba(117, 110, 164, 0.2);
-}
-
-/* Project Selection Styles */
-.project-card {
-    transition: all 0.3s ease;
-}
-
-.project-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.category-card {
-    transition: all 0.3s ease;
-}
-
-.category-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Mobile Responsive Adjustments */
-@media (max-width: 768px) {
+    /* CKEditor Custom Styling */
     .ck-editor__editable {
-        min-height: 120px;
-        max-height: 250px;
-    }
-
-    .priority-card,
-    .project-card,
-    .category-card {
-        padding: 0.5rem !important;
-    }
-
-    .selected-project-card {
+        min-height: 150px;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 0.5rem !important;
         padding: 0.75rem !important;
     }
-}
+
+    .ck-editor__editable:focus {
+        border-color: #756EA4 !important;
+        box-shadow: 0 0 0 3px rgba(117, 110, 164, 0.1) !important;
+    }
+
+    .ck.ck-editor {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .ck.ck-toolbar {
+        background: #f9fafb !important;
+        border: 1px solid #e5e7eb !important;
+        border-bottom: none !important;
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    .ck.ck-toolbar .ck-button {
+        color: #6b7280 !important;
+    }
+
+    .ck.ck-toolbar .ck-button:hover {
+        background: #e5e7eb !important;
+    }
+
+    /* Priority Selection Styles */
+    .priority-card {
+        transition: all 0.3s ease;
+    }
+
+    .priority-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .priority-card.selected {
+        border-color: #756EA4;
+        background-color: rgba(117, 110, 164, 0.05);
+        box-shadow: 0 5px 15px rgba(117, 110, 164, 0.2);
+    }
+
+    /* Project Selection Styles */
+    .project-card {
+        transition: all 0.3s ease;
+    }
+
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-card {
+        transition: all 0.3s ease;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Mobile Responsive Adjustments */
+    @media (max-width: 768px) {
+        .ck-editor__editable {
+            min-height: 120px;
+            max-height: 250px;
+        }
+
+        .priority-card,
+        .project-card,
+        .category-card {
+            padding: 0.5rem !important;
+        }
+
+        .selected-project-card {
+            padding: 0.75rem !important;
+        }
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -139,10 +139,11 @@
 
 use CodeIgniter\Database\Config;
 
-function getProjectColor($id) {
+function getProjectColor($id)
+{
     $colors = [
         'from-blue-500 to-blue-600',
-        'from-green-500 to-green-600', 
+        'from-green-500 to-green-600',
         'from-purple-500 to-purple-600',
         'from-orange-500 to-orange-600',
         'from-pink-500 to-pink-600',
@@ -190,91 +191,87 @@ function getProjectColor($id) {
                         </label>
 
                         <?php if (!empty($data['projects'])): ?>
-                        <!-- Project Selection Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6"
-                            id="projectSelectionGrid">
-                            <?php foreach ($data['projects'] as $project): 
+                            <!-- Project Selection Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6"
+                                id="projectSelectionGrid">
+                                <?php foreach ($data['projects'] as $project):
                                     $isSelected = isset($selected_project['project_id']) && $selected_project['project_id'] == $project['project_id'];
                                     $projectColor = getProjectColor($project['project_id']);
-                                ?>
-                            <div class="relative">
-                                <input type="radio"
-                                    id="project_<?= $project['project_id'] ?>" 
-                                    name="project_id"
-                                    value="<?= $project['project_id'] ?>" 
-                                    class="hidden peer project-radio"
-                                    data-name="<?= esc($project['project_name']) ?>"
-                                    data-code="<?= esc($project['project_code']) ?>"
-                                    data-count="<?= $project['ticket_count'] ?? 0 ?>"
-                                    required>
-                                <label for="project_<?= $project['project_id'] ?>"
-                                    class="block p-4 md:p-5 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br <?= $projectColor ?> peer-checked:text-white project-card">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex items-start gap-3 md:gap-4">
-                                            <div
-                                                class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center flex">
-                                                <i class="fas fa-project-diagram text-lg md:text-xl"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <h4
-                                                    class="text-lg md:text-xl font-bold mb-1 peer-checked:text-white">
-                                                    <?= esc($project['project_name']) ?></h4>
-                                                <p
-                                                    class="text-sm md:text-base mb-2 peer-checked:text-white/90">
-                                                    <?= esc($project['description'] ?? 'No description') ?></p>
-                                                <div class="flex items-center gap-4">
-                                                    <span
-                                                        class="inline-flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-xs md:text-sm">
-                                                        <i class="fas fa-ticket-alt"></i>
-                                                        <?= $project['ticket_count'] ?? 0 ?> tickets
-                                                    </span>
-                                                    <span class="text-xs md:text-sm font-medium">
-                                                        Code: <?= esc($project['project_code']) ?>
-                                                    </span>
+                                    ?>
+                                    <div class="relative">
+                                        <input type="radio" id="project_<?= $project['project_id'] ?>" name="project_id"
+                                            value="<?= $project['project_id'] ?>" class="hidden peer project-radio"
+                                            data-name="<?= esc($project['project_name']) ?>"
+                                            data-code="<?= esc($project['project_code']) ?>"
+                                            data-count="<?= $project['ticket_count'] ?? 0 ?>" required>
+                                        <label for="project_<?= $project['project_id'] ?>"
+                                            class="block p-4 md:p-5 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br <?= $projectColor ?> peer-checked:text-white project-card">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex items-start gap-3 md:gap-4">
+                                                    <div
+                                                        class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center flex">
+                                                        <i class="fas fa-project-diagram text-lg md:text-xl"></i>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <h4 class="text-lg md:text-xl font-bold mb-1 peer-checked:text-white">
+                                                            <?= esc($project['project_name']) ?>
+                                                        </h4>
+                                                        <p class="text-sm md:text-base mb-2 peer-checked:text-white/90">
+                                                            <?= esc($project['description'] ?? 'No description') ?>
+                                                        </p>
+                                                        <div class="flex items-center gap-4">
+                                                            <span
+                                                                class="inline-flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-xs md:text-sm">
+                                                                <i class="fas fa-ticket-alt"></i>
+                                                                <?= $project['ticket_count'] ?? 0 ?> tickets
+                                                            </span>
+                                                            <span class="text-xs md:text-sm font-medium">
+                                                                Code: <?= esc($project['project_code']) ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                                <?php if ($isSelected): ?>
+                                                    <div
+                                                        class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                                        <i class="fas fa-check text-white"></i>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
-                                        </div>
-                                        <?php if ($isSelected): ?>
-                                        <div
-                                            class="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-check text-white"></i>
-                                        </div>
-                                        <?php endif; ?>
+                                        </label>
                                     </div>
-                                </label>
+                                <?php endforeach; ?>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div id="selectedProjectInfo"
-                            class="<?= isset($selected_project) ? '' : 'hidden' ?> p-4 md:p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white shadow-lg mb-3">
-                            <div class="flex items-center justify-between mb-2">
-                                <div>
-                                    <h4 class="text-white text-lg md:text-xl font-bold">
-                                        <i class="fas fa-check-circle mr-2"></i>
-                                        Ready to Create Ticket
-                                    </h4>
-                                    <p class="text-white/90 text-sm md:text-base">
-                                        Ticket will be created under: <span class="font-bold"
-                                            id="selectedProjectName"><?= isset($selected_project) ? esc($selected_project['project_name']) : '' ?></span>
-                                    </p>
+                            <div id="selectedProjectInfo"
+                                class="<?= isset($selected_project) ? '' : 'hidden' ?> p-4 md:p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white shadow-lg mb-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h4 class="text-white text-lg md:text-xl font-bold">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            Ready to Create Ticket
+                                        </h4>
+                                        <p class="text-white/90 text-sm md:text-base">
+                                            Ticket will be created under: <span class="font-bold"
+                                                id="selectedProjectName"><?= isset($selected_project) ? esc($selected_project['project_name']) : '' ?></span>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
                         <?php else: ?>
-                        <!-- No Projects Available -->
-                        <div class="p-6 md:p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-center">
-                            <i class="fas fa-folder-open text-3xl md:text-4xl text-gray-400 mb-3 md:mb-4"></i>
-                            <h4 class="text-text-dark text-lg md:text-xl font-bold mb-2">No Projects Assigned</h4>
-                            <p class="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
-                                You don't have access to any projects yet. Please contact your administrator.
-                            </p>
-                            <a href="<?= base_url('customer/dashboard') ?>"
-                                class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] smooth-transition font-medium inline-flex items-center justify-center text-sm md:text-base">
-                                <i class="fas fa-arrow-left mr-2"></i>
-                                Back to Dashboard
-                            </a>
-                        </div>
+                            <!-- No Projects Available -->
+                            <div class="p-6 md:p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-center">
+                                <i class="fas fa-folder-open text-3xl md:text-4xl text-gray-400 mb-3 md:mb-4"></i>
+                                <h4 class="text-text-dark text-lg md:text-xl font-bold mb-2">No Projects Assigned</h4>
+                                <p class="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
+                                    You don't have access to any projects yet. Please contact your administrator.
+                                </p>
+                                <a href="<?= base_url('customer/dashboard') ?>"
+                                    class="px-4 md:px-6 py-2 md:py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] smooth-transition font-medium inline-flex items-center justify-center text-sm md:text-base">
+                                    <i class="fas fa-arrow-left mr-2"></i>
+                                    Back to Dashboard
+                                </a>
+                            </div>
                         <?php endif; ?>
                     </div>
 
@@ -303,22 +300,23 @@ function getProjectColor($id) {
                         </label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                             <?php foreach ($data['categories'] as $category): ?>
-                            <div class="relative">
-                                <input type="radio" id="cat_<?= $category['category_id'] ?>" name="category_id"
-                                    value="<?= $category['category_id'] ?>" class="hidden peer" required>
-                                <label for="cat_<?= $category['category_id'] ?>"
-                                    class="block p-3 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-secondary/10 category-card">
-                                    <div class="text-center">
-                                        <div
-                                            class="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 rounded-full bg-secondary/20 flex items-center justify-center">
-                                            <i class="fas fa-folder text-secondary text-xs md:text-sm"></i>
+                                <div class="relative">
+                                    <input type="radio" id="cat_<?= $category['category_id'] ?>" name="category_id"
+                                        value="<?= $category['category_id'] ?>" class="hidden peer" required>
+                                    <label for="cat_<?= $category['category_id'] ?>"
+                                        class="block p-3 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-secondary/10 category-card">
+                                        <div class="text-center">
+                                            <div
+                                                class="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 rounded-full bg-secondary/20 flex items-center justify-center">
+                                                <i class="fas fa-folder text-secondary text-xs md:text-sm"></i>
+                                            </div>
+                                            <h4
+                                                class="text-text-dark text-xs md:text-sm font-bold mb-1 peer-checked:text-secondary">
+                                                <?= esc($category['category_name']) ?>
+                                            </h4>
                                         </div>
-                                        <h4
-                                            class="text-text-dark text-xs md:text-sm font-bold mb-1 peer-checked:text-secondary">
-                                            <?= esc($category['category_name']) ?></h4>
-                                    </div>
-                                </label>
-                            </div>
+                                    </label>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -331,30 +329,32 @@ function getProjectColor($id) {
                         </label>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                             <?php foreach ($data['priorities'] as $priority): ?>
-                            <div class="relative">
-                                <input type="radio" id="pri_<?= $priority['priority_id'] ?>" name="priority_id"
-                                    value="<?= $priority['priority_id'] ?>" class="hidden peer" required>
-                                <label for="pri_<?= $priority['priority_id'] ?>"
-                                    class="block p-2 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br peer-checked:<?= getPriorityColor($priority['priority_id']) ?> peer-checked:text-white priority-card">
-                                    <div class="text-center">
-                                        <div
-                                            class="w-6 h-6 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 rounded-full <?= getPriorityBgColor($priority['priority_id']) ?> flex items-center justify-center">
-                                            <i
-                                                class="fas <?= getPriorityIcon($priority['priority_name']) ?> <?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-base peer-checked:text-white"></i>
+                                <div class="relative">
+                                    <input type="radio" id="pri_<?= $priority['priority_id'] ?>" name="priority_id"
+                                        value="<?= $priority['priority_id'] ?>" class="hidden peer" required>
+                                    <label for="pri_<?= $priority['priority_id'] ?>"
+                                        class="block p-2 md:p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br peer-checked:<?= getPriorityColor($priority['priority_id']) ?> peer-checked:text-white priority-card">
+                                        <div class="text-center">
+                                            <div
+                                                class="w-6 h-6 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 rounded-full <?= getPriorityBgColor($priority['priority_id']) ?> flex items-center justify-center">
+                                                <i
+                                                    class="fas <?= getPriorityIcon($priority['priority_name']) ?> <?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-base peer-checked:text-white"></i>
+                                            </div>
+                                            <h4
+                                                class="<?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-sm font-bold mb-1 peer-checked:text-white">
+                                                <?= $priority['priority_name'] ?>
+                                            </h4>
+                                            <p
+                                                class="text-gray-600 text-xs mb-1 md:mb-2 peer-checked:text-white/80 hidden md:block">
+                                                <?= getPriorityDescription($priority['priority_name']) ?>
+                                            </p>
+                                            <span
+                                                class="text-xs <?= getPriorityTextColor($priority['priority_id']) ?> font-medium hidden md:inline peer-checked:text-white">
+                                                <?= getPriorityResponseTime($priority['priority_name']) ?>
+                                            </span>
                                         </div>
-                                        <h4
-                                            class="<?= getPriorityTextColor($priority['priority_id']) ?> text-xs md:text-sm font-bold mb-1 peer-checked:text-white">
-                                            <?= $priority['priority_name'] ?></h4>
-                                        <p
-                                            class="text-gray-600 text-xs mb-1 md:mb-2 peer-checked:text-white/80 hidden md:block">
-                                            <?= getPriorityDescription($priority['priority_name']) ?></p>
-                                        <span
-                                            class="text-xs <?= getPriorityTextColor($priority['priority_id']) ?> font-medium hidden md:inline peer-checked:text-white">
-                                            <?= getPriorityResponseTime($priority['priority_name']) ?>
-                                        </span>
-                                    </div>
-                                </label>
-                            </div>
+                                    </label>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -446,55 +446,55 @@ function getProjectColor($id) {
 
                 <div class="space-y-3 md:space-y-4" id="projectInfoContent">
                     <?php if (isset($selected_project)): ?>
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div
-                            class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div
+                                class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Total Tickets</h4>
+                                <p class="text-gray-300 text-xs"><?= $selected_project['ticket_count'] ?? 0 ?> tickets in
+                                    this project</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Total Tickets</h4>
-                            <p class="text-gray-300 text-xs"><?= $selected_project['ticket_count'] ?? 0 ?> tickets in
-                                this project</p>
-                        </div>
-                    </div>
 
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div
-                            class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-code text-accent text-xs md:text-sm"></i>
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div
+                                class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-code text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Project Code</h4>
+                                <p class="text-gray-300 text-xs"><?= esc($selected_project['project_code']) ?></p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Project Code</h4>
-                            <p class="text-gray-300 text-xs"><?= esc($selected_project['project_code']) ?></p>
-                        </div>
-                    </div>
 
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div
-                            class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-clock text-accent text-xs md:text-sm"></i>
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div
+                                class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Average Resolution</h4>
+                                <p class="text-gray-300 text-xs">24 hours for similar issues</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Average Resolution</h4>
-                            <p class="text-gray-300 text-xs">24 hours for similar issues</p>
-                        </div>
-                    </div>
 
-                    <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
-                        <div
-                            class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-users text-accent text-xs md:text-sm"></i>
+                        <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg">
+                            <div
+                                class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-users text-accent text-xs md:text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Assigned Team</h4>
+                                <p class="text-gray-300 text-xs">Development & Support Team</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Assigned Team</h4>
-                            <p class="text-gray-300 text-xs">Development & Support Team</p>
-                        </div>
-                    </div>
                     <?php else: ?>
-                    <div class="text-center py-4">
-                        <i class="fas fa-info-circle text-gray-400 text-xl mb-2"></i>
-                        <p class="text-gray-300 text-sm">Select a project to see details</p>
-                    </div>
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle text-gray-400 text-xl mb-2"></i>
+                            <p class="text-gray-300 text-sm">Select a project to see details</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -545,132 +545,132 @@ function getProjectColor($id) {
 </div>
 
 <script>
-let editor;
+    let editor;
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize CKEditor
-    ClassicEditor
-        .create(document.querySelector('#editor-container'), {
-            toolbar: {
-                items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', '|',
-                    'link', '|',
-                    'bulletedList', 'numberedList', '|',
-                    'blockQuote', 'codeBlock', '|',
-                    'undo', 'redo'
-                ],
-                shouldNotGroupWhenFull: true
-            },
-            placeholder: 'Please describe your issue in detail...',
-            language: 'en',
-            link: {
-                addTargetToExternalLinks: true,
-                defaultProtocol: 'https://'
-            },
-            height: '200px'
-        })
-        .then(newEditor => {
-            editor = newEditor;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize CKEditor
+        ClassicEditor
+            .create(document.querySelector('#editor-container'), {
+                toolbar: {
+                    items: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', 'strikethrough', '|',
+                        'link', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'blockQuote', 'codeBlock', '|',
+                        'undo', 'redo'
+                    ],
+                    shouldNotGroupWhenFull: true
+                },
+                placeholder: 'Please describe your issue in detail...',
+                language: 'en',
+                link: {
+                    addTargetToExternalLinks: true,
+                    defaultProtocol: 'https://'
+                },
+                height: '200px'
+            })
+            .then(newEditor => {
+                editor = newEditor;
 
-            // Update character counter on editor content change
-            editor.model.document.on('change:data', () => {
+                // Update character counter on editor content change
+                editor.model.document.on('change:data', () => {
+                    updateDescriptionCounter();
+                });
+
+                // Set initial counter
                 updateDescriptionCounter();
-            });
-
-            // Set initial counter
-            updateDescriptionCounter();
-        })
-        .catch(error => {
-            console.error(error);
-            // Fallback to textarea if CKEditor fails
-            document.querySelector('#editor-container').innerHTML = `
+            })
+            .catch(error => {
+                console.error(error);
+                // Fallback to textarea if CKEditor fails
+                document.querySelector('#editor-container').innerHTML = `
                     <textarea id="descriptionTextarea" name="description" rows="6" 
                               class="w-full p-3 md:p-4 bg-white/70 border border-gray-300 rounded-xl text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 resize-none"
                               placeholder="Please describe your issue in detail..."
                               oninput="updateDescriptionCounter()"
                               required></textarea>
                 `;
-        });
+            });
 
-    const form = document.getElementById('createTicketForm');
-    const titleInput = document.getElementById('ticketTitle');
-    const titleCounter = document.getElementById('titleCounter');
-    const descCounter = document.getElementById('descCounter');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btnText');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('attachments');
-    const fileList = document.getElementById('fileList');
-    let files = [];
+        const form = document.getElementById('createTicketForm');
+        const titleInput = document.getElementById('ticketTitle');
+        const titleCounter = document.getElementById('titleCounter');
+        const descCounter = document.getElementById('descCounter');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('attachments');
+        const fileList = document.getElementById('fileList');
+        let files = [];
 
-    // Character counters
-    function updateTitleCounter() {
-        const titleLength = titleInput.value.length;
-        titleCounter.textContent = `${titleLength}/100 characters`;
-        titleCounter.className =
-            `text-right text-xs mt-1 ${titleLength > 100 ? 'text-red-500' : 'text-gray-500'}`;
-    }
-
-    function updateDescriptionCounter() {
-        let content = '';
-        if (editor) {
-            content = editor.getData();
-        } else {
-            const textarea = document.querySelector('#descriptionTextarea');
-            if (textarea) {
-                content = textarea.value;
-            }
+        // Character counters
+        function updateTitleCounter() {
+            const titleLength = titleInput.value.length;
+            titleCounter.textContent = `${titleLength}/100 characters`;
+            titleCounter.className =
+                `text-right text-xs mt-1 ${titleLength > 100 ? 'text-red-500' : 'text-gray-500'}`;
         }
 
-        // Strip HTML tags for character count
-        const strippedContent = content.replace(/<[^>]*>/g, '');
-        const descLength = strippedContent.length;
-
-        descCounter.textContent = `${descLength} characters`;
-        descCounter.className = `text-xs ${descLength < 50 ? 'text-red-500' : 'text-gray-500'}`;
-
-        // Update hidden input
-        document.getElementById('description').value = content;
-    }
-
-    titleInput.addEventListener('input', updateTitleCounter);
-    updateTitleCounter();
-
-    // File upload handling
-    function handleFiles(selectedFiles) {
-        for (let file of selectedFiles) {
-            if (file.size > 10 * 1024 * 1024) {
-                showToast(`File "${file.name}" exceeds 10MB limit`, 'error');
-                continue;
+        function updateDescriptionCounter() {
+            let content = '';
+            if (editor) {
+                content = editor.getData();
+            } else {
+                const textarea = document.querySelector('#descriptionTextarea');
+                if (textarea) {
+                    content = textarea.value;
+                }
             }
 
-            files.push(file);
-            displayFile(file);
+            // Strip HTML tags for character count
+            const strippedContent = content.replace(/<[^>]*>/g, '');
+            const descLength = strippedContent.length;
+
+            descCounter.textContent = `${descLength} characters`;
+            descCounter.className = `text-xs ${descLength < 50 ? 'text-red-500' : 'text-gray-500'}`;
+
+            // Update hidden input
+            document.getElementById('description').value = content;
         }
 
-        // Update drop zone text
-        dropZone.querySelector('p.text-text-dark').textContent =
-            files.length > 0 ? `${files.length} file(s) selected` : 'Drag & drop files here';
-    }
+        titleInput.addEventListener('input', updateTitleCounter);
+        updateTitleCounter();
 
-    function displayFile(file) {
-        const fileId = Date.now() + Math.random();
-        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-        const fileExtension = file.name.split('.').pop().toUpperCase();
+        // File upload handling
+        function handleFiles(selectedFiles) {
+            for (let file of selectedFiles) {
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast(`File "${file.name}" exceeds 10MB limit`, 'error');
+                    continue;
+                }
 
-        // Get icon based on file type
-        let fileIcon = 'fa-file';
-        if (file.type.startsWith('image/')) fileIcon = 'fa-file-image';
-        else if (file.type.includes('pdf')) fileIcon = 'fa-file-pdf';
-        else if (file.type.includes('word') || file.type.includes('document')) fileIcon = 'fa-file-word';
-        else if (file.type.includes('zip') || file.type.includes('compressed')) fileIcon = 'fa-file-archive';
+                files.push(file);
+                displayFile(file);
+            }
 
-        const fileItem = document.createElement('div');
-        fileItem.className =
-            'flex items-center justify-between p-2 md:p-3 bg-white/80 border border-gray-300 rounded-lg smooth-transition hover:bg-white';
-        fileItem.innerHTML = `
+            // Update drop zone text
+            dropZone.querySelector('p.text-text-dark').textContent =
+                files.length > 0 ? `${files.length} file(s) selected` : 'Drag & drop files here';
+        }
+
+        function displayFile(file) {
+            const fileId = Date.now() + Math.random();
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+            const fileExtension = file.name.split('.').pop().toUpperCase();
+
+            // Get icon based on file type
+            let fileIcon = 'fa-file';
+            if (file.type.startsWith('image/')) fileIcon = 'fa-file-image';
+            else if (file.type.includes('pdf')) fileIcon = 'fa-file-pdf';
+            else if (file.type.includes('word') || file.type.includes('document')) fileIcon = 'fa-file-word';
+            else if (file.type.includes('zip') || file.type.includes('compressed')) fileIcon = 'fa-file-archive';
+
+            const fileItem = document.createElement('div');
+            fileItem.className =
+                'flex items-center justify-between p-2 md:p-3 bg-white/80 border border-gray-300 rounded-lg smooth-transition hover:bg-white';
+            fileItem.innerHTML = `
                 <div class="flex items-center gap-2 md:gap-3">
                     <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
                         <i class="fas ${fileIcon} text-secondary text-sm md:text-base"></i>
@@ -684,107 +684,107 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-times text-xs md:text-sm"></i>
                 </button>
             `;
-        fileItem.dataset.id = fileId;
-        fileItem.dataset.file = file.name;
-        fileList.appendChild(fileItem);
-    }
-
-    window.removeFile = function(fileId) {
-        const fileItem = document.querySelector(`[data-id="${fileId}"]`);
-        if (fileItem) {
-            const fileName = fileItem.dataset.file;
-            files = files.filter(f => f.name !== fileName);
-            fileItem.remove();
-
-            // Reset drop zone text if no files
-            if (files.length === 0) {
-                dropZone.querySelector('p.text-text-dark').textContent = 'Drag & drop files here';
-            }
+            fileItem.dataset.id = fileId;
+            fileItem.dataset.file = file.name;
+            fileList.appendChild(fileItem);
         }
-    };
 
-    // Drag and drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
+        window.removeFile = function (fileId) {
+            const fileItem = document.querySelector(`[data-id="${fileId}"]`);
+            if (fileItem) {
+                const fileName = fileItem.dataset.file;
+                files = files.filter(f => f.name !== fileName);
+                fileItem.remove();
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+                // Reset drop zone text if no files
+                if (files.length === 0) {
+                    dropZone.querySelector('p.text-text-dark').textContent = 'Drag & drop files here';
+                }
+            }
+        };
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
-    });
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
-    });
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
-    function highlight() {
-        dropZone.classList.add('border-secondary', 'bg-secondary/10', 'scale-[1.02]');
-    }
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
 
-    function unhighlight() {
-        dropZone.classList.remove('border-secondary', 'bg-secondary/10', 'scale-[1.02]');
-    }
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
 
-    dropZone.addEventListener('drop', handleDrop, false);
+        function highlight() {
+            dropZone.classList.add('border-secondary', 'bg-secondary/10', 'scale-[1.02]');
+        }
 
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const droppedFiles = dt.files;
-        handleFiles(droppedFiles);
-    }
+        function unhighlight() {
+            dropZone.classList.remove('border-secondary', 'bg-secondary/10', 'scale-[1.02]');
+        }
 
-    // File input change
-    fileInput.addEventListener('change', function(e) {
-        handleFiles(e.target.files);
-        e.target.value = ''; // Reset input
-    });
+        dropZone.addEventListener('drop', handleDrop, false);
 
-    // Toast notification
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className =
-            `fixed top-20 md:top-24 right-4 p-3 rounded-lg shadow-lg z-50 animate-slide-in max-w-xs md:max-w-sm ${type === 'error' ? 'bg-red-500 text-white' : type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`;
-        toast.innerHTML = `
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const droppedFiles = dt.files;
+            handleFiles(droppedFiles);
+        }
+
+        // File input change
+        fileInput.addEventListener('change', function (e) {
+            handleFiles(e.target.files);
+            e.target.value = ''; // Reset input
+        });
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className =
+                `fixed top-20 md:top-24 right-4 p-3 rounded-lg shadow-lg z-50 animate-slide-in max-w-xs md:max-w-sm ${type === 'error' ? 'bg-red-500 text-white' : type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`;
+            toast.innerHTML = `
                 <div class="flex items-start gap-2">
                     <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mt-0.5 flex-shrink-0"></i>
                     <span class="text-xs md:text-sm">${message}</span>
                 </div>
             `;
-        document.body.appendChild(toast);
+            document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
-    }
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
 
-    // Project selection functionality
-    function showProjectSelection() {
-        document.getElementById('selectedProjectInfo').classList.add('hidden');
-    }
+        // Project selection functionality
+        function showProjectSelection() {
+            document.getElementById('selectedProjectInfo').classList.add('hidden');
+        }
 
-    // Update project info when project is selected
-    document.querySelectorAll('.project-radio').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const projectName = this.getAttribute('data-name');
-            const projectCode = this.getAttribute('data-code');
-            const ticketCount = this.getAttribute('data-count');
+        // Update project info when project is selected
+        document.querySelectorAll('.project-radio').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const projectName = this.getAttribute('data-name');
+                const projectCode = this.getAttribute('data-code');
+                const ticketCount = this.getAttribute('data-count');
 
-            // 1. Update Banner "Ready to Create Ticket"
-            document.getElementById('selectedProjectName').textContent = projectName;
-            document.getElementById('selectedProjectInfo').classList.remove('hidden');
+                // 1. Update Banner "Ready to Create Ticket"
+                document.getElementById('selectedProjectName').textContent = projectName;
+                document.getElementById('selectedProjectInfo').classList.remove('hidden');
 
-            // 2. Update Tombol Submit
-            document.getElementById('btnText').textContent = `Create Ticket for ${projectName}`;
+                // 2. Update Tombol Submit
+                document.getElementById('btnText').textContent = `Create Ticket for ${projectName}`;
 
-            // 3. Update Sidebar (Project Information) Secara Dinamis
-            const sidebarContent = document.getElementById('projectInfoContent');
-            sidebarContent.innerHTML = `
+                // 3. Update Sidebar (Project Information) Secara Dinamis
+                const sidebarContent = document.getElementById('projectInfoContent');
+                sidebarContent.innerHTML = `
                 <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg animate-fade-in">
                     <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
@@ -815,173 +815,174 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-        });
-    });
-
-    // Form submission
-    // form.addEventListener('submit', async function(e) {
-    //     e.preventDefault();
-
-    //     // Validate form
-    //     if (!validateForm()) {
-    //         return;
-    //     }
-
-    //     // Show loading
-    //     submitBtn.disabled = true;
-    //     btnText.textContent = 'Creating Ticket...';
-    //     loadingSpinner.classList.remove('hidden');
-
-    //     try {
-    //         const formData = new FormData(form);
-
-    //         // Add files to FormData
-    //         files.forEach(file => {
-    //             formData.append('attachments[]', file);
-    //         });
-
-    //         // Get CKEditor content
-    //         if (editor) {
-    //             formData.set('description', editor.getData());
-    //         }
-
-    //         // Send to server
-    //         const response = await fetch('<?= base_url('customer/process_create_ticket') ?>', {
-    //             method: 'POST',
-    //             body: formData
-    //         });
-
-    //         if (response.ok) {
-    //             const result = await response.json();
-    //             showToast(result.message || 'Ticket created successfully!', 'success');
-
-    //             setTimeout(() => {
-    //                 window.location.href = '<?= base_url('customer/my_tickets') ?>';
-    //             }, 2000);
-    //         } else {
-    //             const error = await response.json();
-    //             throw new Error(error.message || 'Failed to create ticket');
-    //         }
-
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //         showToast(error.message || 'Failed to create ticket. Please try again.', 'error');
-
-    //         // Reset button
-    //         submitBtn.disabled = false;
-    //         btnText.textContent = 'Create Ticket';
-    //         loadingSpinner.classList.add('hidden');
-    //     }
-    // });
-
-    function validateForm() {
-        let isValid = true;
-        const errors = [];
-
-        // Project validation
-        const projectSelected = document.querySelector('input[name="project_id"]:checked');
-        if (!projectSelected) {
-            errors.push('Please select a project');
-            isValid = false;
-        }
-
-        // Title validation
-        if (!titleInput.value.trim()) {
-            errors.push('Ticket title is required');
-            titleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
-            isValid = false;
-        } else if (titleInput.value.length > 100) {
-            errors.push('Title must be 100 characters or less');
-            titleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
-            isValid = false;
-        } else {
-            titleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
-        }
-
-        // Category validation
-        const categorySelected = document.querySelector('input[name="category_id"]:checked');
-        if (!categorySelected) {
-            errors.push('Please select a category');
-            isValid = false;
-        }
-
-        // Priority validation
-        const prioritySelected = document.querySelector('input[name="priority_id"]:checked');
-        if (!prioritySelected) {
-            errors.push('Please select a priority level');
-            isValid = false;
-        }
-
-        // Description validation
-        let descriptionContent = '';
-        if (editor) {
-            descriptionContent = editor.getData();
-        } else {
-            const textarea = document.querySelector('#descriptionTextarea');
-            if (textarea) {
-                descriptionContent = textarea.value;
-            }
-        }
-
-        const strippedContent = descriptionContent.replace(/<[^>]*>/g, '');
-        if (!strippedContent.trim()) {
-            errors.push('Description is required');
-            isValid = false;
-        } else if (strippedContent.length < 50) {
-            errors.push('Please provide more details (at least 50 characters)');
-            isValid = false;
-        }
-
-        // Show errors
-        if (errors.length > 0) {
-            const errorHtml = errors.map(error => `<li class="mb-1 text-xs">• ${error}</li>`).join('');
-            showToast(
-                `<div class="text-left"><p class="font-semibold mb-1 text-xs">Please fix the following:</p><ul>${errorHtml}</ul></div>`,
-                'error');
-        }
-
-        return isValid;
-    }
-
-    // Add priority selection feedback
-    const priorityInputs = document.querySelectorAll('input[name="priority_id"]');
-    priorityInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            // Remove all selected classes first
-            document.querySelectorAll('.priority-card').forEach(card => {
-                card.classList.remove('selected');
             });
-
-            // Add selected class to current
-            const label = document.querySelector(`label[for="${this.id}"]`);
-            if (label) {
-                label.classList.add('selected');
-            }
         });
-    });
 
-    // Add category selection feedback
-    const categoryInputs = document.querySelectorAll('input[name="category_id"]');
-    categoryInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            // Remove all selected classes first
-            document.querySelectorAll('.category-card').forEach(card => {
-                card.classList.remove('selected');
+        // Form submission
+        // form.addEventListener('submit', async function(e) {
+        //     e.preventDefault();
+
+        //     // Validate form
+        //     if (!validateForm()) {
+        //         return;
+        //     }
+
+        //     // Show loading
+        //     submitBtn.disabled = true;
+        //     btnText.textContent = 'Creating Ticket...';
+        //     loadingSpinner.classList.remove('hidden');
+
+        //     try {
+        //         const formData = new FormData(form);
+
+        //         // Add files to FormData
+        //         files.forEach(file => {
+        //             formData.append('attachments[]', file);
+        //         });
+
+        //         // Get CKEditor content
+        //         if (editor) {
+        //             formData.set('description', editor.getData());
+        //         }
+
+        //         // Send to server
+        //         const response = await fetch('<?= base_url('customer/process_create_ticket') ?>', {
+        //             method: 'POST',
+        //             body: formData
+        //         });
+
+        //         if (response.ok) {
+        //             const result = await response.json();
+        //             showToast(result.message || 'Ticket created successfully!', 'success');
+
+        //             setTimeout(() => {
+        //                 window.location.href = '<?= base_url('customer/my_tickets') ?>';
+        //             }, 2000);
+        //         } else {
+        //             const error = await response.json();
+        //             throw new Error(error.message || 'Failed to create ticket');
+        //         }
+
+        //     } catch (error) {
+        //         console.error('Error:', error);
+        //         showToast(error.message || 'Failed to create ticket. Please try again.', 'error');
+
+        //         // Reset button
+        //         submitBtn.disabled = false;
+        //         btnText.textContent = 'Create Ticket';
+        //         loadingSpinner.classList.add('hidden');
+        //     }
+        // });
+
+        function validateForm() {
+            let isValid = true;
+            const errors = [];
+
+            // Project validation
+            const projectSelected = document.querySelector('input[name="project_id"]:checked');
+            if (!projectSelected) {
+                errors.push('Please select a project');
+                isValid = false;
+            }
+
+            // Title validation
+            if (!titleInput.value.trim()) {
+                errors.push('Ticket title is required');
+                titleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+                isValid = false;
+            } else if (titleInput.value.length > 100) {
+                errors.push('Title must be 100 characters or less');
+                titleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+                isValid = false;
+            } else {
+                titleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+            }
+
+            // Category validation
+            const categorySelected = document.querySelector('input[name="category_id"]:checked');
+            if (!categorySelected) {
+                errors.push('Please select a category');
+                isValid = false;
+            }
+
+            // Priority validation
+            const prioritySelected = document.querySelector('input[name="priority_id"]:checked');
+            if (!prioritySelected) {
+                errors.push('Please select a priority level');
+                isValid = false;
+            }
+
+            // Description validation
+            let descriptionContent = '';
+            if (editor) {
+                descriptionContent = editor.getData();
+            } else {
+                const textarea = document.querySelector('#descriptionTextarea');
+                if (textarea) {
+                    descriptionContent = textarea.value;
+                }
+            }
+
+            const strippedContent = descriptionContent.replace(/<[^>]*>/g, '');
+            if (!strippedContent.trim()) {
+                errors.push('Description is required');
+                isValid = false;
+            } else if (strippedContent.length < 50) {
+                errors.push('Please provide more details (at least 50 characters)');
+                isValid = false;
+            }
+
+            // Show errors
+            if (errors.length > 0) {
+                const errorHtml = errors.map(error => `<li class="mb-1 text-xs">• ${error}</li>`).join('');
+                showToast(
+                    `<div class="text-left"><p class="font-semibold mb-1 text-xs">Please fix the following:</p><ul>${errorHtml}</ul></div>`,
+                    'error');
+            }
+
+            return isValid;
+        }
+
+        // Add priority selection feedback
+        const priorityInputs = document.querySelectorAll('input[name="priority_id"]');
+        priorityInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                // Remove all selected classes first
+                document.querySelectorAll('.priority-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+
+                // Add selected class to current
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                if (label) {
+                    label.classList.add('selected');
+                }
             });
+        });
 
-            // Add selected class to current
-            const label = document.querySelector(`label[for="${this.id}"]`);
-            if (label) {
-                label.classList.add('selected');
-            }
+        // Add category selection feedback
+        const categoryInputs = document.querySelectorAll('input[name="category_id"]');
+        categoryInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                // Remove all selected classes first
+                document.querySelectorAll('.category-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+
+                // Add selected class to current
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                if (label) {
+                    label.classList.add('selected');
+                }
+            });
         });
     });
-});
 </script>
 
 <?php
 // Helper functions for priorities
-function getPriorityColor($priorityId) {
+function getPriorityColor($priorityId)
+{
     $colors = [
         1 => 'from-blue-100 to-blue-300',      // Low
         2 => 'from-yellow-100 to-yellow-300',  // Medium
@@ -991,7 +992,8 @@ function getPriorityColor($priorityId) {
     return $colors[$priorityId] ?? 'from-blue-100 to-blue-300';
 }
 
-function getPriorityBgColor($priorityId) {
+function getPriorityBgColor($priorityId)
+{
     $colors = [
         1 => 'bg-blue-100',      // Low
         2 => 'bg-yellow-100',    // Medium
@@ -1001,7 +1003,8 @@ function getPriorityBgColor($priorityId) {
     return $colors[$priorityId] ?? 'bg-blue-100';
 }
 
-function getPriorityTextColor($priorityId) {
+function getPriorityTextColor($priorityId)
+{
     $colors = [
         1 => 'text-blue-800',      // Low
         2 => 'text-yellow-800',    // Medium
@@ -1011,7 +1014,8 @@ function getPriorityTextColor($priorityId) {
     return $colors[$priorityId] ?? 'text-blue-800';
 }
 
-function getPriorityIcon($priorityName) {
+function getPriorityIcon($priorityName)
+{
     $icons = [
         'Low' => 'fa-arrow-down',
         'Medium' => 'fa-minus',
@@ -1021,7 +1025,8 @@ function getPriorityIcon($priorityName) {
     return $icons[$priorityName] ?? 'fa-flag';
 }
 
-function getPriorityDescription($priorityName) {
+function getPriorityDescription($priorityName)
+{
     $descriptions = [
         'Low' => 'Minor issue, no immediate impact',
         'Medium' => 'Important but not urgent',
@@ -1031,7 +1036,8 @@ function getPriorityDescription($priorityName) {
     return $descriptions[$priorityName] ?? 'Standard priority';
 }
 
-function getPriorityResponseTime($priorityName) {
+function getPriorityResponseTime($priorityName)
+{
     $responseTimes = [
         'Low' => 'Response within 24h',
         'Medium' => 'Response within 12h',

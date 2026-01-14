@@ -13,9 +13,16 @@ class UserModel extends Model
     protected $useSoftDeletes = false;
     protected $protectFields = true;
     protected $allowedFields = [
-        'username', 'full_name', 'email', 'password', 
-        'role_id', 'department_id', 'phone_number', 
-        'photo_profile', 'is_active', 'last_login'
+        'username',
+        'full_name',
+        'email',
+        'password',
+        'role_id',
+        'department_id',
+        'phone_number',
+        'photo_profile',
+        'is_active',
+        'last_login'
     ];
 
     // Dates
@@ -56,11 +63,11 @@ class UserModel extends Model
     public function getUsersWithRole(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $builder = $this->db->table('users u');
-        
+
         // PostgreSQL specific - use proper boolean handling
         $builder->select('u.*, r.role_name, r.role_id, d.department_name, d.department_id')
-                ->join('roles r', 'r.role_id = u.role_id', 'left')
-                ->join('departments d', 'd.department_id = u.department_id', 'left');
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left');
 
         // Apply filters
         $this->applyUserFilters($builder, $filters);
@@ -82,9 +89,9 @@ class UserModel extends Model
     public function countFilteredUsers(array $filters = []): int
     {
         $builder = $this->db->table('users u');
-        
+
         $builder->join('roles r', 'r.role_id = u.role_id', 'left')
-                ->join('departments d', 'd.department_id = u.department_id', 'left');
+            ->join('departments d', 'd.department_id = u.department_id', 'left');
 
         // Apply filters
         $this->applyUserFilters($builder, $filters);
@@ -141,7 +148,7 @@ class UserModel extends Model
     public function getUserWithDetails(int $userId): ?array
     {
         $builder = $this->db->table('users u');
-        
+
         // PostgreSQL specific - use subqueries with proper column aliasing
         $builder->select("u.*, r.role_name, d.department_name, 
                 (SELECT COUNT(*) FROM tickets t WHERE t.customer_id = u.user_id) as total_tickets,
@@ -171,7 +178,7 @@ class UserModel extends Model
         ";
 
         $result = $this->db->query($sql)->getRowArray();
-        
+
         return $result ?: [
             'total_users' => 0,
             'active_users' => 0,
@@ -189,8 +196,8 @@ class UserModel extends Model
     {
         // PostgreSQL boolean literal
         return $this->where('department_id', $departmentId)
-                    ->where('is_active', true)
-                    ->findAll();
+            ->where('is_active', true)
+            ->findAll();
     }
 
     /**
@@ -200,8 +207,8 @@ class UserModel extends Model
     {
         // PostgreSQL boolean literal
         return $this->where('role_id', $roleId)
-                    ->where('is_active', true)
-                    ->findAll();
+            ->where('is_active', true)
+            ->findAll();
     }
 
     /**
@@ -220,9 +227,9 @@ class UserModel extends Model
     public function getRecentUsers(int $limit = 5): array
     {
         return $this->select('user_id, username, full_name, email, created_at, is_active')
-                    ->orderBy('created_at', 'DESC')
-                    ->limit($limit)
-                    ->findAll();
+            ->orderBy('created_at', 'DESC')
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -239,8 +246,8 @@ class UserModel extends Model
     public function bulkUpdate(array $userIds, array $data): bool
     {
         return $this->whereIn('user_id', $userIds)
-                    ->set($data)
-                    ->update();
+            ->set($data)
+            ->update();
     }
 
     /**
@@ -260,7 +267,7 @@ class UserModel extends Model
     public function verifyCredentials(string $email, string $password): ?array
     {
         $user = $this->where('email', $email)->first();
-        
+
         if (!$user || !password_verify($password, $user['password'])) {
             return null;
         }
@@ -292,11 +299,11 @@ class UserModel extends Model
     {
         $builder = $this->builder();
         $builder->where('email', $email);
-        
+
         if ($excludeUserId) {
             $builder->where('user_id !=', $excludeUserId);
         }
-        
+
         return $builder->countAllResults() > 0;
     }
 
@@ -307,45 +314,45 @@ class UserModel extends Model
     {
         $builder = $this->builder();
         $builder->where('username', $username);
-        
+
         if ($excludeUserId) {
             $builder->where('user_id !=', $excludeUserId);
         }
-        
+
         return $builder->countAllResults() > 0;
     }
 
     /**
- * Get active users with their roles for project assignment
- */
-public function getActiveUsersWithRoles(): array
-{
-    $db = db_connect();
-    
-    return $db->table('users u')
-        ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
-        ->join('roles r', 'r.role_id = u.role_id')
-        ->where('u.is_active', true)
-        ->orderBy('u.full_name', 'ASC')
-        ->get()
-        ->getResultArray();
-}
+     * Get active users with their roles for project assignment
+     */
+    public function getActiveUsersWithRoles(): array
+    {
+        $db = db_connect();
 
-/**
- * Search active users
- */
-public function searchActiveUsers(string $keyword): array
-{
-    return $this->builder()
-        ->select('user_id, username, full_name, email')
-        ->where('is_active', true)
-        ->groupStart()
+        return $db->table('users u')
+            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+            ->join('roles r', 'r.role_id = u.role_id')
+            ->where('u.is_active', true)
+            ->orderBy('u.full_name', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
+     * Search active users
+     */
+    public function searchActiveUsers(string $keyword): array
+    {
+        return $this->builder()
+            ->select('user_id, username, full_name, email')
+            ->where('is_active', true)
+            ->groupStart()
             ->like('full_name', $keyword)
             ->orLike('username', $keyword)
             ->orLike('email', $keyword)
-        ->groupEnd()
-        ->orderBy('full_name', 'ASC')
-        ->get()
-        ->getResultArray();
-}
+            ->groupEnd()
+            ->orderBy('full_name', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }

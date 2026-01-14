@@ -702,8 +702,8 @@
 
             const toast = document.createElement('div');
             toast.className = `custom-toast fixed top-24 right-4 md:right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slide-in ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
+                type === 'success' ? 'bg-green-500 text-white' :
+                    'bg-blue-500 text-white'
                 }`;
             toast.innerHTML = `
                 <div class="flex items-center gap-2">

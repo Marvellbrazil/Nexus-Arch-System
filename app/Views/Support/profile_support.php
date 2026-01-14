@@ -4,15 +4,22 @@
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
-<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
-<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
-<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
+<div
+    class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0">
+</div>
+<div
+    class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0">
+</div>
+<div
+    class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0">
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <?php
 // Ambil inisial dari nama
-function getInitials($name) {
+function getInitials($name)
+{
     $words = explode(' ', $name);
     $initials = '';
     foreach ($words as $word) {
@@ -29,7 +36,8 @@ $phone = $user_details['phone'] ?? '09:00 - 18:00 (Mon-Fri)';
 $initials = getInitials($userName);
 
 // Format angka dengan koma
-function formatNumber($num) {
+function formatNumber($num)
+{
     return number_format($num);
 }
 ?>
@@ -41,11 +49,11 @@ function formatNumber($num) {
                 <h1 class="text-[32px] font-semibold mb-2 text-text-dark">Support Agent Profile</h1>
                 <p class="text-[15px] font-light text-[#666]">Manage your support agent account and performance</p>
             </div>
-            
+
             <!-- Action Buttons -->
             <div class="flex items-center gap-3">
-                <button onclick="confirmLogout()" 
-                        class="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium flex items-center gap-2">
+                <button onclick="confirmLogout()"
+                    class="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium flex items-center gap-2">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </button>
@@ -62,12 +70,14 @@ function formatNumber($num) {
                 <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
                     <!-- Avatar -->
                     <div class="relative">
-                        <div class="w-24 h-24 bg-gradient-to-br from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        <div
+                            class="w-24 h-24 bg-gradient-to-br from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                             <?= $initials ?>
                         </div>
-                        <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full" id="statusIndicator"></div>
+                        <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full"
+                            id="statusIndicator"></div>
                     </div>
-                    
+
                     <!-- Support Agent Info -->
                     <div class="flex-1">
                         <div class="flex flex-wrap items-center gap-3 mb-3">
@@ -76,7 +86,7 @@ function formatNumber($num) {
                                 <?= esc($userRole) ?>
                             </span>
                         </div>
-                        
+
                         <div class="space-y-2">
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-envelope text-gray-400"></i>
@@ -93,14 +103,14 @@ function formatNumber($num) {
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Agent Information -->
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i class="fas fa-user-tie text-secondary"></i>
                         Agent Information
                     </h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Full Name</label>
@@ -108,60 +118,62 @@ function formatNumber($num) {
                                 <span class="text-gray-800"><?= esc($userName) ?></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Email Address</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <span class="text-gray-800"><?= esc($userEmail) ?></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Role</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <span class="text-gray-800"><?= esc($userRole) ?></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Department</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <span class="text-gray-800"><?= esc($department) ?></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Phone Number</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <span class="text-gray-800"><?= esc($phone) ?></span>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-gray-600 text-sm mb-1">Status</label>
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <span class="text-gray-800" id="currentStatusText"><?= $current_status ?? 'Available' ?></span>
+                                <span class="text-gray-800"
+                                    id="currentStatusText"><?= $current_status ?? 'Available' ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Edit Button -->
                 <div class="border-t border-gray-200 pt-6">
-                    <button id="editProfileBtn" class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+                    <button id="editProfileBtn"
+                        class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
                         <i class="fas fa-edit"></i>
                         Edit Profile Information
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Sidebar Stats -->
         <div class="space-y-6">
             <!-- Performance Stats -->
             <div class="bg-gradient-to-br from-secondary to-[#8A84C6] rounded-2xl p-6 text-white">
                 <h3 class="text-lg font-semibold mb-4">Performance Statistics</h3>
-                
+
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
@@ -174,7 +186,7 @@ function formatNumber($num) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -186,7 +198,7 @@ function formatNumber($num) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -198,7 +210,7 @@ function formatNumber($num) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -212,11 +224,11 @@ function formatNumber($num) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Activity & Availability -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Activity & Availability</h3>
-                
+
                 <div class="space-y-3">
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -229,7 +241,7 @@ function formatNumber($num) {
                             </p>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                             <i class="fas fa-calendar-check text-green-600"></i>
@@ -239,14 +251,15 @@ function formatNumber($num) {
                             <p class="text-xs text-gray-600"><?= $join_date ?? 'January 10, 2025' ?></p>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                             <i class="fas fa-user-clock text-purple-600"></i>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">Current Status</p>
-                            <p class="text-xs text-green-600 font-medium cursor-pointer" id="statusText" onclick="toggleStatus()">
+                            <p class="text-xs text-green-600 font-medium cursor-pointer" id="statusText"
+                                onclick="toggleStatus()">
                                 ● <?= $current_status ?? 'Available' ?>
                             </p>
                         </div>
@@ -270,20 +283,22 @@ function formatNumber($num) {
                             Updated: <?= date('F j') ?>
                         </span>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-gray-50 rounded-xl p-4 text-center">
                             <p class="text-gray-600 text-sm mb-2">Tickets Handled</p>
                             <p class="text-3xl font-bold text-gray-800">
                                 <?= $metrics['tickets_handled'] ?? 42 ?>
                             </p>
-                            <p class="text-xs <?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' ?> mt-1">
-                                <i class="fas fa-arrow-<?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'up' : 'down' ?> mr-1"></i>
-                                <?= abs($metrics['ticket_change_percent'] ?? 8) ?>% 
+                            <p
+                                class="text-xs <?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' ?> mt-1">
+                                <i
+                                    class="fas fa-arrow-<?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'up' : 'down' ?> mr-1"></i>
+                                <?= abs($metrics['ticket_change_percent'] ?? 8) ?>%
                                 <?= ($metrics['ticket_change_percent'] ?? 0) >= 0 ? 'increase' : 'decrease' ?>
                             </p>
                         </div>
-                        
+
                         <div class="bg-blue-50 rounded-xl p-4 text-center">
                             <p class="text-blue-600 text-sm mb-2">Avg. Response Time</p>
                             <p class="text-3xl font-bold text-blue-700">
@@ -293,7 +308,7 @@ function formatNumber($num) {
                                 <i class="fas fa-arrow-down mr-1"></i>2m faster
                             </p>
                         </div>
-                        
+
                         <div class="bg-yellow-50 rounded-xl p-4 text-center">
                             <p class="text-yellow-600 text-sm mb-2">First Contact Resolution</p>
                             <p class="text-3xl font-bold text-yellow-700">
@@ -303,7 +318,7 @@ function formatNumber($num) {
                                 <i class="fas fa-arrow-up mr-1"></i>5% increase
                             </p>
                         </div>
-                        
+
                         <div class="bg-green-50 rounded-xl p-4 text-center">
                             <p class="text-green-600 text-sm mb-2">Customer Satisfaction</p>
                             <p class="text-3xl font-bold text-green-700">
@@ -315,7 +330,7 @@ function formatNumber($num) {
                             </p>
                         </div>
                     </div>
-                    
+
                     <!-- Performance Breakdown -->
                     <div class="space-y-4">
                         <div>
@@ -324,30 +339,30 @@ function formatNumber($num) {
                                 <span class="text-gray-600"><?= $stats['resolution_rate'] ?? 90 ?>%</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-green-500 rounded-full progress-bar" 
-                                     data-width="<?= $stats['resolution_rate'] ?? 90 ?>%"></div>
+                                <div class="h-full bg-green-500 rounded-full progress-bar"
+                                    data-width="<?= $stats['resolution_rate'] ?? 90 ?>%"></div>
                             </div>
                         </div>
-                        
+
                         <div>
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="text-gray-700 font-medium">SLA Compliance</span>
                                 <span class="text-gray-600"><?= $stats['sla_compliance'] ?? 96 ?>%</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-500 rounded-full progress-bar" 
-                                     data-width="<?= $stats['sla_compliance'] ?? 96 ?>%"></div>
+                                <div class="h-full bg-blue-500 rounded-full progress-bar"
+                                    data-width="<?= $stats['sla_compliance'] ?? 96 ?>%"></div>
                             </div>
                         </div>
-                        
+
                         <div>
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="text-gray-700 font-medium">Quality Score</span>
                                 <span class="text-gray-600"><?= $stats['quality_score'] ?? 88 ?>%</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-purple-500 rounded-full progress-bar" 
-                                     data-width="<?= $stats['quality_score'] ?? 88 ?>%"></div>
+                                <div class="h-full bg-purple-500 rounded-full progress-bar"
+                                    data-width="<?= $stats['quality_score'] ?? 88 ?>%"></div>
                             </div>
                         </div>
                     </div>
@@ -361,24 +376,29 @@ function formatNumber($num) {
 <style>
     /* Animations for progress bars */
     @keyframes fillProgress {
-        from { width: 0; }
-        to { width: var(--target-width); }
+        from {
+            width: 0;
+        }
+
+        to {
+            width: var(--target-width);
+        }
     }
-    
+
     .progress-bar-animated {
         animation: fillProgress 1.5s ease-out forwards;
     }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Logout confirmation
-        window.confirmLogout = function() {
+        window.confirmLogout = function () {
             if (confirm('Are you sure you want to logout?')) {
                 window.location.href = '<?= base_url('logout') ?>';
             }
         };
-        
+
         // Animate progress bars on load
         setTimeout(() => {
             document.querySelectorAll('.progress-bar').forEach(bar => {
@@ -388,47 +408,47 @@ function formatNumber($num) {
                 bar.classList.add('progress-bar-animated');
             });
         }, 500);
-        
+
         // Status toggle functionality
-        window.toggleStatus = function() {
+        window.toggleStatus = function () {
             const statusElement = document.getElementById('statusText');
             const indicatorElement = document.getElementById('statusIndicator');
             const statusTextElement = document.getElementById('currentStatusText');
-            
+
             const currentStatus = statusElement.textContent.includes('Available') ? 'Available' : 'Away';
             const newStatus = currentStatus === 'Available' ? 'Away' : 'Available';
             const newColor = newStatus === 'Available' ? 'green' : 'yellow';
-            
+
             // Update status text
             statusElement.textContent = `● ${newStatus}`;
             statusElement.className = `text-xs text-${newColor}-600 font-medium cursor-pointer`;
-            
+
             // Update status indicator
             indicatorElement.className = `absolute bottom-2 right-2 w-6 h-6 bg-${newColor}-500 border-2 border-white rounded-full`;
-            
+
             // Update current status in agent info
             if (statusTextElement) {
                 statusTextElement.textContent = newStatus;
             }
-            
+
             // Update status via AJAX
             updateAgentStatus(newStatus);
-            
+
             showToast(`Status changed to ${newStatus}`, 'info');
         };
-        
+
         // Edit profile button
-        document.getElementById('editProfileBtn').addEventListener('click', function() {
+        document.getElementById('editProfileBtn').addEventListener('click', function () {
             showEditProfileModal();
         });
-        
+
         // Initialize with current status
         const currentStatus = '<?= $current_status ?? "Available" ?>';
         if (currentStatus === 'Away') {
             toggleStatus(); // Switch to Away if needed
         }
     });
-    
+
     function updateAgentStatus(status) {
         fetch('<?= base_url("support/update_status") ?>', {
             method: 'POST',
@@ -441,17 +461,17 @@ function formatNumber($num) {
                 csrf_token: '<?= csrf_hash() ?>'
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                console.error('Failed to update status:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error updating status:', error);
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Failed to update status:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+            });
     }
-    
+
     function showEditProfileModal() {
         // Create modal
         const modal = document.createElement('div');
@@ -486,7 +506,7 @@ function formatNumber($num) {
                                 <input type="text" name="phone" value="<?= esc($phone) ?>" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
                             </div>
                             
-                            <?php 
+                            <?php
                             // Get departments for dropdown
                             $db = db_connect();
                             $departments = $db->table('departments')
@@ -520,56 +540,56 @@ function formatNumber($num) {
                 </form>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         document.body.style.overflow = 'hidden';
-        
+
         // Handle form submission
-        modal.querySelector('#editProfileForm').addEventListener('submit', function(e) {
+        modal.querySelector('#editProfileForm').addEventListener('submit', function (e) {
             e.preventDefault();
             saveProfileChanges(this);
         });
     }
-    
+
     function saveProfileChanges(form) {
         const saveBtn = form.querySelector('button[type="submit"]');
         const originalText = saveBtn.textContent;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
         saveBtn.disabled = true;
-        
+
         // Submit form data
         const formData = new FormData(form);
-        
+
         fetch(form.action, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.text())
-        .then(html => {
-            // Close modal
-            document.querySelector('.fixed.inset-0').remove();
-            document.body.style.overflow = 'auto';
-            
-            // Show success message
-            showToast('Profile updated successfully!', 'success');
-            
-            // Reload page to see changes
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error updating profile. Please try again.', 'error');
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
-        });
+            .then(response => response.text())
+            .then(html => {
+                // Close modal
+                document.querySelector('.fixed.inset-0').remove();
+                document.body.style.overflow = 'auto';
+
+                // Show success message
+                showToast('Profile updated successfully!', 'success');
+
+                // Reload page to see changes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating profile. Please try again.', 'error');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
     }
-    
+
     function showToast(message, type = 'info') {
         // Remove existing toasts
         document.querySelectorAll('.toast-notification').forEach(toast => toast.remove());
-        
+
         const toast = document.createElement('div');
         toast.className = `toast-notification fixed top-24 right-6 p-4 rounded-xl shadow-xl z-[9999] max-w-sm animate-fadeInUp ${type === 'error' ? 'bg-red-500 text-white' : type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`;
         toast.innerHTML = `
@@ -583,9 +603,9 @@ function formatNumber($num) {
                 </button>
             </div>
         `;
-        
+
         document.body.appendChild(toast);
-        
+
         // Auto remove after 3 seconds
         setTimeout(() => {
             if (toast.parentElement) {
@@ -595,7 +615,7 @@ function formatNumber($num) {
             }
         }, 3000);
     }
-    
+
     // Add CSS animation
     const style = document.createElement('style');
     style.textContent = `

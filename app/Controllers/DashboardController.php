@@ -11,12 +11,12 @@ class DashboardController extends Controller
         // Redirect ke login jika belum punya role
         return redirect()->to('/login');
     }
-    
+
     public function admin()
     {
         // Cek session/login status di sini (untuk real app)
         // Untuk demo langsung tampilkan dashboard
-        
+
         $data = [
             'title' => 'Admin Dashboard',
             'user' => [
@@ -31,10 +31,10 @@ class DashboardController extends Controller
                 'resolved_tickets' => 85
             ]
         ];
-        
+
         return view('Admin/dashboard', $data);
     }
-    
+
     public function customer()
     {
         $data = [
@@ -51,10 +51,10 @@ class DashboardController extends Controller
                 'new_messages' => 1
             ]
         ];
-        
+
         return view('Customer/dashboard', $data);
     }
-    
+
     public function support()
     {
         $data = [
@@ -71,10 +71,10 @@ class DashboardController extends Controller
                 'resolved_today' => 2
             ]
         ];
-        
+
         return view('Support/dashboard', $data);
     }
-    
+
     public function department($dept = 'it-support')
     {
         $departmentNames = [
@@ -83,9 +83,9 @@ class DashboardController extends Controller
             'uiux-support' => 'UI/UX Support',
             'feature-request' => 'Feature Request'
         ];
-        
+
         $viewPath = "Department/" . str_replace('-', '_', ucfirst($dept)) . "/dashboard";
-        
+
         $data = [
             'title' => $departmentNames[$dept] . ' Dashboard',
             'user' => [
@@ -100,7 +100,7 @@ class DashboardController extends Controller
                 'completed_today' => 3
             ]
         ];
-        
+
         return view($viewPath, $data);
     }
 }

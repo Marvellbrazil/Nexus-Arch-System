@@ -314,7 +314,8 @@
                                             <?= htmlspecialchars($ticket['subject']) ?>
                                         </p>
                                         <p class="text-gray-500 text-xs mt-1 hidden md:block">
-                                            <?= htmlspecialchars($ticket['customer_name']) ?></p>
+                                            <?= htmlspecialchars($ticket['customer_name']) ?>
+                                        </p>
                                     </div>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
@@ -740,8 +741,8 @@
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = `fixed top-24 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'error' ? 'bg-red-500 text-white' :
-                type === 'success' ? 'bg-green-500 text-white' :
-                    'bg-blue-500 text-white'
+            type === 'success' ? 'bg-green-500 text-white' :
+                'bg-blue-500 text-white'
             }`;
         toast.innerHTML = `
             <div class="flex items-center gap-2">

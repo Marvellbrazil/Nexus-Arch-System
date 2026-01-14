@@ -674,9 +674,11 @@ $notifications = [
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <p class="font-semibold text-gray-800 text-sm truncate">
-                                                    <?= esc($notification['title']) ?></p>
+                                                    <?= esc($notification['title']) ?>
+                                                </p>
                                                 <p class="text-gray-600 text-xs mt-1 truncate">
-                                                    <?= esc($notification['message']) ?></p>
+                                                    <?= esc($notification['message']) ?>
+                                                </p>
                                                 <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
                                             </div>
                                             <?php if (!$notification['read']): ?>
@@ -759,7 +761,8 @@ $notifications = [
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-gray-800 text-xs truncate">
-                                                <?= esc($notification['title']) ?></p>
+                                                <?= esc($notification['title']) ?>
+                                            </p>
                                             <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?>
                                             </p>
                                             <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>

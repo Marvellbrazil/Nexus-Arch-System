@@ -639,8 +639,8 @@ Request<?= $this->endSection() ?>
 
         const toast = document.createElement('div');
         toast.className = `toast-notification fixed top-24 right-6 p-4 rounded-xl shadow-xl z-[9999] max-w-sm animate-fadeInUp ${type === 'error' ? 'bg-red-500 text-white border-l-4 border-red-600' :
-                type === 'success' ? 'bg-green-500 text-white border-l-4 border-green-600' :
-                    'bg-blue-500 text-white border-l-4 border-blue-600'
+            type === 'success' ? 'bg-green-500 text-white border-l-4 border-green-600' :
+                'bg-blue-500 text-white border-l-4 border-blue-600'
             }`;
         toast.innerHTML = `
         <div class="flex items-center gap-3">
