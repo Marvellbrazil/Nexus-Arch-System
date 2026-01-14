@@ -233,4 +233,49 @@ class RoleModel extends Model
 
         return $levels[$level] ?? $level;
     }
+
+    public function getSystemNotifications(TicketModel $ticketModel): array
+    {
+        $notifications = [];
+
+        // Check for high priority tickets
+        $highPriorityTickets = $ticketModel->getHighPriorityTicketsCount();
+
+        if ($highPriorityTickets > 5) {
+            $notifications[] = [
+                'type' => 'warning',
+                'icon' => 'exclamation-triangle',
+                'color' => '#FFB400',
+                'title' => 'High Priority Tickets',
+                'message' => "There are {$highPriorityTickets} high priority tickets requiring attention",
+                'time' => 'Just now'
+            ];
+        }
+
+        // Check for SLA violations
+        $slaViolations = $ticketModel->getSLAViolationsCount();
+
+        if ($slaViolations > 0) {
+            $notifications[] = [
+                'type' => 'danger',
+                'icon' => 'clock',
+                'color' => '#FF4C51',
+                'title' => 'SLA Violations',
+                'message' => "{$slaViolations} tickets have exceeded SLA time",
+                'time' => '1h ago'
+            ];
+        }
+
+        // System info
+        $notifications[] = [
+            'type' => 'info',
+            'icon' => 'info-circle',
+            'color' => '#9155FD',
+            'title' => 'System Update',
+            'message' => 'Scheduled maintenance tonight at 10:00 PM',
+            'time' => '2h ago'
+        ];
+
+        return $notifications;
+    }
 }
