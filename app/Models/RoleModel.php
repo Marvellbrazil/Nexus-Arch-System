@@ -51,16 +51,97 @@ class RoleModel extends Model
     }
 
     /**
-     * Get permissions for a role
+     * Delete role
      */
-    public function getRolePermissions($roleId)
+    public function deleteRole($roleId)
     {
-        $db = db_connect();
+        try {
+            // Cek apakah ada user yang menggunakan role ini
+            $db = db_connect();
+            $userCount = $db->table('users')
+                ->where('role_id', $roleId)
+                ->countAllResults();
 
-        return $db->table('role_permissions')
-            ->where('role_id', $roleId)
-            ->get()
-            ->getResultArray();
+            if ($userCount > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Cannot delete role. There are {$userCount} users assigned to this role."
+                ];
+            }
+
+            // Hapus role
+            if ($this->delete($roleId)) {
+                return [
+                    'success' => true,
+                    'message' => 'Role deleted successfully'
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Failed to delete role'
+            ];
+        } catch (\Exception $e) {
+            log_message('error', 'Delete role error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Duplicate role
+     */
+    public function duplicateRole($roleId, $newRoleName, $newDescription)
+    {
+        try {
+            // Get existing role
+            $existingRole = $this->find($roleId);
+            if (!$existingRole) {
+                return [
+                    'success' => false,
+                    'message' => 'Source role not found'
+                ];
+            }
+
+            // Cek duplikat nama
+            $duplicate = $this->where('role_name', $newRoleName)->first();
+            if ($duplicate) {
+                return [
+                    'success' => false,
+                    'message' => 'Role name already exists'
+                ];
+            }
+
+            // Create new role
+            $newRoleData = [
+                'role_name' => $newRoleName,
+                'description' => $newDescription ?: $existingRole['description'],
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            if ($this->insert($newRoleData)) {
+                $newRoleId = $this->getInsertID();
+                return [
+                    'success' => true,
+                    'message' => 'Role duplicated successfully',
+                    'new_role_id' => $newRoleId
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Failed to duplicate role'
+            ];
+        } catch (\Exception $e) {
+            log_message('error', 'Duplicate role error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**
