@@ -72,7 +72,8 @@ class CustomerController extends BaseController
                 SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
             ')
             ->join('tickets t', 't.project_id = p.project_id', 'left')
-            ->where('p.user_id', $this->userId)
+            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+            ->where('pa.user_id', $this->userId)
             ->groupBy('p.project_id')
             ->get()
             ->getResultArray();
@@ -585,10 +586,11 @@ class CustomerController extends BaseController
                 SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
             ')
             ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = p.user_id', 'left')
-            ->where('p.user_id', $this->userId)
+            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+            ->where('pa.user_id', $this->userId)
             ->where('p.is_active', true)
             ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
-            ->orderBy('p.project_name', 'ASC')
+            ->orderBy('p.project_id', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -663,10 +665,11 @@ class CustomerController extends BaseController
             ->select('p.project_id, p.project_code, p.project_name, p.description, p.created_at, 
                 COUNT(t.ticket_id) as ticket_count')
             ->join('tickets t', 't.project_id = p.project_id', 'left')
-            ->where('p.user_id', $this->userId) // Sekarang langsung filter ke kolom user_id di tabel projects
+            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+            ->where('pa.user_id', $this->userId)
             ->where('p.is_active', value: true)
             ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
-            ->orderBy('p.project_name', 'ASC')
+            ->orderBy('p.project_id', 'ASC')
             ->get()
             ->getResultArray();
     }
