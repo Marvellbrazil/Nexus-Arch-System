@@ -15,7 +15,7 @@ use Exception;
 class SupportController extends BaseController
 {
     private $userId;
-    private $supportUserModel;
+    protected $supportUserModel;
     private $supportRoleModel;
     private $supportTicketModel;
     private $supportNotificationModel;
@@ -25,7 +25,7 @@ class SupportController extends BaseController
     {
         // Check if user is logged in
         if (!session()->get('is_logged_in')) {
-            return redirect()->to('/login');
+            return redirect()->to('support/login');
         }
 
         // Check if user has support role
@@ -99,8 +99,8 @@ class SupportController extends BaseController
         $userModel = new UserModel();
         $roleModel = new RoleModel();
 
-// Get user details dengan departments
-        $data['user_details'] = $this->supportUserModel->getUserWithRole($userId);
+        // Get user details dengan departments
+        $data['user_details'] = $userModel->getUserDetails($userId);
 
         // Hitung active duration (logika sederhana)
         $activeDuration = "8h 24m";
@@ -116,7 +116,9 @@ class SupportController extends BaseController
 
         // ==================== STATISTIK DINAMIS ====================
 
-// 1. Tickets in Progress
+        $this->supportStatsModel = new SupportStatsModel();
+
+        // 1. Tickets in Progress
         $ticketsInProgress = $this->supportStatsModel->getInProgressTicketsCount($userId);
 
         // Tickets need attention (priority tinggi)
