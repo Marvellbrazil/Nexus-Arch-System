@@ -205,8 +205,8 @@
                                     </div>
                                     <!-- Progress Bar -->
                                     <?php 
-                                    $total = $data['projects']['stats'][$project['project_id']]['ticket_count'] ?? 0;
-                                    $resolved = $data['projects']['stats'][$project['project_id']]['resolved_tickets'] ?? 0;
+                                    $total = $project['ticket_count'] ?? 0;
+                                    $resolved = $project['resolved_tickets'] ?? 0;
                                     $progress = $total > 0 ? round(($resolved / $total) * 100) : 0;
                                     ?>
                                     <div class="w-full bg-gray-200 rounded-full h-1.5">
@@ -243,7 +243,7 @@
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-400">Created At:</span>
-                                        <span class="font-medium"><?= $data['projects']['stats'][$project['project_id']]['created_at'] ?? 'N/A' ?></span>
+                                        <span class="font-medium"><?= date('d-m-Y H:i:s', strtotime($project['created_at'])) ?></span>
                                     </div>
                                 </div>
                                 <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
