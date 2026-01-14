@@ -4,24 +4,19 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class TicketModel extends Model
+class TicketAttachmentModel extends Model
 {
-    protected $table            = 'tickets';
-    protected $primaryKey       = 'ticket_id';
+    protected $table            = 'ticket_attachments';
+    protected $primaryKey       = 'attachment_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'subject',
-        'description',
-        'project_id',
-        'department_id',
-        'assigned_to',
-        'category_id',
-        'priority_id',
-        'status_id',
-        'due_date'
+        'file_name',
+        'file_path',
+        'file_type',
+        'file_size'
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -4,25 +4,15 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class TicketModel extends Model
+class StatusModel extends Model
 {
-    protected $table            = 'tickets';
-    protected $primaryKey       = 'ticket_id';
+    protected $table            = 'statuses';
+    protected $primaryKey       = 'status_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [
-        'subject',
-        'description',
-        'project_id',
-        'department_id',
-        'assigned_to',
-        'category_id',
-        'priority_id',
-        'status_id',
-        'due_date'
-    ];
+    protected $allowedFields    = ['status_name'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -31,7 +21,7 @@ class TicketModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';

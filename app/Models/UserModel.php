@@ -21,8 +21,7 @@ class UserModel extends Model
         'department_id',
         'phone_number',
         'photo_profile',
-        'is_active',
-        'last_login'
+        'reset_token'
     ];
 
     // Dates

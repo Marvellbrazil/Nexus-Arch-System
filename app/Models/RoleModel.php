@@ -10,12 +10,7 @@ class RoleModel extends Model
     protected $primaryKey = 'role_id';
     protected $allowedFields = [
         'role_name',
-        'description',
-        'access_level',
-        'color_class',
-        'is_core',
-        'permissions',
-        'user_count'
+        'description'
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
