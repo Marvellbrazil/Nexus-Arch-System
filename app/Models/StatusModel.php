@@ -43,4 +43,9 @@ class StatusModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getStatuses()
+    {
+        return $this->select('status_name')->orderBy('status_id', 'ASC')->findAll();
+    }
 }

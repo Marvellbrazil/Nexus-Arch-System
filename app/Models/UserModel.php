@@ -401,20 +401,20 @@ class UserModel extends Model
     /**
      * Search active users
      */
-    public function searchActiveUsers(string $keyword): array
-    {
-        return $this->builder()
-            ->select('user_id, username, full_name, email')
-            ->where('is_active', true)
-            ->groupStart()
-            ->like('full_name', $keyword)
-            ->orLike('username', $keyword)
-            ->orLike('email', $keyword)
-            ->groupEnd()
-            ->orderBy('full_name', 'ASC')
-            ->get()
-            ->getResultArray();
-    }
+        public function searchActiveUsers(string $keyword): array
+        {
+            return $this->builder()
+                ->select('user_id, username, full_name, email')
+                ->where('is_active', true)
+                ->groupStart()
+                ->like('full_name', $keyword)
+                ->orLike('username', $keyword)
+                ->orLike('email', $keyword)
+                ->groupEnd()
+                ->orderBy('full_name', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
 
     /**
      * Get user statistics for dashboard
@@ -512,4 +512,81 @@ class UserModel extends Model
     }
 
     
+    
+        /**
+         * Get user by email
+         */
+        public function getUserByEmail(string $email)
+        {
+            return $this->where('email', $email)->first();
+        }
+    
+        /**
+         * Update a user record
+         */
+        public function updateUser(int $id, array $data)
+        {
+            return $this->update($id, $data);
+        }
+        
+        /**
+         * Update user password
+         */
+        public function updateUserPassword(int $id, string $password)
+        {
+            return $this->update($id, ['password' => $password]);
+        }
+    
+        /**
+         * Update user reset token
+         */
+            public function updateUserResetToken(int $id, string $token)
+            {
+                return $this->update($id, ['reset_token' => $token]);
+            }
+        
+            /**
+             * Get basic user details
+             */
+            public function getBasicUserDetails(int $userId)
+            {
+                return $this->select('username, full_name, email, photo_profile')
+                            ->where('user_id', $userId)
+                            ->first();
+            }
+
+    public function getProjectTeamMembers(int $projectId, int $excludeUserId): array
+    {
+        return $this->builder('users u')
+            ->select('u.user_id, u.full_name, u.email, r.role_name, u.photo_profile')
+            ->join('tickets t', 'u.user_id = t.assigned_to')
+            ->join('roles r', 'r.role_id = u.role_id')
+            ->where('t.project_id', $projectId)
+            ->where('u.user_id !=', $excludeUserId)
+            ->distinct()
+            ->get()
+            ->getResultArray();
+    }
+
+public function getUserDetails($userId)
+    {
+        return $this->builder('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+    }
+
+    public function getUserWithRole($userId)
+    {
+        return $this->builder('users u')
+            ->select('u.*, r.role_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+    }
 }
+        

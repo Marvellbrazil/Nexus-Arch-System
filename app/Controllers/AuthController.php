@@ -3,11 +3,21 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Models\RoleModel;
+use App\Models\DepartmentModel;
 use Config\Services;
 
 class AuthController extends BaseController
 {
-    // Halaman login untuk Customer (default)
+    public $userModel;
+    public $roleModel;
+    public $departmentModel;
+    public function __construct()
+    {
+        $this->userModel = new UserModel();
+        $this->roleModel = new RoleModel();
+        $this->departmentModel = new DepartmentModel();
+    }
     public function loginCustomer()
     {
         // Jika sudah login, redirect ke dashboard sesuai role
@@ -57,7 +67,7 @@ class AuthController extends BaseController
         $validation->setRules([
             'email' => 'required|valid_email',
             'password' => 'required',
-            'login_type' => 'required' // Wajib ada login_type
+            'login_type' => 'required'
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
@@ -68,8 +78,7 @@ class AuthController extends BaseController
         $password = $this->request->getPost('password');
         $loginType = $this->request->getPost('login_type'); // 'admin', 'support', 'customer', 'department'
 
-        $userModel = new UserModel();
-        $user = $userModel->where('email', $email)->first();
+        $user = $this->userModel->getUserByEmail($email);
 
         if (!$user) {
             return redirect()->back()->withInput()->with('error', 'Invalid email or password');
@@ -86,13 +95,12 @@ class AuthController extends BaseController
         }
 
         // Get role name
-        $db = db_connect();
-        $role = $db->table('roles')->where('role_id', $user['role_id'])->get()->getRowArray();
+        $role = $this->roleModel->getRoleName($user['role_id']);
         $department = null;
 
         // If user has department, get department info
         if ($user['department_id']) {
-            $department = $db->table('departments')->where('department_id', $user['department_id'])->get()->getRowArray();
+            $department = $this->departmentModel->getDepartmentByID($user['department_id']);
         }
 
         // Validasi role sesuai dengan halaman login
@@ -100,19 +108,18 @@ class AuthController extends BaseController
 
         // Validasi ketat berdasarkan halaman login
         $isValidLogin = false;
-
         switch ($loginType) {
             case 'admin':
-                $isValidLogin = ($roleName === 'Admin');
+                if ($roleName === 'Admin') $isValidLogin = true;
                 break;
             case 'support':
-                $isValidLogin = ($roleName === 'Support');
+                if ($roleName === 'Support') $isValidLogin = true;
                 break;
             case 'customer':
-                $isValidLogin = ($roleName === 'Customer');
+                if ($roleName === 'Customer') $isValidLogin = true;
                 break;
             case 'department':
-                $isValidLogin = ($roleName === 'Department');
+                if ($roleName === 'Department') $isValidLogin = true;
                 break;
         }
 
@@ -154,7 +161,7 @@ class AuthController extends BaseController
         session()->set($sessionData);
 
         // Update last login
-        $userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);
+        $this->userModel->updateLastLogin($user['user_id']);
 
         return $this->redirectToDashboard();
     }
@@ -212,52 +219,17 @@ class AuthController extends BaseController
     public function processForgotPassword()
     {
         $email = $this->request->getPost('email');
-        $userModel = new UserModel();
-        $user = $userModel->where('email', $email)->first();
+        $user = $this->userModel->getUserByEmail($email);
 
         if ($user) {
             $resetToken = bin2hex(random_bytes(16));
-            $userModel->update($user['user_id'], ['reset_token' => $resetToken]);
+            $this->userModel->updateUserResetToken($user['user_id'], $resetToken);
 
-            $this->sendResetEmail($email, $resetToken, $user['role_name']);
+            // send email
 
             return redirect()->to('/login')->with('success', 'Password reset instructions sent to your email');
         }
 
         return redirect()->to('/auth/forgot_password')->with('error', 'Email not found');
-    }
-
-    private function sendResetEmail($email, $resetToken, $role)
-    {
-        $fromEmail = '';
-        $fromName = 'Nexus Arch System';
-
-        switch ($role) {
-            case 'Admin':
-                $fromEmail = 'admin@nexus.com';
-                break;
-            case 'Support':
-                $fromEmail = 'support@nexus.com';
-                break;
-            case 'Customer':
-                $fromEmail = 'customer@nexus.com';
-                break;
-            default:
-                $fromEmail = 'no-reply@nexus.com';
-                break;
-        }
-
-        $emailService = \Config\Services::email();
-        $emailService->setFrom($fromEmail, $fromName);
-        $emailService->setTo($email);
-        $emailService->setSubject('Password Reset Request');
-        $emailService->setMessage(
-            "Klik link berikut untuk mereset password Anda: \n" .
-            base_url() . "/auth/reset_password/" . $resetToken
-        );
-
-        if (!$emailService->send()) {
-            log_message('error', 'Gagal mengirim email reset password');
-        }
     }
 }

@@ -1,91 +1,83 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Models\ProjectModel;
 use App\Models\UserModel;
-use Config\Database;
+use App\Models\TicketModel;
+use App\Models\NotificationModel;
+use App\Models\PriorityModel;
+use App\Models\StatusModel;
+use App\Models\TicketMessageModel;
+use App\Models\TicketAttachmentModel;
+use App\Models\CategoryModel;
+use App\Models\DepartmentModel;
+use App\Models\CategoryDepartmentMapping;
 
 class CustomerController extends BaseController
 {
-    private $db;
     private $userId;
     private $userModel;
+    private $ticketModel;
+    private $projectModel;
+    private $notificationModel;
+    private $priorityModel;
+    private $statusModel;
+    private $ticketMessageModel;
+    private $ticketAttachmentModel;
+    private $categoryModel;
+    private $departmentModel;
+    private $categoryDepartmentMapping;
 
     public function __construct()
     {
         $this->checkRole(['Customer']);
-        $this->db = Database::connect();
         $this->userId = session()->get('user_id');
+
+        // Load the models
         $this->userModel = new UserModel();
+        $this->ticketModel = new TicketModel();
+        $this->projectModel = new ProjectModel();
+        $this->notificationModel = new NotificationModel();
+        $this->priorityModel = new PriorityModel();
+        $this->statusModel = new StatusModel();
+        $this->ticketMessageModel = new TicketMessageModel();
+        $this->ticketAttachmentModel = new TicketAttachmentModel();
+        $this->categoryModel = new CategoryModel();
+        $this->departmentModel = new DepartmentModel();
+        $this->categoryDepartmentMapping = new CategoryDepartmentMapping();
     }
 
     private function getTicketStats()
     {
         return [
-            'total_tickets' => $this->db->table('tickets')
-                ->where('customer_id', $this->userId)
-                ->countAllResults(),
-            'total_tickets_per_week' => $this->db->table('tickets')
-                ->where('customer_id', $this->userId)
-                ->where('created_at >=', date('Y-m-d', strtotime('-1 week')))
-                ->countAllResults(),
-            'open_tickets' => $this->getTicketCountByStatus('Open'),
-            'in_progress_tickets' => $this->getTicketCountByStatus('In Progress'),
-            'resolved_tickets' => $this->getTicketCountByStatus('Resolved'),
-            'cancelled_tickets' => $this->getTicketCountByStatus('Cancelled'),
-            'tickets_this_month' => $this->db->table('tickets')
-                ->where('customer_id', $this->userId)
-                ->where('created_at >=', date('Y-m-01'))
-                ->countAllResults(),
+            'total_tickets' => $this->ticketModel->getTotalTickets($this->userId),
+            'total_tickets_per_week' => $this->ticketModel->getTicketsPerWeek($this->userId),
+            'open_tickets' => $this->ticketModel->getTicketCountByStatus($this->userId, 'Open'),
+            'in_progress_tickets' => $this->ticketModel->getTicketCountByStatus($this->userId, 'In Progress'),
+            'resolved_tickets' => $this->ticketModel->getTicketCountByStatus($this->userId, 'Resolved'),
+            'cancelled_tickets' => $this->ticketModel->getTicketCountByStatus($this->userId, 'Cancelled'),
+            'tickets_this_month' => $this->ticketModel->getTicketsThisMonth($this->userId),
         ];
     }
 
     private function getTicketCountByStatus($statusName)
     {
-        return $this->db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.customer_id', $this->userId)
-            ->where('s.status_name', $statusName)
-            ->countAllResults();
+        // This function is now part of the TicketModel, named getTicketCountByStatus.
+        // It is kept here to avoid breaking other parts of the controller during incremental refactoring.
+        // It will be removed once the refactoring is complete.
+        return $this->ticketModel->getTicketCountByStatus($this->userId, $statusName);
     }
 
     public function dashboard()
     {
         $data = $this->loadCommonData();
         $data['stats'] = $this->getTicketStats();
+        $data['recent_tickets'] = $this->ticketModel->getRecentTickets($this->userId, 5);
+        $data['projects'] = $this->projectModel->getProjectsForCustomerDashboard($this->userId);
+        $data['notifications'] = $this->notificationModel->getNotifications($this->userId);
 
-        $data['recent_tickets'] = $this->db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->where('t.customer_id', $this->userId)
-            ->orderBy('t.created_at', 'DESC')
-            ->limit(5)
-            ->get()
-            ->getResultArray();
-
-        $data['projects'] = $this->db->table('projects p')
-            ->select('
-                p.*, 
-                COUNT(t.ticket_id) as ticket_count, 
-                SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets, 
-                SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
-            ')
-            ->join('tickets t', 't.project_id = p.project_id', 'left')
-            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
-            ->where('pa.user_id', $this->userId)
-            ->groupBy('p.project_id')
-            ->orderBy('p.created_at', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $data['notifications'] = $this->db->table('notifications')
-            ->where('user_id', $this->userId)
-            ->get()
-            ->getResultArray();
-
-        $user = $this->userModel->find($this->userId);
+        $user = $this->userModel->getBasicUserDetails($this->userId);
         $data['user'] = [
             'full_name' => $user['full_name'],
             'email' => $user['email'],
@@ -129,78 +121,16 @@ class CustomerController extends BaseController
         $page = $this->request->getGet('page') ?? 1;
         $offset = ($page - 1) * $perPage;
 
-        // Build query
-        $builder = $this->db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, 
-                cat.category_name, proj.project_name, 
-                d.department_name,
-                t.ticket_number as display_id,
-                t.ticket_id as id_num,
-                t.created_at as timestamp,
-                t.subject,
-                proj.project_code as project_key')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-            ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->where('t.customer_id', $this->userId);
-
-        // Apply search filter if exists
-        $search = $this->request->getGet('search');
-        if (!empty($search)) {
-            $builder->groupStart()
-                ->like('t.ticket_number', $search)
-                ->orLike('t.subject', $search)
-                ->orLike('proj.project_name', $search)
-                ->groupEnd();
-        }
-
-        // Apply status filter
-        $statusFilter = $this->request->getGet('status');
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $builder->where('s.status_name', $statusFilter);
-        }
-
-        // Apply priority filter
-        $priorityFilter = $this->request->getGet('priority');
-        if (!empty($priorityFilter) && $priorityFilter !== 'all') {
-            $builder->where('p.priority_name', $priorityFilter);
-        }
-
-        // Apply project filter
-        $projectFilter = $this->request->getGet('project');
-        if (!empty($projectFilter) && $projectFilter !== 'all') {
-            $builder->where('proj.project_id', $projectFilter);
-        }
-
-        // Get total count for pagination
-        $totalRows = $builder->countAllResults(false);
-
-        // Apply sorting
-        $sortBy = $this->request->getGet('sort') ?? 'date-desc';
-        $sortParts = explode('-', $sortBy);
-        $sortColumn = $sortParts[0] ?? 'date';
-        $sortDirection = $sortParts[1] ?? 'desc';
-
-        // Map sort column to database column
-        $sortMap = [
-            'id' => 't.ticket_number',
-            'subject' => 't.subject',
-            'project' => 'proj.project_name',
-            'priority' => 'p.priority_id', // Using ID for correct priority order
-            'date' => 't.created_at',
-            'status' => 's.status_id'
+        $filters = [
+            'search' => $this->request->getGet('search'),
+            'status' => $this->request->getGet('status'),
+            'priority' => $this->request->getGet('priority'),
+            'project' => $this->request->getGet('project'),
+            'sort' => $this->request->getGet('sort'),
         ];
 
-        $orderColumn = $sortMap[$sortColumn] ?? 't.created_at';
-        $builder->orderBy($orderColumn, strtoupper($sortDirection));
-
-        // Apply pagination
-        $builder->limit($perPage, $offset);
-
-        // Execute query
-        $data['tickets'] = $builder->get()->getResultArray();
+        $totalRows = $this->ticketModel->countPaginatedTickets($this->userId, $filters);
+        $data['tickets'] = $this->ticketModel->getPaginatedTickets($this->userId, $filters, $perPage, $offset);
 
         // Format tickets for frontend
         foreach ($data['tickets'] as &$ticket) {
@@ -216,34 +146,12 @@ class CustomerController extends BaseController
         $data['total_pages'] = ceil($totalRows / $perPage);
 
         // Get filter options
-        $data['projects'] = $this->db->table('projects p')
-            ->select('p.project_id, p.project_name, p.project_code')
-            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
-            ->where('pa.user_id', $this->userId)
-            ->where('p.is_active', true)
-            ->get()
-            ->getResultArray();
-
-        $data['priorities'] = $this->db->table('priorities')
-            ->select('priority_name')
-            ->orderBy('priority_id', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $data['statuses'] = $this->db->table('statuses')
-            ->select('status_name')
-            ->orderBy('status_id', 'ASC')
-            ->get()
-            ->getResultArray();
+        $data['projects'] = $this->projectModel->getActiveProjectsForCustomer($this->userId);
+        $data['priorities'] = $this->priorityModel->getPriorities();
+        $data['statuses'] = $this->statusModel->getStatuses();
 
         // Pass filter values to view
-        $data['current_filters'] = [
-            'search' => $search,
-            'status' => $statusFilter,
-            'priority' => $priorityFilter,
-            'project' => $projectFilter,
-            'sort' => $sortBy
-        ];
+        $data['current_filters'] = $filters;
 
         $data['query_string_helper'] = function ($excludeParams = []) {
             return $this->getQueryString($excludeParams);
@@ -317,39 +225,15 @@ class CustomerController extends BaseController
     public function ticketDetail($id)
     {
         $data = $this->loadCommonData();
-
-        $ticket = $this->db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, proj.project_name, d.department_name')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-            ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->where('t.ticket_id', $id)
-            ->where('t.customer_id', $this->userId)
-            ->get()
-            ->getRowArray();
+        $ticket = $this->ticketModel->getTicketDetails($id, $this->userId);
 
         if (!$ticket) {
             return redirect()->to('/customer/my_tickets')->with('error', 'Ticket not found');
         }
 
         $data['ticket'] = $ticket;
-
-        $data['messages'] = $this->db->table('ticket_messages tm')
-            ->select('tm.*, u.full_name, u.photo_profile')
-            ->join('users u', 'u.user_id = tm.sender_id')
-            ->where('tm.ticket_id', $id)
-            ->orderBy('tm.created_at', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $data['attachments'] = $this->db->table('ticket_attachments ta')
-            ->select('ta.*, u.full_name')
-            ->join('users u', 'u.user_id = ta.uploaded_by')
-            ->where('ta.ticket_id', $id)
-            ->get()
-            ->getResultArray();
+        $data['messages'] = $this->ticketMessageModel->getMessagesForTicket($id);
+        $data['attachments'] = $this->ticketAttachmentModel->getAttachmentsForTicket($id);
 
         return view('Customer/ticket_detail', $data);
     }
@@ -358,56 +242,15 @@ class CustomerController extends BaseController
     {
         $data = $this->loadCommonData();
 
-        $data['project'] = $this->db->table('projects p')
-            ->select('p.*, 
-                COUNT(DISTINCT t.ticket_id) as total_tickets,
-                SUM(CASE WHEN s.status_name = \'Open\' THEN 1 ELSE 0 END) as open_tickets,
-                SUM(CASE WHEN s.status_name = \'In Progress\' THEN 1 ELSE 0 END) as in_progress_tickets,
-                SUM(CASE WHEN s.status_name = \'Resolved\' THEN 1 ELSE 0 END) as resolved_tickets,
-                SUM(CASE WHEN s.status_name = \'Closed\' THEN 1 ELSE 0 END) as closed_tickets')
-            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = ' . $this->userId, 'left')
-            ->join('statuses s', 's.status_id = t.status_id', 'left')
-            ->where('p.project_id', $projectId)
-            ->groupBy('p.project_id')
-            ->get()
-            ->getRowArray();
+        $data['project'] = $this->projectModel->getProjectDetailsForCustomer($projectId, $this->userId);
 
         if (!$data['project']) {
             return redirect()->to('/customer/dashboard')->with('error', 'Project not found');
         }
 
-        $data['tickets'] = $this->db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, d.department_name')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->where('t.project_id', $projectId)
-            ->where('t.customer_id', $this->userId)
-            ->orderBy('t.created_at', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $data['recent_activity'] = $this->db->table('ticket_messages tm')
-            ->select('tm.*, t.subject, u.full_name, u.photo_profile')
-            ->join('tickets t', 't.ticket_id = tm.ticket_id')
-            ->join('users u', 'u.user_id = tm.sender_id')
-            ->where('t.project_id', $projectId)
-            ->where('t.customer_id', $this->userId)
-            ->orderBy('tm.created_at', 'DESC')
-            ->limit(5)
-            ->get()
-            ->getResultArray();
-
-        $data['team_members'] = $this->db->table('tickets t')
-            ->select('u.user_id, u.full_name, u.email, r.role_name, u.photo_profile')
-            ->join('users u', 'u.user_id = t.assigned_to') // Ambil staf yang ditugaskan ke tiket
-            ->join('roles r', 'r.role_id = u.role_id')
-            ->where('t.project_id', $projectId)
-            ->where('u.user_id !=', $this->userId) // Jangan masukkan diri sendiri
-            ->distinct() // Penting agar satu orang tidak muncul double jika pegang banyak tiket
-            ->get()
-            ->getResultArray();
+        $data['tickets'] = $this->ticketModel->getTicketsByProject($projectId, $this->userId);
+        $data['recent_activity'] = $this->ticketMessageModel->getRecentActivityForProject($projectId, $this->userId);
+        $data['team_members'] = $this->userModel->getProjectTeamMembers($projectId, $this->userId);
 
         return view('Customer/project_detail', $data);
     }
@@ -566,35 +409,10 @@ class CustomerController extends BaseController
         $data['stats'] = $this->getTicketStats();
 
         // Get user details
-        $data['user_details'] = $this->db->table('users u')
-            ->select('u.*, r.role_name, d.department_name')
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
-            ->join('departments d', 'd.department_id = u.department_id', 'left')
-            ->where('u.user_id', $this->userId)
-            ->get()
-            ->getRowArray();
+        $data['user_details'] = $this->userModel->getUserDetails($this->userId);
 
         // Get assigned projects with ticket counts
-        $data['assigned_projects'] = $this->db->table('projects p')
-            ->select('
-                p.project_id, 
-                p.project_code, 
-                p.project_name, 
-                p.description, 
-                p.created_at,
-                COUNT(t.ticket_id) as ticket_count,
-                SUM(CASE WHEN t.status_id = 1 THEN 1 ELSE 0 END) as open_tickets,
-                SUM(CASE WHEN t.status_id = 2 THEN 1 ELSE 0 END) as in_progress_tickets,
-                SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
-            ')
-            ->join('tickets t', 't.project_id = p.project_id', 'left')
-            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
-            ->where('pa.user_id', $this->userId)
-            ->where('p.is_active', true)
-            ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
-            ->orderBy('p.project_id', 'ASC')
-            ->get()
-            ->getResultArray();
+        $data['assigned_projects'] = $this->projectModel->getAssignedProjectsWithTicketCount($this->userId);
 
         // Calculate ticket statistics for progress bars
         $totalTickets = $data['stats']['total_tickets'];
@@ -624,37 +442,12 @@ class CustomerController extends BaseController
 
         return view('Customer/profile_customer', ['data' => $data]);
     }
-    public function notifications()
+public function notifications()
     {
         $data = $this->loadCommonData();
 
-        $notifications = $this->db->table('notifications')
-            ->where('user_id', $this->userId)
-            ->orderBy('created_at', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $data['notifications'] = [];
-        foreach ($notifications as $notification) {
-            $data['notifications'][] = [
-                'id' => $notification['notification_id'],
-                'title' => $notification['title'],
-                'message' => $notification['message'],
-                'created_at' => $notification['created_at'],
-                'type' => $notification['notification_type'],
-                'is_read' => $notification['is_read'],
-                'ticket_id' => $notification['ticket_id'],
-            ];
-        }
-
-        $data['stats'] = [
-            'total_notifications' => $this->db->table('notifications')->where('user_id', $this->userId)->countAllResults(),
-            'unread_notifications' => $this->db->table('notifications')->where(['user_id' => $this->userId, 'is_read' => false])->countAllResults(),
-            'this_week_notifications' => $this->db->table('notifications')
-                ->where('user_id', $this->userId)
-                ->where('created_at >=', date('Y-m-d', strtotime('-1 week')))
-                ->countAllResults(),
-        ];
+        $data['notifications'] = $this->notificationModel->getNotificationsForCustomer($this->userId);
+        $data['stats'] = $this->notificationModel->getNotificationStatsForCustomer($this->userId);
 
         return view('Customer/notifications', ['data' => $data]);
     }
@@ -688,9 +481,9 @@ class CustomerController extends BaseController
         // Get projects assigned to this customer
         $data['projects'] = $this->getAssignedProjects();
 
-        $data['categories'] = $this->db->table('categories')->get()->getResultArray();
-        $data['priorities'] = $this->db->table('priorities')->get()->getResultArray();
-        $data['departments'] = $this->db->table('departments')->get()->getResultArray();
+$data['categories'] = $this->categoryModel->getAllCategories();
+        $data['priorities'] = $this->priorityModel->getAllPriorities();
+        $data['departments'] = $this->departmentModel->getAllDepartments();
 
         return view('Customer/create_ticket', ['data' => $data]);
     }
@@ -710,23 +503,18 @@ class CustomerController extends BaseController
             return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
         }
 
-        // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
-        $project = $this->db->table('projects p')
-            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
-            ->where('p.project_id', $projectId)
-            ->where('pa.user_id', $this->userId)
-            ->get()
-            ->getRowArray();
+// Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
+        $project = $this->projectModel->getProjectForCustomer($projectId, $this->userId);
 
         if (!$project) {
             return redirect()->back()->with('error', 'Project not found or access denied');
         }
 
-        // Nomor Tiket & Mapping Departemen
-        $ticketCount = $this->db->table('tickets')->where('project_id', $projectId)->countAllResults();
+// Nomor Tiket & Mapping Departemen
+        $ticketCount = $this->ticketModel->countTicketsByProject($projectId);
         $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
 
-        $departmentMapping = $this->db->table('category_department_mapping')->where('category_id', $categoryId)->get()->getRowArray();
+        $departmentMapping = $this->categoryDepartmentMapping->getDepartmentByCategory($categoryId);
         $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
 
         $ticketData = [
@@ -743,8 +531,7 @@ class CustomerController extends BaseController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $this->db->table('tickets')->insert($ticketData);
-        $ticketId = $this->db->insertID();
+$ticketId = $this->ticketModel->insert($ticketData);
 
         $this->handleAttachments($ticketId);
         // $this->createTicketNotification($ticketId);
@@ -773,7 +560,7 @@ class CustomerController extends BaseController
                         'created_at' => date('Y-m-d H:i:s')
                     ];
 
-                    $this->db->table('ticket_attachments')->insert($attachmentData);
+                    $this->ticketAttachmentModel->insert($attachmentData);
                 }
             }
         }
@@ -802,11 +589,9 @@ class CustomerController extends BaseController
         $this->db->table('notifications')->insert($notificationData);
     }
 
-    public function markAllRead()
+public function markAllRead()
     {
-        $this->db->table('notifications')
-            ->where('user_id', $this->userId)
-            ->update(['is_read' => true]);
+        $this->notificationModel->markAllAsRead($this->userId);
 
         return redirect()->back()->with('success', 'All notifications marked as read');
     }

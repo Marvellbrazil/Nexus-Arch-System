@@ -2,9 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Models\UserModel;
+use App\Models\DepartmentModel;
+use App\Models\TicketModel;
+
 class DepartmentController extends BaseController
 {
     protected $departmentName = '';
+    private $userId;
+    private $deptUserModel;
+    private $deptDepartmentModel;
+    private $deptTicketModel;
+
     // DepartmentController.php - PERBAIKAN constructor dan validation
     public function __construct()
     {
@@ -23,12 +32,18 @@ class DepartmentController extends BaseController
 
         // Get department name from session
         $this->departmentName = session()->get('department_name');
+        $this->userId = session()->get('user_id');
 
         // Jika tidak ada department_name di session, force logout
         if (!$this->departmentName) {
             session()->destroy();
             return redirect()->to('/login')->with('error', 'Session department missing. Please login again.');
         }
+
+        // Load models
+        $this->deptUserModel = new UserModel();
+        $this->deptDepartmentModel = new DepartmentModel();
+        $this->deptTicketModel = new TicketModel();
     }
 
     // Tambahkan method untuk get deptType dari URL
@@ -71,11 +86,8 @@ class DepartmentController extends BaseController
         $userId = session()->get('user_id');
         $db = db_connect();
 
-        // Get department ID
-        $department = $db->table('departments')
-            ->where('department_name', $departmentName)
-            ->get()
-            ->getRowArray();
+// Get department ID
+        $department = $this->deptDepartmentModel->findByName($departmentName);
 
         if (!$department) {
             return redirect()->to('/login')->with('error', 'Department not found');
@@ -84,53 +96,22 @@ class DepartmentController extends BaseController
         $departmentId = $department['department_id'];
 
         // Get department statistics
-        $totalTickets = $db->table('tickets')
-            ->where('department_id', $departmentId)
-            ->countAllResults();
-
-        $openTickets = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.department_id', $departmentId)
-            ->where('s.status_name', 'Open')
-            ->countAllResults();
-
-        $assignedToMe = $db->table('tickets')
-            ->where('department_id', $departmentId)
+        $stats = $this->deptDepartmentModel->getDepartmentStatistics($departmentId);
+        $assignedToMe = $this->deptTicketModel->where('department_id', $departmentId)
             ->where('assigned_to', $userId)
             ->countAllResults();
 
         $data['stats'] = [
-            'total_tickets' => $totalTickets,
-            'open_tickets' => $openTickets,
+            'total_tickets' => $stats['total_tickets'],
+            'open_tickets' => $stats['open_tickets'],
             'assigned_to_me' => $assignedToMe
         ];
 
         // Get tickets assigned to this department
-        $data['department_tickets'] = $db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, u.full_name as customer_name')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->join('users u', 'u.user_id = t.customer_id')
-            ->where('t.department_id', $departmentId)
-            ->orderBy('t.created_at', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
+        $data['department_tickets'] = $this->deptDepartmentModel->getDepartmentTickets($departmentId);
 
         // Get tickets assigned to me
-        $data['my_tickets'] = $db->table('tickets t')
-            ->select('t.*, p.priority_name, s.status_name, cat.category_name, u.full_name as customer_name')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->join('categories cat', 'cat.category_id = t.category_id')
-            ->join('users u', 'u.user_id = t.customer_id')
-            ->where('t.department_id', $departmentId)
-            ->where('t.assigned_to', $userId)
-            ->orderBy('t.created_at', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
+        $data['my_tickets'] = $this->deptDepartmentModel->getAssignedTicketsForUser($departmentId, $userId);
 
         $data['view'] = "Department/{$this->formatDepartmentView($departmentName)}/dashboard";
 
@@ -214,14 +195,8 @@ class DepartmentController extends BaseController
         $userId = session()->get('user_id');
         $db = db_connect();
 
-        // Get user details
-        $data['user_details'] = $db->table('users u')
-            ->select('u.*, r.role_name, d.department_name')
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
-            ->join('departments d', 'd.department_id = u.department_id', 'left')
-            ->where('u.user_id', $userId)
-            ->get()
-            ->getRowArray();
+// Get user details
+        $data['user_details'] = $this->deptUserModel->getUserDetails($userId);
 
         // Format view path
         $viewPath = "Department/{$this->formatDepartmentView($departmentName)}/profile";

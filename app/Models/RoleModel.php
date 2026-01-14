@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\ConnectionInterface;
+use CodeIgniter\Database\Postgre\Builder;
 use CodeIgniter\Model;
+use CodeIgniter\Validation\ValidationInterface;
 
 class RoleModel extends Model
 {
+    public $db;
     protected $table = 'roles';
     protected $primaryKey = 'role_id';
     protected $allowedFields = [
@@ -23,15 +27,22 @@ class RoleModel extends Model
      */
     public function getAllRolesWithCount()
     {
-        $db = db_connect();
 
-        return $db->table('roles r')
+        return $this->table('roles r')
             ->select('r.*, COUNT(u.user_id) as user_count')
             ->join('users u', 'u.role_id = r.role_id', 'left')
             ->groupBy('r.role_id')
             ->orderBy('r.role_name', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    /**
+     * Get role name by ID
+    */
+    public function getRoleName($roleId)
+    {
+        return $this->where('role_id', $roleId)->first();
     }
 
     /**

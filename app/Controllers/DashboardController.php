@@ -6,6 +6,11 @@ use CodeIgniter\Controller;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        // Constructor untuk inisialisasi
+    }
+
     public function index()
     {
         // Redirect ke login jika belum punya role

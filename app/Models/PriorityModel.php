@@ -43,4 +43,14 @@ class PriorityModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+public function getPriorities()
+    {
+        return $this->orderBy('priority_id', 'ASC')->findAll();
+    }
+
+    public function getAllPriorities()
+    {
+        return $this->get()->getResultArray();
+    }
 }

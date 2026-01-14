@@ -12,7 +12,7 @@ class TicketMessageModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['message'];
+    protected $allowedFields    = ['ticket_id', 'sender_id', 'message', 'is_internal'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -43,4 +43,29 @@ class TicketMessageModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getMessagesForTicket($ticketId)
+    {
+        return $this->builder('ticket_messages tm')
+            ->select('tm.*, u.full_name, u.photo_profile')
+            ->join('users u', 'u.user_id = tm.sender_id')
+            ->where('tm.ticket_id', $ticketId)
+            ->orderBy('tm.created_at', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    public function getRecentActivityForProject($projectId, $userId)
+    {
+        return $this->builder('ticket_messages tm')
+            ->select('tm.*, t.subject, u.full_name, u.photo_profile')
+            ->join('tickets t', 't.ticket_id = tm.ticket_id')
+            ->join('users u', 'u.user_id = tm.sender_id')
+            ->where('t.project_id', $projectId)
+            ->where('t.customer_id', $userId)
+            ->orderBy('tm.created_at', 'DESC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
+    }
 }
