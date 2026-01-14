@@ -2,61 +2,18 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\ConnectionInterface;
 use CodeIgniter\Model;
+use CodeIgniter\Validation\ValidationInterface;
 
 class TicketModel extends Model
 {
     protected $table = 'tickets';
-    protected $primaryKey = 'ticket_id';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
-    protected $useSoftDeletes = false;
 
-    protected $allowedFields = [
-        'ticket_number',
-        'subject',
-        'description',
-        'customer_id',
-        'project_id',
-        'department_id',
-        'assigned_to',
-        'category_id',
-        'priority_id',
-        'status_id',
-        'due_date',
-        'first_response_at',
-        'resolved_at',
-        'closed_at'
-    ];
-
-    protected $useTimestamps = true;
-    protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
-
-    protected $validationRules = [
-        'ticket_number' => 'required|max_length[20]|is_unique[tickets.ticket_number,ticket_id,{ticket_id}]',
-        'subject' => 'required|max_length[255]',
-        'description' => 'required',
-        'customer_id' => 'required|integer',
-        'project_id' => 'required|integer',
-        'category_id' => 'required|integer',
-        'priority_id' => 'required|integer',
-        'status_id' => 'required|integer'
-    ];
-
-    protected $validationMessages = [
-        'ticket_number' => [
-            'required' => 'Ticket number is required',
-            'is_unique' => 'Ticket number already exists'
-        ],
-        'subject' => [
-            'required' => 'Subject is required'
-        ]
-    ];
-
-    // Callbacks
-    protected $beforeInsert = ['generateTicketNumber'];
-    protected $beforeUpdate = ['updateTimestamps'];
+    public function __construct(?ConnectionInterface $db = null, ?ValidationInterface $validation = null)
+    {
+        $this->builder = db_connect()->table($this->table);
+    }
 
     // ==================== CALLBACK METHODS ====================
 
@@ -112,9 +69,7 @@ class TicketModel extends Model
      */
     public function getTicketsWithDetails(array $filters = [], int $limit = null, int $offset = 0): array
     {
-        $db = db_connect();
-
-        $builder = $db->table('tickets t')
+        $queryBuilder = $this->builder
             ->select('t.*, 
                 c.first_name as customer_first_name, c.last_name as customer_last_name, c.email as customer_email,
                 p.project_name, p.project_code,
@@ -133,16 +88,16 @@ class TicketModel extends Model
 
         // Apply filters
         if (!empty($filters)) {
-            $this->applyFilters($builder, $filters);
+            $this->applyFilters($queryBuilder, $filters);
         }
 
-        $builder->orderBy('t.created_at', 'DESC');
+        $queryBuilder->orderBy('t.created_at', 'DESC');
 
         if ($limit) {
-            $builder->limit($limit, $offset);
+            $queryBuilder->limit($limit, $offset);
         }
 
-        return $builder->get()->getResultArray();
+        // return $queryBuilder->get()->getResultArray();
     }
 
     /**

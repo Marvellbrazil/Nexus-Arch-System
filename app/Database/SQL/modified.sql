@@ -97,8 +97,6 @@ CREATE TABLE "public"."projects" (
     "description" text,
     "is_active" bool DEFAULT true,
     "created_at" timestamp DEFAULT now(),
-    "user_id" int4 NOT NULL,
-    CONSTRAINT "projects_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE CASCADE ON UPDATE CASCADE,
     PRIMARY KEY ("project_id")
 );
 
@@ -280,11 +278,16 @@ INSERT INTO "public"."priorities" ("priority_id", "priority_name") VALUES
 (2, 'Medium'),
 (3, 'High'),
 (4, 'Critical');
-
-INSERT INTO "public"."projects" ("project_id", "project_code", "project_name", "description", "is_active", "created_at", "user_id") VALUES
-(3, 'PROJ003', 'Web Portal', 'Web portal development', 't', '2026-01-09 10:27:16.980932', 2),
-(2, 'PROJ002', 'Mobile App', 'Mobile application support', 't', '2026-01-09 10:27:16.980932', 2),
-(1, 'PROJ001', 'NEXUS System', 'Main NEXUS support system', 't', '2026-01-09 10:27:16.980932', 8);
+INSERT INTO "public"."project_assignments" ("assignment_id", "user_id", "project_id", "assigned_at") VALUES
+(2, 8, 1, '2026-01-14 09:05:37.007935'),
+(3, 2, 2, '2026-01-14 09:05:37.007935'),
+(4, 2, 3, '2026-01-14 09:05:37.007935'),
+(5, 2, 4, '2026-01-14 10:03:25.579894');
+INSERT INTO "public"."projects" ("project_id", "project_code", "project_name", "description", "is_active", "created_at") VALUES
+(1, 'PROJ001', 'NEXUS System', 'Main NEXUS support system', 't', '2026-01-09 10:27:16.980932'),
+(2, 'PROJ002', 'Mobile App', 'Mobile Application Support', 't', '2026-01-09 10:27:16.980932'),
+(3, 'PROJ003', 'Web Portal', 'Web Portal Development', 't', '2026-01-11 14:32:16.980932'),
+(4, 'PROJ004', 'Hub Website', 'Hub Links in Website', 'f', '2026-01-14 10:02:56.068147');
 INSERT INTO "public"."roles" ("role_id", "role_name", "description", "created_at") VALUES
 (1, 'Admin', 'Full system access and management', '2026-01-09 10:27:16.980932'),
 (2, 'Customer', 'External users who submit tickets', '2026-01-09 10:27:16.980932'),
@@ -302,13 +305,15 @@ INSERT INTO "public"."tickets" ("ticket_id", "ticket_number", "subject", "descri
 (1, 'PROJ002-001', 'skjgbjksbgkjbsfg', '<p>kjrsbgkjrsbgkjfgbkjdbgkjbdkjbgjkdbgkjbdfjkgbkjdfgbkjdfgb</p>', 2, 2, 1, NULL, 2, 3, 1, NULL, NULL, NULL, NULL, '2026-01-12 12:00:43', '2026-01-12 12:00:43'),
 (3, 'PROJ003-001', 'Wrong Path', '<p>This is a serious problem, I think there''s problem on the <i>APPPATH, </i>which cause the main functionality of this web is down. Please fix it <strong>ASAP</strong>!</p>', 2, 3, 1, NULL, 2, 4, 3, NULL, NULL, NULL, NULL, '2026-01-13 13:56:37', '2026-01-13 13:56:37'),
 (4, 'PROJ003-002', '.env not found', '<p>We can tricked it by Database.php, but it is still severe, remembering .env is crucial for web, and we don''t have the exact templates for this website.</p>', 2, 3, 1, NULL, 2, 3, 1, NULL, NULL, NULL, NULL, '2026-01-13 14:15:34', '2026-01-13 14:15:34'),
-(2, 'PROJ002-002', 'skjgbjksbgkjbsfg', '<p>kjrsbgkjrsbgkjfgbkjdbgkjbdkjbgjkdbgkjbdfjkgbkjdfgbkjdfgb</p>', 2, 2, 1, NULL, 2, 3, 2, NULL, NULL, NULL, NULL, '2026-01-12 12:01:25', '2026-01-12 12:01:25');
+(2, 'PROJ002-002', 'skjgbjksbgkjbsfg', '<p>kjrsbgkjrsbgkjfgbkjdbgkjbdkjbgjkdbgkjbdfjkgbkjdfgbkjdfgb</p>', 2, 2, 1, NULL, 2, 3, 2, NULL, NULL, NULL, NULL, '2026-01-12 12:01:25', '2026-01-12 12:01:25'),
+(5, 'PROJ004-001', 'The server is overload', '<p>The server is starting to overload due to unexpected there is so much users that visiting the website, please change the <i><strong>rate limit</strong></i> and <i><strong>server tick rate</strong></i>.</p>', 2, 4, 1, NULL, 1, 3, 1, NULL, NULL, NULL, NULL, '2026-01-14 10:46:35', '2026-01-14 10:46:35'),
+(6, 'PROJ003-003', 'Portal is broken', '<p>Please, my portal is broken, I don''t know how to fix it, what I know is the message “<strong>http://hamperskita.co.id/ NOT FOUND</strong>”</p>', 2, 3, 1, NULL, 2, 3, 1, NULL, NULL, NULL, NULL, '2026-01-14 12:34:35', '2026-01-14 12:34:35');
 INSERT INTO "public"."users" ("user_id", "username", "full_name", "email", "password", "role_id", "department_id", "phone_number", "photo_profile", "is_active", "last_login", "created_at", "updated_at") VALUES
-(1, 'admin', 'System Administrator', 'admin@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 1, NULL, NULL, NULL, 't', '2026-01-12 09:14:45', '2026-01-09 10:27:16.980932', '2026-01-12 09:14:45'),
-(3, 'support1', 'Jane Support', 'support@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 3, NULL, NULL, NULL, 't', '2026-01-12 10:10:13', '2026-01-09 10:27:16.980932', '2026-01-12 10:10:13'),
 (4, 'itsupport1', 'IT Support Staff', 'itsupport@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 1, NULL, NULL, 't', '2026-01-09 10:39:43', '2026-01-09 10:27:16.980932', '2026-01-09 10:39:43'),
 (5, 'uiux1', 'UI/UX Designer', 'uiux@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 2, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
 (6, 'techsupport1', 'Technical Support', 'techsupport@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 3, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
 (7, 'feature1', 'Feature Developer', 'feature@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 4, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
-(2, 'janedoe', 'Jane Doe', 'janedoe@nexus.com', '$2y$10$cF2FHo6vY3.suCJxZVfs2eLPeFrT8Bj4Jsf08J1Ebo6LlsjsMtK9q', 2, NULL, NULL, NULL, 't', '2026-01-13 13:49:40', '2026-01-09 10:27:16.980932', '2026-01-13 13:49:40'),
+(3, 'support1', 'Jane Support', 'support@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 3, NULL, NULL, NULL, 't', '2026-01-14 11:36:48', '2026-01-09 10:27:16.980932', '2026-01-14 11:36:48'),
+(2, 'janedoe', 'Jane Doe', 'janedoe@nexus.com', '$2y$10$cF2FHo6vY3.suCJxZVfs2eLPeFrT8Bj4Jsf08J1Ebo6LlsjsMtK9q', 2, NULL, NULL, NULL, 't', '2026-01-14 12:30:20', '2026-01-09 10:27:16.980932', '2026-01-14 12:30:20'),
+(1, 'admin', 'System Administrator', 'admin@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 1, NULL, NULL, NULL, 't', '2026-01-14 13:27:38', '2026-01-09 10:27:16.980932', '2026-01-14 13:27:38'),
 (8, 'customer', 'Customer Customer', 'customer@nexus.com', '$2y$10$QPJtsp8ODWD9.Wb3ZSyO9eB2JbB9ICSdOQDDNrJ.SGP7zrLB7oGLG', 2, NULL, 'NULL', 'NULL', 't', '2026-01-10 22:04:46', '2026-01-10 21:32:22.414413', '2026-01-10 22:04:46');

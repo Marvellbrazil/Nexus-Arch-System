@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Controllers;
+use App\Models\ProjectModel;
 use App\Models\UserModel;
 use Config\Database;
+use App\Models\ProjectModel;
 
 class CustomerController extends BaseController
 {
@@ -131,13 +133,13 @@ class CustomerController extends BaseController
         // Build query
         $builder = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, 
-                 cat.category_name, proj.project_name, 
-                 d.department_name,
-                 t.ticket_number as display_id,
-                 t.ticket_id as id_num,
-                 t.created_at as timestamp,
-                 t.subject,
-                 proj.project_code as project_key')
+                cat.category_name, proj.project_name, 
+                d.department_name,
+                t.ticket_number as display_id,
+                t.ticket_id as id_num,
+                t.created_at as timestamp,
+                t.subject,
+                proj.project_code as project_key')
             ->join('priorities p', 'p.priority_id = t.priority_id')
             ->join('statuses s', 's.status_id = t.status_id')
             ->join('categories cat', 'cat.category_id = t.category_id')
@@ -458,7 +460,6 @@ class CustomerController extends BaseController
 
         // Handle password change
         if (!empty($postData['current_password'])) {
-            // Verify current password - CEK FIELD PASSWORD DI DATABASE
             if (!password_verify($postData['current_password'], $currentUser['password'])) {
                 log_message('debug', 'Password verification failed');
                 return redirect()->back()->with('error', 'Current password is incorrect');
@@ -587,7 +588,7 @@ class CustomerController extends BaseController
                 SUM(CASE WHEN t.status_id = 2 THEN 1 ELSE 0 END) as in_progress_tickets,
                 SUM(CASE WHEN t.status_id = 3 THEN 1 ELSE 0 END) as resolved_tickets
             ')
-            ->join('tickets t', 't.project_id = p.project_id AND t.customer_id = p.user_id', 'left')
+            ->join('tickets t', 't.project_id = p.project_id', 'left')
             ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
             ->where('pa.user_id', $this->userId)
             ->where('p.is_active', true)
@@ -663,17 +664,21 @@ class CustomerController extends BaseController
 
     private function getAssignedProjects()
     {
-        return $this->db->table('projects p')
-            ->select('p.project_id, p.project_code, p.project_name, p.description, p.created_at, 
-                COUNT(t.ticket_id) as ticket_count')
-            ->join('tickets t', 't.project_id = p.project_id', 'left')
-            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
-            ->where('pa.user_id', $this->userId)
-            ->where('p.is_active', value: true)
-            ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
-            ->orderBy('p.project_id', 'ASC')
-            ->get()
-            ->getResultArray();
+        // return $this->db->table('projects p')
+        //     ->select('p.project_id, p.project_code, p.project_name, p.description, p.created_at, 
+        //         COUNT(t.ticket_id) as ticket_count')
+        //     ->join('tickets t', 't.project_id = p.project_id', 'left')
+        //     ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+        //     ->where('pa.user_id', $this->userId)
+        //     ->where('p.is_active', value: true)
+        //     ->groupBy('p.project_id, p.project_code, p.project_name, p.description, p.created_at')
+        //     ->orderBy('p.project_id', 'ASC')
+        //     ->get()
+        //     ->getResultArray();
+
+        $projects = new ProjectModel();
+
+        return $projects->getAssignedProjects($this->userId);
     }
 
     // Update method createTicket():

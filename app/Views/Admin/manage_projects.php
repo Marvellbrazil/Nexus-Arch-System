@@ -990,7 +990,7 @@
             projects.forEach(project => {
                 html += `
                     <div class="project-row ${selectedProjectId === project.id ? 'selected' : ''}" 
-                         data-project-id="${project.id}">
+                        data-project-id="${project.id}">
                         <div class="col-span-2 text-text-dark/60 font-medium">#${project.id}</div>
                         <div class="col-span-3">
                             <div class="font-medium text-text-dark">${project.name}</div>

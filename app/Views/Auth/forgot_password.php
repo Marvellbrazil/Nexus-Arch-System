@@ -54,10 +54,15 @@
             <!-- Submit Button -->
             <button 
                 type="submit" 
-                class="w-full h-12 md:h-[45px] bg-secondary hover:bg-[#817CB2] text-[#C1D1F3] text-sm md:text-[16px] font-extrabold rounded md:rounded-[6px] border-none cursor-pointer transition-all duration-300 my-4 md:my-[20px] hover:-translate-y-[2px] hover:shadow-lg"
+                class="w-full h-12 md:h-[45px] bg-secondary hover:bg-[#817CB2] text-[#C1D1F3] text-sm md:text-[16px] font-extrabold rounded md:rounded-[6px] border-none cursor-pointer transition-all duration-300 my-2 md:my-[10px] hover:-translate-y-[2px] hover:shadow-lg"
             >
                 Send Reset Link
             </button>
+            <div class="text-center">
+                <a href="<?= base_url('login') ?>" class="text-text-light text-xs md:text-[14px] font-bold no-underline hover:text-accent cursor-pointer transition-colors">
+                    Back to Login?
+                </a>
+            </div>
         </form>
     </div>
 </div>

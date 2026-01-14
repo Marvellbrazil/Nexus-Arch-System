@@ -344,7 +344,7 @@
     </div>
 
     <!-- Projects Section -->
-    <div class="mb-8">
+    <!-- <div class="mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -357,7 +357,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Project 1 -->
                 <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
                     <div class="flex items-start justify-between mb-4">
                         <div>
@@ -380,7 +379,6 @@
                     </div>
                 </div>
 
-                <!-- Project 2 -->
                 <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
                     <div class="flex items-start justify-between mb-4">
                         <div>
@@ -404,7 +402,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Ticket Statistics -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">

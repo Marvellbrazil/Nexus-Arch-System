@@ -138,7 +138,7 @@
                             name="email" 
                             value="<?= old('email') ?>"
                             class="w-full h-12 md:h-[54px] pl-12 pr-4 bg-[rgba(255,255,255,0.1)] border border-border-light rounded md:rounded-[6px] text-text-light text-sm md:text-[17px] font-bold outline-none form-input transition-all duration-300 placeholder:text-text-light/50"
-                            placeholder="enter your department email"
+                            placeholder="Enter your email"
                             required
                             autocomplete="email"
                         >
@@ -159,7 +159,7 @@
                             id="password" 
                             name="password" 
                             class="w-full h-12 md:h-[54px] pl-12 pr-12 bg-[rgba(255,255,255,0.1)] border border-border-light rounded md:rounded-[6px] text-text-light text-sm md:text-[17px] font-bold outline-none form-input transition-all duration-300 placeholder:text-text-light/50"
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                             required
                             autocomplete="current-password"
                         >
