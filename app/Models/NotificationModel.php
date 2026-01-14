@@ -74,9 +74,9 @@ class NotificationModel extends Model
         return $this->insert($data);
     }
 
-public function markAllAsRead($userId)
+    public function markAllAsRead($userId)
     {
-        return $this->where('user_id', $userId)->set(['is_read' => true])->update();
+        return $this->where('user_id', $userId)->set(['is_read' => 't'])->update();
     }
 
     public function getNotificationsForCustomer($userId)

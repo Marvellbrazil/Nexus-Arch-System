@@ -472,7 +472,7 @@ public function notifications()
 
         $projects = new ProjectModel();
 
-        return $projects->getAssignedProjects($this->userId);
+        return $projects->getAssignedProjectsWithTicketCount($this->userId);
     }
 
     // Update method createTicket():

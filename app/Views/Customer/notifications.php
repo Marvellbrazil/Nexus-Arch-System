@@ -236,7 +236,7 @@
                                 <p class="text-sm md:text-base text-gray-700 mb-3"><?= $notification['message'] ?></p>
                                 <div class="flex items-center gap-2">
                                     <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
-                                        <span class="text-xs font-bold text-white"><?= $notification['type'] ?></span>
+                                        <span class="text-xs font-bold text-white"><?= $notification['notification_type'] ?></span>
                                     </div>
                                     <div class="priority-badge px-3 py-1 <?= $notification['is_read'] == 't' ? 'bg-[#66BBFF]' : 'bg-[#a9a9a9]' ?> rounded-lg">
                                         <span class="text-xs font-bold text-white"><?= $notification['is_read'] == 't' ? 'Read' : 'Unread' ?></span>
