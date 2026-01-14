@@ -589,4 +589,3 @@ public function getUserDetails($userId)
             ->getRowArray();
     }
 }
-        

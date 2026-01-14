@@ -59,8 +59,7 @@ $routes->group('admin', function ($routes) {
 
 // Customer Routes
 $routes->group('customer', function ($routes) {
-    $routes->get('', function () {
-        return redirect()->to('customer/dashboard'); });
+    $routes->get('', function () { return redirect()->to('customer/dashboard'); });
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');

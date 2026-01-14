@@ -17,7 +17,7 @@ use App\Models\CategoryDepartmentMapping;
 class CustomerController extends BaseController
 {
     private $userId;
-    private $userModel;
+    protected $userModel;
     private $ticketModel;
     private $projectModel;
     private $notificationModel;
@@ -28,11 +28,13 @@ class CustomerController extends BaseController
     private $categoryModel;
     private $departmentModel;
     private $categoryDepartmentMapping;
+    private $db;
 
     public function __construct()
     {
         $this->checkRole(['Customer']);
         $this->userId = session()->get('user_id');
+        $this->db = db_connect();
 
         // Load the models
         $this->userModel = new UserModel();
