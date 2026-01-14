@@ -762,19 +762,19 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // CSRF Token untuk AJAX requests
         const csrfToken = '<?= csrf_hash() ?>';
         const csrfName = '<?= csrf_token() ?>';
         const baseUrl = '<?= base_url() ?>';
-        
+
         // State management
         let currentPage = 1;
         let itemsPerPage = 10;
         let selectedProjectId = null;
         let isLoading = false;
         let allUsers = <?= json_encode($all_users ?? []) ?>;
-        
+
         // DOM Elements
         const elements = {
             projectSearch: document.getElementById('projectSearch'),
@@ -795,14 +795,186 @@
             bulkAssignBtn: document.getElementById('bulkAssignBtn'),
             importProjectsBtn: document.getElementById('importProjectsBtn')
         };
-        
+
+        // Modal templates sebagai string
+        const bulkAssignModalHTML = `
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slideInUp">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Bulk Assign Users to Projects</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 overflow-y-auto max-h-[60vh]">
+            <!-- Step 1: Select Projects -->
+            <div class="mb-6">
+                <h4 class="text-gray-700 font-medium mb-4">Step 1: Select Projects</h4>
+                <div class="mb-4">
+                    <div class="relative">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <input type="text" placeholder="Search projects..." id="bulkSearchProjects"
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                    </div>
+                </div>
+                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                    <div id="bulkProjectsList" class="divide-y divide-gray-100">
+                        <!-- Projects will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Select Users -->
+            <div>
+                <h4 class="text-gray-700 font-medium mb-4">Step 2: Select Users</h4>
+                <div class="mb-4">
+                    <div class="relative">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <input type="text" placeholder="Search users..." id="bulkSearchUsers"
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                    </div>
+                </div>
+                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                    <div id="bulkUsersList" class="divide-y divide-gray-100">
+                        <!-- Users will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-gray-600">Selected Projects:</span>
+                        <span id="bulkSelectedProjectsCount" class="ml-2 font-semibold">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Selected Users:</span>
+                        <span id="bulkSelectedUsersCount" class="ml-2 font-semibold">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Total Assignments:</span>
+                        <span id="bulkTotalAssignments" class="ml-2 font-semibold">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                Cancel
+            </button>
+            <button id="confirmBulkAssign" disabled
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Assign Users
+            </button>
+        </div>
+    </div>
+</div>
+`;
+
+        const importProjectsModalHTML = `
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Import Projects</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <!-- File Upload -->
+            <div class="mb-6">
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-secondary transition-colors">
+                    <div class="mb-4">
+                        <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl"></i>
+                    </div>
+                    <h4 class="text-gray-700 font-medium mb-2">Drop file here or click to browse</h4>
+                    <p class="text-gray-500 text-sm mb-4">Supports CSV, XLSX, XLS (Max 10MB)</p>
+                    <input type="file" id="importFile" accept=".csv,.xlsx,.xls" class="hidden">
+                    <button id="browseFileBtn" class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
+                        Browse Files
+                    </button>
+                </div>
+                <div id="selectedFileInfo" class="mt-3 text-sm text-gray-600 hidden">
+                    <i class="fas fa-file text-gray-400 mr-2"></i>
+                    <span id="fileName"></span>
+                    <button id="removeFileBtn" class="ml-2 text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Template Download -->
+            <div class="mb-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                        <div>
+                            <h5 class="text-blue-800 font-medium mb-1">Need a template?</h5>
+                            <p class="text-blue-600 text-sm mb-3">Download our CSV template to ensure proper formatting.</p>
+                            <button id="downloadTemplateBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                                <i class="fas fa-download mr-2"></i>Download CSV Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Required Columns -->
+            <div>
+                <h5 class="text-gray-700 font-medium mb-2">Required Columns:</h5>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="bg-gray-50 p-2 rounded">
+                        <span class="font-medium">project_name</span>
+                        <span class="text-red-500 ml-1">*</span>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <span class="font-medium">project_code</span>
+                        <span class="text-red-500 ml-1">*</span>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <span class="font-medium">description</span>
+                        <span class="text-gray-500 ml-1">(optional)</span>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <span class="font-medium">is_active</span>
+                        <span class="text-gray-500 ml-1">(true/false)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                Cancel
+            </button>
+            <button id="confirmImport" disabled
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Import Projects
+            </button>
+        </div>
+    </div>
+</div>
+`;
+
         // Initialize
         init();
-        
+
         function init() {
             loadProjectsData();
             setupEventListeners();
-            
+
             // Auto-select first project if available from initial data
             const initialProjects = <?= json_encode($projects ?? []) ?>;
             if (initialProjects && initialProjects.length > 0) {
@@ -811,7 +983,7 @@
                 }, 500);
             }
         }
-        
+
         function setupEventListeners() {
             // Search input
             if (elements.projectSearch) {
@@ -820,7 +992,7 @@
                     loadProjectsData();
                 }, 300));
             }
-            
+
             // Filter changes
             if (elements.statusFilter) {
                 elements.statusFilter.addEventListener('change', () => {
@@ -828,33 +1000,33 @@
                     loadProjectsData();
                 });
             }
-            
+
             if (elements.sortFilter) {
                 elements.sortFilter.addEventListener('change', () => {
                     currentPage = 1;
                     loadProjectsData();
                 });
             }
-            
+
             // Reset filters
             if (elements.resetFilters) {
                 elements.resetFilters.addEventListener('click', resetAllFilters);
             }
-            
+
             // Export projects
             if (elements.exportProjects) {
                 elements.exportProjects.addEventListener('click', exportProjectsData);
             }
-            
+
             // Pagination
             if (elements.prevPage) {
                 elements.prevPage.addEventListener('click', () => changePage(currentPage - 1));
             }
-            
+
             if (elements.nextPage) {
                 elements.nextPage.addEventListener('click', () => changePage(currentPage + 1));
             }
-            
+
             // Sort headers
             document.querySelectorAll('.sortable').forEach(header => {
                 header.addEventListener('click', () => {
@@ -863,27 +1035,27 @@
                     loadProjectsData(field, currentDirection);
                 });
             });
-            
+
             // Action buttons
             if (elements.addProjectBtn) {
                 elements.addProjectBtn.addEventListener('click', showAddProjectModal);
             }
-            
+
             if (elements.bulkAssignBtn) {
                 elements.bulkAssignBtn.addEventListener('click', showBulkAssignModal);
             }
-            
+
             if (elements.importProjectsBtn) {
                 elements.importProjectsBtn.addEventListener('click', showImportProjectsModal);
             }
         }
-        
+
         async function loadProjectsData(sortBy = 'created_at', sortOrder = 'desc') {
             if (isLoading) return;
-            
+
             isLoading = true;
             showLoading();
-            
+
             try {
                 const response = await fetch(`${baseUrl}/admin/manageProjects`, {
                     method: 'POST',
@@ -903,14 +1075,14 @@
                         sort_order: sortOrder
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.data) {
                     renderProjects(data.data);
                     updatePagination(data.recordsTotal, data.recordsFiltered);
                     updateShowingCount(data.recordsFiltered);
-                    
+
                     // Select first project if none selected
                     if (!selectedProjectId && data.data.length > 0) {
                         selectProject(data.data[0].id);
@@ -930,11 +1102,11 @@
                 hideLoading();
             }
         }
-        
+
         function fallbackToInitialData() {
             // Use initial data from server if available
             const initialProjects = <?= json_encode($projects ?? []) ?>;
-            
+
             if (initialProjects && initialProjects.length > 0) {
                 const formattedProjects = initialProjects.map(project => ({
                     id: project.project_id,
@@ -942,21 +1114,21 @@
                     name: project.project_name,
                     description: project.description,
                     status: project.is_active ? 'active' : 'inactive',
-                    created_at: project.created_at ? new Date(project.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                    created_at: project.created_at ? new Date(project.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
                     }) : 'Unknown',
                     total_tickets: project.total_tickets || 0,
                     open_tickets: project.open_tickets || 0,
                     assigned_users: project.assigned_users || 0,
                     is_active: project.is_active
                 }));
-                
+
                 renderProjects(formattedProjects);
                 updatePagination(formattedProjects.length, formattedProjects.length);
                 updateShowingCount(formattedProjects.length);
-                
+
                 if (!selectedProjectId && formattedProjects.length > 0) {
                     selectProject(formattedProjects[0].id);
                 }
@@ -964,7 +1136,7 @@
                 showEmptyState();
             }
         }
-        
+
         function showEmptyState() {
             if (elements.projectsList) {
                 elements.projectsList.innerHTML = `
@@ -976,17 +1148,17 @@
                 `;
             }
         }
-        
+
         function renderProjects(projects) {
             if (!elements.projectsList) return;
-            
+
             if (!projects || projects.length === 0) {
                 showEmptyState();
                 return;
             }
-            
+
             let html = '';
-            
+
             projects.forEach(project => {
                 html += `
                     <div class="project-row ${selectedProjectId === project.id ? 'selected' : ''}" 
@@ -1018,20 +1190,20 @@
                     </div>
                 `;
             });
-            
+
             elements.projectsList.innerHTML = html;
-            
+
             // Add event listeners
             document.querySelectorAll('.project-row').forEach(row => {
                 const projectId = parseInt(row.dataset.projectId);
-                
+
                 // Click event for selecting project
                 row.addEventListener('click', (e) => {
                     if (!e.target.closest('.project-action-btn')) {
                         selectProject(projectId);
                     }
                 });
-                
+
                 // Action menu event
                 const actionBtn = row.querySelector('.project-action-btn');
                 if (actionBtn) {
@@ -1045,10 +1217,10 @@
                 }
             });
         }
-        
+
         async function selectProject(projectId) {
             selectedProjectId = projectId;
-            
+
             // Update selected row styling
             document.querySelectorAll('.project-row').forEach(row => {
                 row.classList.remove('selected');
@@ -1056,19 +1228,19 @@
                     row.classList.add('selected');
                 }
             });
-            
+
             // Load project details
             await loadProjectDetails(projectId);
-            
+
             // Update project actions
             updateProjectActions(projectId);
         }
-        
+
         async function loadProjectDetails(projectId) {
             if (!projectId) return;
-            
+
             showLoading('projectDetails');
-            
+
             try {
                 const response = await fetch(`${baseUrl}/admin/manageProjects`, {
                     method: 'POST',
@@ -1082,9 +1254,9 @@
                         project_id: projectId
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success && data.project) {
                     renderProjectDetails(data.project, data.assigned_users || []);
                 } else {
@@ -1097,14 +1269,14 @@
                 hideLoading('projectDetails');
             }
         }
-        
+
         function renderProjectDetails(project, assignedUsers = []) {
             if (!elements.projectDetails) return;
-            
+
             const initials = project.project_code ? project.project_code.substring(0, 2) : '??';
             const createdAt = project.created_at || 'Unknown';
             const updatedAt = project.updated_at || null;
-            
+
             const detailsHtml = `
                 <div class="animate-fadeIn">
                     <div class="project-avatar">${initials}</div>
@@ -1182,10 +1354,10 @@
                     ` : ''}
                 </div>
             `;
-            
+
             elements.projectDetails.innerHTML = detailsHtml;
         }
-        
+
         function showProjectDetailsError(message) {
             if (elements.projectDetails) {
                 elements.projectDetails.innerHTML = `
@@ -1201,10 +1373,10 @@
                 `;
             }
         }
-        
+
         function updateProjectActions(projectId) {
             if (!elements.projectActions) return;
-            
+
             // Show loading state
             elements.projectActions.innerHTML = `
                 <div class="space-y-2">
@@ -1214,13 +1386,13 @@
                     </button>
                 </div>
             `;
-            
+
             // Get project status from row
             const projectRow = document.querySelector(`[data-project-id="${projectId}"]`);
             const statusBadge = projectRow?.querySelector('.status-badge');
             const statusText = statusBadge?.textContent?.toLowerCase().trim() || 'active';
             const isActive = statusText === 'active';
-            
+
             const actionsHtml = `
                 <div class="space-y-2 animate-fadeIn">
                     <button class="edit-project-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
@@ -1246,37 +1418,613 @@
                     </div>
                 </div>
             `;
-            
+
             elements.projectActions.innerHTML = actionsHtml;
-            
+
             // Add event listeners
             setTimeout(() => {
                 const editBtn = elements.projectActions.querySelector('.edit-project-btn');
                 const manageBtn = elements.projectActions.querySelector('.manage-users-btn');
                 const toggleBtn = elements.projectActions.querySelector('.toggle-status-btn');
                 const deleteBtn = elements.projectActions.querySelector('.delete-project-btn');
-                
+
                 if (editBtn) {
                     editBtn.addEventListener('click', () => editProject(projectId));
                 }
-                
+
                 if (manageBtn) {
                     manageBtn.addEventListener('click', () => manageProjectUsers(projectId));
                 }
-                
+
                 if (toggleBtn) {
                     toggleBtn.addEventListener('click', () => toggleProjectStatus(projectId, !isActive));
                 }
-                
+
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => deleteProject(projectId));
                 }
             }, 100);
         }
-        
-        // ... (sisanya sama seperti sebelumnya, semua function untuk modal, pagination, dll)
-        // Pastikan untuk menyesuaikan dengan struktur data dari ProjectModel Anda
-        
+
+        // Function untuk menampilkan modal Bulk Assign
+        async function showBulkAssignModal() {
+            // Remove existing modal
+            const existingModal = document.querySelector('.bulk-assign-modal');
+            if (existingModal) existingModal.remove();
+
+            // Create and append modal
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'bulk-assign-modal';
+            modalContainer.innerHTML = bulkAssignModalHTML;
+            document.body.appendChild(modalContainer);
+
+            // Setup event listeners
+            setupBulkAssignModalEvents();
+            
+            // Load initial data
+            await loadBulkProjects();
+            await loadBulkUsers();
+        }
+
+        function setupBulkAssignModalEvents() {
+            const modal = document.querySelector('.bulk-assign-modal');
+            
+            // Close modal
+            modal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.style.opacity = '0';
+                    modal.style.transform = 'translateY(10px)';
+                    setTimeout(() => modal.remove(), 300);
+                });
+            });
+
+            // Search projects
+            const searchProjectsInput = modal.querySelector('#bulkSearchProjects');
+            if (searchProjectsInput) {
+                searchProjectsInput.addEventListener('input', debounce(async () => {
+                    await loadBulkProjects(searchProjectsInput.value);
+                }, 300));
+            }
+
+            // Search users
+            const searchUsersInput = modal.querySelector('#bulkSearchUsers');
+            if (searchUsersInput) {
+                searchUsersInput.addEventListener('input', debounce(async () => {
+                    await loadBulkUsers(searchUsersInput.value);
+                }, 300));
+            }
+
+            // Confirm button
+            const confirmBtn = modal.querySelector('#confirmBulkAssign');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', processBulkAssign);
+            }
+        }
+
+        // Function untuk menampilkan modal Import Projects
+        function showImportProjectsModal() {
+            // Remove existing modal
+            const existingModal = document.querySelector('.import-projects-modal');
+            if (existingModal) existingModal.remove();
+
+            // Create and append modal
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'import-projects-modal';
+            modalContainer.innerHTML = importProjectsModalHTML;
+            document.body.appendChild(modalContainer);
+
+            // Setup event listeners
+            setupImportModalEvents();
+        }
+
+        function setupImportModalEvents() {
+            const modal = document.querySelector('.import-projects-modal');
+            
+            // Close modal
+            modal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.style.opacity = '0';
+                    modal.style.transform = 'translateY(10px)';
+                    setTimeout(() => modal.remove(), 300);
+                });
+            });
+
+            // File upload
+            const fileInput = modal.querySelector('#importFile');
+            const browseBtn = modal.querySelector('#browseFileBtn');
+            const removeFileBtn = modal.querySelector('#removeFileBtn');
+            const confirmBtn = modal.querySelector('#confirmImport');
+
+            if (browseBtn) {
+                browseBtn.addEventListener('click', () => fileInput.click());
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        const file = this.files[0];
+                        const fileName = modal.querySelector('#fileName');
+                        const fileInfo = modal.querySelector('#selectedFileInfo');
+                        
+                        if (fileName) fileName.textContent = file.name;
+                        if (fileInfo) fileInfo.classList.remove('hidden');
+                        if (confirmBtn) confirmBtn.disabled = false;
+                    }
+                });
+            }
+
+            if (removeFileBtn) {
+                removeFileBtn.addEventListener('click', () => {
+                    fileInput.value = '';
+                    modal.querySelector('#selectedFileInfo').classList.add('hidden');
+                    if (confirmBtn) confirmBtn.disabled = true;
+                });
+            }
+
+            // Download template
+            const downloadBtn = modal.querySelector('#downloadTemplateBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadCSVTemplate);
+            }
+
+            // Confirm import
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', processImport);
+            }
+        }
+
+        // Function untuk memproses bulk assign
+        async function processBulkAssign() {
+            const modal = document.querySelector('.bulk-assign-modal');
+            if (!modal) return;
+
+            const selectedProjects = Array.from(modal.querySelectorAll('.project-checkbox:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked'))
+                .map(cb => parseInt(cb.value));
+
+            if (selectedProjects.length === 0 || selectedUsers.length === 0) {
+                showToast('Please select at least one project and one user', 'error');
+                return;
+            }
+
+            // Show loading
+            const confirmBtn = modal.querySelector('#confirmBulkAssign');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+            confirmBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('project_ids', JSON.stringify(selectedProjects));
+                formData.append('user_ids', JSON.stringify(selectedUsers));
+
+                const response = await fetch(`${baseUrl}/admin/projects/bulk-assign`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    modal.querySelector('.close-modal').click();
+                    
+                    // Reload projects to update counts
+                    loadProjectsData();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Bulk assign error:', error);
+                showToast('Failed to process bulk assignment', 'error');
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // Function untuk memproses import
+        async function processImport() {
+            const modal = document.querySelector('.import-projects-modal');
+            if (!modal) return;
+
+            const fileInput = modal.querySelector('#importFile');
+            if (!fileInput.files.length) {
+                showToast('Please select a file to import', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            // Show loading
+            const confirmBtn = modal.querySelector('#confirmImport');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+            confirmBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('projects_file', file);
+
+                const response = await fetch(`${baseUrl}/admin/projects/import`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    modal.querySelector('.close-modal').click();
+                    
+                    // Reload projects
+                    loadProjectsData();
+                    
+                    // Show import summary if there were errors
+                    if (data.error_count > 0) {
+                        setTimeout(() => {
+                            showImportSummary(data);
+                        }, 1000);
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                showToast('Failed to import projects', 'error');
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // Function untuk menampilkan summary import
+        function showImportSummary(data) {
+            const summaryHTML = `
+                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
+                    <div class="bg-white rounded-2xl w-full max-w-lg animate-slideInUp">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-semibold text-gray-800">Import Summary</h3>
+                                <button class="close-summary text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-green-50 p-4 rounded-xl text-center">
+                                        <div class="text-green-600 text-2xl font-bold">${data.imported_count}</div>
+                                        <div class="text-green-700 text-sm">Projects Imported</div>
+                                    </div>
+                                    <div class="bg-red-50 p-4 rounded-xl text-center">
+                                        <div class="text-red-600 text-2xl font-bold">${data.error_count}</div>
+                                        <div class="text-red-700 text-sm">Errors</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${data.errors && data.errors.length > 0 ? `
+                            <div>
+                                <h4 class="text-gray-700 font-medium mb-3">Error Details:</h4>
+                                <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="p-3 text-left">Row</th>
+                                                <th class="p-3 text-left">Error</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.errors.map(error => `
+                                                <tr class="border-t border-gray-100">
+                                                    <td class="p-3">${error.row}</td>
+                                                    <td class="p-3 text-red-600">${error.error}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="p-6 border-t border-gray-200">
+                            <button class="close-summary w-full py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const summaryContainer = document.createElement('div');
+            summaryContainer.innerHTML = summaryHTML;
+            document.body.appendChild(summaryContainer);
+
+            summaryContainer.querySelectorAll('.close-summary').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    summaryContainer.style.opacity = '0';
+                    summaryContainer.style.transform = 'translateY(10px)';
+                    setTimeout(() => summaryContainer.remove(), 300);
+                });
+            });
+        }
+
+        // Function untuk load projects untuk bulk assign
+        async function loadBulkProjects(search = '') {
+            const modal = document.querySelector('.bulk-assign-modal');
+            if (!modal) return;
+
+            const projectsList = modal.querySelector('#bulkProjectsList');
+            if (!projectsList) return;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('search', search);
+
+                const response = await fetch(`${baseUrl}/admin/projects/get-for-bulk-assign`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.projects) {
+                    renderBulkProjects(data.projects, projectsList);
+                    updateBulkSelectionCounts();
+                }
+            } catch (error) {
+                console.error('Error loading bulk projects:', error);
+                projectsList.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load projects</div>';
+            }
+        }
+
+        // Function untuk load users untuk bulk assign
+        async function loadBulkUsers(search = '') {
+            const modal = document.querySelector('.bulk-assign-modal');
+            if (!modal) return;
+
+            const usersList = modal.querySelector('#bulkUsersList');
+            if (!usersList) return;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('search', search);
+
+                const response = await fetch(`${baseUrl}/admin/getAllUsers`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.users) {
+                    renderBulkUsers(data.users, usersList);
+                    updateBulkSelectionCounts();
+                }
+            } catch (error) {
+                console.error('Error loading bulk users:', error);
+                usersList.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load users</div>';
+            }
+        }
+
+        // Function untuk render projects di bulk assign modal
+        function renderBulkProjects(projects, container) {
+            if (!projects || projects.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-gray-500">No projects found</div>';
+                return;
+            }
+
+            const html = projects.map(project => `
+                <div class="user-item">
+                    <label class="flex items-center w-full cursor-pointer">
+                        <input type="checkbox" class="project-checkbox mr-3" value="${project.project_id}">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-700">${project.project_name}</div>
+                            <div class="text-gray-500 text-xs">${project.project_code}</div>
+                        </div>
+                        <span class="${project.is_active ? 'status-active' : 'status-inactive'} status-badge text-xs">
+                            ${project.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </label>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+            // Add event listeners to checkboxes
+            container.querySelectorAll('.project-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkSelectionCounts);
+            });
+        }
+
+        // Function untuk render users di bulk assign modal
+        function renderBulkUsers(users, container) {
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-gray-500">No users found</div>';
+                return;
+            }
+
+            const html = users.map(user => `
+                <div class="user-item">
+                    <label class="flex items-center w-full cursor-pointer">
+                        <input type="checkbox" class="user-checkbox mr-3" value="${user.user_id}">
+                        <div class="user-avatar-small">
+                            ${getUserInitials(user.full_name || user.username)}
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-700">${user.full_name || user.username}</div>
+                            <div class="text-gray-500 text-xs">${user.email} • ${user.role_name}</div>
+                        </div>
+                    </label>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+            // Add event listeners to checkboxes
+            container.querySelectorAll('.user-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkSelectionCounts);
+            });
+        }
+
+        // Function untuk update selection counts
+        function updateBulkSelectionCounts() {
+            const modal = document.querySelector('.bulk-assign-modal');
+            if (!modal) return;
+
+            const selectedProjects = Array.from(modal.querySelectorAll('.project-checkbox:checked')).length;
+            const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked')).length;
+            const totalAssignments = selectedProjects * selectedUsers;
+
+            // Update counts
+            modal.querySelector('#bulkSelectedProjectsCount').textContent = selectedProjects;
+            modal.querySelector('#bulkSelectedUsersCount').textContent = selectedUsers;
+            modal.querySelector('#bulkTotalAssignments').textContent = totalAssignments;
+
+            // Update confirm button state
+            const confirmBtn = modal.querySelector('#confirmBulkAssign');
+            if (confirmBtn) {
+                confirmBtn.disabled = selectedProjects === 0 || selectedUsers === 0;
+            }
+        }
+
+        // Function untuk download CSV template
+        function downloadCSVTemplate() {
+            const csvContent = `project_name,project_code,description,is_active
+Website Redesign,PROJ001,Complete website overhaul,true
+Mobile App,PROJ002,New mobile application development,true
+Database Migration,PROJ003,Migrate to new database system,false
+API Integration,PROJ004,Third-party API integration,true`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'project_import_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Function untuk menampilkan modal Add Project
+        function showAddProjectModal() {
+            // Get template
+            const template = document.getElementById('addProjectModalTemplate');
+            if (!template) return;
+
+            // Remove existing modal
+            const existingModal = document.querySelector('.add-project-modal');
+            if (existingModal) existingModal.remove();
+
+            // Clone and append modal
+            const modal = template.content.cloneNode(true);
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'add-project-modal';
+            modalContainer.appendChild(modal);
+            document.body.appendChild(modalContainer);
+
+            // Setup event listeners
+            setupAddProjectModalEvents();
+        }
+
+        function setupAddProjectModalEvents() {
+            const modal = document.querySelector('.add-project-modal');
+            if (!modal) return;
+
+            // Close modal
+            modal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.style.opacity = '0';
+                    modal.style.transform = 'translateY(10px)';
+                    setTimeout(() => modal.remove(), 300);
+                });
+            });
+
+            // Confirm add project
+            const confirmBtn = modal.querySelector('#confirmAddProject');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', processAddProject);
+            }
+        }
+
+        async function processAddProject() {
+            const modal = document.querySelector('.add-project-modal');
+            if (!modal) return;
+
+            const projectName = modal.querySelector('#projectName').value;
+            const projectCode = modal.querySelector('#projectCode').value;
+            const description = modal.querySelector('#projectDescription').value;
+            const status = modal.querySelector('#projectStatus').value;
+
+            // Validation
+            if (!projectName || !projectCode) {
+                showToast('Project name and code are required', 'error');
+                return;
+            }
+
+            // Show loading
+            const confirmBtn = modal.querySelector('#confirmAddProject');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+            confirmBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('project_name', projectName);
+                formData.append('project_code', projectCode);
+                formData.append('description', description);
+                formData.append('is_active', status === 'active');
+
+                const response = await fetch(`${baseUrl}/admin/projects/add`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Project created successfully', 'success');
+                    modal.querySelector('.close-modal').click();
+                    
+                    // Reload projects
+                    loadProjectsData();
+                    
+                    // Select the new project
+                    if (data.project_id) {
+                        setTimeout(() => {
+                            selectProject(data.project_id);
+                        }, 500);
+                    }
+                } else {
+                    showToast(data.message || 'Failed to create project', 'error');
+                }
+            } catch (error) {
+                console.error('Add project error:', error);
+                showToast('Failed to create project', 'error');
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+
         // Utility functions
         function getStatusName(status) {
             const statuses = {
@@ -1288,7 +2036,7 @@
             };
             return statuses[status?.toLowerCase()] || status || 'Active';
         }
-        
+
         function getStatusClass(status) {
             const classes = {
                 'active': 'status-active',
@@ -1299,12 +2047,12 @@
             };
             return classes[status?.toLowerCase()] || 'status-inactive';
         }
-        
+
         function getUserInitials(name) {
             if (!name) return '??';
             return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         }
-        
+
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -1316,7 +2064,7 @@
                 timeout = setTimeout(later, wait);
             };
         }
-        
+
         function showLoading(elementId = null) {
             if (elementId) {
                 const element = document.getElementById(elementId);
@@ -1345,7 +2093,7 @@
                 overlay.classList.remove('hidden');
             }
         }
-        
+
         function hideLoading(elementId = null) {
             if (elementId) {
                 // Element-specific loading will be replaced by content
@@ -1356,29 +2104,27 @@
                 }
             }
         }
-        
+
         function showToast(message, type = 'info') {
             // Remove existing toasts
             document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-            
+
             const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${
-                type === 'error' ? 'bg-red-500 text-white' : 
-                type === 'success' ? 'bg-green-500 text-white' : 
-                'bg-blue-500 text-white'
-            }`;
+            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
+                    type === 'success' ? 'bg-green-500 text-white' :
+                        'bg-blue-500 text-white'
+                }`;
             toast.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <i class="fas ${
-                        type === 'error' ? 'fa-exclamation-circle' : 
-                        type === 'success' ? 'fa-check-circle' : 
+                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                    type === 'success' ? 'fa-check-circle' :
                         'fa-info-circle'
-                    }"></i>
+                }"></i>
                     <span class="text-sm">${message}</span>
                 </div>
             `;
             document.body.appendChild(toast);
-            
+
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-10px)';

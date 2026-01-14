@@ -2301,4 +2301,355 @@ public function getAllUsers()
     }
 }
 
+// AdminController.php - Tambahkan method-method ini
+
+/**
+ * Handle bulk user assignment
+ */
+public function bulkAssignUsers()
+{
+    if (!$this->request->isAJAX()) {
+        return redirect()->to('/admin/projects');
+    }
+
+    try {
+        $projectIds = $this->request->getPost('project_ids');
+        $userIds = $this->request->getPost('user_ids');
+
+        if (empty($projectIds) || empty($userIds)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please select at least one project and one user'
+            ]);
+        }
+
+        $db = db_connect();
+        $successCount = 0;
+
+        $db->transStart();
+
+        foreach ($projectIds as $projectId) {
+            foreach ($userIds as $userId) {
+                // Check if assignment already exists
+                $exists = $db->table('project_assignments')
+                    ->where('project_id', $projectId)
+                    ->where('user_id', $userId)
+                    ->countAllResults();
+
+                if (!$exists) {
+                    $db->table('project_assignments')->insert([
+                        'project_id' => $projectId,
+                        'user_id' => $userId,
+                        'assigned_by' => session()->get('user_id'),
+                        'assigned_at' => date('Y-m-d H:i:s')
+                    ]);
+                    $successCount++;
+                }
+            }
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus()) {
+            log_message('info', "Bulk assignment completed: {$successCount} assignments made by user " . session()->get('user_id'));
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Successfully assigned {$successCount} users to selected projects"
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to process bulk assignment'
+        ]);
+
+    } catch (\Exception $e) {
+        log_message('error', 'Bulk assign users error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Handle project import
+ */
+public function importProjects()
+{
+    if (!$this->request->isAJAX()) {
+        return redirect()->to('/admin/projects');
+    }
+
+    try {
+        $file = $this->request->getFile('projects_file');
+        
+        if (!$file || !$file->isValid()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please upload a valid file'
+            ]);
+        }
+
+        // Validate file type
+        $allowedExtensions = ['csv', 'xlsx', 'xls'];
+        $extension = $file->getClientExtension();
+        
+        if (!in_array($extension, $allowedExtensions)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Only CSV and Excel files are allowed'
+            ]);
+        }
+
+        // Process based on file type
+        if ($extension === 'csv') {
+            $result = $this->processCSVImport($file);
+        } else {
+            $result = $this->processExcelImport($file);
+        }
+
+        return $this->response->setJSON($result);
+
+    } catch (\Exception $e) {
+        log_message('error', 'Import projects error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Import failed: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Process CSV file import
+ */
+private function processCSVImport($file): array
+{
+    $path = $file->getTempName();
+    $handle = fopen($path, 'r');
+    
+    if (!$handle) {
+        return ['success' => false, 'message' => 'Failed to read CSV file'];
+    }
+
+    $headers = fgetcsv($handle); // Get column headers
+    $importedCount = 0;
+    $errorRows = [];
+
+    // Validate required headers
+    $requiredHeaders = ['project_name', 'project_code'];
+    $missingHeaders = array_diff($requiredHeaders, array_map('strtolower', $headers));
+    
+    if (!empty($missingHeaders)) {
+        fclose($handle);
+        return [
+            'success' => false,
+            'message' => 'Missing required columns: ' . implode(', ', $missingHeaders)
+        ];
+    }
+
+    $db = db_connect();
+    $db->transStart();
+
+    $rowNum = 1;
+    while (($row = fgetcsv($handle)) !== false) {
+        $rowNum++;
+        
+        if (count($row) < 2) {
+            $errorRows[] = ['row' => $rowNum, 'error' => 'Insufficient columns'];
+            continue;
+        }
+
+        // Map row to associative array
+        $projectData = [];
+        foreach ($headers as $index => $header) {
+            $projectData[strtolower($header)] = $row[$index] ?? null;
+        }
+
+        // Validate data
+        if (empty($projectData['project_name']) || empty($projectData['project_code'])) {
+            $errorRows[] = ['row' => $rowNum, 'error' => 'Missing required fields'];
+            continue;
+        }
+
+        // Check if project code already exists
+        $exists = $db->table('projects')
+            ->where('project_code', strtoupper($projectData['project_code']))
+            ->countAllResults();
+
+        if ($exists) {
+            $errorRows[] = ['row' => $rowNum, 'error' => 'Project code already exists'];
+            continue;
+        }
+
+        // Prepare data for insertion
+        $insertData = [
+            'project_name' => $projectData['project_name'],
+            'project_code' => strtoupper($projectData['project_code']),
+            'description' => $projectData['description'] ?? null,
+            'is_active' => isset($projectData['is_active']) 
+                ? filter_var($projectData['is_active'], FILTER_VALIDATE_BOOLEAN)
+                : true,
+            'user_id' => session()->get('user_id'),
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($db->table('projects')->insert($insertData)) {
+            $importedCount++;
+        }
+    }
+
+    fclose($handle);
+    $db->transComplete();
+
+    if ($db->transStatus()) {
+        return [
+            'success' => true,
+            'message' => "Imported {$importedCount} projects successfully",
+            'imported_count' => $importedCount,
+            'error_count' => count($errorRows),
+            'errors' => $errorRows
+        ];
+    }
+
+    return [
+        'success' => false,
+        'message' => 'Database transaction failed'
+    ];
+}
+
+/**
+ * Process Excel file import (requires PhpSpreadsheet library)
+ */
+private function processExcelImport($file): array
+{
+    // Check if PhpSpreadsheet is available
+    if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+        return [
+            'success' => false,
+            'message' => 'Excel processing requires PhpSpreadsheet library'
+        ];
+    }
+
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getTempName());
+        $spreadsheet = $reader->load($file->getTempName());
+        $worksheet = $spreadsheet->getActiveSheet();
+        
+        $importedCount = 0;
+        $errorRows = [];
+        $db = db_connect();
+        
+        $db->transStart();
+
+        foreach ($worksheet->getRowIterator(2) as $row) { // Start from row 2 (skip header)
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(false);
+            
+            $rowData = [];
+            foreach ($cellIterator as $cell) {
+                $rowData[] = $cell->getValue();
+            }
+
+            // Validate row
+            if (empty($rowData[0]) || empty($rowData[1])) {
+                $errorRows[] = ['row' => $row->getRowIndex(), 'error' => 'Missing required fields'];
+                continue;
+            }
+
+            $projectData = [
+                'project_name' => $rowData[0],
+                'project_code' => strtoupper($rowData[1]),
+                'description' => $rowData[2] ?? null,
+                'is_active' => isset($rowData[3]) 
+                    ? filter_var($rowData[3], FILTER_VALIDATE_BOOLEAN)
+                    : true,
+                'user_id' => session()->get('user_id'),
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Check if project code exists
+            $exists = $db->table('projects')
+                ->where('project_code', $projectData['project_code'])
+                ->countAllResults();
+
+            if ($exists) {
+                $errorRows[] = ['row' => $row->getRowIndex(), 'error' => 'Project code already exists'];
+                continue;
+            }
+
+            if ($db->table('projects')->insert($projectData)) {
+                $importedCount++;
+            }
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus()) {
+            return [
+                'success' => true,
+                'message' => "Imported {$importedCount} projects successfully",
+                'imported_count' => $importedCount,
+                'error_count' => count($errorRows),
+                'errors' => $errorRows
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Database transaction failed'
+        ];
+
+    } catch (\Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Excel processing error: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Get projects for bulk assignment (AJAX)
+ */
+public function getProjectsForBulkAssign()
+{
+    if (!$this->request->isAJAX()) {
+        return redirect()->to('/admin/projects');
+    }
+
+    try {
+        $search = $this->request->getPost('search') ?? '';
+        
+        $db = db_connect();
+        
+        $query = $db->table('projects p')
+            ->select('p.project_id, p.project_code, p.project_name, p.is_active')
+            ->where('p.is_active', true);
+        
+        if (!empty($search)) {
+            $query->groupStart()
+                ->like('p.project_name', $search)
+                ->orLike('p.project_code', $search)
+                ->groupEnd();
+        }
+        
+        $query->orderBy('p.project_name', 'ASC');
+        
+        $projects = $query->get()->getResultArray();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'projects' => $projects
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Get projects for bulk assign error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to load projects'
+        ]);
+    }
+}
+
 }
