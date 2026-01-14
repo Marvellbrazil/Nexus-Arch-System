@@ -314,4 +314,38 @@ class UserModel extends Model
         
         return $builder->countAllResults() > 0;
     }
+
+    /**
+ * Get active users with their roles for project assignment
+ */
+public function getActiveUsersWithRoles(): array
+{
+    $db = db_connect();
+    
+    return $db->table('users u')
+        ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+        ->join('roles r', 'r.role_id = u.role_id')
+        ->where('u.is_active', true)
+        ->orderBy('u.full_name', 'ASC')
+        ->get()
+        ->getResultArray();
+}
+
+/**
+ * Search active users
+ */
+public function searchActiveUsers(string $keyword): array
+{
+    return $this->builder()
+        ->select('user_id, username, full_name, email')
+        ->where('is_active', true)
+        ->groupStart()
+            ->like('full_name', $keyword)
+            ->orLike('username', $keyword)
+            ->orLike('email', $keyword)
+        ->groupEnd()
+        ->orderBy('full_name', 'ASC')
+        ->get()
+        ->getResultArray();
+}
 }

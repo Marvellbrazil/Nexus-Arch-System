@@ -1635,195 +1635,670 @@ class AdminController extends BaseController
         return view('Admin/system_settings', $data);
     }
 
-    // ==================== PROJECT MANAGEMENT METHODS ====================
+ // ==================== PROJECT MANAGEMENT METHODS ====================
 
-    public function manageProjects()
-    {
-        $data = $this->loadCommonData();
+/**
+ * Manage Projects - Main method
+ */
+public function manageProjects()
+{
+    $data = $this->loadCommonData();
+    $data['title'] = 'Manage Projects - NEXUS Admin';
 
-        // Get all projects with ticket counts
-        $db = db_connect();
+    // Load projects data with ticket counts
+    $data['projects'] = $this->projectModel->getProjectsWithTicketCounts();
+    
+    // Load all users for assignment (active users only)
+    $data['all_users'] = $this->userModel->getActiveUsersWithRoles();
+    
+    // Load project assignments
+    $data['assignments'] = $this->getProjectAssignments();
 
-        $data['projects'] = $db->table('projects p')
-            ->select('p.*, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets,
-                (SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.project_id) as assigned_users')
-            ->orderBy('p.created_at', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        // Get all users for assignment
-        $data['all_users'] = $db->table('users u')
-            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
-            ->join('roles r', 'r.role_id = u.role_id')
-            ->where('u.is_active', true)
-            ->orderBy('u.full_name', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        // Get project assignments
-        $data['assignments'] = [];
-        $assignments = $db->table('project_assignments pa')
-            ->select('pa.project_id, pa.user_id, u.full_name')
-            ->join('users u', 'u.user_id = pa.user_id')
-            ->get()
-            ->getResultArray();
-
-        foreach ($assignments as $assignment) {
-            if (!isset($data['assignments'][$assignment['project_id']])) {
-                $data['assignments'][$assignment['project_id']] = [];
-            }
-            $data['assignments'][$assignment['project_id']][] = $assignment['user_id'];
-        }
-
-        return view('Admin/manage_projects', $data);
+    // Check for AJAX requests
+    if ($this->request->isAJAX()) {
+        return $this->handleProjectsAjax();
     }
 
-    public function addProject()
-    {
-        if ($this->request->getMethod() === 'post') {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'project_code' => 'required|min_length[3]|max_length[20]|is_unique[projects.project_code]',
-                'project_name' => 'required|min_length[3]|max_length[100]',
-                'description' => 'permit_empty'
-            ]);
+    return view('Admin/manage_projects', $data);
+}
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->withInput()->with('errors', $validation->getErrors());
-            }
+/**
+ * Handle AJAX requests for projects
+ */
+private function handleProjectsAjax()
+{
+    try {
+        $action = $this->request->getPost('action');
 
-            $projectData = [
-                'project_code' => strtoupper($this->request->getPost('project_code')),
-                'project_name' => $this->request->getPost('project_name'),
-                'description' => $this->request->getPost('description'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-
-            if ($this->projectModel->save($projectData)) {
-                return redirect()->to('/admin/projects')->with('success', 'Project added successfully!');
-            } else {
-                return redirect()->back()->withInput()->with('error', 'Failed to add project');
-            }
+        switch ($action) {
+            case 'get_project_details':
+                return $this->getProjectDetailsAjax();
+            case 'add_project':
+                return $this->addProjectAjax();
+            case 'edit_project':
+                return $this->editProjectAjax();
+            case 'delete_project':
+                return $this->deleteProjectAjax();
+            case 'change_project_status':
+                return $this->changeProjectStatusAjax();
+            case 'manage_users':
+                return $this->manageProjectUsersAjax();
+            case 'get_projects_table':
+                return $this->getProjectsTableAjax();
+            default:
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ]);
         }
+    } catch (\Exception $e) {
+        log_message('error', 'Projects AJAX error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
 
-        return redirect()->to('/admin/projects');
+/**
+ * Get project details for AJAX
+ */
+private function getProjectDetailsAjax()
+{
+    $projectId = $this->request->getPost('project_id');
+
+    if (!$projectId) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project ID is required'
+        ]);
     }
 
-    public function editProject($id)
-    {
-        if ($this->request->getMethod() === 'post') {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'project_code' => "required|min_length[3]|max_length[20]|is_unique[projects.project_code,project_id,$id]",
-                'project_name' => 'required|min_length[3]|max_length[100]',
-                'description' => 'permit_empty'
-            ]);
+    $project = $this->projectModel->getProjectWithUser($projectId);
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->withInput()->with('errors', $validation->getErrors());
-            }
-
-            $projectData = [
-                'project_id' => $id,
-                'project_code' => strtoupper($this->request->getPost('project_code')),
-                'project_name' => $this->request->getPost('project_name'),
-                'description' => $this->request->getPost('description'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0,
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-
-            if ($this->projectModel->save($projectData)) {
-                return redirect()->to('/admin/projects')->with('success', 'Project updated successfully!');
-            } else {
-                return redirect()->back()->withInput()->with('error', 'Failed to update project');
-            }
-        }
-
-        return redirect()->to('/admin/projects');
+    if (!$project) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project not found'
+        ]);
     }
 
-    public function deleteProject($id)
-    {
-        // Check if project has tickets
-        $hasTickets = $this->ticketModel->where('project_id', $id)->countAllResults();
+    // Get ticket statistics for this project
+    $db = db_connect();
+    $ticketStats = $db->table('tickets')
+        ->select("
+            COUNT(*) as total_tickets,
+            COUNT(CASE WHEN status_id IN (1,2) THEN 1 END) as open_tickets,
+            COUNT(CASE WHEN status_id IN (4,5) THEN 1 END) as closed_tickets
+        ")
+        ->where('project_id', $projectId)
+        ->get()
+        ->getRowArray();
 
-        if ($hasTickets > 0) {
-            return redirect()->to('/admin/projects')->with('error', 'Cannot delete project with existing tickets. Please reassign tickets first.');
+    // Get assigned users for this project
+    $assignedUsers = $this->getAssignedUsersForProject($projectId);
+
+    $responseData = [
+        'success' => true,
+        'project' => [
+            'project_id' => $project['project_id'],
+            'project_code' => $project['project_code'],
+            'project_name' => $project['project_name'],
+            'description' => $project['description'] ?? 'No description',
+            'is_active' => (bool) $project['is_active'],
+            'created_at' => date('M d, Y', strtotime($project['created_at'])),
+            'updated_at' => $project['updated_at'] ? date('M d, Y', strtotime($project['updated_at'])) : null,
+            'user' => $project['user'] ?? null,
+            'total_tickets' => $ticketStats['total_tickets'] ?? 0,
+            'open_tickets' => $ticketStats['open_tickets'] ?? 0,
+            'closed_tickets' => $ticketStats['closed_tickets'] ?? 0
+        ],
+        'assigned_users' => $assignedUsers
+    ];
+
+    return $this->response->setJSON($responseData);
+}
+
+/**
+ * Get assigned users for a project
+ */
+private function getAssignedUsersForProject($projectId): array
+{
+    $db = db_connect();
+    
+    return $db->table('project_assignments pa')
+        ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+        ->join('users u', 'u.user_id = pa.user_id')
+        ->join('roles r', 'r.role_id = u.role_id', 'left')
+        ->where('pa.project_id', $projectId)
+        ->where('u.is_active', true)
+        ->orderBy('u.full_name', 'ASC')
+        ->get()
+        ->getResultArray();
+}
+
+/**
+ * Get all project assignments
+ */
+private function getProjectAssignments(): array
+{
+    $db = db_connect();
+    
+    $assignments = [];
+    $results = $db->table('project_assignments pa')
+        ->select('pa.project_id, pa.user_id, u.full_name')
+        ->join('users u', 'u.user_id = pa.user_id')
+        ->where('u.is_active', true)
+        ->get()
+        ->getResultArray();
+
+    foreach ($results as $assignment) {
+        if (!isset($assignments[$assignment['project_id']])) {
+            $assignments[$assignment['project_id']] = [];
         }
-
-        // Delete project assignments first
-        $this->projectAssignmentModel->where('project_id', $id)->delete();
-
-        if ($this->projectModel->delete($id)) {
-            return redirect()->to('/admin/projects')->with('success', 'Project deleted successfully!');
-        } else {
-            return redirect()->back()->with('error', 'Failed to delete project');
-        }
+        $assignments[$assignment['project_id']][] = $assignment['user_id'];
     }
 
-    public function assignUsersToProject($projectId)
-    {
-        if ($this->request->getMethod() === 'post') {
-            $userIds = $this->request->getPost('user_ids') ?: [];
+    return $assignments;
+}
 
-            // Delete existing assignments
-            $this->projectAssignmentModel->where('project_id', $projectId)->delete();
+/**
+ * Add project via AJAX
+ */
+private function addProjectAjax()
+{
+    $validation = \Config\Services::validation();
+    $validation->setRules([
+        'project_name' => 'required|min_length[3]|max_length[100]',
+        'project_code' => 'required|min_length[3]|max_length[20]|is_unique[projects.project_code]',
+        'description' => 'permit_empty|max_length[500]',
+        'is_active' => 'permit_empty|in_list[true,false,1,0]'
+    ]);
 
-            // Add new assignments
-            if (!empty($userIds)) {
-                $assignmentData = [];
-                foreach ($userIds as $userId) {
-                    $assignmentData[] = [
-                        'project_id' => $projectId,
-                        'user_id' => $userId,
-                        'assigned_at' => date('Y-m-d H:i:s')
-                    ];
-                }
-
-                if (!empty($assignmentData)) {
-                    $this->projectAssignmentModel->insertBatch($assignmentData);
-                }
-            }
-
-            return redirect()->to('/admin/projects')->with('success', 'Users assigned to project successfully!');
-        }
-
-        return redirect()->to('/admin/projects');
+    if (!$validation->withRequest($this->request)->run()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'errors' => $validation->getErrors()
+        ]);
     }
 
-    public function changeProjectStatus($id)
-    {
-        $status = $this->request->getPost('status') === 'active' ? 1 : 0;
+    $projectData = [
+        'project_name' => $this->request->getPost('project_name'),
+        'project_code' => strtoupper($this->request->getPost('project_code')),
+        'description' => $this->request->getPost('description') ?: null,
+        'is_active' => $this->request->getPost('is_active') ? true : false,
+        'user_id' => session()->get('user_id') // Default to current user as creator
+    ];
 
-        if ($this->projectModel->update($id, ['is_active' => $status])) {
-            return redirect()->to('/admin/projects')->with('success', "Project status updated successfully!");
-        } else {
-            return redirect()->back()->with('error', 'Failed to update project status');
-        }
+    // Check if project code already exists
+    if ($this->projectModel->projectCodeExists($projectData['project_code'])) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project code already exists'
+        ]);
     }
 
-    /**
-     * Refresh dashboard data via AJAX
-     */
-    public function refreshDashboardData()
-    {
-        // Only allow AJAX requests
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403);
-        }
+    if ($this->projectModel->save($projectData)) {
+        $projectId = $this->projectModel->getInsertID();
 
-        $data = [
-            'stats' => $this->getDashboardStats(),
-            'ticketStatus' => $this->getTicketStatusData(),
-            'timestamp' => date('Y-m-d H:i:s')
-        ];
+        // Log activity
+        log_message('info', "Project created: {$projectData['project_name']} (ID: {$projectId}) by user " . session()->get('user_id'));
 
         return $this->response->setJSON([
             'success' => true,
-            'data' => $data
+            'message' => 'Project added successfully',
+            'project_id' => $projectId,
+            'project_data' => [
+                'id' => $projectId,
+                'project_code' => $projectData['project_code'],
+                'project_name' => $projectData['project_name'],
+                'is_active' => $projectData['is_active'],
+                'created_at' => date('M d, Y')
+            ]
         ]);
     }
+
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Failed to add project'
+    ]);
+}
+
+/**
+ * Edit project via AJAX
+ */
+private function editProjectAjax()
+{
+    $projectId = $this->request->getPost('project_id');
+
+    if (!$projectId) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project ID is required'
+        ]);
+    }
+
+    $validation = \Config\Services::validation();
+    $validation->setRules([
+        'project_name' => 'required|min_length[3]|max_length[100]',
+        'project_code' => "required|min_length[3]|max_length[20]|is_unique[projects.project_code,project_id,{$projectId}]",
+        'description' => 'permit_empty|max_length[500]',
+        'is_active' => 'permit_empty|in_list[true,false,1,0]',
+        'user_id' => 'permit_empty|integer'
+    ]);
+
+    if (!$validation->withRequest($this->request)->run()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'errors' => $validation->getErrors()
+        ]);
+    }
+
+    $projectData = [
+        'project_id' => $projectId,
+        'project_name' => $this->request->getPost('project_name'),
+        'project_code' => strtoupper($this->request->getPost('project_code')),
+        'description' => $this->request->getPost('description') ?: null,
+        'is_active' => $this->request->getPost('is_active') ? true : false,
+        'user_id' => $this->request->getPost('user_id') ?: null
+    ];
+
+    // Check if project code already exists (excluding current project)
+    if ($this->projectModel->projectCodeExists($projectData['project_code'], $projectId)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project code already exists'
+        ]);
+    }
+
+    if ($this->projectModel->save($projectData)) {
+        // Log activity
+        log_message('info', "Project updated: ID {$projectId} by user " . session()->get('user_id'));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Project updated successfully',
+            'project_data' => $projectData
+        ]);
+    }
+
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Failed to update project'
+    ]);
+}
+
+/**
+ * Delete project via AJAX
+ */
+private function deleteProjectAjax()
+{
+    $projectId = $this->request->getPost('project_id');
+
+    if (!$projectId) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project ID is required'
+        ]);
+    }
+
+    // Check if project has tickets
+    $hasTickets = $this->ticketModel->where('project_id', $projectId)->countAllResults();
+
+    if ($hasTickets > 0) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Cannot delete project with existing tickets. Please reassign tickets first.'
+        ]);
+    }
+
+    // Check if project has assignments
+    $db = db_connect();
+    $hasAssignments = $db->table('project_assignments')
+        ->where('project_id', $projectId)
+        ->countAllResults();
+
+    if ($hasAssignments > 0) {
+        // Delete project assignments first
+        $db->table('project_assignments')->where('project_id', $projectId)->delete();
+    }
+
+    if ($this->projectModel->delete($projectId)) {
+        // Log activity
+        log_message('info', "Project deleted: ID {$projectId} by user " . session()->get('user_id'));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Project deleted successfully'
+        ]);
+    }
+
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Failed to delete project'
+    ]);
+}
+
+/**
+ * Change project status via AJAX
+ */
+private function changeProjectStatusAjax()
+{
+    $projectId = $this->request->getPost('project_id');
+    $isActive = $this->request->getPost('is_active');
+
+    if (!$projectId || $isActive === null) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project ID and status are required'
+        ]);
+    }
+
+    $isActiveBool = filter_var($isActive, FILTER_VALIDATE_BOOLEAN);
+    $statusText = $isActiveBool ? 'activated' : 'deactivated';
+
+    if ($this->projectModel->changeStatus($projectId, $isActiveBool)) {
+        // Log activity
+        log_message('info', "Project status changed: ID {$projectId} {$statusText} by user " . session()->get('user_id'));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => "Project {$statusText} successfully",
+            'is_active' => $isActiveBool
+        ]);
+    }
+
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Failed to change project status'
+    ]);
+}
+
+/**
+ * Manage project users via AJAX
+ */
+private function manageProjectUsersAjax()
+{
+    $projectId = $this->request->getPost('project_id');
+    $userIds = $this->request->getPost('user_ids') ?: [];
+
+    if (!$projectId) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Project ID is required'
+        ]);
+    }
+
+    // Validate user IDs are integers
+    $validUserIds = array_filter($userIds, function($id) {
+        return is_numeric($id) && $id > 0;
+    });
+
+    if ($this->updateProjectAssignments($projectId, $validUserIds)) {
+        // Log activity
+        log_message('info', "Project assignments updated: Project ID {$projectId} with " . count($validUserIds) . " users by user " . session()->get('user_id'));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Project users updated successfully',
+            'user_count' => count($validUserIds)
+        ]);
+    }
+
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Failed to update project users'
+    ]);
+}
+
+/**
+ * Update project assignments
+ */
+private function updateProjectAssignments($projectId, $userIds): bool
+{
+    $db = db_connect();
+    
+    // Start transaction
+    $db->transStart();
+    
+    try {
+        // Delete existing assignments
+        $db->table('project_assignments')->where('project_id', $projectId)->delete();
+        
+        // Insert new assignments
+        if (!empty($userIds)) {
+            $assignmentData = [];
+            foreach ($userIds as $userId) {
+                $assignmentData[] = [
+                    'project_id' => $projectId,
+                    'user_id' => $userId,
+                    'assigned_by' => session()->get('user_id'),
+                    'assigned_at' => date('Y-m-d H:i:s')
+                ];
+            }
+            
+            if (!empty($assignmentData)) {
+                $db->table('project_assignments')->insertBatch($assignmentData);
+            }
+        }
+        
+        $db->transComplete();
+        
+        return $db->transStatus();
+        
+    } catch (\Exception $e) {
+        $db->transRollback();
+        log_message('error', 'Update project assignments error: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get projects data for table via AJAX
+ */
+private function getProjectsTableAjax()
+{
+    try {
+        $draw = $this->request->getPost('draw');
+        $start = $this->request->getPost('start') ?? 0;
+        $length = $this->request->getPost('length') ?? 10;
+        $search = $this->request->getPost('search')['value'] ?? '';
+
+        // Get filters
+        $filters = [
+            'search' => $search,
+            'status' => $this->request->getPost('status'),
+            'sort_by' => $this->request->getPost('sort_by') ?? 'created_at',
+            'sort_order' => $this->request->getPost('sort_order') ?? 'desc',
+            'start' => $start,
+            'length' => $length
+        ];
+
+        // Get projects data
+        $projects = $this->getFilteredProjects($filters);
+        $totalRecords = $this->projectModel->countAll();
+        $filteredRecords = $this->countFilteredProjects($filters);
+
+        // Format response data
+        $data = [];
+        foreach ($projects as $project) {
+            // Get assigned users count
+            $assignedUsersCount = $this->countAssignedUsers($project['project_id']);
+            
+            $data[] = [
+                'id' => $project['project_id'],
+                'project_code' => $project['project_code'],
+                'name' => $project['project_name'],
+                'description' => $project['description'] ?: 'No description',
+                'status' => $project['is_active'] ? 'active' : 'inactive',
+                'created_at' => date('M d, Y', strtotime($project['created_at'])),
+                'total_tickets' => $project['total_tickets'] ?? 0,
+                'open_tickets' => $project['open_tickets'] ?? 0,
+                'assigned_users' => $assignedUsersCount,
+                'is_active' => (bool) $project['is_active']
+            ];
+        }
+
+        return $this->response->setJSON([
+            'draw' => $draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
+
+    } catch (\Exception $e) {
+        log_message('error', 'Projects table AJAX error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'draw' => $this->request->getPost('draw'),
+            'recordsTotal' => 0,
+            'recordsFiltered' => 0,
+            'data' => [],
+            'error' => 'Failed to load projects data'
+        ]);
+    }
+}
+
+/**
+ * Get filtered projects
+ */
+private function getFilteredProjects($filters = []): array
+{
+    $db = db_connect();
+    
+    $query = $db->table('projects p')
+        ->select('p.*, 
+            (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
+            (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets');
+    
+    // Apply search filter
+    if (!empty($filters['search'])) {
+        $query->groupStart()
+            ->like('p.project_name', $filters['search'])
+            ->orLike('p.project_code', $filters['search'])
+            ->orLike('p.description', $filters['search'])
+            ->groupEnd();
+    }
+    
+    // Apply status filter
+    if (!empty($filters['status']) && $filters['status'] !== 'all') {
+        if ($filters['status'] === 'active') {
+            $query->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where('p.is_active', false);
+        }
+    }
+    
+    // Apply sorting
+    $sortColumn = $filters['sort_by'] ?? 'created_at';
+    $sortOrder = $filters['sort_order'] ?? 'desc';
+    
+    // Map sort column names
+    $sortColumnMap = [
+        'id' => 'project_id',
+        'name' => 'project_name',
+        'code' => 'project_code',
+        'tickets' => 'total_tickets',
+        'status' => 'is_active'
+    ];
+    
+    $actualSortColumn = $sortColumnMap[$sortColumn] ?? $sortColumn;
+    $query->orderBy($actualSortColumn, $sortOrder);
+    
+    // Apply pagination
+    if (isset($filters['length']) && $filters['length'] > 0) {
+        $query->limit($filters['length'], $filters['start'] ?? 0);
+    }
+    
+    return $query->get()->getResultArray();
+}
+
+/**
+ * Count filtered projects
+ */
+private function countFilteredProjects($filters = []): int
+{
+    $db = db_connect();
+    
+    $query = $db->table('projects p');
+    
+    // Apply search filter
+    if (!empty($filters['search'])) {
+        $query->groupStart()
+            ->like('p.project_name', $filters['search'])
+            ->orLike('p.project_code', $filters['search'])
+            ->orLike('p.description', $filters['search'])
+            ->groupEnd();
+    }
+    
+    // Apply status filter
+    if (!empty($filters['status']) && $filters['status'] !== 'all') {
+        if ($filters['status'] === 'active') {
+            $query->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where('p.is_active', false);
+        }
+    }
+    
+    return $query->countAllResults();
+}
+
+/**
+ * Count assigned users for a project
+ */
+private function countAssignedUsers($projectId): int
+{
+    $db = db_connect();
+    
+    return $db->table('project_assignments pa')
+        ->join('users u', 'u.user_id = pa.user_id')
+        ->where('pa.project_id', $projectId)
+        ->where('u.is_active', true)
+        ->countAllResults();
+}
+
+/**
+ * Get all users for AJAX
+ */
+public function getAllUsers()
+{
+    if (!$this->request->isAJAX()) {
+        return redirect()->to('/admin/projects');
+    }
+
+    try {
+        $search = $this->request->getPost('search') ?? '';
+        
+        $db = db_connect();
+        
+        $query = $db->table('users u')
+            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+            ->join('roles r', 'r.role_id = u.role_id')
+            ->where('u.is_active', true);
+        
+        if (!empty($search)) {
+            $query->groupStart()
+                ->like('u.full_name', $search)
+                ->orLike('u.username', $search)
+                ->orLike('u.email', $search)
+                ->groupEnd();
+        }
+        
+        $query->orderBy('u.full_name', 'ASC');
+        
+        $users = $query->get()->getResultArray();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'users' => $users
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Get users AJAX error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to load users'
+        ]);
+    }
+}
+
 }
