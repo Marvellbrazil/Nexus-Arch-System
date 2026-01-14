@@ -11,6 +11,7 @@ class AdminController extends BaseController
 {
     protected $userModel;
     protected $roleModel;
+    protected $ticketModel;
     protected $departmentModel;
     protected $projectAssignmentModel;
 
