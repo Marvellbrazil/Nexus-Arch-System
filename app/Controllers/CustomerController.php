@@ -75,6 +75,7 @@ class CustomerController extends BaseController
             ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
             ->where('pa.user_id', $this->userId)
             ->groupBy('p.project_id')
+            ->orderBy('p.created_at', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -214,10 +215,11 @@ class CustomerController extends BaseController
         $data['total_pages'] = ceil($totalRows / $perPage);
 
         // Get filter options
-        $data['projects'] = $this->db->table('projects')
-            ->select('project_id, project_name, project_code')
-            ->where('user_id', $this->userId)
-            ->where('is_active', true)
+        $data['projects'] = $this->db->table('projects p')
+            ->select('p.project_id, p.project_name, p.project_code')
+            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+            ->where('pa.user_id', $this->userId)
+            ->where('p.is_active', true)
             ->get()
             ->getResultArray();
 
@@ -721,9 +723,10 @@ class CustomerController extends BaseController
         }
 
         // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
-        $project = $this->db->table('projects')
-            ->where('project_id', $projectId)
-            ->where('user_id', $this->userId)
+        $project = $this->db->table('projects p')
+            ->join('project_assignments pa', 'pa.project_id = p.project_id', 'left')
+            ->where('p.project_id', $projectId)
+            ->where('pa.user_id', $this->userId)
             ->get()
             ->getRowArray();
 

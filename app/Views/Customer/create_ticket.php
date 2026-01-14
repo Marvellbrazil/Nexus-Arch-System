@@ -196,22 +196,22 @@ function getProjectColor($id) {
                                 ?>
                             <div class="relative">
                                 <input type="radio" id="project_<?= $project['project_id'] ?>" name="project_id"
-                                    value="<?= $project['project_id'] ?>" class="hidden peer project-radio"
-                                    <?= $isSelected ? 'checked' : '' ?> required>
+                                    value="<?= $project['project_id'] ?>" class="hidden peer project-radio" 
+                                    <?= $isSelected ? 'checked' : '' ?> <?= $_GET['project'] == $project['project_id'] ? 'checked' : '' ?> required>
                                 <label for="project_<?= $project['project_id'] ?>"
                                     class="block p-4 md:p-5 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br <?= $projectColor ?> peer-checked:text-white project-card">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-start gap-3 md:gap-4">
                                             <div
-                                                class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-project-diagram text-white text-lg md:text-xl"></i>
+                                                class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg flex items-center justify-center flex">
+                                                <i class="fas fa-project-diagram text-lg md:text-xl"></i>
                                             </div>
                                             <div class="flex-1">
                                                 <h4
-                                                    class="text-text-dark text-lg md:text-xl font-bold mb-1 peer-checked:text-white">
+                                                    class="text-lg md:text-xl font-bold mb-1 peer-checked:text-white">
                                                     <?= esc($project['project_name']) ?></h4>
                                                 <p
-                                                    class="text-gray-600 text-sm md:text-base mb-2 peer-checked:text-white/90">
+                                                    class="text-sm md:text-base mb-2 peer-checked:text-white/90">
                                                     <?= esc($project['description'] ?? 'No description') ?></p>
                                                 <div class="flex items-center gap-4">
                                                     <span

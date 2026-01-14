@@ -717,7 +717,7 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
             <!-- User Avatar (Desktop) -->
             <div title="Logout">
                 <button id="logoutButton" class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors ml-4"
-                onclick="location.href = 'customer/logout'">
+                onclick="(confirm('Are you sure you want to logout?')) ? location.href = '/logout' : ''">
                     <i class="fa-solid fa-arrow-right-from-bracket text-lg active"></i>
                 </button>
             </div>
@@ -779,7 +779,8 @@ $notifications = $db->table('notifications')->where('user_id', session()->get('u
                 </a>
                 
                 <a href="<?= base_url('customer/logout') ?>" 
-                    class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4">
+                    class="mobile-nav-item text-red-600 mt-4 border-t border-gray-100 pt-4"
+                    onclick="return confirm('Are you sure you want to logout?')">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="font-medium">Logout</span>
                 </a>
