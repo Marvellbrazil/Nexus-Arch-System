@@ -6,6 +6,7 @@ use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\DepartmentModel;
+use App\Models\ProjectAssignmentModel;
 use App\Models\ProjectModel;
 
 use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetIOFactory;
@@ -27,8 +28,12 @@ class AdminController extends BaseController
         $this->ticketModel = new TicketModel();
         $this->projectModel = new ProjectModel();
         $this->departmentModel = new DepartmentModel();
+        $this->projectAssignmentModel = new ProjectAssignmentModel();
     }
 
+    /**
+     * Dashboard dengan data dinamis
+     */
     /**
      * Dashboard dengan data dinamis
      */
@@ -103,7 +108,7 @@ class AdminController extends BaseController
                 SELECT column_name 
                 FROM information_schema.columns 
                 WHERE table_name = 'statuses' 
-                AND table_schema = 'public'
+                AND table_schema = DATABASE()
             ")->getResultArray();
 
             $statusColumns = array_column($statusTableInfo, 'column_name');
@@ -166,11 +171,8 @@ class AdminController extends BaseController
             $data['total_tickets_for_chart'] = $totalTicketsForPercentage;
 
             $data['quickLinks'] = $this->getQuickLinks();
-
             $data['recentActivities'] = $this->getRecentActivities();
-
             $data['systemNotifications'] = $this->getSystemNotifications();
-
         } catch (\Exception $e) {
             log_message('error', 'Dashboard error: ' . $e->getMessage());
 
@@ -191,6 +193,26 @@ class AdminController extends BaseController
 
         return view('Admin/dashboard', $data);
     }
+
+    /**
+     * Get CSS class for role badge
+     */
+    private function getRoleClass(string $roleName): string
+    {
+        $roleClasses = [
+            'Admin' => 'role-admin',
+            'Support' => 'role-support',
+            'Developer' => 'role-developer',
+            'Customer' => 'role-customer',
+            'Manager' => 'role-manager',
+            'Supervisor' => 'role-supervisor',
+            'Staff' => 'role-staff'
+        ];
+
+        return $roleClasses[$roleName] ?? 'role-default';
+    }
+
+    
 
     // ==================== PRIVATE METHODS ====================
 
@@ -214,7 +236,6 @@ class AdminController extends BaseController
      */
     private function getDashboardStats(): array
     {
-        $db = db_connect();
 
         $stats = [
             'total_users' => $this->userModel->countAll(),
@@ -260,6 +281,9 @@ class AdminController extends BaseController
         ];
     }
 
+    /**
+     * Get recent activities from tickets and users
+     */
     /**
      * Get recent activities from tickets and users
      */
@@ -366,45 +390,6 @@ class AdminController extends BaseController
         ];
 
         return $notifications;
-    }
-
-    /**
-     * Get quick access links
-     */
-    private function getQuickLinks(): array
-    {
-        return [
-            [
-                'title' => 'Manage Users',
-                'url' => base_url('admin/users'),
-                'icon' => 'users',
-                'color' => 'bg-purple-100 text-purple-600'
-            ],
-            [
-                'title' => 'Manage Roles',
-                'url' => base_url('admin/roles'),
-                'icon' => 'user-tag',
-                'color' => 'bg-blue-100 text-blue-600'
-            ],
-            [
-                'title' => 'Manage Departments',
-                'url' => base_url('admin/departments'),
-                'icon' => 'sitemap',
-                'color' => 'bg-green-100 text-green-600'
-            ],
-            [
-                'title' => 'View Tickets',
-                'url' => base_url('admin/tickets'),
-                'icon' => 'ticket-alt',
-                'color' => 'bg-yellow-100 text-yellow-600'
-            ],
-            [
-                'title' => 'Manage Projects',
-                'url' => base_url('admin/projects'),
-                'icon' => 'project-diagram',
-                'color' => 'bg-indigo-100 text-indigo-600'
-            ]
-        ];
     }
 
     /**
@@ -519,114 +504,8 @@ class AdminController extends BaseController
         // Get user statistics
         $data['userStats'] = $this->userModel->getUserStatistics();
 
-        // Check if AJAX request for table data
-        if ($this->request->isAJAX() && $this->request->getMethod() === 'post') {
-            return $this->getUsersTableData();
-        }
-
         return view('Admin/manage_users', $data);
     }
-
-    /**
- * Handle users AJAX request - Untuk DataTables
- */
-public function users()
-{
-    // Redirect ke manageUsers jika bukan AJAX request
-    if (!$this->request->isAJAX()) {
-        return $this->manageUsers();
-    }
-    
-    return $this->getUsersTableData();
-}
-
-    /**
- * Get users data for DataTable (AJAX)
- */
-private function getUsersTableData()
-{
-    try {
-        // Get DataTable parameters
-        $draw = $this->request->getPost('draw');
-        $start = $this->request->getPost('start') ?? 0;
-        $length = $this->request->getPost('length') ?? 10;
-        $search = $this->request->getPost('search')['value'] ?? '';
-        
-        // Get sort order
-        $order = $this->request->getPost('order')[0] ?? ['column' => 5, 'dir' => 'desc'];
-        $columnMap = [
-            0 => 'user_id',
-            1 => 'full_name',
-            2 => 'email',
-            3 => 'role_name',
-            4 => 'is_active',
-            5 => 'created_at'
-        ];
-        
-        $sortColumn = $columnMap[$order['column']] ?? 'created_at';
-        $sortOrder = $order['dir'] ?? 'DESC';
-
-        // Get filters
-        $filters = [
-            'search' => $search,
-            'role_id' => $this->request->getPost('role_id'),
-            'department_id' => $this->request->getPost('department_id'),
-            'is_active' => $this->request->getPost('is_active'),
-            'date_from' => $this->request->getPost('date_from'),
-            'date_to' => $this->request->getPost('date_to'),
-            'sort' => $sortColumn,
-            'order' => $sortOrder
-        ];
-
-        // Get users data with pagination
-        $users = $this->userModel->getUsersWithRole($filters, $length, $start);
-        $totalRecords = $this->userModel->countAll();
-        $filteredRecords = $this->userModel->countFilteredUsers($filters);
-
-        // Format response for DataTable
-        $data = [];
-        foreach ($users as $user) {
-            $statusBadge = $user['is_active'] 
-                ? '<span class="status-active status-badge">Active</span>' 
-                : '<span class="status-inactive status-badge">Inactive</span>';
-            
-            $roleBadge = '<span class="role-badge ' . $this->getRoleClass($user['role_name']) . '">' 
-                . htmlspecialchars($user['role_name']) . '</span>';
-            
-            $data[] = [
-                'DT_RowId' => 'user_' . $user['user_id'],
-                'user_id' => $user['user_id'],
-                'full_name' => htmlspecialchars($user['full_name']),
-                'username' => htmlspecialchars($user['username']),
-                'email' => htmlspecialchars($user['email']),
-                'role_name' => $roleBadge,
-                'department_name' => htmlspecialchars($user['department_name'] ?? 'N/A'),
-                'is_active' => $user['is_active'],
-                'status_html' => $statusBadge,
-                'created_at' => date('M d, Y', strtotime($user['created_at'])),
-                'actions' => $this->getUserActionsHtml($user['user_id'])
-            ];
-        }
-
-        return $this->response->setJSON([
-            'draw' => intval($draw),
-            'recordsTotal' => intval($totalRecords),
-            'recordsFiltered' => intval($filteredRecords),
-            'data' => $data
-        ]);
-
-    } catch (\Exception $e) {
-        log_message('error', 'Users AJAX error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'draw' => $this->request->getPost('draw'),
-            'recordsTotal' => 0,
-            'recordsFiltered' => 0,
-            'data' => [],
-            'error' => 'Failed to load users data: ' . $e->getMessage()
-        ]);
-    }
-}
-
     /**
      * Get user details for AJAX
      */
@@ -682,7 +561,6 @@ private function getUsersTableData()
             ];
 
             return $this->response->setJSON($response);
-
         } catch (\Exception $e) {
             log_message('error', 'User details error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -747,7 +625,6 @@ private function getUsersTableData()
                     'message' => 'Failed to add user'
                 ]);
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Add user error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -815,7 +692,6 @@ private function getUsersTableData()
                     'message' => 'Failed to update user'
                 ]);
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Edit user error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -861,7 +737,6 @@ private function getUsersTableData()
                     'message' => 'Failed to reset password'
                 ]);
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Reset password error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -896,7 +771,6 @@ private function getUsersTableData()
                     'message' => 'Failed to change user status'
                 ]);
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Change status error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -935,7 +809,6 @@ private function getUsersTableData()
                     'message' => 'Failed to delete user'
                 ]);
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Delete user error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -990,13 +863,11 @@ private function getUsersTableData()
 
             fclose($output);
             exit;
-
         } catch (\Exception $e) {
             log_message('error', 'Export users error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to export users');
         }
     }
-
     /**
      * Load common data for all views
      */
@@ -1034,6 +905,11 @@ private function getUsersTableData()
                     data-user-id="' . $userId . '" 
                     title="Reset Password">
                 <i class="fas fa-key"></i>
+            </button>
+            <button class="btn-change-status p-2 text-orange-600 hover:text-orange-800 transition-colors" 
+                    data-user-id="' . $userId . '" 
+                    title="Change Status">
+                <i class="fas fa-exchange-alt"></i>
             </button>
             <button class="btn-delete-user p-2 text-red-600 hover:text-red-800 transition-colors" 
                     data-user-id="' . $userId . '" 
@@ -1133,7 +1009,6 @@ private function getUsersTableData()
                 'recordsFiltered' => $filteredRecords,
                 'data' => $data
             ]);
-
         } catch (\Exception $e) {
             log_message('error', 'Users AJAX error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2122,7 +1997,6 @@ private function getUsersTableData()
             $db->transComplete();
 
             return $db->transStatus();
-
         } catch (\Exception $e) {
             $db->transRollback();
             log_message('error', 'Update project assignments error: ' . $e->getMessage());
@@ -2182,7 +2056,6 @@ private function getUsersTableData()
                 'recordsFiltered' => $filteredRecords,
                 'data' => $data
             ]);
-
         } catch (\Exception $e) {
             log_message('error', 'Projects table AJAX error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2328,7 +2201,6 @@ private function getUsersTableData()
                 'success' => true,
                 'users' => $users
             ]);
-
         } catch (\Exception $e) {
             log_message('error', 'Get users AJAX error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2400,7 +2272,6 @@ private function getUsersTableData()
                 'success' => false,
                 'message' => 'Failed to process bulk assignment'
             ]);
-
         } catch (\Exception $e) {
             log_message('error', 'Bulk assign users error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2448,7 +2319,6 @@ private function getUsersTableData()
             }
 
             return $this->response->setJSON($result);
-
         } catch (\Exception $e) {
             log_message('error', 'Import projects error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2637,7 +2507,6 @@ private function getUsersTableData()
                 'success' => false,
                 'message' => 'Database transaction failed'
             ];
-
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -2679,7 +2548,6 @@ private function getUsersTableData()
                 'success' => true,
                 'projects' => $projects
             ]);
-
         } catch (\Exception $e) {
             log_message('error', 'Get projects for bulk assign error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -2688,5 +2556,4 @@ private function getUsersTableData()
             ]);
         }
     }
-
 }

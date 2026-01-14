@@ -4,15 +4,15 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class DepartmentModel extends Model
+class NotificationModel extends Model
 {
-    protected $table            = 'departments';
-    protected $primaryKey       = 'department_id';
+    protected $table            = 'notifications';
+    protected $primaryKey       = 'notification_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['department_name', 'description'];
+    protected $allowedFields    = ['user_id', 'ticket_id', 'title', 'title', 'message', 'is_read', 'notification_type'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
