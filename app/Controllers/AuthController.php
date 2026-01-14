@@ -160,8 +160,8 @@ class AuthController extends BaseController
 
         session()->set($sessionData);
 
-        // Update last login
-        $this->userModel->updateLastLogin($user['user_id']);
+        // // Update last login
+        // $this->userModel->updateLastLogin($user['user_id']);
 
         return $this->redirectToDashboard();
     }
