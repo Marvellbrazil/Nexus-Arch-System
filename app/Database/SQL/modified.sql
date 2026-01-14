@@ -70,6 +70,21 @@ CREATE TABLE "public"."priorities" (
     PRIMARY KEY ("priority_id")
 );
 
+DROP TABLE IF EXISTS "public"."project_assignments";
+-- Sequence and defined type
+CREATE SEQUENCE IF NOT EXISTS project_assignments_assignment_id_seq;
+
+-- Table Definition
+CREATE TABLE "public"."project_assignments" (
+    "assignment_id" int4 NOT NULL DEFAULT nextval('project_assignments_assignment_id_seq'::regclass),
+    "user_id" int4 NOT NULL,
+    "project_id" int4 NOT NULL,
+    "assigned_at" timestamp DEFAULT now(),
+    CONSTRAINT "project_assignments_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("project_id"),
+    CONSTRAINT "project_assignments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id"),
+    PRIMARY KEY ("assignment_id")
+);
+
 DROP TABLE IF EXISTS "public"."projects";
 -- Sequence and defined type
 CREATE SEQUENCE IF NOT EXISTS projects_project_id_seq;
@@ -258,12 +273,14 @@ INSERT INTO "public"."departments" ("department_id", "department_name", "descrip
 (2, 'UI/UX Support', 'User interface and user experience support', '2026-01-09 10:27:16.980932'),
 (3, 'Technical Support', 'General technical assistance', '2026-01-09 10:27:16.980932'),
 (4, 'Feature Request', 'Feature development and enhancement requests', '2026-01-09 10:27:16.980932');
-
+INSERT INTO "public"."notifications" ("notification_id", "user_id", "ticket_id", "title", "message", "is_read", "notification_type", "created_at") VALUES
+(1, 2, 3, 'APPPATH Fixed', 'The APPPATH error is now fixed, the web is fully-functional.', 'f', 'Success', '2026-01-13 14:31:10.935903');
 INSERT INTO "public"."priorities" ("priority_id", "priority_name") VALUES
 (1, 'Low'),
 (2, 'Medium'),
 (3, 'High'),
 (4, 'Critical');
+
 INSERT INTO "public"."projects" ("project_id", "project_code", "project_name", "description", "is_active", "created_at", "user_id") VALUES
 (3, 'PROJ003', 'Web Portal', 'Web portal development', 't', '2026-01-09 10:27:16.980932', 2),
 (2, 'PROJ002', 'Mobile App', 'Mobile application support', 't', '2026-01-09 10:27:16.980932', 2),
@@ -281,13 +298,17 @@ INSERT INTO "public"."statuses" ("status_id", "status_name") VALUES
 
 
 
-
+INSERT INTO "public"."tickets" ("ticket_id", "ticket_number", "subject", "description", "customer_id", "project_id", "department_id", "assigned_to", "category_id", "priority_id", "status_id", "due_date", "first_response_at", "resolved_at", "closed_at", "created_at", "updated_at") VALUES
+(1, 'PROJ002-001', 'skjgbjksbgkjbsfg', '<p>kjrsbgkjrsbgkjfgbkjdbgkjbdkjbgjkdbgkjbdfjkgbkjdfgbkjdfgb</p>', 2, 2, 1, NULL, 2, 3, 1, NULL, NULL, NULL, NULL, '2026-01-12 12:00:43', '2026-01-12 12:00:43'),
+(3, 'PROJ003-001', 'Wrong Path', '<p>This is a serious problem, I think there''s problem on the <i>APPPATH, </i>which cause the main functionality of this web is down. Please fix it <strong>ASAP</strong>!</p>', 2, 3, 1, NULL, 2, 4, 3, NULL, NULL, NULL, NULL, '2026-01-13 13:56:37', '2026-01-13 13:56:37'),
+(4, 'PROJ003-002', '.env not found', '<p>We can tricked it by Database.php, but it is still severe, remembering .env is crucial for web, and we don''t have the exact templates for this website.</p>', 2, 3, 1, NULL, 2, 3, 1, NULL, NULL, NULL, NULL, '2026-01-13 14:15:34', '2026-01-13 14:15:34'),
+(2, 'PROJ002-002', 'skjgbjksbgkjbsfg', '<p>kjrsbgkjrsbgkjfgbkjdbgkjbdkjbgjkdbgkjbdfjkgbkjdfgbkjdfgb</p>', 2, 2, 1, NULL, 2, 3, 2, NULL, NULL, NULL, NULL, '2026-01-12 12:01:25', '2026-01-12 12:01:25');
 INSERT INTO "public"."users" ("user_id", "username", "full_name", "email", "password", "role_id", "department_id", "phone_number", "photo_profile", "is_active", "last_login", "created_at", "updated_at") VALUES
-(3, 'support1', 'Jane Support', 'support@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 3, NULL, NULL, NULL, 't', '2026-01-11 22:25:19', '2026-01-09 10:27:16.980932', '2026-01-11 22:25:19'),
 (1, 'admin', 'System Administrator', 'admin@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 1, NULL, NULL, NULL, 't', '2026-01-12 09:14:45', '2026-01-09 10:27:16.980932', '2026-01-12 09:14:45'),
-(2, 'janedoe', 'Jane Doe', 'janedoe@nexus.com', '$2y$10$cF2FHo6vY3.suCJxZVfs2eLPeFrT8Bj4Jsf08J1Ebo6LlsjsMtK9q', 2, NULL, NULL, NULL, 't', '2026-01-12 09:16:10', '2026-01-09 10:27:16.980932', '2026-01-12 09:16:10'),
+(3, 'support1', 'Jane Support', 'support@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 3, NULL, NULL, NULL, 't', '2026-01-12 10:10:13', '2026-01-09 10:27:16.980932', '2026-01-12 10:10:13'),
 (4, 'itsupport1', 'IT Support Staff', 'itsupport@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 1, NULL, NULL, 't', '2026-01-09 10:39:43', '2026-01-09 10:27:16.980932', '2026-01-09 10:39:43'),
 (5, 'uiux1', 'UI/UX Designer', 'uiux@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 2, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
 (6, 'techsupport1', 'Technical Support', 'techsupport@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 3, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
 (7, 'feature1', 'Feature Developer', 'feature@nexus.com', '$2y$10$u48zXFLN9t1xBOyv4LPE3OKU7L6xlvJDJn11vliBk42fmXibDPPxu', 4, 4, NULL, NULL, 't', NULL, '2026-01-09 10:27:16.980932', '2026-01-09 13:02:48.680289'),
+(2, 'janedoe', 'Jane Doe', 'janedoe@nexus.com', '$2y$10$cF2FHo6vY3.suCJxZVfs2eLPeFrT8Bj4Jsf08J1Ebo6LlsjsMtK9q', 2, NULL, NULL, NULL, 't', '2026-01-13 13:49:40', '2026-01-09 10:27:16.980932', '2026-01-13 13:49:40'),
 (8, 'customer', 'Customer Customer', 'customer@nexus.com', '$2y$10$QPJtsp8ODWD9.Wb3ZSyO9eB2JbB9ICSdOQDDNrJ.SGP7zrLB7oGLG', 2, NULL, 'NULL', 'NULL', 't', '2026-01-10 22:04:46', '2026-01-10 21:32:22.414413', '2026-01-10 22:04:46');

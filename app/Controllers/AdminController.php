@@ -2,15 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\DepartmentModel;
-use App\Models\ProjectAssignmentModel;
+use App\Models\ProjectModel;
 
 class AdminController extends BaseController
 {
     protected $userModel;
     protected $roleModel;
+    protected $ticketModel;
+    protected $projectModel;
     protected $departmentModel;
     protected $projectAssignmentModel;
 
@@ -19,8 +22,9 @@ class AdminController extends BaseController
         // Initialize models
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
+        $this->ticketModel = new TicketModel();
+        $this->projectModel = new ProjectModel();
         $this->departmentModel = new DepartmentModel();
-        $this->projectAssignmentModel = new ProjectAssignmentModel();
     }
     /**
      * Dashboard dengan data dinamis
@@ -93,11 +97,11 @@ class AdminController extends BaseController
 
             // PERBAIKAN: Cek struktur tabel statuses terlebih dahulu
             $statusTableInfo = $db->query("
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'statuses' 
-            AND table_schema = 'public'
-        ")->getResultArray();
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'statuses' 
+                AND table_schema = 'public'
+            ")->getResultArray();
 
             $statusColumns = array_column($statusTableInfo, 'column_name');
             $hasColorColumn = in_array('color', $statusColumns);
