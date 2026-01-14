@@ -348,7 +348,7 @@ $notification_count = count($notifications);
         @media (max-width: 768px) {
             .desktop-nav-container {
                 display: none;
-            }
+            } 
         }
 
         /* Mobile Glass Menu */
@@ -664,12 +664,9 @@ $notification_count = count($notifications);
                                                 <?php endif; ?>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="font-semibold text-gray-800 text-sm truncate">
-                                                    <?= esc($notification['title']) ?></p>
-                                                <p class="text-gray-600 text-xs mt-1 truncate">
-                                                    <?= esc($notification['message']) ?></p>
-                                                <p class="text-gray-500 text-xs mt-2"><?= esc($notification['created_at']) ?>
-                                                </p>
+                                                <p class="font-semibold text-gray-800 text-sm truncate"><?= esc($notification['title']) ?></p>
+                                                <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
+                                                <p class="text-gray-500 text-xs mt-2"><?= esc(date('F d, Y H:i:s', strtotime($notification['created_at']))) ?></p>
                                             </div>
                                             <?php if (!$notification['is_read']): ?>
                                                 <div class="flex-shrink-0 mt-1">
@@ -741,11 +738,9 @@ $notification_count = count($notifications);
                                             <?php endif; ?>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="font-semibold text-gray-800 text-xs truncate">
-                                                <?= esc($notification['title']) ?></p>
-                                            <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?>
-                                            </p>
-                                            <p class="text-gray-500 text-xs mt-2"><?= esc($notification['created_at']) ?></p>
+                                            <p class="font-semibold text-gray-800 text-xs truncate"><?= esc($notification['title']) ?></p>
+                                            <p class="text-gray-600 text-xs mt-1 truncate"><?= esc($notification['message']) ?></p>
+                                            <p class="text-gray-500 text-xs mt-2"><?= esc(date('F d, Y H:i:s', strtotime($notification['created_at']))) ?></p>
                                         </div>
                                     </div>
                                 </a>
@@ -1009,13 +1004,13 @@ $notification_count = count($notifications);
             }
 
             // Simulate new notification (for demo purposes)
-            setInterval(() => {
-                if (window.location.pathname.includes('customer') && Math.random() > 0.7) {
-                    const currentCount = parseInt(document.querySelector('.notification-badge')?.textContent || '0');
-                    updateNotificationCount(currentCount + 1);
-                }
-            }, 30000);
-
+            // setInterval(() => {
+            //     if (window.location.pathname.includes('customer') && Math.random() > 0.7) {
+            //         const currentCount = parseInt(document.querySelector('.notification-badge')?.textContent || '0');
+            //         updateNotificationCount(currentCount);
+            //     }
+            // }, 30000);
+            
             // Scroll effect with smooth background transition
             let lastScrollTop = 0;
             const navbar = document.querySelector('.liquid-glass-navbar');

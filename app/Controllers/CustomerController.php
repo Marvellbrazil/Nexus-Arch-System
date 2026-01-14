@@ -640,7 +640,7 @@ class CustomerController extends BaseController
                 'id' => $notification['notification_id'],
                 'title' => $notification['title'],
                 'message' => $notification['message'],
-                'time' => $notification['created_at'],
+                'created_at' => $notification['created_at'],
                 'type' => $notification['notification_type'],
                 'is_read' => $notification['is_read'],
                 'ticket_id' => $notification['ticket_id'],
@@ -802,11 +802,10 @@ class CustomerController extends BaseController
         $this->db->table('notifications')->insert($notificationData);
     }
 
-    public function markedAsRead($id)
+    public function markAllRead()
     {
         $this->db->table('notifications')
             ->where('user_id', $this->userId)
-            ->where('notification_id', $id)
             ->update(['is_read' => true]);
 
         return redirect()->back()->with('success', 'All notifications marked as read');

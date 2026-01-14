@@ -70,6 +70,7 @@ $routes->group('customer', function ($routes) {
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', [CustomerController::class, 'updateProfile']);
     $routes->get('notifications', [CustomerController::class, 'notifications']);
+    $routes->get('notifications/mark_all_read', [CustomerController::class, 'markAllRead']);
     $routes->get('logout', [AuthController::class, 'logout']);
 });
 
