@@ -8,6 +8,8 @@ use App\Models\RoleModel;
 use App\Models\DepartmentModel;
 use App\Models\ProjectModel;
 
+use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetIOFactory;
+
 class AdminController extends BaseController
 {
     protected $userModel;
@@ -2533,7 +2535,7 @@ private function processExcelImport($file): array
     }
 
     try {
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getTempName());
+        $reader = SpreadsheetIOFactory::createReaderForFile($file->getTempName());
         $spreadsheet = $reader->load($file->getTempName());
         $worksheet = $spreadsheet->getActiveSheet();
         

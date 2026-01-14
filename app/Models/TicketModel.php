@@ -67,7 +67,7 @@ class TicketModel extends Model
     /**
      * Get tickets with all related data
      */
-    public function getTicketsWithDetails(array $filters = [], int $limit = null, int $offset = 0): array
+    public function getTicketsWithDetails(array $filters = [], int $limit = null, int $offset = 0)
     {
         $queryBuilder = $this->builder
             ->select('t.*, 

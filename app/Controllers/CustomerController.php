@@ -4,7 +4,6 @@ namespace App\Controllers;
 use App\Models\ProjectModel;
 use App\Models\UserModel;
 use Config\Database;
-use App\Models\ProjectModel;
 
 class CustomerController extends BaseController
 {
