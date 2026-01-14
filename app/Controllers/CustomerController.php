@@ -684,22 +684,6 @@ class CustomerController extends BaseController
         // Get projects assigned to this customer
         $data['projects'] = $this->getAssignedProjects();
 
-        // Get selected project from query parameter or default to first project
-        $selectedProjectId = $this->request->getGet('project');
-        if ($selectedProjectId) {
-            $data['selected_project'] = $this->db->table('projects')
-                ->where('project_id', $selectedProjectId)
-                ->where('is_active', true)
-                ->get()
-                ->getRowArray();
-        }
-
-        // If no selected project or project not found, use first assigned project
-        if (empty($data['selected_project']) && !empty($data['projects'])) {
-            $data['selected_project'] = $data['projects'][0];
-            $selectedProjectId = $data['projects'][0]['project_id'];
-        }
-
         $data['categories'] = $this->db->table('categories')->get()->getResultArray();
         $data['priorities'] = $this->db->table('priorities')->get()->getResultArray();
         $data['departments'] = $this->db->table('departments')->get()->getResultArray();

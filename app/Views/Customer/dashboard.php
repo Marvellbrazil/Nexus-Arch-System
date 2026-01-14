@@ -161,8 +161,8 @@
                                                 <span class="text-xs md:text-sm font-medium px-2 py-0.5">
                                                     <?= ucfirst($project['project_name']) ?>
                                                 </span>
-                                                <span class="text-xs md:text-sm font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                                                    Status
+                                                <span class="text-xs md:text-sm font-medium px-2 py-0.5 rounded-full <?= ($project['is_active'] == 't') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
+                                                    <?= ($project['is_active'] == 't') ? 'Active' : 'Inactive' ?>
                                                 </span>
                                             </div>
                                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">

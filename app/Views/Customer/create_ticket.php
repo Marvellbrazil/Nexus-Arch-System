@@ -136,6 +136,9 @@
 
 <?php
 // Helper function for project colors
+
+use CodeIgniter\Database\Config;
+
 function getProjectColor($id) {
     $colors = [
         'from-blue-500 to-blue-600',
@@ -195,9 +198,15 @@ function getProjectColor($id) {
                                     $projectColor = getProjectColor($project['project_id']);
                                 ?>
                             <div class="relative">
-                                <input type="radio" id="project_<?= $project['project_id'] ?>" name="project_id"
-                                    value="<?= $project['project_id'] ?>" class="hidden peer project-radio" 
-                                    <?= $isSelected ? 'checked' : '' ?> <?= $_GET['project'] == $project['project_id'] ? 'checked' : '' ?> required>
+                                <input type="radio"
+                                    id="project_<?= $project['project_id'] ?>" 
+                                    name="project_id"
+                                    value="<?= $project['project_id'] ?>" 
+                                    class="hidden peer project-radio"
+                                    data-name="<?= esc($project['project_name']) ?>"
+                                    data-code="<?= esc($project['project_code']) ?>"
+                                    data-count="<?= $project['ticket_count'] ?? 0 ?>"
+                                    required>
                                 <label for="project_<?= $project['project_id'] ?>"
                                     class="block p-4 md:p-5 border-2 border-gray-300 rounded-xl cursor-pointer hover:scale-[1.02] smooth-transition peer-checked:border-secondary peer-checked:bg-gradient-to-br <?= $projectColor ?> peer-checked:text-white project-card">
                                     <div class="flex items-start justify-between">
@@ -236,8 +245,6 @@ function getProjectColor($id) {
                             </div>
                             <?php endforeach; ?>
                         </div>
-
-                        <!-- Selected Project Info -->
                         <div id="selectedProjectInfo"
                             class="<?= isset($selected_project) ? '' : 'hidden' ?> p-4 md:p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white shadow-lg mb-3">
                             <div class="flex items-center justify-between mb-2">
@@ -251,11 +258,6 @@ function getProjectColor($id) {
                                             id="selectedProjectName"><?= isset($selected_project) ? esc($selected_project['project_name']) : '' ?></span>
                                     </p>
                                 </div>
-                                <button type="button" onclick="showProjectSelection()"
-                                    class="px-3 md:px-4 py-1 md:py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 smooth-transition font-medium text-xs md:text-sm">
-                                    <i class="fas fa-exchange-alt mr-1 md:mr-2"></i>
-                                    Change Project
-                                </button>
                             </div>
                         </div>
 
@@ -763,27 +765,56 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Project selection functionality
     function showProjectSelection() {
-        document.getElementById('projectSelectionGrid').classList.remove('hidden');
         document.getElementById('selectedProjectInfo').classList.add('hidden');
     }
 
     // Update project info when project is selected
     document.querySelectorAll('.project-radio').forEach(radio => {
         radio.addEventListener('change', function() {
-            const projectId = this.value;
-            const projectCard = this.closest('.project-card');
-            const projectName = projectCard.querySelector('h4').textContent;
+            const projectName = this.getAttribute('data-name');
+            const projectCode = this.getAttribute('data-code');
+            const ticketCount = this.getAttribute('data-count');
 
-            // Update selected project info
+            // 1. Update Banner "Ready to Create Ticket"
             document.getElementById('selectedProjectName').textContent = projectName;
             document.getElementById('selectedProjectInfo').classList.remove('hidden');
-            document.getElementById('projectSelectionGrid').classList.add('hidden');
 
-            // Update button text
+            // 2. Update Tombol Submit
             document.getElementById('btnText').textContent = `Create Ticket for ${projectName}`;
 
-            // Load project details via AJAX (optional enhancement)
-            // loadProjectDetails(projectId);
+            // 3. Update Sidebar (Project Information) Secara Dinamis
+            const sidebarContent = document.getElementById('projectInfoContent');
+            sidebarContent.innerHTML = `
+                <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg animate-fade-in">
+                    <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-ticket-alt text-accent text-xs md:text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Total Tickets</h4>
+                        <p class="text-gray-300 text-xs">${ticketCount} tickets in this project</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg animate-fade-in">
+                    <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-code text-accent text-xs md:text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Project Code</h4>
+                        <p class="text-gray-300 text-xs">${projectCode}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-white/10 rounded-lg animate-fade-in">
+                    <div class="w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-clock text-accent text-xs md:text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white text-xs md:text-sm font-semibold mb-1">Average Resolution</h4>
+                        <p class="text-gray-300 text-xs">24 hours for similar issues</p>
+                    </div>
+                </div>
+            `;
         });
     });
 
