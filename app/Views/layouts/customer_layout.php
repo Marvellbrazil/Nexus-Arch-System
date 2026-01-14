@@ -13,8 +13,8 @@ $userModel = new UserModel();
 $username = $userModel->where('user_id', session()->get('user_id'))->get()->getRowArray()['full_name'];
 
 $db = Database::connect();
-$notification_count = $db->table('notifications')->where('user_id', session()->get('user_id'))->countAllResults();
-$notifications = $db->table('notifications')->where('user_id', session()->get('user_id'))->get()->getResultArray();
+$notifications = $db->table('notifications')->where('user_id', session()->get('user_id'))->where('is_read', 'f')->get()->getResultArray();
+$notification_count = count($notifications);
 ?>
 <!DOCTYPE html>
 <html lang="en">
