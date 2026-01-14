@@ -121,7 +121,8 @@
             
             <!-- Notification Actions -->
             <div class="flex items-center gap-3">
-                <button class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2">
+                <button class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2"
+                onclick="location.href='<?= base_url('customer/notifications/mark_all_read') ?>'">
                     <i class="fas fa-check-double"></i>
                     Mark All as Read
                 </button>
@@ -139,8 +140,8 @@
                         <i class="fas fa-search"></i>
                     </div>
                     <input type="text" 
-                           placeholder="Search notifications..." 
-                           class="w-full h-12 md:h-14 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm md:text-base focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
+                        placeholder="Search notifications..." 
+                        class="w-full h-12 md:h-14 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm md:text-base focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
                 </div>
             </div>
             
@@ -199,12 +200,15 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
                                     <h3 class="text-base md:text-lg font-bold text-text-dark"><?= $notification['title'] ?></h3>
-                                    <span class="text-xs md:text-sm text-gray-500"><?= $notification['created_at'] ?></span>
+                                    <span class="text-xs md:text-sm text-gray-500"><?= date('F d, Y H:i:s', strtotime($notification['created_at'])) ?></span>
                                 </div>
                                 <p class="text-sm md:text-base text-gray-700 mb-3"><?= $notification['message'] ?></p>
                                 <div class="flex items-center gap-2">
                                     <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
-                                        <span class="text-xs font-bold text-white"><?= $notification['notification_type'] ?></span>
+                                        <span class="text-xs font-bold text-white"><?= $notification['type'] ?></span>
+                                    </div>
+                                    <div class="priority-badge px-3 py-1 <?= $notification['is_read'] == 't' ? 'bg-[#66BBFF]' : 'bg-[#a9a9a9]' ?> rounded-lg">
+                                        <span class="text-xs font-bold text-white"><?= $notification['is_read'] == 't' ? 'Read' : 'Unread' ?></span>
                                     </div>
                                 </div>
                             </div>
