@@ -64,7 +64,7 @@ public function getDepartmentByID(int $departmentId): ?array
         return $this->where('department_name', $departmentName)->first();
     }
 
-    public function getDepartmentStatistics($departmentId)
+    public function getDepartmentTicketsStatistics($departmentId)
     {
         $totalTickets = $this->db->table('tickets')
             ->where('department_id', $departmentId)
