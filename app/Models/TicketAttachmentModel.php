@@ -13,6 +13,8 @@ class TicketAttachmentModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'ticket_id',
+        'uploaded_by',
         'file_name',
         'file_path',
         'file_type',
@@ -48,4 +50,19 @@ class TicketAttachmentModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getAttachmentsForTicket($ticketId)
+    {
+        return $this->builder('ticket_attachments ta')
+            ->select('ta.*, u.full_name')
+            ->join('users u', 'u.user_id = ta.uploaded_by')
+            ->where('ta.ticket_id', $ticketId)
+            ->get()
+            ->getResultArray();
+    }
+
+    public function createAttachment($data)
+    {
+        return $this->insert($data);
+    }
 }

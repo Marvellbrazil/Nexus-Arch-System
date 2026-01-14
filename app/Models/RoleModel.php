@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\ConnectionInterface;
+use CodeIgniter\Database\Postgre\Builder;
 use CodeIgniter\Model;
+use CodeIgniter\Validation\ValidationInterface;
 
 class RoleModel extends Model
 {
+    public $db;
     protected $table = 'roles';
     protected $primaryKey = 'role_id';
     protected $allowedFields = [
@@ -23,15 +27,22 @@ class RoleModel extends Model
      */
     public function getAllRolesWithCount()
     {
-        $db = db_connect();
 
-        return $db->table('roles r')
+        return $this->table('roles r')
             ->select('r.*, COUNT(u.user_id) as user_count')
             ->join('users u', 'u.role_id = r.role_id', 'left')
             ->groupBy('r.role_id')
             ->orderBy('r.role_name', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    /**
+     * Get role name by ID
+    */
+    public function getRoleName($roleId)
+    {
+        return $this->where('role_id', $roleId)->first();
     }
 
     /**
@@ -48,59 +59,6 @@ class RoleModel extends Model
             ->groupBy('r.role_id')
             ->get()
             ->getRowArray();
-    }
-
-    /**
-     * Get permissions for a role
-     */
-    public function getRolePermissions($roleId)
-    {
-        $db = db_connect();
-
-        return $db->table('role_permissions')
-            ->where('role_id', $roleId)
-            ->get()
-            ->getResultArray();
-    }
-
-    /**
-     * Update role permissions
-     */
-    public function updateRolePermissions($roleId, $permissions)
-    {
-        $db = db_connect();
-
-        // Delete existing permissions
-        $db->table('role_permissions')->where('role_id', $roleId)->delete();
-
-        // Insert new permissions
-        $permissionData = [];
-        foreach ($permissions as $permission) {
-            $permissionData[] = [
-                'role_id' => $roleId,
-                'permission_key' => $permission['key'],
-                'permission_name' => $permission['name'],
-                'module' => $permission['module'],
-                'is_allowed' => $permission['is_allowed'],
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-        }
-
-        if (!empty($permissionData)) {
-            return $db->table('role_permissions')->insertBatch($permissionData);
-        }
-
-        return true;
-    }
-
-    /**
-     * Get role templates (core roles)
-     */
-    public function getRoleTemplates()
-    {
-        return $this->where('is_core', true)
-            ->orderBy('role_name', 'ASC')
-            ->findAll();
     }
 
     /**

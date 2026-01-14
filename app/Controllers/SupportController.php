@@ -5,11 +5,22 @@ namespace App\Controllers;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use App\Models\UserModel;
 use App\Models\RoleModel;
+use App\Models\TicketModel;
+use App\Models\NotificationModel;
+use App\Models\SupportStatsModel;
+use App\Models\DepartmentModel;
 use DateTime;
 use Exception;
 
 class SupportController extends BaseController
 {
+    private $userId;
+    private $supportUserModel;
+    private $supportRoleModel;
+    private $supportTicketModel;
+    private $supportNotificationModel;
+    private $supportStatsModel;
+
     public function __construct()
     {
         // Check if user is logged in
@@ -22,6 +33,15 @@ class SupportController extends BaseController
         if (!in_array($userRole, ['Support', 'Admin'])) {
             throw PageNotFoundException::forPageNotFound();
         }
+
+        $this->userId = session()->get('user_id');
+        
+        // Load models
+        $this->supportUserModel = new UserModel();
+        $this->supportRoleModel = new RoleModel();
+        $this->supportTicketModel = new TicketModel();
+        $this->supportNotificationModel = new NotificationModel();
+        $this->supportStatsModel = new SupportStatsModel();
     }
 
     protected function loadCommonData()
@@ -79,25 +99,16 @@ class SupportController extends BaseController
         $userModel = new UserModel();
         $roleModel = new RoleModel();
 
-        // Get user details dengan departments
-        $data['user_details'] = $db->table('users u')
-            ->select('u.*, r.role_name')
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
-            ->where('u.user_id', $userId)
-            ->get()
-            ->getRowArray();
+// Get user details dengan departments
+        $data['user_details'] = $this->supportUserModel->getUserWithRole($userId);
 
         // Hitung active duration (logika sederhana)
         $activeDuration = "8h 24m";
 
-        // Get user departments
+// Get user departments
         if ($data['user_details'] && $data['user_details']['department_id']) {
-            $department = $db->table('departments')
-                ->select('department_name')
-                ->where('department_id', $data['user_details']['department_id'])
-                ->get()
-                ->getRowArray();
-
+            $departmentModel = new DepartmentModel();
+            $department = $departmentModel->find($data['user_details']['department_id']);
             if ($department) {
                 $data['user_details']['department_name'] = $department['department_name'];
             }
@@ -105,43 +116,20 @@ class SupportController extends BaseController
 
         // ==================== STATISTIK DINAMIS ====================
 
-        // 1. Tickets in Progress
-        $ticketsInProgress = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.assigned_to', $userId)
-            ->whereIn('s.status_name', ['In Progress', 'Processing'])
-            ->countAllResults();
+// 1. Tickets in Progress
+        $ticketsInProgress = $this->supportStatsModel->getInProgressTicketsCount($userId);
 
         // Tickets need attention (priority tinggi)
-        $needsAttention = $db->table('tickets t')
-            ->join('priorities p', 'p.priority_id = t.priority_id')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.assigned_to', $userId)
-            ->whereIn('p.priority_name', ['Urgent', 'High'])
-            ->whereIn('s.status_name', ['Open', 'In Progress'])
-            ->countAllResults();
+        $needsAttention = $this->supportStatsModel->getNeedsAttentionCount($userId);
 
         // 2. Waiting Customer Reply
-        $waitingCustomerReply = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.assigned_to', $userId)
-            ->where('s.status_name', 'Waiting Customer Reply')
-            ->countAllResults();
+        $waitingCustomerReply = $this->supportStatsModel->getWaitingCustomerReplyCount($userId);
 
         // 3. Incoming Tickets (belum diassign)
-        $incomingTickets = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.assigned_to IS NULL')
-            ->where('s.status_name', 'Open')
-            ->countAllResults();
+        $incomingTickets = $this->supportStatsModel->getIncomingTicketsCount();
 
         // New today
-        $newToday = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.assigned_to IS NULL')
-            ->where('s.status_name', 'Open')
-            ->where('DATE(t.created_at)', date('Y-m-d'))
-            ->countAllResults();
+        $newToday = $this->supportStatsModel->getNewTodayCount();
 
         // ==================== TEAM UPDATES ====================
 

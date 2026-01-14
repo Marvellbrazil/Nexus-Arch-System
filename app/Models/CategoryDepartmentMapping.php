@@ -43,4 +43,9 @@ class CategoryDepartmentMapping extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getDepartmentByCategory($categoryId)
+    {
+        return $this->where('category_id', $categoryId)->first();
+    }
 }
