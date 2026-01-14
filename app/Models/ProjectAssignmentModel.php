@@ -4,15 +4,15 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class DepartmentModel extends Model
+class ProjectAssignmentModel extends Model
 {
-    protected $table            = 'departments';
-    protected $primaryKey       = 'department_id';
+    protected $table            = 'project_assignments';
+    protected $primaryKey       = 'assignment_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['department_name', 'description'];
+    protected $allowedFields    = ['user_id', 'project_id'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
