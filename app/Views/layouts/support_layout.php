@@ -1,5 +1,10 @@
 <?php
-$session = \Config\Services::session();
+
+// use App\Models\UserModel;
+use Config\Services;
+use Config\Database;
+
+$session = Services::session();
 $success = $session->getFlashdata('success');
 $error = $session->getFlashdata('error');
 $message = $session->getFlashdata('message');
@@ -9,9 +14,9 @@ $username = $session->get('username') ?? $session->get('name') ?? $session->get(
 $user_id = $session->get('user_id');
 
 // 🔥 PERBAIKAN: Ambil notifikasi dinamis dari database
-$db = \Config\Database::connect();
-$notifications = [];
-$notification_count = 0;
+$db = Database::connect();
+$notifications = $db->table('notifications')->where('user_id', session()->get('user_id'))->where('is_read', 'f')->get()->getResultArray();
+$notification_count = count($notifications);
 
 if ($db->tableExists('notifications') && $user_id) {
     try {
@@ -697,7 +702,7 @@ $notifications = $formatted_notifications;
                 <div class="nav-separator"></div>
 
                 <!-- Notification placed next to Profile in center nav -->
-                <div class="relative">
+                <div class="relative" title="Notification (<?= $notification_count ?>)">
                     <button id="notificationButton"
                         class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors">
                         <i class="fas fa-bell text-lg"></i>
@@ -726,7 +731,7 @@ $notifications = $formatted_notifications;
                             <?php else: ?>
                                 <?php foreach ($notifications as $notification): ?>
                                     <a href="<?= base_url('support/notifications/' . $notification['id']) ?>"
-                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['read'] ? 'notification-unread' : '' ?>">
+                                        class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors <?= !$notification['is_read'] ? 'notification-unread' : '' ?>">
                                         <div class="flex gap-3">
                                             <div class="flex-shrink-0">
                                                 <?php if ($notification['type'] == 'assignment'): ?>
@@ -760,9 +765,9 @@ $notifications = $formatted_notifications;
                                                 <p class="text-gray-600 text-xs mt-1 truncate">
                                                     <?= esc($notification['message']) ?>
                                                 </p>
-                                                <p class="text-gray-500 text-xs mt-2"><?= esc($notification['time']) ?></p>
+                                                <p class="text-gray-500 text-xs mt-2"><?= esc($notification['created_at']) ?></p>
                                             </div>
-                                            <?php if (!$notification['read']): ?>
+                                            <?php if (!$notification['is_read']): ?>
                                                 <div class="flex-shrink-0 mt-1">
                                                     <span class="w-2 h-2 bg-secondary rounded-full"></span>
                                                 </div>
@@ -780,11 +785,6 @@ $notifications = $formatted_notifications;
                         </div>
                     </div>
                 </div>
-
-                <a href="<?= base_url('support/profile') ?>"
-                    class="nav-glass-item <?= current_url() == base_url('support/profile') ? 'active' : '' ?>">
-                    <?= esc($username) ?>
-                </a>
             </div>
         </div>
 
@@ -899,11 +899,19 @@ $notifications = $formatted_notifications;
         <!-- Desktop Right Section (Hidden on mobile) -->
         <div class="hidden md:flex items-center gap-3">
             <!-- User Avatar (Desktop) -->
-            <div>
-                <a href="<?= base_url('support/profile') ?>" class="no-underline">
+            <div title="Logout">
+                <button id="logoutButton"
+                    class="notification-bell-glass p-2 text-primary hover:text-secondary transition-colors ml-4"
+                    onclick="(confirm('Are you sure you want to logout?')) ? location.href = '/logout' : ''">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-lg active"></i>
+                </button>
+            </div>
+            <div class="nav-separator"></div>
+            <div title="<?= esc($username) ?>">
+                <a href="<?= base_url('customer/profile') ?>" class="no-underline">
                     <div
                         class="user-avatar-glass w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        SA
+                        <?= strtoupper(substr($username, 0, 1)) ?>
                     </div>
                 </a>
             </div>
