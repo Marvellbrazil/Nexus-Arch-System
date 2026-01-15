@@ -762,7 +762,7 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // CSRF Token untuk AJAX requests
         const csrfToken = '<?= csrf_hash() ?>';
         const csrfName = '<?= csrf_token() ?>';
@@ -1236,28 +1236,26 @@
             updateProjectActions(projectId);
         }
 
+        // Ganti fungsi loadProjectDetails() dengan:
         async function loadProjectDetails(projectId) {
             if (!projectId) return;
 
             showLoading('projectDetails');
 
             try {
-                const response = await fetch(`${baseUrl}/admin/manageProjects`, {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('action', 'get_project_details');
+                formData.append('project_id', projectId);
+
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: new URLSearchParams({
-                        [csrfName]: csrfToken,
-                        action: 'get_project_details',
-                        project_id: projectId
-                    })
+                    body: formData
                 });
 
                 const data = await response.json();
 
-                if (data.success && data.project) {
+                if (data.success) {
                     renderProjectDetails(data.project, data.assigned_users || []);
                 } else {
                     showProjectDetailsError(data.message || 'Failed to load project details');
@@ -1268,6 +1266,36 @@
             } finally {
                 hideLoading('projectDetails');
             }
+        }
+
+        // Tambahkan fungsi untuk Toast warning:
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+            toast.innerHTML = `
+        <div class="flex items-center gap-2">
+            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                type === 'success' ? 'fa-check-circle' :
+                type === 'warning' ? 'fa-exclamation-triangle' :
+                'fa-info-circle'
+            }"></i>
+            <span class="text-sm">${message}</span>
+        </div>
+    `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, type === 'error' || type === 'warning' ? 5000 : 3000);
         }
 
         function renderProjectDetails(project, assignedUsers = []) {
@@ -1464,6 +1492,20 @@
             // Load initial data
             await loadBulkProjects();
             await loadBulkUsers();
+
+            // Update fetch URL untuk controller
+            const response = await fetch(`${baseUrl}/admin/manageProjects`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    [csrfName]: csrfToken,
+                    action: 'get_projects_for_bulk_assign',
+                    search: searchTerm
+                })
+            });
         }
 
         function setupBulkAssignModalEvents() {
@@ -1540,7 +1582,7 @@
             }
 
             if (fileInput) {
-                fileInput.addEventListener('change', function () {
+                fileInput.addEventListener('change', function() {
                     if (this.files.length > 0) {
                         const file = this.files[0];
                         const fileName = modal.querySelector('#fileName');
@@ -1573,7 +1615,7 @@
             }
         }
 
-        // Function untuk memproses bulk assign
+        // Ganti fungsi processBulkAssign() dengan:
         async function processBulkAssign() {
             const modal = document.querySelector('.bulk-assign-modal');
             if (!modal) return;
@@ -1584,8 +1626,13 @@
             const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked'))
                 .map(cb => parseInt(cb.value));
 
-            if (selectedProjects.length === 0 || selectedUsers.length === 0) {
-                showToast('Please select at least one project and one user', 'error');
+            if (selectedProjects.length === 0) {
+                showToast('Please select at least one project', 'error');
+                return;
+            }
+
+            if (selectedUsers.length === 0) {
+                showToast('Please select at least one user', 'error');
                 return;
             }
 
@@ -1598,10 +1645,11 @@
             try {
                 const formData = new FormData();
                 formData.append(csrfName, csrfToken);
+                formData.append('action', 'bulk_assign_projects');
                 formData.append('project_ids', JSON.stringify(selectedProjects));
                 formData.append('user_ids', JSON.stringify(selectedUsers));
 
-                const response = await fetch(`${baseUrl}/admin/projects/bulk-assign`, {
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1614,8 +1662,15 @@
 
                     // Reload projects to update counts
                     loadProjectsData();
+
+                    // Show warnings if any
+                    if (data.warning) {
+                        setTimeout(() => {
+                            showToast(data.warning, 'warning');
+                        }, 1000);
+                    }
                 } else {
-                    showToast(data.message, 'error');
+                    showToast(data.message || 'Failed to process bulk assignment', 'error');
                 }
             } catch (error) {
                 console.error('Bulk assign error:', error);
@@ -1626,7 +1681,7 @@
             }
         }
 
-        // Function untuk memproses import
+        // Ganti fungsi processImport() dengan:
         async function processImport() {
             const modal = document.querySelector('.import-projects-modal');
             if (!modal) return;
@@ -1654,9 +1709,10 @@
             try {
                 const formData = new FormData();
                 formData.append(csrfName, csrfToken);
+                formData.append('action', 'import_projects');
                 formData.append('projects_file', file);
 
-                const response = await fetch(`${baseUrl}/admin/projects/import`, {
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1666,6 +1722,10 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     modal.querySelector('.close-modal').click();
+
+                    // Clear file input
+                    fileInput.value = '';
+                    modal.querySelector('#selectedFileInfo').classList.add('hidden');
 
                     // Reload projects
                     loadProjectsData();
@@ -1677,7 +1737,7 @@
                         }, 1000);
                     }
                 } else {
-                    showToast(data.message, 'error');
+                    showToast(data.message || 'Failed to import projects', 'error');
                 }
             } catch (error) {
                 console.error('Import error:', error);
@@ -1763,7 +1823,7 @@
             });
         }
 
-        // Function untuk load projects untuk bulk assign
+        // Ganti fungsi loadBulkProjects() dengan:
         async function loadBulkProjects(search = '') {
             const modal = document.querySelector('.bulk-assign-modal');
             if (!modal) return;
@@ -1771,12 +1831,20 @@
             const projectsList = modal.querySelector('#bulkProjectsList');
             if (!projectsList) return;
 
+            // Show loading
+            projectsList.innerHTML = `
+        <div class="p-4 text-center">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-secondary"></div>
+        </div>
+    `;
+
             try {
                 const formData = new FormData();
                 formData.append(csrfName, csrfToken);
+                formData.append('action', 'get_projects_for_bulk');
                 formData.append('search', search);
 
-                const response = await fetch(`${baseUrl}/admin/projects/get-for-bulk-assign`, {
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1786,10 +1854,52 @@
                 if (data.success && data.projects) {
                     renderBulkProjects(data.projects, projectsList);
                     updateBulkSelectionCounts();
+                } else {
+                    projectsList.innerHTML = '<div class="p-4 text-center text-gray-500">No projects found</div>';
                 }
             } catch (error) {
                 console.error('Error loading bulk projects:', error);
-                projectsList.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load projects</div>';
+                projectsList.innerHTML = '<div class="p-4 text-center text-gray-500 text-red-600">Failed to load projects</div>';
+            }
+        }
+
+        // Ganti fungsi loadBulkUsers() dengan:
+        async function loadBulkUsers(search = '') {
+            const modal = document.querySelector('.bulk-assign-modal');
+            if (!modal) return;
+
+            const usersList = modal.querySelector('#bulkUsersList');
+            if (!usersList) return;
+
+            // Show loading
+            usersList.innerHTML = `
+        <div class="p-4 text-center">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-secondary"></div>
+        </div>
+    `;
+
+            try {
+                const formData = new FormData();
+                formData.append(csrfName, csrfToken);
+                formData.append('action', 'get_all_users');
+                formData.append('search', search);
+
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.users) {
+                    renderBulkUsers(data.users, usersList);
+                    updateBulkSelectionCounts();
+                } else {
+                    usersList.innerHTML = '<div class="p-4 text-center text-gray-500">No users found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading bulk users:', error);
+                usersList.innerHTML = '<div class="p-4 text-center text-gray-500 text-red-600">Failed to load users</div>';
             }
         }
 
@@ -1912,7 +2022,9 @@ Mobile App,PROJ002,New mobile application development,true
 Database Migration,PROJ003,Migrate to new database system,false
 API Integration,PROJ004,Third-party API integration,true`;
 
-            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const blob = new Blob([csvContent], {
+                type: 'text/csv'
+            });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1964,18 +2076,26 @@ API Integration,PROJ004,Third-party API integration,true`;
             }
         }
 
+        // Ganti fungsi processAddProject() dengan:
         async function processAddProject() {
             const modal = document.querySelector('.add-project-modal');
             if (!modal) return;
 
-            const projectName = modal.querySelector('#projectName').value;
-            const projectCode = modal.querySelector('#projectCode').value;
-            const description = modal.querySelector('#projectDescription').value;
+            const projectName = modal.querySelector('#projectName').value.trim();
+            const projectCode = modal.querySelector('#projectCode').value.trim().toUpperCase();
+            const description = modal.querySelector('#projectDescription').value.trim();
             const status = modal.querySelector('#projectStatus').value;
 
             // Validation
-            if (!projectName || !projectCode) {
-                showToast('Project name and code are required', 'error');
+            if (!projectName) {
+                showToast('Project name is required', 'error');
+                modal.querySelector('#projectName').focus();
+                return;
+            }
+
+            if (!projectCode) {
+                showToast('Project code is required', 'error');
+                modal.querySelector('#projectCode').focus();
                 return;
             }
 
@@ -1988,12 +2108,13 @@ API Integration,PROJ004,Third-party API integration,true`;
             try {
                 const formData = new FormData();
                 formData.append(csrfName, csrfToken);
+                formData.append('action', 'create_project');
                 formData.append('project_name', projectName);
                 formData.append('project_code', projectCode);
                 formData.append('description', description);
                 formData.append('is_active', status === 'active');
 
-                const response = await fetch(`${baseUrl}/admin/projects/add`, {
+                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
                     method: 'POST',
                     body: formData
                 });
@@ -2001,8 +2122,14 @@ API Integration,PROJ004,Third-party API integration,true`;
                 const data = await response.json();
 
                 if (data.success) {
-                    showToast('Project created successfully', 'success');
+                    showToast(data.message, 'success');
                     modal.querySelector('.close-modal').click();
+
+                    // Clear form
+                    modal.querySelector('#projectName').value = '';
+                    modal.querySelector('#projectCode').value = '';
+                    modal.querySelector('#projectDescription').value = '';
+                    modal.querySelector('#projectStatus').value = 'active';
 
                     // Reload projects
                     loadProjectsData();
@@ -2011,10 +2138,16 @@ API Integration,PROJ004,Third-party API integration,true`;
                     if (data.project_id) {
                         setTimeout(() => {
                             selectProject(data.project_id);
-                        }, 500);
+                        }, 1000);
                     }
                 } else {
-                    showToast(data.message || 'Failed to create project', 'error');
+                    if (data.errors) {
+                        // Show validation errors
+                        const errorMessages = Object.values(data.errors).join(', ');
+                        showToast(errorMessages, 'error');
+                    } else {
+                        showToast(data.message || 'Failed to create project', 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Add project error:', error);
@@ -2024,7 +2157,6 @@ API Integration,PROJ004,Third-party API integration,true`;
                 confirmBtn.disabled = false;
             }
         }
-
         // Utility functions
         function getStatusName(status) {
             const statuses = {
@@ -2132,5 +2264,74 @@ API Integration,PROJ004,Third-party API integration,true`;
             }, 3000);
         }
     });
+
+    // Ganti fungsi exportProjectsData() dengan:
+    async function exportProjectsData() {
+        try {
+            showLoading();
+
+            const filters = {
+                search: elements.projectSearch?.value || '',
+                status: elements.statusFilter?.value || '',
+                sort_by: elements.sortFilter?.value || 'name_asc'
+            };
+
+            const formData = new FormData();
+            formData.append(csrfName, csrfToken);
+            formData.append('action', 'export_projects_csv');
+            formData.append('search', filters.search);
+            formData.append('status', filters.status);
+            formData.append('sort_by', filters.sort_by);
+
+            const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Convert data to CSV and download
+                downloadCSV(data.data, data.filename || 'projects.csv');
+                showToast(`Exported ${data.count} projects successfully`, 'success');
+            } else {
+                showToast(data.message || 'Failed to export projects', 'error');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Failed to export projects', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Function untuk download CSV
+    function downloadCSV(data, filename) {
+        const csvContent = data.map(row =>
+            row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+
+        const blob = new Blob([csvContent], {
+            type: 'text/csv;charset=utf-8;'
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // Function untuk reset filter
+    function resetAllFilters() {
+        if (elements.projectSearch) elements.projectSearch.value = '';
+        if (elements.statusFilter) elements.statusFilter.value = '';
+        if (elements.sortFilter) elements.sortFilter.value = 'name_asc';
+
+        currentPage = 1;
+        loadProjectsData();
+    }
 </script>
 <?= $this->endSection() ?>

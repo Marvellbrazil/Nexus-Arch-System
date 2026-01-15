@@ -98,25 +98,6 @@ class UserModel extends Model
         return $builder->countAllResults();
     }
 
-    /**
-     * Get user by ID with full details (PostgreSQL compatible)
-     */
-    public function getUserWithDetails(int $userId): ?array
-    {
-        $builder = $this->db->table('users u');
-
-        // PostgreSQL specific - use subqueries with proper column aliasing
-        $builder->select("u.*, r.role_name, d.department_name, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.customer_id = u.user_id) as total_tickets,
-                (SELECT COUNT(*) FROM project_assignments pa WHERE pa.user_id = u.user_id) as total_projects")
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
-            ->join('departments d', 'd.department_id = u.department_id', 'left')
-            ->where('u.user_id', $userId);
-
-        $result = $builder->get()->getRowArray();
-        return $result ?: null;
-    }
-
     public function getUserStatistics(): array
     {
         $db = db_connect();

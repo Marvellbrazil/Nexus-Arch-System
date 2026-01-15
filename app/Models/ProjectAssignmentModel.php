@@ -219,64 +219,63 @@ class ProjectAssignmentModel extends Model
         ];
     }
 
-    // /**
-    //  * Bulk assign users to multiple projects
-    //  */
-    // public function bulkAssignUsers(array $projectIds, array $userIds, int $assignedBy): array
-    // {
-    //     $db = db_connect();
-    //     $totalAssignments = 0;
-        
-    //     $db->transStart();
+    /**
+     * Bulk assign users to multiple projects
+     */
+    public function bulkAssignUsers(array $projectIds, array $userIds, int $assignedBy): array
+    {
+        $db = db_connect();
+        $totalAssignments = 0;
 
-    //     try {
-    //         foreach ($projectIds as $projectId) {
-    //             foreach ($userIds as $userId) {
-    //                 // Check if assignment already exists
-    //                 $exists = $db->table('project_assignments')
-    //                     ->where('project_id', $projectId)
-    //                     ->where('user_id', $userId)
-    //                     ->countAllResults();
+        $db->transStart();
 
-    //                 if (!$exists) {
-    //                     $db->table('project_assignments')->insert([
-    //                         'project_id' => $projectId,
-    //                         'user_id' => $userId,
-    //                         'assigned_by' => $assignedBy,
-    //                         'assigned_at' => date('Y-m-d H:i:s')
-    //                     ]);
-    //                     $totalAssignments++;
-    //                 }
-    //             }
-    //         }
+        try {
+            foreach ($projectIds as $projectId) {
+                foreach ($userIds as $userId) {
+                    // Check if assignment already exists
+                    $exists = $db->table('project_assignments')
+                        ->where('project_id', $projectId)
+                        ->where('user_id', $userId)
+                        ->countAllResults();
 
-    //         $db->transComplete();
+                    if (!$exists) {
+                        $db->table('project_assignments')->insert([
+                            'project_id' => $projectId,
+                            'user_id' => $userId,
+                            'assigned_by' => $assignedBy,
+                            'assigned_at' => date('Y-m-d H:i:s')
+                        ]);
+                        $totalAssignments++;
+                    }
+                }
+            }
 
-    //         if ($db->transStatus()) {
-    //             log_message('info', "Bulk assignment completed: {$totalAssignments} assignments made by user {$assignedBy}");
+            $db->transComplete();
 
-    //             return [
-    //                 'success' => true,
-    //                 'message' => "Successfully assigned {$totalAssignments} users to selected projects",
-    //                 'total_assignments' => $totalAssignments
-    //             ];
-    //         }
+            if ($db->transStatus()) {
+                log_message('info', "Bulk assignment completed: {$totalAssignments} assignments made by user {$assignedBy}");
 
-    //         return [
-    //             'success' => false,
-    //             'message' => 'Failed to process bulk assignment'
-    //         ];
+                return [
+                    'success' => true,
+                    'message' => "Successfully assigned {$totalAssignments} users to selected projects",
+                    'total_assignments' => $totalAssignments
+                ];
+            }
 
-    //     } catch (\Exception $e) {
-    //         $db->transRollback();
-    //         log_message('error', 'Bulk assign users error: ' . $e->getMessage());
-            
-    //         return [
-    //             'success' => false,
-    //             'message' => 'Server error: ' . $e->getMessage()
-    //         ];
-    //     }
-    // }
+            return [
+                'success' => false,
+                'message' => 'Failed to process bulk assignment'
+            ];
+        } catch (\Exception $e) {
+            $db->transRollback();
+            log_message('error', 'Bulk assign users error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
+    }
 
     /**
      * Check if user is assigned to project
@@ -482,5 +481,98 @@ class ProjectAssignmentModel extends Model
             ->limit($limit)
             ->get()
             ->getResultArray();
+    }
+
+    // Tambahkan di bagian akhir class ProjectAssignmentModel sebelum tutup }
+
+    /**
+     * Bulk assign users to multiple projects with validation
+     */
+    public function bulkAssignUsersToProjects(array $projectIds, array $userIds, int $assignedBy): array
+    {
+        $db = db_connect();
+        $totalAssignments = 0;
+        $errors = [];
+
+        $db->transStart();
+
+        try {
+            foreach ($projectIds as $projectId) {
+                // Validate project exists and is active
+                $projectExists = $db->table('projects')
+                    ->where('project_id', $projectId)
+                    ->where('is_active', true)
+                    ->countAllResults() > 0;
+
+                if (!$projectExists) {
+                    $errors[] = "Project ID {$projectId} not found or inactive";
+                    continue;
+                }
+
+                foreach ($userIds as $userId) {
+                    // Validate user exists and is active
+                    $userExists = $db->table('users')
+                        ->where('user_id', $userId)
+                        ->where('is_active', true)
+                        ->countAllResults() > 0;
+
+                    if (!$userExists) {
+                        $errors[] = "User ID {$userId} not found or inactive for project {$projectId}";
+                        continue;
+                    }
+
+                    // Check if assignment already exists
+                    $exists = $db->table('project_assignments')
+                        ->where('project_id', $projectId)
+                        ->where('user_id', $userId)
+                        ->countAllResults();
+
+                    if (!$exists) {
+                        $db->table('project_assignments')->insert([
+                            'project_id' => $projectId,
+                            'user_id' => $userId,
+                            'assigned_by' => $assignedBy,
+                            'assigned_at' => date('Y-m-d H:i:s'),
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s')
+                        ]);
+                        $totalAssignments++;
+                    }
+                }
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus()) {
+                log_message('info', "Bulk assignment completed: {$totalAssignments} assignments made by user {$assignedBy}");
+
+                $result = [
+                    'success' => true,
+                    'message' => "Successfully assigned {$totalAssignments} users to selected projects",
+                    'total_assignments' => $totalAssignments,
+                    'assigned_by' => $assignedBy
+                ];
+
+                if (!empty($errors)) {
+                    $result['warning'] = 'Some assignments were skipped due to errors';
+                    $result['errors'] = $errors;
+                }
+
+                return $result;
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Transaction failed'
+            ];
+        } catch (\Exception $e) {
+            $db->transRollback();
+            log_message('error', 'Bulk assign users to projects error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
     }
 }

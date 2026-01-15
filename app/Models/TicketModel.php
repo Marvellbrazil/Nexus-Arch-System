@@ -54,6 +54,12 @@ class TicketModel extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
+    public function store($data){
+    $db = db_connect()->table('tickets');   
+
+    return $db ->insert( $data);
+    }
+
     /**
      * Get ticket statistics for dashboard
      */

@@ -520,6 +520,7 @@ class CustomerController extends BaseController
         // Nomor Tiket & Mapping Departemen
         $ticketCount = $this->ticketModel->countTicketsByProject($projectId);
         $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
+        
 
         $departmentMapping = $this->categoryDepartmentMapping->getDepartmentByCategory($categoryId);
         $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
@@ -538,7 +539,9 @@ class CustomerController extends BaseController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $ticketId = $this->ticketModel->insert($ticketData);
+        // var_dump(db_connect()->error());die();
+
+        $ticketId = $this->ticketModel->store($ticketData);
 
         $this->handleAttachments($ticketId);
         // $this->createTicketNotification($ticketId);
