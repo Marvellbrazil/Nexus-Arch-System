@@ -542,7 +542,7 @@ class UserModel extends Model
          */
             public function updateUserResetToken(int $id, string $token)
             {
-                return $this->update($id, ['reset_token' => $token]);
+                return $this->update($id, ['otp' => $token]);
             }
         
             /**

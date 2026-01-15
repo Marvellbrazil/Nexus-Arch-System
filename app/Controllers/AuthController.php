@@ -222,10 +222,12 @@ class AuthController extends BaseController
         $user = $this->userModel->getUserByEmail($email);
 
         if ($user) {
-            $resetToken = bin2hex(random_bytes(16));
-            $this->userModel->updateUserResetToken($user['user_id'], $resetToken);
+            $otp = generateOTP();
+            $this->userModel->updateUserResetToken($user['user_id'], $otp);
 
-            // send email
+            $body = view('Email/template', ['otp' => $otp]);
+
+            sendEmail($email, 'OTP for Password Reset', $body);
 
             return redirect()->to('/login')->with('success', 'Password reset instructions sent to your email');
         }

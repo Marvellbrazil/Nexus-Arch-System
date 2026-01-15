@@ -8,7 +8,7 @@ use App\Models\UserModel;
 
 class BaseController extends Controller
 {
-    protected $helpers = ['url', 'form', 'session'];
+    protected $helpers = ['url', 'form', 'session', 'MyHelper'];
     protected $session;
     protected $userModel;
 
