@@ -672,85 +672,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial data
-        let departmentsData = [
-            {
-                id: 1,
-                name: "QA Team",
-                description: "Quality assurance, testing, and issue validation.",
-                detailedDescription: "Responsible for testing application quality and ensuring features meet requirements.",
-                members: 19,
-                activeTickets: 12,
-                resolvedTickets: 45,
-                status: "active",
-                categories: ["Testing", "Quality", "Validation"],
-                icon: "fa-clipboard-check",
-                head: "John Doe",
-                created: "Jan 15, 2024"
-            },
-            {
-                id: 2,
-                name: "IT Support",
-                description: "Handles technical support, access, and system issues.",
-                detailedDescription: "Handles technical issues, system support, network, and user access.",
-                members: 21,
-                activeTickets: 8,
-                resolvedTickets: 34,
-                status: "active",
-                categories: ["Bug", "Technical Support", "Feature Request"],
-                icon: "fa-headset",
-                head: "Jane Smith",
-                created: "Feb 10, 2024"
-            },
-            {
-                id: 3,
-                name: "Backend Team",
-                description: "Manages APIs, databases, and server-side logic.",
-                detailedDescription: "Manages system logic, databases, APIs, and server-side processes.",
-                members: 13,
-                activeTickets: 5,
-                resolvedTickets: 28,
-                status: "active",
-                categories: ["API", "Database", "Server"],
-                icon: "fa-server",
-                head: "Alex Johnson",
-                created: "Mar 5, 2024"
-            },
-            {
-                id: 4,
-                name: "Frontend Team",
-                description: "Handles UI, UX, and client-side functionality.",
-                detailedDescription: "Responsible for user interface design and overall user experience.",
-                members: 11,
-                activeTickets: 7,
-                resolvedTickets: 31,
-                status: "active",
-                categories: ["UI", "UX", "Frontend"],
-                icon: "fa-paint-brush",
-                head: "Sarah Williams",
-                created: "Apr 20, 2024"
-            },
-            {
-                id: 5,
-                name: "Security Team",
-                description: "Manages system security and access controls.",
-                detailedDescription: "Responsible for security monitoring, access controls, and compliance.",
-                members: 8,
-                activeTickets: 3,
-                resolvedTickets: 12,
-                status: "inactive",
-                categories: ["Security", "Compliance", "Access"],
-                icon: "fa-shield-alt",
-                head: "Michael Brown",
-                created: "May 15, 2024"
-            }
-        ];
-
-        let filteredDepartments = [...departmentsData];
+        // Data will be loaded dynamically
+        let departmentsData = [];
+        let filteredDepartments = [];
         let selectedDepartmentId = null;
         let currentFilter = "all";
         let currentPage = 1;
-        let itemsPerPage = 5;
+        let itemsPerPage = 10;
+        let totalDepartments = 0;
 
         // DOM Elements
         const departmentSearch = document.getElementById('departmentSearch');
@@ -767,17 +696,17 @@
         const pageNumbers = document.getElementById('pageNumbers');
         const prevPage = document.getElementById('prevPage');
         const nextPage = document.getElementById('nextPage');
-        const totalDepartments = document.getElementById('totalDepartments');
-        const activeDepartments = document.getElementById('activeDepartments');
-        const inactiveDepartments = document.getElementById('inactiveDepartments');
-        const totalMembers = document.getElementById('totalMembers');
+        const totalDepartmentsEl = document.getElementById('totalDepartments');
+        const activeDepartmentsEl = document.getElementById('activeDepartments');
+        const inactiveDepartmentsEl = document.getElementById('inactiveDepartments');
+        const totalMembersEl = document.getElementById('totalMembers');
 
         // Initialize
         init();
 
         function init() {
-            renderDepartments();
-            updateQuickStats();
+            loadDepartments();
+            loadStatistics();
             setupEventListeners();
         }
 
@@ -785,7 +714,7 @@
             // Search functionality
             if (departmentSearch) {
                 departmentSearch.addEventListener('input', debounce(() => {
-                    filterDepartments();
+                    loadDepartments();
                 }, 300));
             }
 
@@ -798,7 +727,8 @@
                     this.classList.add('active');
                     // Update filter
                     currentFilter = this.dataset.filter;
-                    filterDepartments();
+                    currentPage = 1;
+                    loadDepartments();
                 });
             });
 
@@ -822,28 +752,84 @@
             }
         }
 
+        async function loadDepartments() {
+            try {
+                showLoading();
+                
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'get_departments_data',
+                        search: departmentSearch ? departmentSearch.value.trim() : '',
+                        status: currentFilter !== 'all' ? currentFilter : '',
+                        page: currentPage,
+                        limit: itemsPerPage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    departmentsData = data.departments;
+                    filteredDepartments = departmentsData;
+                    totalDepartments = data.pagination.total;
+                    itemsPerPage = data.pagination.limit;
+                    
+                    renderDepartments();
+                    updatePagination(data.pagination);
+                    updateShowingCount(data.pagination);
+                } else {
+                    showToast(data.message || 'Failed to load departments', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                showToast('Failed to load departments', 'error');
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'get_department_statistics'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateQuickStats(data.statistics);
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
         function renderDepartments() {
             if (!departmentsList) return;
 
             departmentsList.innerHTML = '';
 
-            // Get current page departments
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageDepartments = filteredDepartments.slice(startIndex, endIndex);
-
-            if (pageDepartments.length === 0) {
+            if (departmentsData.length === 0) {
                 emptyState.classList.remove('hidden');
                 departmentsList.classList.add('hidden');
-                updatePagination();
-                updateShowingCount();
+                updatePagination({ total: 0, page: 1, total_pages: 1 });
                 return;
             }
 
             emptyState.classList.add('hidden');
             departmentsList.classList.remove('hidden');
 
-            pageDepartments.forEach(dept => {
+            departmentsData.forEach(dept => {
                 const deptElement = document.createElement('div');
                 deptElement.className = `department-item ${selectedDepartmentId === dept.id ? 'selected' : ''}`;
                 deptElement.dataset.departmentId = dept.id;
@@ -854,7 +840,7 @@
                         <div class="text-xs text-text-dark/50 truncate">${dept.description}</div>
                     </div>
                     <div class="col-span-4">
-                        <p class="text-xs text-text-dark/70 truncate">${dept.detailedDescription}</p>
+                        <p class="text-xs text-text-dark/70 truncate">${dept.detailed_description}</p>
                     </div>
                     <div class="col-span-2 text-center">
                         <span class="text-[#5A516B] text-sm font-semibold">${dept.members}</span>
@@ -887,75 +873,49 @@
 
                 departmentsList.appendChild(deptElement);
             });
-
-            updatePagination();
-            updateShowingCount();
         }
 
-        function filterDepartments() {
-            const searchTerm = departmentSearch ? departmentSearch.value.toLowerCase().trim() : '';
+        async function selectDepartment(departmentId) {
+            try {
+                showLoading();
+                
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'get_department_details',
+                        department_id: departmentId
+                    })
+                });
 
-            filteredDepartments = departmentsData.filter(dept => {
-                // Apply search filter
-                if (searchTerm) {
-                    if (!dept.name.toLowerCase().includes(searchTerm) &&
-                        !dept.description.toLowerCase().includes(searchTerm) &&
-                        !dept.detailedDescription.toLowerCase().includes(searchTerm)) {
-                        return false;
-                    }
+                const data = await response.json();
+
+                if (data.success) {
+                    selectedDepartmentId = departmentId;
+                    
+                    // Update selected row styling
+                    document.querySelectorAll('.department-item').forEach(row => {
+                        row.classList.remove('selected');
+                        if (parseInt(row.dataset.departmentId) === departmentId) {
+                            row.classList.add('selected');
+                        }
+                    });
+
+                    // Load department details
+                    loadDepartmentDetails(data.department);
+                } else {
+                    showToast(data.message || 'Failed to load department details', 'error');
                 }
-
-                // Apply status filter
-                if (currentFilter !== 'all' && dept.status !== currentFilter) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            currentPage = 1;
-            renderDepartments();
-            updateQuickStats();
+            } catch (error) {
+                console.error('Error selecting department:', error);
+                showToast('Failed to load department details', 'error');
+            }
         }
 
-        function selectDepartment(departmentId) {
-            selectedDepartmentId = departmentId;
-
-            // Update selected row styling
-            document.querySelectorAll('.department-item').forEach(row => {
-                row.classList.remove('selected');
-                if (parseInt(row.dataset.departmentId) === departmentId) {
-                    row.classList.add('selected');
-                }
-            });
-
-            // Load department details
-            loadDepartmentDetails(departmentId);
-        }
-
-        function clearSelectedDepartment() {
-            selectedDepartmentId = null;
-
-            // Clear selected styling
-            document.querySelectorAll('.department-item').forEach(row => {
-                row.classList.remove('selected');
-            });
-
-            // Clear details panel
-            departmentDetails.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-8 text-center">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-building text-gray-400 text-xl"></i>
-                    </div>
-                    <p class="text-text-dark/60 text-sm">Select a department to view details</p>
-                </div>
-            `;
-        }
-
-        function loadDepartmentDetails(departmentId) {
-            const dept = departmentsData.find(d => d.id === departmentId);
-            if (!dept) return;
-
+        function loadDepartmentDetails(dept) {
             const detailsHtml = `
                 <div class="animate-fadeIn">
                     <!-- Department Header -->
@@ -981,15 +941,15 @@
                     <!-- Statistics -->
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <div class="stat-value">${dept.members}</div>
+                            <div class="stat-value">${dept.member_count}</div>
                             <div class="stat-label">Members</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${dept.activeTickets}</div>
+                            <div class="stat-value">${dept.active_tickets}</div>
                             <div class="stat-label">Active Tickets</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${dept.resolvedTickets}</div>
+                            <div class="stat-value">${dept.resolved_tickets}</div>
                             <div class="stat-label">Resolved</div>
                         </div>
                     </div>
@@ -998,20 +958,20 @@
                     <div class="mb-6">
                         <h4 class="text-text-dark/80 text-sm font-medium mb-3">Assigned Members</h4>
                         <div class="space-y-3">
-                            <div class="member-item">
-                                <div class="member-info">
-                                    <div class="member-avatar">JD</div>
-                                    <span class="text-sm text-text-dark">John Doe</span>
+                            ${dept.recent_members.map(member => `
+                                <div class="member-item">
+                                    <div class="member-info">
+                                        <div class="member-avatar">${member.avatar_initials}</div>
+                                        <span class="text-sm text-text-dark">${member.name}</span>
+                                    </div>
+                                    <span class="view-badge">${member.role}</span>
                                 </div>
-                                <span class="view-badge">View</span>
-                            </div>
-                            <div class="member-item">
-                                <div class="member-info">
-                                    <div class="member-avatar">JS</div>
-                                    <span class="text-sm text-text-dark">Jane Smith</span>
+                            `).join('')}
+                            ${dept.member_count > 5 ? `
+                                <div class="text-center">
+                                    <span class="text-xs text-text-dark/50">+${dept.member_count - 5} more members</span>
                                 </div>
-                                <span class="view-badge">View</span>
-                            </div>
+                            ` : ''}
                         </div>
                     </div>
                     
@@ -1022,9 +982,12 @@
                             Ticket Categories
                         </h4>
                         <div class="pl-6">
-                            ${dept.categories.map(cat => `
-                                <div class="category-item">${cat}</div>
-                            `).join('')}
+                            ${dept.categories.length > 0 ? 
+                                dept.categories.map(cat => `
+                                    <div class="category-item">${cat}</div>
+                                `).join('') :
+                                '<div class="category-item text-text-dark/50">No categories assigned</div>'
+                            }
                         </div>
                     </div>
                     
@@ -1033,10 +996,9 @@
                         <div class="flex items-start gap-2">
                             <i class="fas fa-sticky-note text-[#434264] mt-1"></i>
                             <p class="text-[10px] text-text-dark/70 leading-tight">
-                                ${dept.name === 'IT Support'
-                    ? 'New Technical Support tickets are assigned to this department by default.'
-                    : `${dept.name} handles specialized tickets related to their expertise.`
-                }
+                                Created on ${dept.created_at}. ${dept.member_count > 0 ? 
+                                    'Currently has ' + dept.member_count + ' active members.' : 
+                                    'No members assigned yet.'}
                             </p>
                         </div>
                     </div>
@@ -1068,6 +1030,25 @@
                     toggleBtn.addEventListener('click', () => toggleDepartmentStatus(dept.id));
                 }
             }, 100);
+        }
+
+        function clearSelectedDepartment() {
+            selectedDepartmentId = null;
+
+            // Clear selected styling
+            document.querySelectorAll('.department-item').forEach(row => {
+                row.classList.remove('selected');
+            });
+
+            // Clear details panel
+            departmentDetails.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-building text-gray-400 text-xl"></i>
+                    </div>
+                    <p class="text-text-dark/60 text-sm">Select a department to view details</p>
+                </div>
+            `;
         }
 
         function showDepartmentActionsMenu(button, department) {
@@ -1126,10 +1107,30 @@
             }
         }
 
-        function showAddDepartmentModal() {
+        async function showAddDepartmentModal() {
             // Create modal from template
             const template = document.getElementById('addDepartmentModalTemplate');
             const modal = document.importNode(template.content, true);
+
+            // Get categories for selection
+            try {
+                const categoriesResponse = await fetch('/admin/departments/get-categories');
+                const categoriesData = await categoriesResponse.json();
+                
+                if (categoriesData.success) {
+                    const categoriesContainer = modal.querySelector('#categoriesContainer');
+                    if (categoriesContainer) {
+                        categoriesContainer.innerHTML = categoriesData.categories.map(cat => `
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="cat_${cat.category_id}" value="${cat.category_id}" class="rounded">
+                                <label for="cat_${cat.category_id}" class="text-sm text-gray-700">${cat.category_name}</label>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
 
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
@@ -1149,184 +1150,246 @@
             });
         }
 
-        function editDepartment(departmentId) {
-            const dept = departmentsData.find(d => d.id === departmentId);
-            if (!dept) return;
-
-            // Create modal from template
-            const template = document.getElementById('editDepartmentModalTemplate');
-            const modal = document.importNode(template.content, true);
-
-            // Fill modal data
-            modal.querySelector('#editDepartmentName').value = dept.name;
-            modal.querySelector('#editDepartmentDescription').value = dept.description;
-            modal.querySelector('#editDepartmentStatus').value = dept.status;
-            modal.querySelector('#editDepartmentHead').value = dept.head || '';
-
-            // Set category checkboxes
-            dept.categories.forEach(cat => {
-                const checkboxId = `editCat${cat.replace(/\s+/g, '')}`;
-                const checkbox = modal.querySelector(`#${checkboxId}`);
-                if (checkbox) {
-                    checkbox.checked = true;
-                }
-            });
-
-            document.body.appendChild(modal);
-            document.body.style.overflow = 'hidden';
-
-            // Add event listeners
-            const closeButtons = modal.querySelectorAll('.close-modal');
-            closeButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.body.removeChild(btn.closest('.fixed'));
-                    document.body.style.overflow = 'auto';
+        async function editDepartment(departmentId) {
+            try {
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'get_department_details',
+                        department_id: departmentId
+                    })
                 });
-            });
 
-            const confirmBtn = modal.querySelector('#confirmEditDepartment');
-            confirmBtn.addEventListener('click', () => {
-                updateDepartment(departmentId, modal);
-            });
+                const data = await response.json();
+
+                if (data.success) {
+                    const dept = data.department;
+                    
+                    // Create modal from template
+                    const template = document.getElementById('editDepartmentModalTemplate');
+                    const modal = document.importNode(template.content, true);
+
+                    // Fill modal data
+                    modal.querySelector('#editDepartmentName').value = dept.name;
+                    modal.querySelector('#editDepartmentDescription').value = dept.description;
+                    modal.querySelector('#editDepartmentStatus').value = dept.status;
+                    modal.querySelector('#editDepartmentHead').value = dept.head || '';
+
+                    // Load and set categories
+                    try {
+                        const categoriesResponse = await fetch('/admin/departments/get-categories');
+                        const categoriesData = await categoriesResponse.json();
+                        
+                        if (categoriesData.success) {
+                            const categoriesContainer = modal.querySelector('#editCategoriesContainer');
+                            if (categoriesContainer) {
+                                categoriesContainer.innerHTML = categoriesData.categories.map(cat => `
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="edit_cat_${cat.category_id}" 
+                                            value="${cat.category_id}" 
+                                            ${dept.categories.includes(cat.category_name) ? 'checked' : ''}
+                                            class="rounded">
+                                        <label for="edit_cat_${cat.category_id}" class="text-sm text-gray-700">
+                                            ${cat.category_name}
+                                        </label>
+                                    </div>
+                                `).join('');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading categories:', error);
+                    }
+
+                    document.body.appendChild(modal);
+                    document.body.style.overflow = 'hidden';
+
+                    // Add event listeners
+                    const closeButtons = modal.querySelectorAll('.close-modal');
+                    closeButtons.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            document.body.removeChild(btn.closest('.fixed'));
+                            document.body.style.overflow = 'auto';
+                        });
+                    });
+
+                    const confirmBtn = modal.querySelector('#confirmEditDepartment');
+                    confirmBtn.addEventListener('click', () => {
+                        updateDepartment(departmentId, modal);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading department for edit:', error);
+                showToast('Failed to load department details', 'error');
+            }
         }
 
-        function createNewDepartment(modal) {
+        async function createNewDepartment(modal) {
             const name = modal.querySelector('#departmentName').value.trim();
             const description = modal.querySelector('#departmentDescription').value.trim();
-            const status = modal.querySelector('#departmentStatus').value;
-            const head = modal.querySelector('#departmentHead').value.trim();
 
-            if (!name || !description) {
-                alert('Please fill in all required fields');
+            if (!name) {
+                alert('Department name is required');
                 return;
             }
 
             // Get selected categories
-            const categories = [];
-            if (modal.querySelector('#catBug').checked) categories.push('Bug');
-            if (modal.querySelector('#catTechnical').checked) categories.push('Technical Support');
-            if (modal.querySelector('#catFeature').checked) categories.push('Feature Request');
+            const categoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+            const categories = Array.from(categoryCheckboxes).map(cb => cb.value);
 
-            // Create new department
-            const newDept = {
-                id: Math.max(...departmentsData.map(d => d.id)) + 1,
-                name: name,
-                description: description,
-                detailedDescription: description,
-                members: 0,
-                activeTickets: 0,
-                resolvedTickets: 0,
-                status: status,
-                categories: categories.length > 0 ? categories : ['General'],
-                icon: getRandomIcon(),
-                head: head || 'Not assigned',
-                created: new Date().toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                })
-            };
+            try {
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'add_department',
+                        department_name: name,
+                        description: description,
+                        categories: categories
+                    })
+                });
 
-            // Add to departments data
-            departmentsData.push(newDept);
+                const data = await response.json();
 
-            // Close modal
-            document.body.removeChild(modal.querySelector('.fixed'));
-            document.body.style.overflow = 'auto';
+                if (data.success) {
+                    // Close modal
+                    document.body.removeChild(modal.querySelector('.fixed'));
+                    document.body.style.overflow = 'auto';
 
-            // Update UI
-            filterDepartments();
-            selectDepartment(newDept.id);
+                    // Reload departments
+                    loadDepartments();
+                    loadStatistics();
 
-            showToast(`Department "${name}" created successfully!`, 'success');
+                    showToast('Department created successfully!', 'success');
+                } else {
+                    if (data.errors) {
+                        const errorMessage = Object.values(data.errors).join(', ');
+                        alert(errorMessage);
+                    } else {
+                        alert(data.message || 'Failed to create department');
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating department:', error);
+                alert('Failed to create department');
+            }
         }
 
-        function updateDepartment(departmentId, modal) {
-            const dept = departmentsData.find(d => d.id === departmentId);
-            if (!dept) return;
-
+        async function updateDepartment(departmentId, modal) {
             const name = modal.querySelector('#editDepartmentName').value.trim();
             const description = modal.querySelector('#editDepartmentDescription').value.trim();
-            const status = modal.querySelector('#editDepartmentStatus').value;
-            const head = modal.querySelector('#editDepartmentHead').value.trim();
 
-            if (!name || !description) {
-                alert('Please fill in all required fields');
+            if (!name) {
+                alert('Department name is required');
                 return;
             }
 
             // Get selected categories
-            const categories = [];
-            if (modal.querySelector('#editCatBug').checked) categories.push('Bug');
-            if (modal.querySelector('#editCatTechnical').checked) categories.push('Technical Support');
-            if (modal.querySelector('#editCatFeature').checked) categories.push('Feature Request');
+            const categoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+            const categories = Array.from(categoryCheckboxes).map(cb => cb.value);
 
-            // Update department data
-            dept.name = name;
-            dept.description = description;
-            dept.detailedDescription = description;
-            dept.status = status;
-            dept.head = head || 'Not assigned';
-            dept.categories = categories.length > 0 ? categories : ['General'];
+            try {
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'edit_department',
+                        department_id: departmentId,
+                        department_name: name,
+                        description: description,
+                        categories: categories
+                    })
+                });
 
-            // Close modal
-            document.body.removeChild(modal.querySelector('.fixed'));
-            document.body.style.overflow = 'auto';
+                const data = await response.json();
 
-            // Update UI
-            renderDepartments();
-            if (selectedDepartmentId === departmentId) {
-                loadDepartmentDetails(departmentId);
+                if (data.success) {
+                    // Close modal
+                    document.body.removeChild(modal.querySelector('.fixed'));
+                    document.body.style.overflow = 'auto';
+
+                    // Reload departments
+                    loadDepartments();
+                    if (selectedDepartmentId === departmentId) {
+                        selectDepartment(departmentId);
+                    }
+
+                    showToast('Department updated successfully!', 'success');
+                } else {
+                    if (data.errors) {
+                        const errorMessage = Object.values(data.errors).join(', ');
+                        alert(errorMessage);
+                    } else {
+                        alert(data.message || 'Failed to update department');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating department:', error);
+                alert('Failed to update department');
             }
-
-            showToast('Department updated successfully!', 'success');
         }
 
-        function toggleDepartmentStatus(departmentId) {
-            const dept = departmentsData.find(d => d.id === departmentId);
-            if (!dept) return;
+        async function toggleDepartmentStatus(departmentId) {
+            if (!confirm('Are you sure you want to toggle this department\'s status?')) {
+                return;
+            }
 
-            const newStatus = dept.status === 'active' ? 'inactive' : 'active';
-            const action = newStatus === 'active' ? 'activate' : 'deactivate';
+            try {
+                const response = await fetch('/admin/departments/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        action: 'toggle_department_status',
+                        department_id: departmentId
+                    })
+                });
 
-            if (confirm(`Are you sure you want to ${action} this department?`)) {
-                // Update department status
-                dept.status = newStatus;
+                const data = await response.json();
 
-                // Update UI
-                renderDepartments();
-                if (selectedDepartmentId === departmentId) {
-                    loadDepartmentDetails(departmentId);
+                if (data.success) {
+                    // Reload departments
+                    loadDepartments();
+                    loadStatistics();
+                    
+                    if (selectedDepartmentId === departmentId) {
+                        selectDepartment(departmentId);
+                    }
+
+                    showToast('Department status updated!', 'success');
+                } else {
+                    showToast(data.message || 'Failed to update status', 'error');
                 }
-
-                updateQuickStats();
-
-                showToast(`Department ${action}d successfully`, 'success');
+            } catch (error) {
+                console.error('Error toggling department status:', error);
+                showToast('Failed to update status', 'error');
             }
         }
 
         function manageDepartmentMembers(departmentId) {
-            const dept = departmentsData.find(d => d.id === departmentId);
-            if (!dept) return;
-
-            showToast(`Manage members for ${dept.name} department`, 'info');
-            // In a real app, this would open a member management interface
+            showToast('Member management feature coming soon!', 'info');
         }
 
-        function updateQuickStats() {
-            const total = departmentsData.length;
-            const active = departmentsData.filter(d => d.status === 'active').length;
-            const inactive = total - active;
-            const members = departmentsData.reduce((sum, dept) => sum + dept.members, 0);
-
-            totalDepartments.textContent = total;
-            activeDepartments.textContent = active;
-            inactiveDepartments.textContent = inactive;
-            totalMembers.textContent = members;
+        function updateQuickStats(stats) {
+            if (totalDepartmentsEl) totalDepartmentsEl.textContent = stats.total_departments || 0;
+            if (activeDepartmentsEl) activeDepartmentsEl.textContent = stats.active_departments || 0;
+            if (inactiveDepartmentsEl) inactiveDepartmentsEl.textContent = stats.inactive_departments || 0;
+            if (totalMembersEl) totalMembersEl.textContent = stats.total_members || 0;
         }
 
-        function updatePagination() {
-            const totalPages = Math.max(1, Math.ceil(filteredDepartments.length / itemsPerPage));
+        function updatePagination(pagination) {
+            const totalPages = Math.max(1, pagination.total_pages);
 
             if (currentPage > totalPages) {
                 currentPage = totalPages;
@@ -1393,10 +1456,10 @@
         }
 
         function changePage(page) {
-            if (page < 1 || page > Math.ceil(filteredDepartments.length / itemsPerPage)) return;
+            if (page < 1 || page > Math.ceil(totalDepartments / itemsPerPage)) return;
 
             currentPage = page;
-            renderDepartments();
+            loadDepartments();
 
             // Scroll to top of list
             if (departmentsList) {
@@ -1404,46 +1467,27 @@
             }
         }
 
-        function updateShowingCount() {
+        function updateShowingCount(pagination) {
+            if (!showingCount || !totalCount) return;
+
             const startIndex = (currentPage - 1) * itemsPerPage + 1;
-            const endIndex = Math.min(startIndex + itemsPerPage - 1, filteredDepartments.length);
+            const endIndex = Math.min(startIndex + itemsPerPage - 1, totalDepartments);
 
-            if (showingCount) {
-                showingCount.textContent = `${startIndex}-${endIndex}`;
-            }
-
-            if (totalCount) {
-                totalCount.textContent = filteredDepartments.length;
-            }
+            showingCount.textContent = `${startIndex}-${endIndex}`;
+            totalCount.textContent = totalDepartments;
         }
 
-        // Utility functions
-        function getRandomIcon() {
-            const icons = [
-                'fa-clipboard-check',
-                'fa-headset',
-                'fa-server',
-                'fa-paint-brush',
-                'fa-shield-alt',
-                'fa-code',
-                'fa-database',
-                'fa-network-wired',
-                'fa-cloud',
-                'fa-mobile-alt'
-            ];
-            return icons[Math.floor(Math.random() * icons.length)];
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
+        function showLoading() {
+            // You can add a loading indicator here
+            const departmentsList = document.getElementById('departmentsList');
+            if (departmentsList) {
+                departmentsList.innerHTML = `
+                    <div class="py-8 text-center">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
+                        <p class="mt-2 text-text-dark/60">Loading departments...</p>
+                    </div>
+                `;
+            }
         }
 
         function showToast(message, type = 'info') {
@@ -1473,12 +1517,26 @@
             }, 3000);
         }
 
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // Auto-select first department on load
         setTimeout(() => {
             if (departmentsData.length > 0) {
                 selectDepartment(departmentsData[0].id);
             }
-        }, 100);
+        }, 500);
     });
+</script>
 </script>
 <?= $this->endSection() ?>
