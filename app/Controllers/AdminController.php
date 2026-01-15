@@ -2456,15 +2456,390 @@ class AdminController extends BaseController
 
     // ==================== TICKET MANAGEMENT ====================
 
+    /**
+     * View Tickets - Main method
+     */
     public function viewTickets()
     {
         $data = $this->loadCommonData();
         $data['title'] = 'View Tickets - NEXUS Admin';
 
-        // Get ticket statistics from model
-        $data['ticketStats'] = $this->ticketModel->getTicketStatistics();
+        try {
+            // Get ticket statistics
+            $data['ticketStats'] = $this->ticketModel->getAdminTicketStatistics();
 
-        return view('Admin/view_tickets', $data);
+            // Get departments for filter dropdown
+            $data['departments'] = $this->departmentModel->findAll();
+
+            // Get priorities for filter dropdown
+            $data['priorities'] = $this->getPriorities();
+
+            // Get statuses for filter dropdown
+            $data['statuses'] = $this->getStatuses();
+
+            // Check for AJAX requests
+            if ($this->request->isAJAX()) {
+                return $this->handleTicketsAjax();
+            }
+
+            return view('Admin/view_tickets', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'View tickets error: ' . $e->getMessage());
+            // Fallback data
+            $data['ticketStats'] = [
+                'total_tickets' => 0,
+                'open_tickets' => 0,
+                'resolved_tickets' => 0,
+                'closed_tickets' => 0
+            ];
+            $data['departments'] = [];
+            $data['priorities'] = [];
+            $data['statuses'] = [];
+
+            return view('Admin/view_tickets', $data);
+        }
+    }
+
+    /**
+     * Handle AJAX requests for tickets
+     */
+    private function handleTicketsAjax()
+    {
+        try {
+            $action = $this->request->getPost('action');
+
+            switch ($action) {
+                case 'get_tickets_data':
+                    return $this->getTicketsDataAjax();
+                case 'get_ticket_details':
+                    return $this->getTicketDetailsAjax();
+                case 'export_tickets':
+                    return $this->exportTicketsAjax();
+                case 'get_ticket_statistics':
+                    return $this->getTicketStatisticsAjax();
+                default:
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Invalid action'
+                    ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Tickets AJAX error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get tickets data for AJAX (with pagination)
+     */
+    private function getTicketsDataAjax()
+    {
+        try {
+            // Get filters
+            $filters = [
+                'search' => $this->request->getPost('search'),
+                'priority' => $this->request->getPost('priority'),
+                'department' => $this->request->getPost('department'),
+                'status' => $this->request->getPost('status'),
+                'date_from' => $this->request->getPost('date_from'),
+                'date_to' => $this->request->getPost('date_to')
+            ];
+
+            // Get pagination parameters
+            $page = $this->request->getPost('page') ?: 1;
+            $limit = $this->request->getPost('limit') ?: 10;
+            $offset = ($page - 1) * $limit;
+
+            // Get tickets from model
+            $tickets = $this->ticketModel->getTicketsForAdmin($filters, $limit, $offset);
+            $totalTickets = $this->ticketModel->countTicketsForAdmin($filters);
+
+            // Format tickets for display
+            $formattedTickets = array_map(function ($ticket) {
+                return [
+                    'id' => $ticket['ticket_number'] ?: $ticket['ticket_id'],
+                    'title' => $ticket['subject'],
+                    'description' => $ticket['description'] ?? 'No description',
+                    'priority' => $ticket['priority_name'] ?? 'Medium',
+                    'priority_value' => strtolower($ticket['priority_name'] ?? 'medium'),
+                    'department' => $ticket['department_name'] ?? 'Not assigned',
+                    'department_value' => strtolower(str_replace(' ', '-', $ticket['department_name'] ?? '')),
+                    'customer' => $ticket['customer_name'] ?? 'Unknown',
+                    'status' => $ticket['status_name'] ?? 'Open',
+                    'status_value' => strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'open')),
+                    'created' => $this->formatDate($ticket['created_at']),
+                    'updated' => $this->formatTimeAgo($ticket['updated_at']),
+                    'project' => $ticket['project_name'] ?? null,
+                    'due_date' => $ticket['due_date'] ? date('M d, Y', strtotime($ticket['due_date'])) : null
+                ];
+            }, $tickets);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'tickets' => $formattedTickets,
+                'pagination' => [
+                    'total' => $totalTickets,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total_pages' => ceil($totalTickets / $limit)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get tickets data error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load tickets data'
+            ]);
+        }
+    }
+
+    /**
+     * Get ticket details for AJAX
+     */
+    private function getTicketDetailsAjax()
+    {
+        try {
+            $ticketId = $this->request->getPost('ticket_id');
+
+            if (!$ticketId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Ticket ID is required'
+                ]);
+            }
+
+            // Get ticket details from model
+            $ticket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
+
+            if (!$ticket) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Ticket not found'
+                ]);
+            }
+
+            // Format activity log
+            $activityLog = array_map(function ($activity) {
+                return [
+                    'type' => strtolower(str_replace(' ', '-', $activity['message_type'])),
+                    'text' => $activity['message'],
+                    'time' => $this->formatTimeAgo($activity['created_at']),
+                    'user' => $activity['full_name']
+                ];
+            }, $ticket['activity'] ?? []);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'ticket' => [
+                    'id' => $ticket['ticket_number'] ?: $ticket['ticket_id'],
+                    'title' => $ticket['subject'],
+                    'description' => $ticket['description'],
+                    'details' => $ticket['description'], // In real app, you might have separate detailed_description field
+                    'priority' => $ticket['priority_name'] ?? 'Medium',
+                    'priority_value' => strtolower($ticket['priority_name'] ?? 'medium'),
+                    'department' => $ticket['department_name'] ?? 'Not assigned',
+                    'customer' => $ticket['customer_name'] ?? 'Unknown',
+                    'customer_email' => $ticket['customer_email'] ?? '',
+                    'customer_phone' => $ticket['customer_phone'] ?? '',
+                    'status' => $ticket['status_name'] ?? 'Open',
+                    'status_value' => strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'open')),
+                    'assigned_to' => $ticket['assigned_to_name'] ?? 'Not assigned',
+                    'project' => $ticket['project_name'] ?? 'Not assigned',
+                    'project_code' => $ticket['project_code'] ?? '',
+                    'created' => $this->formatDate($ticket['created_at']),
+                    'updated' => $this->formatTimeAgo($ticket['updated_at']),
+                    'category' => $ticket['category_name'] ?? 'Uncategorized',
+                    'due_date' => $ticket['due_date'] ? date('M d, Y', strtotime($ticket['due_date'])) : 'Not set'
+                ],
+                'activity' => $activityLog
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get ticket details error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load ticket details'
+            ]);
+        }
+    }
+
+    /**
+     * Export tickets to CSV via AJAX
+     */
+    private function exportTicketsAjax()
+    {
+        try {
+            // Get filters
+            $filters = [
+                'search' => $this->request->getPost('search'),
+                'priority' => $this->request->getPost('priority'),
+                'department' => $this->request->getPost('department'),
+                'status' => $this->request->getPost('status'),
+                'date_from' => $this->request->getPost('date_from'),
+                'date_to' => $this->request->getPost('date_to')
+            ];
+
+            // Get tickets data from model
+            $tickets = $this->ticketModel->exportTicketsForAdmin($filters);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $tickets,
+                'count' => count($tickets)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Export tickets error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to export tickets'
+            ]);
+        }
+    }
+
+    /**
+     * Get ticket statistics for AJAX
+     */
+    private function getTicketStatisticsAjax()
+    {
+        try {
+            $stats = $this->ticketModel->getAdminTicketStatistics();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'statistics' => $stats
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get ticket statistics error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load statistics'
+            ]);
+        }
+    }
+
+    /**
+     * Export tickets to CSV (direct download)
+     */
+    public function exportTickets()
+    {
+        try {
+            // Get filters from query string
+            $filters = [
+                'search' => $this->request->getGet('search'),
+                'priority' => $this->request->getGet('priority'),
+                'department' => $this->request->getGet('department'),
+                'status' => $this->request->getGet('status'),
+                'date_from' => $this->request->getGet('date_from'),
+                'date_to' => $this->request->getGet('date_to')
+            ];
+
+            // Get tickets data from model
+            $tickets = $this->ticketModel->exportTicketsForAdmin($filters);
+
+            // Set headers for CSV download
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="tickets_' . date('Y-m-d') . '.csv"');
+
+            $output = fopen('php://output', 'w');
+
+            // CSV headers
+            fputcsv($output, [
+                'Ticket ID',
+                'Ticket Number',
+                'Subject',
+                'Description',
+                'Priority',
+                'Status',
+                'Category',
+                'Department',
+                'Customer Name',
+                'Customer Email',
+                'Assigned To',
+                'Project',
+                'Project Code',
+                'Created At',
+                'Updated At',
+                'Due Date'
+            ]);
+
+            // CSV data
+            foreach ($tickets as $ticket) {
+                fputcsv($output, [
+                    $ticket['ticket_id'],
+                    $ticket['ticket_number'],
+                    $ticket['subject'],
+                    $ticket['description'],
+                    $ticket['priority_name'],
+                    $ticket['status_name'],
+                    $ticket['category_name'],
+                    $ticket['department_name'],
+                    $ticket['customer_name'],
+                    $ticket['customer_email'],
+                    $ticket['assigned_to'],
+                    $ticket['project_name'],
+                    $ticket['project_code'],
+                    date('Y-m-d H:i:s', strtotime($ticket['created_at'])),
+                    date('Y-m-d H:i:s', strtotime($ticket['updated_at'])),
+                    $ticket['due_date'] ? date('Y-m-d', strtotime($ticket['due_date'])) : ''
+                ]);
+            }
+
+            fclose($output);
+            exit;
+        } catch (\Exception $e) {
+            log_message('error', 'Export tickets error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export tickets');
+        }
+    }
+
+// ==================== HELPER METHODS ====================
+
+    /**
+     * Get priorities for dropdown
+     */
+    private function getPriorities(): array
+    {
+        $priorityModel = new \App\Models\PriorityModel();
+        return $priorityModel->findAll();
+    }
+
+    /**
+     * Get statuses for dropdown
+     */
+    private function getStatuses(): array
+    {
+        $statusModel = new \App\Models\StatusModel();
+        return $statusModel->findAll();
+    }
+
+    /**
+     * Format date for display
+     */
+    private function formatDate($datetime): string
+    {
+        if (!$datetime) return 'N/A';
+
+        $time = strtotime($datetime);
+        $now = time();
+        $diff = $now - $time;
+
+        if ($diff < 86400) { // Less than 24 hours
+            if ($diff < 60) return 'Just now';
+            if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
+            return floor($diff / 3600) . ' hours ago';
+        }
+
+        return date('M d, Y', $time);
+    }
+
+    /**
+     * Format time ago
+     */
+    private function formatTimeAgo($datetime): string
+    {
+        return $this->formatDate($datetime); // Reuse formatDate for now
     }
 
     // ==================== SYSTEM SETTINGS ====================
