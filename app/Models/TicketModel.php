@@ -13,6 +13,7 @@ class TicketModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'ticket_number',
         'subject',
         'description',
         'project_id',
@@ -21,7 +22,8 @@ class TicketModel extends Model
         'category_id',
         'priority_id',
         'status_id',
-        'due_date'
+        'due_date',
+        'customer_id',
     ];
 
     protected bool $allowEmptyInserts = false;

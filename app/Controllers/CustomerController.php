@@ -242,7 +242,7 @@ class CustomerController extends BaseController
         $data['messages'] = $this->ticketMessageModel->getMessagesForTicket($id);
         $data['attachments'] = $this->ticketAttachmentModel->getAttachmentsForTicket($id);
 
-        return view('Customer/ticket_detail', $data);
+        return view('Customer/ticket_detail', ['data' => $data]);
     }
 
     public function projectDetail($projectId)

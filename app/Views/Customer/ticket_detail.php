@@ -21,8 +21,8 @@
     <div class="mb-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-[32px] font-semibold mb-2 text-text-dark">Ticket #12345</h1>
-                <p class="text-[15px] font-light text-[#666]">Cannot Access Dashboard • ProjectX</p>
+                <h1 class="text-[32px] font-semibold mb-2 text-text-dark"><?= $data['ticket']['ticket_number'] ?></h1>
+                <p class="text-[15px] text-[#000]"><?= $data['ticket']['subject'] ?></p>
             </div>
 
             <!-- Action Buttons -->
@@ -50,17 +50,16 @@
                 <div>
                     <div class="text-white/80 text-sm mb-1">Status</div>
                     <div class="flex items-center gap-3">
-                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">OPEN</div>
-                        <div class="text-lg font-bold">In Progress</div>
+                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold"><?= $data['ticket']['status_name'] ?></div>
                     </div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Priority</div>
-                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block">HIGH</div>
+                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block"><?= $data['ticket']['priority_name'] ?></div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Created</div>
-                    <div class="text-lg font-semibold">Feb 19, 2026</div>
+                    <div class="text-lg font-semibold"><?= date('F d, Y', strtotime($data['ticket']['created_at'])) ?></div>
                 </div>
             </div>
         </div>
@@ -72,7 +71,7 @@
                 <div>
                     <div class="flex justify-between text-sm text-gray-600 mb-1">
                         <span>Completion</span>
-                        <span>75%</span>
+                        <span></span>
                     </div>
                     <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div class="h-full bg-secondary rounded-full w-3/4"></div>
@@ -81,7 +80,7 @@
                 <div class="text-sm text-gray-600">
                     <div class="flex items-center gap-2 mb-1">
                         <i class="far fa-clock text-gray-400"></i>
-                        <span>Last update: 1 hour ago</span>
+                        <span>Last update: <?= date('F d, Y H:i:s', strtotime($data['ticket']['updated_at'])) ?></span>
                     </div>
                     <div class="text-secondary font-medium">Accepted by Support Team</div>
                 </div>
@@ -96,8 +95,8 @@
                     <i class="fas fa-tools text-secondary text-xl"></i>
                 </div>
                 <div>
-                    <div class="text-gray-800 font-semibold">Technical Issue</div>
-                    <div class="text-gray-600 text-sm">Software & Applications</div>
+                    <div class="text-gray-800 font-semibold"><?= $data['ticket']['category_name'] ?></div>
+                    <div class="text-gray-600 text-sm"><?= $data['ticket']['department_name'] ?></div>
                 </div>
             </div>
             <p class="text-gray-600 text-sm">
@@ -121,11 +120,11 @@
 
         <!-- Conversation Container (Scrollable) -->
         <div id="conversationContainer" class="p-6 h-[500px] overflow-y-auto">
-            <!-- Conversation Timeline -->
-            <div class="space-y-6">
+            <?php foreach ($data['messages'] as $message) : ?>
+                <div class="space-y-6">
                 <!-- Date Header - February 19 -->
                 <div class="text-center">
-                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">February 19, 2026</span>
+                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full"><?= date('j F Y, H:i', strtotime($message['created_at'])) ?></span>
                 </div>
 
                 <!-- Message 1 - Customer (OLDEST) -->
@@ -141,163 +140,24 @@
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
                             <div>
-                                <span class="text-gray-800 font-semibold">John Smith</span>
-                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
+                                <span class="text-gray-800 font-semibold"><?= $message['full_name'] ?></span>
+                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded"><?= $message['role_name'] ?></span>
                             </div>
                             <div class="text-gray-500 text-sm ml-auto">
                                 <i class="far fa-clock mr-1"></i>
-                                11:00 AM
+                                <?= date('H:i', strtotime($message['created_at'])) ?>
                             </div>
                         </div>
 
                         <div class="bg-gray-50 rounded-xl p-4">
                             <p class="text-gray-700 mb-3">
-                                Hi team, I'm having trouble accessing the ProjectX dashboard. Every time I try to log
-                                in,
-                                I receive an error message that says "Access Denied". I've tried clearing my cache and
-                                using
-                                different browsers, but the issue persists.
+                                <?= $message['message'] ?>
                             </p>
-
                             <!-- Attachment -->
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                                <div class="w-8 h-8 bg-secondary/10 rounded flex items-center justify-center">
-                                    <i class="fas fa-image text-secondary"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="text-gray-800 text-sm font-medium">error_screenshot.png</div>
-                                    <div class="text-gray-500 text-xs">320 KB • Image</div>
-                                </div>
-                                <button class="text-gray-400 hover:text-secondary download-btn">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Message 2 - Support -->
-                <div class="flex gap-4">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-headset text-green-600"></i>
-                        </div>
-                    </div>
-
-                    <!-- Message Content -->
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div>
-                                <span class="text-gray-800 font-semibold">Sarah Johnson</span>
-                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support
-                                    Agent</span>
-                            </div>
-                            <div class="text-gray-500 text-sm ml-auto">
-                                <i class="far fa-clock mr-1"></i>
-                                11:30 AM
-                            </div>
-                        </div>
-
-                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                            <p class="text-gray-700">
-                                Thank you for reporting this issue, John. We've received your ticket and will look into
-                                it immediately.
-                                Could you please provide your browser version and operating system?
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Date Header - Today -->
-                <div class="text-center mt-8 pt-8 border-t border-gray-200">
-                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Today</span>
-                </div>
-
-                <!-- Message 3 - Customer -->
-                <div class="flex gap-4">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600"></i>
-                        </div>
-                    </div>
-
-                    <!-- Message Content -->
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div>
-                                <span class="text-gray-800 font-semibold">John Smith</span>
-                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
-                            </div>
-                            <div class="text-gray-500 text-sm ml-auto">
-                                <i class="far fa-clock mr-1"></i>
-                                09:15 AM • 1 hour ago
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <p class="text-gray-700 mb-3">
-                                Thanks for the quick response! I'm using Chrome version 120.0.6099.130 on Windows 11.
-                                I've attached the error log file for your reference.
-                            </p>
-
-                            <!-- Attachment -->
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                                <div class="w-8 h-8 bg-secondary/10 rounded flex items-center justify-center">
-                                    <i class="fas fa-file-alt text-secondary"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="text-gray-800 text-sm font-medium">error_log.txt</div>
-                                    <div class="text-gray-500 text-xs">45 KB • Text File</div>
-                                </div>
-                                <button class="text-gray-400 hover:text-secondary download-btn">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Message 4 - Support (Resolved) - LATEST MESSAGE -->
-                <div id="latestMessage" class="flex gap-4">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-headset text-green-600"></i>
-                        </div>
-                    </div>
-
-                    <!-- Message Content -->
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div>
-                                <span class="text-gray-800 font-semibold">Michael Chen</span>
-                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support
-                                    Lead</span>
-                            </div>
-                            <div class="text-gray-500 text-sm ml-auto">
-                                <i class="far fa-clock mr-1"></i>
-                                10:30 AM • 15 min ago
-                            </div>
-                        </div>
-
-                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                            <p class="text-gray-700 mb-3">
-                                Issue identified and resolved. There was a permission configuration issue on our end.
-                                The dashboard should now be accessible. Please try logging in again and let us know if
-                                you encounter any further issues.
-                            </p>
-
-                            <!-- Resolution Badge -->
-                            <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-200">
-                                <i class="fas fa-check-circle text-green-600"></i>
-                                <span class="text-green-700 text-sm font-medium">Issue marked as resolved</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
     </div>
 

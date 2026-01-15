@@ -47,8 +47,9 @@ class TicketMessageModel extends Model
     public function getMessagesForTicket($ticketId)
     {
         return $this->builder('ticket_messages tm')
-            ->select('tm.*, u.full_name, u.photo_profile')
+            ->select('tm.*, u.full_name, u.photo_profile, r.role_name')
             ->join('users u', 'u.user_id = tm.sender_id')
+            ->join('roles r', 'r.role_id = u.role_id')
             ->where('tm.ticket_id', $ticketId)
             ->orderBy('tm.created_at', 'ASC')
             ->get()
