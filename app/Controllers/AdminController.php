@@ -1317,19 +1317,23 @@ class AdminController extends BaseController
         $data = $this->loadCommonData();
         $data['title'] = 'Manage Roles - NEXUS Admin';
 
-        // Load roles data from model
+        // Load all data from models
         $data['roles'] = $this->roleModel->getAllRolesWithCount();
-
-        // Load available permissions from model
         $data['allPermissions'] = $this->roleModel->getAllPermissions();
 
-        // Get default selected role (first role)
+        // Set default selected role
         $data['selectedRole'] = !empty($data['roles']) ? $data['roles'][0] : null;
 
         if ($data['selectedRole']) {
-            $data['rolePermissions'] = $this->roleModel->getRolePermissions($data['selectedRole']['role_id']);
-            $data['roleRules'] = $this->roleModel->getRoleRules($data['selectedRole']['role_id']);
-            $data['coreResponsibilities'] = $this->roleModel->getCoreResponsibilities($data['selectedRole']['role_name']);
+            // Get permissions with status
+            $data['permissionsWithStatus'] = $this->roleModel->getPermissionsWithStatus($data['selectedRole']['role_id']);
+
+            // Get permission summary
+            $data['permissionSummary'] = $this->roleModel->getPermissionSummary($data['selectedRole']['role_id']);
+
+            // Get other role info
+            $data['roleRules'] = $this->getRoleRules($data['selectedRole']['role_name']);
+            $data['coreResponsibilities'] = $this->getRoleResponsibilities($data['selectedRole']['role_name']);
         }
 
         // Check for AJAX requests
@@ -1351,14 +1355,22 @@ class AdminController extends BaseController
             switch ($action) {
                 case 'get_role_details':
                     return $this->getRoleDetailsAjax();
+                case 'get_role_permissions':
+                    return $this->getRolePermissionsAjax();
                 case 'save_role':
                     return $this->saveRoleAjax();
+                case 'update_role_permissions':
+                    return $this->updateRolePermissionsAjax();
                 case 'delete_role':
                     return $this->deleteRoleAjax();
                 case 'duplicate_role':
                     return $this->duplicateRoleAjax();
                 case 'reset_role':
                     return $this->resetRoleAjax();
+                case 'copy_permissions':
+                    return $this->copyPermissionsAjax();
+                case 'get_permission_summary':
+                    return $this->getPermissionSummaryAjax();
                 default:
                     return $this->response->setJSON([
                         'success' => false,
@@ -1375,7 +1387,214 @@ class AdminController extends BaseController
     }
 
     /**
-     * Save/update role via AJAX - FIXED VERSION (menghilangkan field yang tidak ada)
+     * Get role permissions for AJAX
+     */
+    private function getRolePermissionsAjax()
+    {
+        $roleId = $this->request->getPost('role_id');
+
+        if (!$roleId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Role ID is required'
+            ]);
+        }
+
+        // Get permissions with status from model
+        $permissionsWithStatus = $this->roleModel->getPermissionsWithStatus($roleId);
+
+        // Get permission summary from model
+        $permissionSummary = $this->roleModel->getPermissionSummary($roleId);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'permissions' => $permissionsWithStatus,
+            'summary' => $permissionSummary
+        ]);
+    }
+
+    /**
+     * Update role permissions via AJAX
+     */
+    private function updateRolePermissionsAjax()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $roleId = $this->request->getPost('role_id');
+            $permissions = $this->request->getPost('permissions');
+
+            if (!$roleId || !$permissions) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Role ID and permissions are required'
+                ]);
+            }
+
+            // Call model method
+            $result = $this->roleModel->updateRolePermissions($roleId, $permissions);
+
+            if ($result) {
+                // Get updated permission summary
+                $summary = $this->roleModel->getPermissionSummary($roleId);
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Permissions updated successfully',
+                    'summary' => $summary
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update permissions'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Update role permissions error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get role details for AJAX
+     */
+    private function getRoleDetailsAjax()
+    {
+        $roleId = $this->request->getPost('role_id');
+
+        if (!$roleId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Role ID is required'
+            ]);
+        }
+
+        // Get role details from model
+        $role = $this->roleModel->getRoleById($roleId);
+
+        if (!$role) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Role not found'
+            ]);
+        }
+
+        // Get permission summary
+        $permissionSummary = $this->roleModel->getPermissionSummary($roleId);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'role' => $role,
+            'rules' => $this->getRoleRules($role['role_name']),
+            'responsibilities' => $this->getRoleResponsibilities($role['role_name']),
+            'permission_summary' => $permissionSummary
+        ]);
+    }
+
+    /**
+     * Reset role permissions via AJAX
+     */
+    private function resetRoleAjax()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $roleId = $this->request->getPost('role_id');
+
+            if (!$roleId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Role ID is required'
+                ]);
+            }
+
+            // Call model method
+            $result = $this->roleModel->resetRolePermissions($roleId);
+
+            return $this->response->setJSON($result);
+        } catch (\Exception $e) {
+            log_message('error', 'Reset role error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Copy permissions from one role to another via AJAX
+     */
+    private function copyPermissionsAjax()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $sourceRoleId = $this->request->getPost('source_role_id');
+            $targetRoleId = $this->request->getPost('target_role_id');
+
+            if (!$sourceRoleId || !$targetRoleId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Source and target role IDs are required'
+                ]);
+            }
+
+            // Call model method
+            $result = $this->roleModel->copyPermissions($sourceRoleId, $targetRoleId);
+
+            return $this->response->setJSON($result);
+        } catch (\Exception $e) {
+            log_message('error', 'Copy permissions error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get permission summary for AJAX
+     */
+    private function getPermissionSummaryAjax()
+    {
+        $roleId = $this->request->getPost('role_id');
+
+        if (!$roleId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Role ID is required'
+            ]);
+        }
+
+        // Get permission summary from model
+        $summary = $this->roleModel->getPermissionSummary($roleId);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'summary' => $summary
+        ]);
+    }
+
+    /**
+     * Save/update role via AJAX
      */
     private function saveRoleAjax()
     {
@@ -1388,92 +1607,84 @@ class AdminController extends BaseController
 
         try {
             $roleId = $this->request->getPost('role_id');
+            $roleName = trim($this->request->getPost('role_name'));
+            $description = trim($this->request->getPost('description'));
 
-            // Validasi minimal - pastikan ada data
-            if (!$this->request->getPost('role_name')) {
+            if (!$roleName) {
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Role name is required'
                 ]);
             }
 
-            // Siapkan data HANYA dengan field yang ada di tabel roles
+            // Prepare role data
             $roleData = [
-                'role_name' => trim($this->request->getPost('role_name')),
+                'role_name' => $roleName,
+                'description' => $description ?: null,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            // Tambahkan description jika ada
-            $description = $this->request->getPost('description');
-            if ($description !== null && $description !== '') {
-                $roleData['description'] = trim($description);
-            }
-
-            // Jika update existing role
             if ($roleId) {
+                // Update existing role
                 $roleData['role_id'] = $roleId;
 
-                // Cek apakah role ada
-                $existingRole = $this->roleModel->find($roleId);
-                if (!$existingRole) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'Role not found'
-                    ]);
-                }
+                // Check for duplicate role name
+                $existing = $this->roleModel->where('role_name', $roleName)
+                    ->where('role_id !=', $roleId)
+                    ->first();
 
-                // Cek nama role unik (kecuali untuk role yang sama)
-                if (isset($roleData['role_name'])) {
-                    $duplicateRole = $this->roleModel->where('role_name', $roleData['role_name'])
-                        ->where('role_id !=', $roleId)
-                        ->first();
-                    if ($duplicateRole) {
-                        return $this->response->setJSON([
-                            'success' => false,
-                            'message' => 'Role name already exists'
-                        ]);
-                    }
-                }
-            } else {
-                // Untuk insert baru, tambahkan created_at
-                $roleData['created_at'] = date('Y-m-d H:i:s');
-
-                // Cek duplikat nama role
-                $duplicateRole = $this->roleModel->where('role_name', $roleData['role_name'])->first();
-                if ($duplicateRole) {
+                if ($existing) {
                     return $this->response->setJSON([
                         'success' => false,
                         'message' => 'Role name already exists'
                     ]);
                 }
-            }
 
-            // Gunakan query builder langsung
-            $db = db_connect();
-
-            if ($roleId) {
-                $result = $db->table('roles')
-                    ->where('role_id', $roleId)
-                    ->update($roleData);
+                $result = $this->roleModel->save($roleData);
                 $savedRoleId = $roleId;
+                $isNew = false;
             } else {
-                $db->table('roles')->insert($roleData);
-                $savedRoleId = $db->insertID();
-                $result = $savedRoleId > 0;
+                // Create new role
+                $roleData['created_at'] = date('Y-m-d H:i:s');
+
+                // Check for duplicate role name
+                $existing = $this->roleModel->where('role_name', $roleName)->first();
+                if ($existing) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Role name already exists'
+                    ]);
+                }
+
+                $result = $this->roleModel->insert($roleData);
+                $savedRoleId = $this->roleModel->getInsertID();
+                $isNew = true;
             }
 
             if ($result) {
+                // If new role, initialize default permissions
+                if ($isNew) {
+                    $this->roleModel->initializeDefaultPermissions($savedRoleId, $roleName);
+                }
+
+                // Get updated role details
+                $role = $this->roleModel->getRoleById($savedRoleId);
+                $permissionSummary = $this->roleModel->getPermissionSummary($savedRoleId);
+
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => 'Role saved successfully',
-                    'role_id' => $savedRoleId
-                ]);
-            } else {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Failed to save role'
+                    'message' => $isNew ? 'Role created successfully' : 'Role updated successfully',
+                    'role_id' => $savedRoleId,
+                    'role' => $role,
+                    'permission_summary' => $permissionSummary,
+                    'is_new' => $isNew
                 ]);
             }
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to save role'
+            ]);
         } catch (\Exception $e) {
             log_message('error', 'Save role error: ' . $e->getMessage());
             return $this->response->setJSON([
@@ -1483,6 +1694,97 @@ class AdminController extends BaseController
         }
     }
 
+// ==================== HELPER METHODS ====================
+
+    /**
+     * Get role rules based on role name
+     */
+    private function getRoleRules($roleName)
+    {
+        $rules = [];
+
+        switch ($roleName) {
+            case 'Admin':
+                $rules = [
+                    'Full system administrator access',
+                    'Can manage all users and settings',
+                    'Unrestricted access to all features',
+                    'Can create, edit, and delete roles'
+                ];
+                break;
+            case 'Support':
+                $rules = [
+                    'Can view and respond to tickets',
+                    'Access to support dashboard',
+                    'Cannot modify system settings',
+                    'Limited user management capabilities'
+                ];
+                break;
+            case 'Customer':
+                $rules = [
+                    'Can create and view own tickets',
+                    'Cannot access admin features',
+                    'Limited to own data only',
+                    'Cannot view other users\' tickets'
+                ];
+                break;
+            case 'Department':
+                $rules = [
+                    'Department-specific access',
+                    'Can handle assigned tickets',
+                    'Limited to department scope',
+                    'Can collaborate with support team'
+                ];
+                break;
+            default:
+                $rules = [
+                    'Custom role - rules defined by administrator',
+                    'Permissions can be customized',
+                    'Affects all users assigned to this role'
+                ];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Get role responsibilities based on role name
+     */
+    private function getRoleResponsibilities($roleName)
+    {
+        $responsibilities = [
+            'Admin' => [
+                'System configuration and management',
+                'User and role management',
+                'Monitor system performance',
+                'Generate reports and analytics',
+                'Troubleshoot system issues'
+            ],
+            'Support' => [
+                'Handle incoming support requests',
+                'Assign tickets to appropriate departments',
+                'Communicate with customers',
+                'Resolve basic technical issues',
+                'Escalate complex issues to relevant departments'
+            ],
+            'Customer' => [
+                'Submit problem reports or requests',
+                'Monitor ticket progress',
+                'Communicate with support team',
+                'Confirm issue resolution',
+                'Provide feedback on support quality'
+            ],
+            'Department' => [
+                'Handle department-specific tickets',
+                'Collaborate with support team',
+                'Provide technical expertise',
+                'Update ticket status and notes',
+                'Ensure SLA compliance for department tickets'
+            ]
+        ];
+
+        return $responsibilities[$roleName] ?? ['Custom role - responsibilities defined by administrator'];
+    }
     /**
      * Delete role via AJAX
      */
@@ -1553,140 +1855,6 @@ class AdminController extends BaseController
                 'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
-    }
-
-    /**
-     * Reset role permissions to default via AJAX
-     */
-    private function resetRoleAjax()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Invalid request method'
-            ]);
-        }
-
-        try {
-            $roleId = $this->request->getPost('role_id');
-
-            if (!$roleId) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Role ID is required'
-                ]);
-            }
-
-            // Reset role permissions using model
-            $result = $this->roleModel->resetRolePermissions($roleId);
-
-            return $this->response->setJSON($result);
-        } catch (\Exception $e) {
-            log_message('error', 'Reset role error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Get role details for AJAX - FIXED VERSION (tanpa permissions yang tidak ada)
-     */
-    private function getRoleDetailsAjax()
-    {
-        $roleId = $this->request->getPost('role_id');
-
-        if (!$roleId) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Role ID is required'
-            ]);
-        }
-
-        // Get role from model
-        $role = $this->roleModel->getRoleById($roleId);
-
-        if (!$role) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Role not found'
-            ]);
-        }
-
-        // Hapus permissions karena tabel role_permissions tidak ada
-        // Get role rules dari fungsi sederhana
-        $rules = [];
-        if ($role['role_name'] === 'Admin') {
-            $rules = [
-                'Full system administrator access',
-                'Can manage all users and settings',
-                'Unrestricted access to all features'
-            ];
-        } elseif ($role['role_name'] === 'Customer') {
-            $rules = [
-                'Can create and view own tickets',
-                'Cannot access admin features',
-                'Limited to own data only'
-            ];
-        } elseif ($role['role_name'] === 'Support') {
-            $rules = [
-                'Can view and respond to tickets',
-                'Access to support dashboard',
-                'Cannot modify system settings'
-            ];
-        } elseif ($role['role_name'] === 'Department') {
-            $rules = [
-                'Department-specific access',
-                'Can handle assigned tickets',
-                'Limited to department scope'
-            ];
-        }
-
-        // Get responsibilities dari fungsi sederhana
-        $responsibilities = $this->getRoleResponsibilities($role['role_name']);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'role' => $role,
-            'rules' => $rules,
-            'responsibilities' => $responsibilities
-        ]);
-    }
-
-    /**
-     * Helper function untuk responsibilities (tanpa tabel role_permissions)
-     */
-    private function getRoleResponsibilities($roleName)
-    {
-        $responsibilities = [
-            'Customer' => [
-                'Submit problem reports or requests',
-                'Monitor ticket progress',
-                'Communicate with support team',
-                'Confirm issue resolution'
-            ],
-            'Support' => [
-                'Handle incoming support requests',
-                'Assign tickets to appropriate departments',
-                'Communicate with customers',
-                'Resolve basic technical issues'
-            ],
-            'Department' => [
-                'Handle department-specific tickets',
-                'Collaborate with support team',
-                'Provide technical expertise',
-                'Update ticket status and notes'
-            ],
-            'Admin' => [
-                'System configuration and management',
-                'User and role management',
-                'Monitor system performance',
-                'Generate reports and analytics'
-            ]
-        ];
-
-        return $responsibilities[$roleName] ?? ['Custom role - responsibilities defined by administrator'];
     }
 
    // ==================== DEPARTMENT MANAGEMENT ====================

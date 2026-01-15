@@ -27,8 +27,9 @@ class RoleModel extends Model
      */
     public function getAllRolesWithCount()
     {
+        $db = db_connect();
 
-        return $this->table('roles r')
+        return $db->table('roles r')
             ->select('r.*, COUNT(u.user_id) as user_count')
             ->join('users u', 'u.role_id = r.role_id', 'left')
             ->groupBy('r.role_id')
@@ -156,36 +157,6 @@ class RoleModel extends Model
     }
 
     /**
-     * Update role permissions
-     */
-    public function updateRolePermissions($roleId, $permissions)
-    {
-        $db = db_connect();
-
-        // Delete existing permissions
-        $db->table('role_permissions')->where('role_id', $roleId)->delete();
-
-        // Insert new permissions
-        $permissionData = [];
-        foreach ($permissions as $permission) {
-            $permissionData[] = [
-                'role_id' => $roleId,
-                'permission_key' => $permission['key'],
-                'permission_name' => $permission['name'],
-                'module' => $permission['module'],
-                'is_allowed' => $permission['is_allowed'],
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-        }
-
-        if (!empty($permissionData)) {
-            return $db->table('role_permissions')->insertBatch($permissionData);
-        }
-
-        return true;
-    }
-
-    /**
      * Get role templates (core roles)
      */
     public function getRoleTemplates()
@@ -193,50 +164,6 @@ class RoleModel extends Model
         return $this->where('is_core', true)
             ->orderBy('role_name', 'ASC')
             ->findAll();
-    }
-
-    /**
-     * Get all permissions grouped by module
-     */
-    public function getAllPermissions()
-    {
-        return [
-            'user' => [
-                ['key' => 'view_own_profile', 'name' => 'View own profile', 'description' => 'Can view their own profile information'],
-                ['key' => 'update_own_profile', 'name' => 'Update own profile', 'description' => 'Can update their own profile information'],
-                ['key' => 'change_password', 'name' => 'Change Password', 'description' => 'Can change their own password'],
-                ['key' => 'view_all_profiles', 'name' => 'View all profiles', 'description' => 'Can view profiles of all users'],
-                ['key' => 'update_all_profiles', 'name' => 'Update all profiles', 'description' => 'Can update profiles of all users'],
-                ['key' => 'reset_passwords', 'name' => 'Reset passwords', 'description' => 'Can reset passwords for other users'],
-                ['key' => 'manage_users', 'name' => 'Manage users', 'description' => 'Can create, edit, and delete users']
-            ],
-            'communication' => [
-                ['key' => 'send_messages', 'name' => 'Send messages in ticket conversation', 'description' => 'Can send messages in ticket conversations'],
-                ['key' => 'view_replies', 'name' => 'View replies from Support & Departments', 'description' => 'Can view replies from support team and departments'],
-                ['key' => 'internal_messages', 'name' => 'Send internal-only messages', 'description' => 'Can send internal messages visible only to staff'],
-                ['key' => 'system_messages', 'name' => 'Send system messages', 'description' => 'Can send system-wide messages and announcements']
-            ],
-            'ticket' => [
-                ['key' => 'view_own_tickets', 'name' => 'View own tickets only', 'description' => 'Can view only tickets they created'],
-                ['key' => 'view_department_tickets', 'name' => 'View department tickets', 'description' => 'Can view tickets assigned to their department'],
-                ['key' => 'view_all_tickets', 'name' => 'View all tickets', 'description' => 'Can view all tickets in the system'],
-                ['key' => 'create_ticket', 'name' => 'Create ticket', 'description' => 'Can create new tickets'],
-                ['key' => 'reply_ticket', 'name' => 'Reply to ticket', 'description' => 'Can reply to existing tickets'],
-                ['key' => 'upload_attachments', 'name' => 'Upload attachments', 'description' => 'Can upload attachments to tickets'],
-                ['key' => 'view_status', 'name' => 'View ticket status & progress', 'description' => 'Can view ticket status and progress'],
-                ['key' => 'assign_ticket', 'name' => 'Assign ticket', 'description' => 'Can assign tickets to other users'],
-                ['key' => 'change_priority', 'name' => 'Change ticket priority', 'description' => 'Can change ticket priority'],
-                ['key' => 'change_status', 'name' => 'Change ticket status', 'description' => 'Can change ticket status'],
-                ['key' => 'change_notes', 'name' => 'Change ticket notes', 'description' => 'Can edit internal ticket notes']
-            ],
-            'system' => [
-                ['key' => 'access_admin_dashboard', 'name' => 'Access admin dashboard', 'description' => 'Can access the admin dashboard'],
-                ['key' => 'access_support_dashboard', 'name' => 'Access support dashboard', 'description' => 'Can access the support dashboard'],
-                ['key' => 'access_department_dashboard', 'name' => 'Access department dashboard', 'description' => 'Can access department-specific dashboards'],
-                ['key' => 'access_reports', 'name' => 'Access reports', 'description' => 'Can access system reports'],
-                ['key' => 'access_sla_data', 'name' => 'Access SLA data', 'description' => 'Can access SLA (Service Level Agreement) data']
-            ]
-        ];
     }
 
     /**
@@ -411,5 +338,360 @@ class RoleModel extends Model
         ];
 
         return $notifications;
+    }
+
+    // ==================== PERMISSION MANAGEMENT METHODS ====================
+
+    /**
+     * Get role permissions from database
+     */
+    public function getRolePermissions($roleId, $groupByModule = false)
+    {
+        $permissions = $this->db->table('role_permissions')
+            ->where('role_id', $roleId)
+            ->orderBy('module', 'ASC')
+            ->orderBy('permission_name', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        if ($groupByModule) {
+            return $this->groupPermissionsByModule($permissions);
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Get all available permissions grouped by module
+     */
+    public function getAllPermissions()
+    {
+        return [
+            'user' => [
+                ['key' => 'view_own_profile', 'name' => 'View own profile', 'description' => 'Can view their own profile information'],
+                ['key' => 'update_own_profile', 'name' => 'Update own profile', 'description' => 'Can update their own profile information'],
+                ['key' => 'change_password', 'name' => 'Change Password', 'description' => 'Can change their own password'],
+                ['key' => 'view_all_profiles', 'name' => 'View all profiles', 'description' => 'Can view profiles of all users'],
+                ['key' => 'update_all_profiles', 'name' => 'Update all profiles', 'description' => 'Can update profiles of all users'],
+                ['key' => 'reset_passwords', 'name' => 'Reset passwords', 'description' => 'Can reset passwords for other users'],
+                ['key' => 'manage_users', 'name' => 'Manage users', 'description' => 'Can create, edit, and delete users']
+            ],
+            'communication' => [
+                ['key' => 'send_messages', 'name' => 'Send messages in ticket conversation', 'description' => 'Can send messages in ticket conversations'],
+                ['key' => 'view_replies', 'name' => 'View replies from Support & Departments', 'description' => 'Can view replies from support team and departments'],
+                ['key' => 'internal_messages', 'name' => 'Send internal-only messages', 'description' => 'Can send internal messages visible only to staff'],
+                ['key' => 'system_messages', 'name' => 'Send system messages', 'description' => 'Can send system-wide messages and announcements']
+            ],
+            'ticket' => [
+                ['key' => 'view_own_tickets', 'name' => 'View own tickets only', 'description' => 'Can view only tickets they created'],
+                ['key' => 'view_department_tickets', 'name' => 'View department tickets', 'description' => 'Can view tickets assigned to their department'],
+                ['key' => 'view_all_tickets', 'name' => 'View all tickets', 'description' => 'Can view all tickets in the system'],
+                ['key' => 'create_ticket', 'name' => 'Create ticket', 'description' => 'Can create new tickets'],
+                ['key' => 'reply_ticket', 'name' => 'Reply to ticket', 'description' => 'Can reply to existing tickets'],
+                ['key' => 'upload_attachments', 'name' => 'Upload attachments', 'description' => 'Can upload attachments to tickets'],
+                ['key' => 'view_status', 'name' => 'View ticket status & progress', 'description' => 'Can view ticket status and progress'],
+                ['key' => 'assign_ticket', 'name' => 'Assign ticket', 'description' => 'Can assign tickets to other users'],
+                ['key' => 'change_priority', 'name' => 'Change ticket priority', 'description' => 'Can change ticket priority'],
+                ['key' => 'change_status', 'name' => 'Change ticket status', 'description' => 'Can change ticket status'],
+                ['key' => 'change_notes', 'name' => 'Change ticket notes', 'description' => 'Can edit internal ticket notes']
+            ],
+            'system' => [
+                ['key' => 'access_admin_dashboard', 'name' => 'Access admin dashboard', 'description' => 'Can access the admin dashboard'],
+                ['key' => 'access_support_dashboard', 'name' => 'Access support dashboard', 'description' => 'Can access the support dashboard'],
+                ['key' => 'access_department_dashboard', 'name' => 'Access department dashboard', 'description' => 'Can access department-specific dashboards'],
+                ['key' => 'access_reports', 'name' => 'Access reports', 'description' => 'Can access system reports'],
+                ['key' => 'access_sla_data', 'name' => 'Access SLA data', 'description' => 'Can access SLA (Service Level Agreement) data']
+            ]
+        ];
+    }
+
+     /**
+     * Update role permissions
+     */
+    public function updateRolePermissions($roleId, $permissions)
+    {
+        try {
+            $this->db->transStart();
+            
+            // Delete existing permissions
+            $this->db->table('role_permissions')->where('role_id', $roleId)->delete();
+            
+            // Insert new permissions
+            $permissionData = [];
+            foreach ($permissions as $permission) {
+                $permissionData[] = [
+                    'role_id' => $roleId,
+                    'permission_key' => $permission['key'],
+                    'permission_name' => $permission['name'],
+                    'module' => $permission['module'],
+                    'is_allowed' => $permission['is_allowed'] ?? true,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+            }
+            
+            if (!empty($permissionData)) {
+                $this->db->table('role_permissions')->insertBatch($permissionData);
+            }
+            
+            $this->db->transComplete();
+            
+            return $this->db->transStatus();
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Update role permissions error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Initialize default permissions for a role
+     */
+    public function initializeDefaultPermissions($roleId, $roleName)
+    {
+        try {
+            $defaultPermissions = $this->getDefaultPermissionsByRole($roleName);
+            $allPermissions = $this->getAllPermissions();
+            
+            $permissionData = [];
+            foreach ($allPermissions as $module => $permissions) {
+                foreach ($permissions as $perm) {
+                    $isAllowed = in_array($perm['key'], $defaultPermissions[$module] ?? []);
+                    
+                    $permissionData[] = [
+                        'role_id' => $roleId,
+                        'permission_key' => $perm['key'],
+                        'permission_name' => $perm['name'],
+                        'module' => $module,
+                        'is_allowed' => $isAllowed,
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+                }
+            }
+            
+            if (!empty($permissionData)) {
+                return $this->db->table('role_permissions')->insertBatch($permissionData);
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            log_message('error', 'Initialize default permissions error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+     /**
+     * Check if role has specific permission
+     */
+    public function hasPermission($roleId, $permissionKey)
+    {
+        $result = $this->db->table('role_permissions')
+            ->where('role_id', $roleId)
+            ->where('permission_key', $permissionKey)
+            ->where('is_allowed', true)
+            ->countAllResults();
+        
+        return $result > 0;
+    }
+
+    /**
+     * Get permissions with status for a role
+     */
+    public function getPermissionsWithStatus($roleId)
+    {
+        $allPermissions = $this->getAllPermissions();
+        $rolePermissions = $this->getRolePermissions($roleId);
+        
+        // Create a lookup array for role permissions
+        $rolePermissionLookup = [];
+        foreach ($rolePermissions as $perm) {
+            $rolePermissionLookup[$perm['permission_key']] = $perm['is_allowed'];
+        }
+        
+        // Combine all permissions with role's permission status
+        $result = [];
+        foreach ($allPermissions as $module => $permissions) {
+            $result[$module] = [];
+            foreach ($permissions as $perm) {
+                $perm['is_allowed'] = $rolePermissionLookup[$perm['key']] ?? false;
+                $result[$module][] = $perm;
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Reset role permissions to defaults
+     */
+    public function resetRolePermissions($roleId)
+    {
+        try {
+            $role = $this->find($roleId);
+            if (!$role) {
+                return [
+                    'success' => false,
+                    'message' => 'Role not found'
+                ];
+            }
+            
+            if ($this->initializeDefaultPermissions($roleId, $role['role_name'])) {
+                return [
+                    'success' => true,
+                    'message' => 'Role permissions reset to defaults successfully'
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to reset permissions'
+            ];
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Reset role permissions error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get permission summary for a role
+     */
+    public function getPermissionSummary($roleId)
+    {
+        $permissions = $this->getRolePermissions($roleId);
+        
+        $total = count($permissions);
+        $allowed = 0;
+        foreach ($permissions as $perm) {
+            if ($perm['is_allowed']) {
+                $allowed++;
+            }
+        }
+        
+        return [
+            'total' => $total,
+            'allowed' => $allowed,
+            'denied' => $total - $allowed,
+            'percentage' => $total > 0 ? round(($allowed / $total) * 100) : 0
+        ];
+    }
+
+    // ==================== PERMISSION BULK OPERATIONS ====================
+
+    /**
+     * Update multiple permissions at once
+     */
+    public function updateBulkPermissions($roleId, array $permissionUpdates)
+    {
+        try {
+            $this->db->transStart();
+            
+            foreach ($permissionUpdates as $update) {
+                $this->db->table('role_permissions')
+                    ->where('role_id', $roleId)
+                    ->where('permission_key', $update['key'])
+                    ->update([
+                        'is_allowed' => $update['is_allowed'],
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]);
+            }
+            
+            $this->db->transComplete();
+            
+            return $this->db->transStatus();
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Update bulk permissions error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Copy permissions from one role to another
+     */
+    public function copyPermissions($sourceRoleId, $targetRoleId)
+    {
+        try {
+            $sourcePermissions = $this->getRolePermissions($sourceRoleId);
+            
+            if (empty($sourcePermissions)) {
+                return [
+                    'success' => false,
+                    'message' => 'Source role has no permissions to copy'
+                ];
+            }
+            
+            $this->db->transStart();
+            
+            // Delete existing permissions from target role
+            $this->db->table('role_permissions')->where('role_id', $targetRoleId)->delete();
+            
+            // Insert copied permissions
+            $permissionData = [];
+            foreach ($sourcePermissions as $perm) {
+                $permissionData[] = [
+                    'role_id' => $targetRoleId,
+                    'permission_key' => $perm['permission_key'],
+                    'permission_name' => $perm['permission_name'],
+                    'module' => $perm['module'],
+                    'is_allowed' => $perm['is_allowed'],
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+            }
+            
+            $this->db->table('role_permissions')->insertBatch($permissionData);
+            
+            $this->db->transComplete();
+            
+            if ($this->db->transStatus()) {
+                return [
+                    'success' => true,
+                    'message' => 'Permissions copied successfully',
+                    'copied_count' => count($permissionData)
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to copy permissions'
+            ];
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Copy permissions error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    // ==================== PERMISSION VALIDATION ====================
+
+    /**
+     * Validate if user has permission
+     */
+    public function validateUserPermission($userId, $permissionKey)
+    {
+        try {
+            $user = $this->db->table('users')
+                ->select('role_id')
+                ->where('user_id', $userId)
+                ->get()
+                ->getRowArray();
+            
+            if (!$user) {
+                return false;
+            }
+            
+            return $this->hasPermission($user['role_id'], $permissionKey);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Validate user permission error: ' . $e->getMessage());
+            return false;
+        }
     }
 }

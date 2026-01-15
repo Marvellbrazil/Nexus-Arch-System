@@ -4,34 +4,64 @@
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
-<div
-    class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0">
-</div>
-<div
-    class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0">
-</div>
-<div
-    class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0">
-</div>
+<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
+<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
+<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <?php
 // Helper functions untuk view
-function getAccessLevelName($level)
+function getAccessScope($roleName)
 {
-    $levels = [
-        'external' => 'External Access',
-        'internal' => 'Internal Access',
-        'full' => 'Full Access',
-        'technical' => 'Technical Access'
+    $scopes = [
+        'Customer' => [
+            'Access limited to own account',
+            'Can view and create own tickets',
+            'Cannot access admin features',
+            'Basic communication permissions'
+        ],
+        'Support' => [
+            'Department access',
+            'Can handle assigned tickets',
+            'Internal communication access',
+            'Limited user management'
+        ],
+        'Department' => [
+            'Department-specific access',
+            'Can handle department tickets',
+            'Internal collaboration',
+            'Technical expertise access'
+        ],
+        'Admin' => [
+            'Full system access',
+            'All management features',
+            'Unrestricted permissions',
+            'System configuration rights'
+        ]
     ];
-    return $levels[$level] ?? $level;
+
+    return $scopes[$roleName] ?? [
+        'Custom access scope',
+        'Permissions defined by administrator'
+    ];
+}
+
+function getAccessScopeIcon($roleName)
+{
+    $icons = [
+        'Customer' => 'fa-user',
+        'Support' => 'fa-headset',
+        'Department' => 'fa-users',
+        'Admin' => 'fa-crown'
+    ];
+
+    return $icons[$roleName] ?? 'fa-user-tag';
 }
 
 function createPermissionItem($label, $icon, $enabled, $permissionKey = '')
 {
-    $html = '
+    return '
     <div class="permission-item">
         <div class="permission-info">
             <i class="fas ' . $icon . ' permission-icon"></i>
@@ -44,28 +74,26 @@ function createPermissionItem($label, $icon, $enabled, $permissionKey = '')
             <span class="permission-slider"></span>
         </label>
     </div>';
-    return $html;
 }
 
 function createSystemAccessItem($label, $allowed)
 {
-    $html = '
+    return '
     <div class="flex items-center gap-3 py-2">
         <i class="fas ' . ($allowed ? 'fa-check text-green-500' : 'fa-ban text-red-400') . '"></i>
         <span class="text-text-dark/60 text-sm">' . ($allowed ? 'Can access' : 'Cannot access') . ' ' . strtolower($label) . '</span>
     </div>';
-    return $html;
 }
 
-function getColorClass($accessLevel)
+function getRoleColorClass($roleName)
 {
     $colors = [
-        'external' => 'role-color-external',
-        'internal' => 'role-color-internal',
-        'full' => 'role-color-full',
-        'technical' => 'role-color-technical'
+        'Customer' => 'role-color-customer',
+        'Support' => 'role-color-support',
+        'Department' => 'role-color-department',
+        'Admin' => 'role-color-admin'
     ];
-    return $colors[$accessLevel] ?? 'role-color-internal';
+    return $colors[$roleName] ?? 'role-color-custom';
 }
 
 // Fungsi untuk mengurutkan roles sesuai urutan yang diinginkan
@@ -87,6 +115,11 @@ function sortRolesByPriority($roles)
 
     return $roles;
 }
+
+// Check if permissions data is available from controller
+$permissionsData = $permissionsWithStatus ?? [];
+$permissionSummary = $permissionSummary ?? ['total' => 0, 'allowed' => 0, 'denied' => 0, 'percentage' => 0];
+$selectedRoleName = $selectedRole['role_name'] ?? '';
 
 // Urutkan roles jika ada
 if (!empty($roles)) {
@@ -115,8 +148,7 @@ if (!empty($roles)) {
             <div class="dashboard-card h-full">
                 <div class="dashboard-card-header flex justify-between items-center">
                     <div class="text-text-dark/85 text-base font-medium">Roles</div>
-                    <button id="addRoleBtn" class="text-text-dark/60 hover:text-secondary transition-colors"
-                        title="Add New Role">
+                    <button id="addRoleBtn" class="text-text-dark/60 hover:text-secondary transition-colors" title="Add New Role">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
@@ -140,20 +172,17 @@ if (!empty($roles)) {
                                 data-role-id="<?= $role['role_id'] ?>" onclick="selectRole(<?= $role['role_id'] ?>)">
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-3">
-                                        <div class="role-dot <?= getColorClass($role['access_level'] ?? 'internal') ?>"></div>
-                                        <span
-                                            class="font-medium <?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'text-white' : 'text-text-dark' ?>">
+                                        <div class="role-dot <?= getRoleColorClass($role['role_name']) ?>"></div>
+                                        <span class="font-medium <?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'text-white' : 'text-text-dark' ?>">
                                             <?= esc($role['role_name']) ?>
                                         </span>
                                     </div>
-                                    <span
-                                        class="role-badge <?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'bg-white/20 text-white' : 'bg-gray-100 text-text-dark' ?>">
+                                    <span class="role-badge <?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'bg-white/20 text-white' : 'bg-gray-100 text-text-dark' ?>">
                                         <?= $role['user_count'] ?? 0 ?>
                                     </span>
                                 </div>
-                                <div
-                                    class="<?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'text-white/70' : 'text-text-dark/50' ?> text-xs ml-5">
-                                    <?= getAccessLevelName($role['access_level'] ?? 'internal') ?>
+                                <div class="<?= $role['role_id'] == ($selectedRole['role_id'] ?? 0) ? 'text-white/70' : 'text-text-dark/50' ?> text-xs ml-5">
+                                    <?= $role['role_name'] ?> Access
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -180,12 +209,26 @@ if (!empty($roles)) {
             <div class="dashboard-card mb-6">
                 <div class="dashboard-card-header flex justify-between items-center">
                     <div class="text-text-dark/85 text-base font-medium">
-                        Role: <span id="selectedRoleName"
-                            class="text-secondary"><?= esc($selectedRole['role_name'] ?? 'Select a Role') ?></span>
+                        Role: <span id="selectedRoleName" class="text-secondary"><?= esc($selectedRoleName) ?></span>
                     </div>
                     <div id="userCount" class="text-sm text-secondary">
-                        <i class="fas fa-users mr-1"></i> <span><?= $selectedRole['user_count'] ?? 0 ?></span> users
-                        assigned
+                        <i class="fas fa-users mr-1"></i> <span id="selectedUserCount"><?= $selectedRole['user_count'] ?? 0 ?></span> users assigned
+                    </div>
+                </div>
+
+                <!-- Permission Summary -->
+                <div class="px-6 pt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-text-dark/70 text-sm">Permission Summary</span>
+                        <span class="text-sm font-medium" id="permissionPercentage"><?= $permissionSummary['percentage'] ?>%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                        <div id="permissionProgress" class="bg-secondary h-2 rounded-full transition-all duration-500" style="width: <?= $permissionSummary['percentage'] ?>%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-text-dark/60">
+                        <span id="allowedCount"><?= $permissionSummary['allowed'] ?> allowed</span>
+                        <span id="deniedCount"><?= $permissionSummary['denied'] ?> denied</span>
+                        <span id="totalCount"><?= $permissionSummary['total'] ?> total</span>
                     </div>
                 </div>
 
@@ -200,42 +243,17 @@ if (!empty($roles)) {
                             </div>
                             <div class="bg-white rounded-lg p-4 space-y-3" id="accessScope">
                                 <?php if ($selectedRole): ?>
-                                    <?php if ($selectedRole['access_level'] === 'external'): ?>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-user text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Access limited to:</span>
+                                    <?php $accessScope = getAccessScope($selectedRoleName); ?>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <i class="fas <?= getAccessScopeIcon($selectedRoleName) ?> text-secondary"></i>
+                                        <span class="text-text-dark/70 text-sm font-medium"><?= $selectedRoleName ?> Access Level</span>
+                                    </div>
+                                    <?php foreach ($accessScope as $scope): ?>
+                                        <div class="flex items-center gap-3 ml-2">
+                                            <i class="fas fa-circle text-xs text-text-dark/30"></i>
+                                            <span class="text-text-dark/70 text-sm"><?= $scope ?></span>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-user-circle text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Own account</span>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-ticket-alt text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Own tickets</span>
-                                        </div>
-                                    <?php elseif ($selectedRole['access_level'] === 'internal'): ?>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-users text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Department access</span>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-project-diagram text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Department tickets</span>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-comments text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Internal communication</span>
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-unlock text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">Full system access</span>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-cogs text-text-dark/40"></i>
-                                            <span class="text-text-dark/70 text-sm">All management features</span>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php endforeach; ?>
                                 <?php else: ?>
                                     <div class="text-center py-4">
                                         <p class="text-text-dark/50 text-sm">Select a role to view access scope</p>
@@ -250,15 +268,13 @@ if (!empty($roles)) {
                                 <h4 class="text-text-dark/80 font-medium text-sm">User Module Permissions</h4>
                             </div>
                             <div class="bg-white rounded-lg p-4 space-y-4" id="userPermissions">
-                                <?php if (!empty($rolePermissions)): ?>
-                                    <?php foreach ($rolePermissions as $permission): ?>
-                                        <?php if ($permission['module'] === 'user'): ?>
-                                            <?= createPermissionItem($permission['permission_name'], 'fa-user', $permission['is_allowed'], $permission['permission_key']) ?>
-                                        <?php endif; ?>
+                                <?php if (!empty($permissionsData['user'])): ?>
+                                    <?php foreach ($permissionsData['user'] as $permission): ?>
+                                        <?= createPermissionItem($permission['name'], 'fa-user', $permission['is_allowed'], $permission['key']) ?>
                                     <?php endforeach; ?>
                                 <?php elseif ($selectedRole): ?>
                                     <div class="text-center py-4">
-                                        <p class="text-text-dark/50 text-sm">Loading permissions...</p>
+                                        <p class="text-text-dark/50 text-sm">No user permissions found</p>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-center py-4">
@@ -274,15 +290,13 @@ if (!empty($roles)) {
                                 <h4 class="text-text-dark/80 font-medium text-sm">Communication Permissions</h4>
                             </div>
                             <div class="bg-white rounded-lg p-4 space-y-4" id="communicationPermissions">
-                                <?php if (!empty($rolePermissions)): ?>
-                                    <?php foreach ($rolePermissions as $permission): ?>
-                                        <?php if ($permission['module'] === 'communication'): ?>
-                                            <?= createPermissionItem($permission['permission_name'], 'fa-comments', $permission['is_allowed'], $permission['permission_key']) ?>
-                                        <?php endif; ?>
+                                <?php if (!empty($permissionsData['communication'])): ?>
+                                    <?php foreach ($permissionsData['communication'] as $permission): ?>
+                                        <?= createPermissionItem($permission['name'], 'fa-comments', $permission['is_allowed'], $permission['key']) ?>
                                     <?php endforeach; ?>
                                 <?php elseif ($selectedRole): ?>
                                     <div class="text-center py-4">
-                                        <p class="text-text-dark/50 text-sm">Loading permissions...</p>
+                                        <p class="text-text-dark/50 text-sm">No communication permissions found</p>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-center py-4">
@@ -301,15 +315,13 @@ if (!empty($roles)) {
                                 <h4 class="text-text-dark/80 font-medium text-sm">Ticket Module Permissions</h4>
                             </div>
                             <div class="bg-white rounded-lg p-4 space-y-4" id="ticketPermissions">
-                                <?php if (!empty($rolePermissions)): ?>
-                                    <?php foreach ($rolePermissions as $permission): ?>
-                                        <?php if ($permission['module'] === 'ticket'): ?>
-                                            <?= createPermissionItem($permission['permission_name'], 'fa-ticket-alt', $permission['is_allowed'], $permission['permission_key']) ?>
-                                        <?php endif; ?>
+                                <?php if (!empty($permissionsData['ticket'])): ?>
+                                    <?php foreach ($permissionsData['ticket'] as $permission): ?>
+                                        <?= createPermissionItem($permission['name'], 'fa-ticket-alt', $permission['is_allowed'], $permission['key']) ?>
                                     <?php endforeach; ?>
                                 <?php elseif ($selectedRole): ?>
                                     <div class="text-center py-4">
-                                        <p class="text-text-dark/50 text-sm">Loading permissions...</p>
+                                        <p class="text-text-dark/50 text-sm">No ticket permissions found</p>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-center py-4">
@@ -325,15 +337,13 @@ if (!empty($roles)) {
                                 <h4 class="text-text-dark/80 font-medium text-sm">System Access Rules</h4>
                             </div>
                             <div class="bg-white rounded-lg p-4 space-y-4" id="systemAccessRules">
-                                <?php if (!empty($rolePermissions)): ?>
-                                    <?php foreach ($rolePermissions as $permission): ?>
-                                        <?php if ($permission['module'] === 'system'): ?>
-                                            <?= createSystemAccessItem($permission['permission_name'], $permission['is_allowed']) ?>
-                                        <?php endif; ?>
+                                <?php if (!empty($permissionsData['system'])): ?>
+                                    <?php foreach ($permissionsData['system'] as $permission): ?>
+                                        <?= createSystemAccessItem($permission['name'], $permission['is_allowed']) ?>
                                     <?php endforeach; ?>
                                 <?php elseif ($selectedRole): ?>
                                     <div class="text-center py-4">
-                                        <p class="text-text-dark/50 text-sm">Loading system access...</p>
+                                        <p class="text-text-dark/50 text-sm">No system permissions found</p>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-center py-4">
@@ -360,7 +370,7 @@ if (!empty($roles)) {
                             <?php endforeach; ?>
                         <?php elseif ($selectedRole): ?>
                             <div class="text-center py-4">
-                                <p class="text-text-dark/50 text-sm">Loading responsibilities...</p>
+                                <p class="text-text-dark/50 text-sm">No responsibilities defined</p>
                             </div>
                         <?php else: ?>
                             <div class="text-center py-4">
@@ -383,14 +393,13 @@ if (!empty($roles)) {
                         <?php if (!empty($roleRules)): ?>
                             <?php foreach ($roleRules as $rule): ?>
                                 <div class="flex items-start gap-3">
-                                    <i
-                                        class="fas <?= ($selectedRole['is_core'] ?? false) ? 'fa-lock' : 'fa-info-circle' ?> text-text-dark/40 mt-1"></i>
+                                    <i class="fas fa-info-circle text-text-dark/40 mt-1"></i>
                                     <span class="text-text-dark/70 text-sm"><?= esc($rule) ?></span>
                                 </div>
                             <?php endforeach; ?>
                         <?php elseif ($selectedRole): ?>
                             <div class="text-center py-4">
-                                <p class="text-text-dark/50 text-sm">Loading rules...</p>
+                                <p class="text-text-dark/50 text-sm">No rules defined for this role</p>
                             </div>
                         <?php else: ?>
                             <div class="text-center py-4">
@@ -418,34 +427,28 @@ if (!empty($roles)) {
 
                     <div id="roleActions" class="mt-4 space-y-4 p-4">
                         <?php if ($selectedRole): ?>
-                            <button class="role-action-btn primary edit-role-btn"
-                                data-role-id="<?= $selectedRole['role_id'] ?>">
-                                <i class="fas fa-edit"></i>
-                                Edit Role Permissions
+                            <button class="role-action-btn primary" onclick="saveRolePermissions()">
+                                <i class="fas fa-save"></i>
+                                Save All Permissions
                             </button>
 
-                            <button class="role-action-btn secondary reset-role-btn"
-                                data-role-id="<?= $selectedRole['role_id'] ?>">
+                            <button class="role-action-btn secondary" onclick="resetRolePermissions(<?= $selectedRole['role_id'] ?>)">
                                 <i class="fas fa-undo-alt"></i>
                                 Reset to Default
                             </button>
 
-                            <button class="role-action-btn secondary duplicate-role-btn"
-                                data-role-id="<?= $selectedRole['role_id'] ?>">
+                            <button class="role-action-btn secondary" onclick="showDuplicateModal(<?= $selectedRole['role_id'] ?>)">
                                 <i class="fas fa-copy"></i>
                                 Duplicate Role
                             </button>
 
-                            <?php if (!($selectedRole['is_core'] ?? false)): ?>
-                                <div class="mt-6 pt-4 border-t border-gray-200">
-                                    <h4 class="text-red-600 font-medium text-sm mb-3">Danger Zone</h4>
-                                    <button class="role-action-btn danger delete-role-btn"
-                                        data-role-id="<?= $selectedRole['role_id'] ?>">
-                                        <i class="fas fa-trash-alt"></i>
-                                        Delete Role
-                                    </button>
-                                </div>
-                            <?php endif; ?>
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <h4 class="text-red-600 font-medium text-sm mb-3">Danger Zone</h4>
+                                <button class="role-action-btn danger" onclick="deleteRole(<?= $selectedRole['role_id'] ?>)">
+                                    <i class="fas fa-trash-alt"></i>
+                                    Delete Role
+                                </button>
+                            </div>
                         <?php else: ?>
                             <div class="text-center py-8">
                                 <p class="text-text-dark/50 text-sm">Select a role to perform actions</p>
@@ -458,21 +461,53 @@ if (!empty($roles)) {
     </div>
 </div>
 
-<!-- Modal Templates -->
-<template id="editRoleModalTemplate">
-    <!-- Modal akan dibuat secara dinamis di JavaScript -->
-</template>
+<!-- Modals -->
+<div id="addRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold mb-4">Add New Role</h3>
+        <form id="addRoleForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+                    <input type="text" name="role_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal('addRoleModal')" class="px-4 py-2 border border-gray-300 rounded-md">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-secondary text-white rounded-md">Create Role</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-<template id="duplicateRoleModalTemplate">
-    <!-- Modal akan dibuat secara dinamis di JavaScript -->
-</template>
-
-<template id="addRoleModalTemplate">
-    <!-- Modal akan dibuat secara dinamis di JavaScript -->
-</template>
+<div id="duplicateRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold mb-4">Duplicate Role</h3>
+        <form id="duplicateRoleForm">
+            <input type="hidden" name="source_role_id" id="sourceRoleId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Role Name</label>
+                    <input type="text" name="new_role_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="new_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal('duplicateRoleModal')" class="px-4 py-2 border border-gray-300 rounded-md">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-secondary text-white rounded-md">Duplicate</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <style>
-    /* Semua CSS dari file sebelumnya tetap sama */
     .role-item {
         border-radius: 12px;
         padding: 16px;
@@ -607,6 +642,7 @@ if (!empty($roles)) {
         gap: 8px;
         transition: all 0.2s ease;
         border: 1px solid transparent;
+        cursor: pointer;
     }
 
     .role-action-btn.primary {
@@ -641,27 +677,26 @@ if (!empty($roles)) {
         transform: translateY(-1px);
     }
 
-    /* Update warna untuk urutan baru */
-    .role-color-external {
+    /* Role color classes */
+    .role-color-customer {
         background: linear-gradient(135deg, #3B82F6, #60A5FA);
     }
 
-    /* Biru - Customer */
-    .role-color-internal {
+    .role-color-support {
         background: linear-gradient(135deg, #8B5CF6, #A78BFA);
     }
 
-    /* Ungu - Support & Department */
-    .role-color-full {
+    .role-color-department {
         background: linear-gradient(135deg, #10B981, #34D399);
     }
 
-    /* Hijau - Admin */
-    .role-color-technical {
+    .role-color-admin {
         background: linear-gradient(135deg, #F59E0B, #FBBF24);
     }
 
-    /* Kuning - Technical */
+    .role-color-custom {
+        background: linear-gradient(135deg, #6B7280, #9CA3AF);
+    }
 </style>
 
 <script>
@@ -673,7 +708,7 @@ if (!empty($roles)) {
     let currentRoleId = <?= json_encode($selectedRole['role_id'] ?? null) ?>;
     let isLoading = false;
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         initEventListeners();
 
         // Jika ada role yang dipilih, load detail via AJAX
@@ -692,35 +727,20 @@ if (!empty($roles)) {
         // Add role button
         const addRoleBtn = document.getElementById('addRoleBtn');
         if (addRoleBtn) {
-            addRoleBtn.addEventListener('click', showAddRoleModal);
+            addRoleBtn.addEventListener('click', () => showModal('addRoleModal'));
         }
 
-        // Event delegation untuk role items
-        document.addEventListener('click', function (e) {
-            // Edit role button
-            if (e.target.closest('.edit-role-btn')) {
-                const roleId = e.target.closest('.edit-role-btn').dataset.roleId;
-                showEditRoleModal(roleId);
-            }
+        // Add role form
+        const addRoleForm = document.getElementById('addRoleForm');
+        if (addRoleForm) {
+            addRoleForm.addEventListener('submit', handleAddRole);
+        }
 
-            // Reset role button
-            if (e.target.closest('.reset-role-btn')) {
-                const roleId = e.target.closest('.reset-role-btn').dataset.roleId;
-                resetRole(roleId);
-            }
-
-            // Duplicate role button
-            if (e.target.closest('.duplicate-role-btn')) {
-                const roleId = e.target.closest('.duplicate-role-btn').dataset.roleId;
-                showDuplicateRoleModal(roleId);
-            }
-
-            // Delete role button
-            if (e.target.closest('.delete-role-btn')) {
-                const roleId = e.target.closest('.delete-role-btn').dataset.roleId;
-                deleteRole(roleId);
-            }
-        });
+        // Duplicate role form
+        const duplicateRoleForm = document.getElementById('duplicateRoleForm');
+        if (duplicateRoleForm) {
+            duplicateRoleForm.addEventListener('submit', handleDuplicateRole);
+        }
     }
 
     function selectRole(roleId) {
@@ -773,17 +793,17 @@ if (!empty($roles)) {
         showLoading();
 
         fetch(`${baseUrl}/admin/manageRoles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                [csrfName]: csrfToken,
-                action: 'get_role_details',
-                role_id: roleId
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    [csrfName]: csrfToken,
+                    action: 'get_role_details',
+                    role_id: roleId
+                })
             })
-        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -796,18 +816,13 @@ if (!empty($roles)) {
                     showToast('Role loaded successfully', 'success');
                 } else {
                     showToast(data.message || 'Failed to load role details', 'error');
-                    // Fallback ke data awal jika ada
-                    if (roleId === currentRoleId) {
-                        revertToInitialState();
-                    }
+                    revertToInitialState();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showToast('Network error occurred', 'error');
-                if (roleId === currentRoleId) {
-                    revertToInitialState();
-                }
+                revertToInitialState();
             })
             .finally(() => {
                 hideLoading();
@@ -818,355 +833,197 @@ if (!empty($roles)) {
         const role = data.role;
 
         // Update basic info
-        const roleNameEl = document.getElementById('selectedRoleName');
-        const userCountEl = document.getElementById('userCount');
+        document.getElementById('selectedRoleName').textContent = role.role_name;
+        document.getElementById('selectedUserCount').textContent = role.user_count || 0;
 
-        if (roleNameEl) roleNameEl.textContent = role.role_name;
-        if (userCountEl) userCountEl.innerHTML = `<i class="fas fa-users mr-1"></i> ${role.user_count} users assigned`;
+        // Update permission summary
+        document.getElementById('permissionPercentage').textContent = data.permission_summary.percentage + '%';
+        document.getElementById('permissionProgress').style.width = data.permission_summary.percentage + '%';
+        document.getElementById('allowedCount').textContent = data.permission_summary.allowed + ' allowed';
+        document.getElementById('deniedCount').textContent = data.permission_summary.denied + ' denied';
+        document.getElementById('totalCount').textContent = data.permission_summary.total + ' total';
 
-        // Update access scope
-        updateAccessScope(role.access_level);
-
-        // Update permissions
-        updatePermissions(data.permissions);
-
-        // Update core responsibilities
-        updateCoreResponsibilities(data.responsibilities);
-
-        // Update role rules
-        updateRoleRules(data.rules, role.is_core);
-
-        // Update action buttons
-        updateActionButtons(role);
+        // Get permissions via AJAX
+        loadRolePermissions(role.role_id);
     }
 
-    function revertToInitialState() {
-        // Kembalikan ke state awal jika AJAX gagal
-        document.getElementById('selectedRoleName').textContent = 'Select a Role';
-        document.getElementById('userCount').innerHTML = '<i class="fas fa-users mr-1"></i> 0 users assigned';
-
-        // Kosongkan semua section
-        ['accessScope', 'userPermissions', 'communicationPermissions',
-            'ticketPermissions', 'systemAccessRules', 'coreResponsibilities',
-            'roleRules', 'roleActions'].forEach(sectionId => {
-                const el = document.getElementById(sectionId);
-                if (el) {
-                    el.innerHTML = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">Failed to load data</p></div>';
+    function loadRolePermissions(roleId) {
+        fetch(`${baseUrl}/admin/manageRoles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    [csrfName]: csrfToken,
+                    action: 'get_role_permissions',
+                    role_id: roleId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updatePermissionsUI(data.permissions, data.summary);
                 }
+            })
+            .catch(error => {
+                console.error('Error loading permissions:', error);
             });
     }
 
-    function updateAccessScope(accessLevel) {
-        const accessScope = document.getElementById('accessScope');
-        if (!accessScope) return;
+    function updatePermissionsUI(permissions, summary) {
+        // Update permission summary
+        if (summary) {
+            document.getElementById('permissionPercentage').textContent = summary.percentage + '%';
+            document.getElementById('permissionProgress').style.width = summary.percentage + '%';
+            document.getElementById('allowedCount').textContent = summary.allowed + ' allowed';
+            document.getElementById('deniedCount').textContent = summary.denied + ' denied';
+            document.getElementById('totalCount').textContent = summary.total + ' total';
+        }
+
+        // Update each permission section
+        updatePermissionSection('userPermissions', permissions.user || []);
+        updatePermissionSection('communicationPermissions', permissions.communication || []);
+        updatePermissionSection('ticketPermissions', permissions.ticket || []);
+        updateSystemAccessSection('systemAccessRules', permissions.system || []);
+    }
+
+    function updatePermissionSection(sectionId, permissions) {
+        const container = document.getElementById(sectionId);
+        if (!container) return;
 
         let html = '';
 
-        switch (accessLevel) {
-            case 'external':
-                html = `
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-user text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Access limited to:</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-user-circle text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Own account</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-ticket-alt text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Own tickets</span>
-                    </div>
-                `;
-                break;
-            case 'internal':
-                html = `
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-users text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Department access</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-project-diagram text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Department tickets</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-comments text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Internal communication</span>
+        if (permissions.length > 0) {
+            permissions.forEach(perm => {
+                html += `
+                    <div class="permission-item">
+                        <div class="permission-info">
+                            <i class="fas ${getPermissionIcon(perm.module)} permission-icon"></i>
+                            <div>
+                                <div class="permission-label">${perm.name}</div>
+                            </div>
+                        </div>
+                        <label class="permission-toggle">
+                            <input type="checkbox" ${perm.is_allowed ? 'checked' : ''} 
+                                   data-permission-key="${perm.key}" data-module="${perm.module}">
+                            <span class="permission-slider"></span>
+                        </label>
                     </div>
                 `;
-                break;
-            case 'full':
-                html = `
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-unlock text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">Full system access</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-cogs text-text-dark/40"></i>
-                        <span class="text-text-dark/70 text-sm">All management features</span>
-                    </div>
-                `;
-                break;
-            default:
-                html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">Access scope information not available</p></div>';
+            });
+        } else {
+            html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">No permissions found</p></div>';
         }
 
-        accessScope.innerHTML = html;
+        container.innerHTML = html;
     }
 
-    function updatePermissions(permissions) {
-        if (!permissions) return;
+    function updateSystemAccessSection(sectionId, permissions) {
+        const container = document.getElementById(sectionId);
+        if (!container) return;
 
-        // Group permissions by module and update each section
-        const modules = [
-            { id: 'userPermissions', module: 'user', icon: 'fa-user' },
-            { id: 'communicationPermissions', module: 'communication', icon: 'fa-comments' },
-            { id: 'ticketPermissions', module: 'ticket', icon: 'fa-ticket-alt' },
-            { id: 'systemAccessRules', module: 'system', icon: 'fa-cog' }
-        ];
+        let html = '';
 
-        modules.forEach(({ id, module, icon }) => {
-            const container = document.getElementById(id);
-            if (!container) return;
+        if (permissions.length > 0) {
+            permissions.forEach(perm => {
+                html += `
+                    <div class="flex items-center gap-3 py-2">
+                        <i class="fas ${perm.is_allowed ? 'fa-check text-green-500' : 'fa-ban text-red-400'}"></i>
+                        <span class="text-text-dark/60 text-sm">
+                            ${perm.is_allowed ? 'Can access' : 'Cannot access'} ${perm.name.toLowerCase()}
+                        </span>
+                    </div>
+                `;
+            });
+        } else {
+            html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">No system access rules found</p></div>';
+        }
 
-            let html = '';
+        container.innerHTML = html;
+    }
 
-            if (permissions[module] && permissions[module].length > 0) {
-                permissions[module].forEach(perm => {
-                    if (module === 'system') {
-                        html += createSystemAccessItemHTML(perm);
-                    } else {
-                        html += createPermissionItemHTML(perm, icon);
-                    }
-                });
-            } else {
-                html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">No permissions found</p></div>';
-            }
+    function getPermissionIcon(module) {
+        const icons = {
+            'user': 'fa-user',
+            'communication': 'fa-comments',
+            'ticket': 'fa-ticket-alt',
+            'system': 'fa-cog'
+        };
+        return icons[module] || 'fa-key';
+    }
 
-            container.innerHTML = html;
+    function revertToInitialState() {
+        document.getElementById('selectedRoleName').textContent = 'Select a Role';
+        document.getElementById('selectedUserCount').textContent = '0';
+        document.getElementById('permissionPercentage').textContent = '0%';
+        document.getElementById('permissionProgress').style.width = '0%';
+        document.getElementById('allowedCount').textContent = '0 allowed';
+        document.getElementById('deniedCount').textContent = '0 denied';
+        document.getElementById('totalCount').textContent = '0 total';
 
-            // Re-attach event listeners for permission toggles
-            if (module !== 'system') {
-                container.querySelectorAll('.permission-toggle input').forEach(input => {
-                    input.addEventListener('change', function () {
-                        updatePermission(this);
-                    });
-                });
+        // Clear all sections
+        ['accessScope', 'userPermissions', 'communicationPermissions',
+            'ticketPermissions', 'systemAccessRules', 'coreResponsibilities',
+            'roleRules'
+        ].forEach(sectionId => {
+            const el = document.getElementById(sectionId);
+            if (el) {
+                el.innerHTML = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">Select a role to view details</p></div>';
             }
         });
     }
 
-    function createPermissionItemHTML(permission, icon) {
-        return `
-            <div class="permission-item">
-                <div class="permission-info">
-                    <i class="fas ${icon} permission-icon"></i>
-                    <div>
-                        <div class="permission-label">${permission.permission_name}</div>
-                    </div>
-                </div>
-                <label class="permission-toggle">
-                    <input type="checkbox" ${permission.is_allowed ? 'checked' : ''} 
-                           data-permission-key="${permission.permission_key}">
-                    <span class="permission-slider"></span>
-                </label>
-            </div>
-        `;
-    }
+    function saveRolePermissions() {
+        if (!currentRoleId) {
+            showToast('Please select a role first', 'error');
+            return;
+        }
 
-    function createSystemAccessItemHTML(permission) {
-        return `
-            <div class="flex items-center gap-3 py-2">
-                <i class="fas ${permission.is_allowed ? 'fa-check text-green-500' : 'fa-ban text-red-400'}"></i>
-                <span class="text-text-dark/60 text-sm">
-                    ${permission.is_allowed ? 'Can access' : 'Cannot access'} ${permission.permission_name.toLowerCase()}
-                </span>
-            </div>
-        `;
-    }
-
-    function updateCoreResponsibilities(responsibilities) {
-        const container = document.getElementById('coreResponsibilities');
-        if (!container) return;
-
-        let html = '';
-
-        if (responsibilities && responsibilities.length > 0) {
-            responsibilities.forEach(responsibility => {
-                html += `
-                    <div class="flex items-start gap-3 mb-3 last:mb-0">
-                        <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                        <span class="text-text-dark/70 text-sm">${responsibility}</span>
-                    </div>
-                `;
+        // Collect all permission changes
+        const permissions = [];
+        document.querySelectorAll('.permission-toggle input').forEach(input => {
+            permissions.push({
+                key: input.dataset.permissionKey,
+                is_allowed: input.checked
             });
-        } else {
-            html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">No responsibilities defined</p></div>';
-        }
+        });
 
-        container.innerHTML = html;
-    }
-
-    function updateRoleRules(rules, isCore) {
-        const container = document.getElementById('roleRules');
-        if (!container) return;
-
-        let html = '';
-
-        if (rules && rules.length > 0) {
-            rules.forEach(rule => {
-                html += `
-                    <div class="flex items-start gap-3">
-                        <i class="fas ${isCore ? 'fa-lock' : 'fa-info-circle'} text-text-dark/40 mt-1"></i>
-                        <span class="text-text-dark/70 text-sm">${rule}</span>
-                    </div>
-                `;
-            });
-        } else {
-            html = '<div class="text-center py-4"><p class="text-text-dark/50 text-sm">No rules defined</p></div>';
-        }
-
-        container.innerHTML = html;
-    }
-
-    function updateActionButtons(role) {
-        const container = document.getElementById('roleActions');
-        if (!container) return;
-
-        let html = `
-            <button class="role-action-btn primary edit-role-btn" data-role-id="${role.role_id}">
-                <i class="fas fa-edit"></i>
-                Edit Role Permissions
-            </button>
-            
-            <button class="role-action-btn secondary reset-role-btn" data-role-id="${role.role_id}">
-                <i class="fas fa-undo-alt"></i>
-                Reset to Default
-            </button>
-            
-            <button class="role-action-btn secondary duplicate-role-btn" data-role-id="${role.role_id}">
-                <i class="fas fa-copy"></i>
-                Duplicate Role
-            </button>
-        `;
-
-        if (!role.is_core) {
-            html += `
-                <div class="mt-6 pt-4 border-t border-gray-200">
-                    <h4 class="text-red-600 font-medium text-sm mb-3">Danger Zone</h4>
-                    <button class="role-action-btn danger delete-role-btn" data-role-id="${role.role_id}">
-                        <i class="fas fa-trash-alt"></i>
-                        Delete Role
-                    </button>
-                </div>
-            `;
-        }
-
-        container.innerHTML = html;
-    }
-
-    function updatePermission(element) {
-        const permissionKey = element.dataset.permissionKey;
-        const isAllowed = element.checked;
-
-        if (!currentRoleId || !permissionKey) return;
-
-        // Tampilkan loading state
-        const originalState = element.checked;
-        element.disabled = true;
+        showLoading();
 
         fetch(`${baseUrl}/admin/manageRoles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                [csrfName]: csrfToken,
-                action: 'update_permission',
-                role_id: currentRoleId,
-                permission_key: permissionKey,
-                is_allowed: isAllowed
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    [csrfName]: csrfToken,
+                    action: 'update_role_permissions',
+                    role_id: currentRoleId,
+                    permissions: permissions
+                })
             })
-        })
             .then(response => response.json())
             .then(data => {
-                element.disabled = false;
-
                 if (data.success) {
-                    showToast('Permission updated successfully', 'success');
-
-                    // Reload role details untuk update semua section
+                    showToast('Permissions saved successfully', 'success');
+                    // Reload role details
                     loadRoleDetails(currentRoleId);
                 } else {
-                    // Revert the toggle
-                    element.checked = originalState;
-                    showToast(data.message || 'Failed to update permission', 'error');
+                    showToast(data.message || 'Failed to save permissions', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                element.disabled = false;
-                element.checked = originalState;
                 showToast('Network error occurred', 'error');
+            })
+            .finally(() => {
+                hideLoading();
             });
     }
 
-    function searchRoles() {
-        const searchTerm = document.getElementById('roleSearch').value.toLowerCase().trim();
-        const roleItems = document.querySelectorAll('.role-item');
-
-        let visibleCount = 0;
-
-        roleItems.forEach(item => {
-            const roleName = item.querySelector('span.font-medium')?.textContent.toLowerCase() || '';
-            const accessLevel = item.querySelector('div.text-xs')?.textContent.toLowerCase() || '';
-
-            if (searchTerm === '' ||
-                roleName.includes(searchTerm) ||
-                accessLevel.includes(searchTerm)) {
-                item.style.display = 'block';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // Tampilkan pesan jika tidak ada hasil
-        const rolesList = document.getElementById('rolesList');
-        const noResultsMsg = rolesList.querySelector('.no-results-message');
-
-        if (visibleCount === 0 && searchTerm !== '') {
-            if (!noResultsMsg) {
-                const msg = document.createElement('div');
-                msg.className = 'no-results-message text-center py-8';
-                msg.innerHTML = `
-                    <i class="fas fa-search text-gray-300 text-3xl mb-3"></i>
-                    <p class="text-gray-500 text-sm">No roles found matching "${searchTerm}"</p>
-                `;
-                rolesList.appendChild(msg);
-            }
-        } else if (noResultsMsg) {
-            noResultsMsg.remove();
-        }
-    }
-
-    function showAddRoleModal() {
-        // Implementasi modal add role
-        alert('Add Role modal akan diimplementasi');
-    }
-
-    function showEditRoleModal(roleId) {
-        // Implementasi modal edit role
-        alert(`Edit Role modal untuk role ID: ${roleId} akan diimplementasi`);
-    }
-
-    function showDuplicateRoleModal(roleId) {
-        // Implementasi modal duplicate role
-        alert(`Duplicate Role modal untuk role ID: ${roleId} akan diimplementasi`);
-    }
-
-    function resetRole(roleId) {
+    function resetRolePermissions(roleId) {
         if (!confirm('Are you sure you want to reset this role to default permissions?')) {
             return;
         }
@@ -1174,17 +1031,17 @@ if (!empty($roles)) {
         showLoading();
 
         fetch(`${baseUrl}/admin/manageRoles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                [csrfName]: csrfToken,
-                action: 'reset_role',
-                role_id: roleId
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    [csrfName]: csrfToken,
+                    action: 'reset_role',
+                    role_id: roleId
+                })
             })
-        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1192,6 +1049,53 @@ if (!empty($roles)) {
                     loadRoleDetails(roleId);
                 } else {
                     showToast(data.message || 'Failed to reset role', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Network error occurred', 'error');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+
+    function showDuplicateModal(roleId) {
+        document.getElementById('sourceRoleId').value = roleId;
+        showModal('duplicateRoleModal');
+    }
+
+    function handleDuplicateRole(e) {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = {
+            [csrfName]: csrfToken,
+            action: 'duplicate_role',
+            role_id: formData.get('source_role_id'),
+            new_role_name: formData.get('new_role_name'),
+            new_description: formData.get('new_description')
+        };
+
+        showLoading();
+        closeModal('duplicateRoleModal');
+
+        fetch(`${baseUrl}/admin/manageRoles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Role duplicated successfully', 'success');
+                    // Reload page to show new role
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to duplicate role', 'error');
                 }
             })
             .catch(error => {
@@ -1211,25 +1115,22 @@ if (!empty($roles)) {
         showLoading();
 
         fetch(`${baseUrl}/admin/manageRoles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                [csrfName]: csrfToken,
-                action: 'delete_role',
-                role_id: roleId
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    [csrfName]: csrfToken,
+                    action: 'delete_role',
+                    role_id: roleId
+                })
             })
-        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     showToast('Role deleted successfully', 'success');
-                    // Reload halaman untuk update list roles
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    setTimeout(() => location.reload(), 1000);
                 } else {
                     showToast(data.message || 'Failed to delete role', 'error');
                 }
@@ -1243,42 +1144,91 @@ if (!empty($roles)) {
             });
     }
 
+    function handleAddRole(e) {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = {
+            [csrfName]: csrfToken,
+            action: 'save_role',
+            role_name: formData.get('role_name'),
+            description: formData.get('description')
+        };
+
+        showLoading();
+        closeModal('addRoleModal');
+
+        fetch(`${baseUrl}/admin/manageRoles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Role created successfully', 'success');
+                    // Reload page to show new role
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to create role', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Network error occurred', 'error');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+
+    function searchRoles() {
+        const searchTerm = document.getElementById('roleSearch').value.toLowerCase().trim();
+        const roleItems = document.querySelectorAll('.role-item');
+
+        roleItems.forEach(item => {
+            const roleName = item.querySelector('span.font-medium')?.textContent.toLowerCase() || '';
+            const display = roleName.includes(searchTerm) || searchTerm === '' ? 'block' : 'none';
+            item.style.display = display;
+        });
+    }
+
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        document.getElementById(modalId + 'Form')?.reset();
+    }
+
     // Utility functions
     function showLoading() {
         isLoading = true;
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.remove('hidden');
     }
 
     function hideLoading() {
         isLoading = false;
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.classList.add('hidden');
+        document.getElementById('loadingOverlay').classList.add('hidden');
     }
 
     function showToast(message, type = 'info') {
-        // Remove existing toasts
-        document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-
         const toast = document.createElement('div');
-        toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideIn ${type === 'error' ? 'bg-red-500 text-white' :
-                type === 'success' ? 'bg-green-500 text-white' :
-                    'bg-blue-500 text-white'
-            }`;
+        toast.className = `fixed top-6 right-6 px-4 py-3 rounded-lg shadow-lg z-50 animate-slideInRight ${type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500'} text-white`;
         toast.innerHTML = `
             <div class="flex items-center gap-2">
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                type === 'success' ? 'fa-check-circle' :
-                    'fa-info-circle'
-            }"></i>
-                <span class="text-sm">${message}</span>
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
             </div>
         `;
         document.body.appendChild(toast);
 
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
+            toast.classList.add('animate-slideOutRight');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
@@ -1295,4 +1245,38 @@ if (!empty($roles)) {
         };
     }
 </script>
+
+<style>
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    .animate-slideInRight {
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    .animate-slideOutRight {
+        animation: slideOutRight 0.3s ease-in;
+    }
+</style>
 <?= $this->endSection() ?>
