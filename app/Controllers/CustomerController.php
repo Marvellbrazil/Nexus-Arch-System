@@ -444,7 +444,7 @@ class CustomerController extends BaseController
 
         return view('Customer/profile_customer', ['data' => $data]);
     }
-public function notifications()
+    public function notifications()
     {
         $data = $this->loadCommonData();
 
@@ -505,14 +505,14 @@ public function notifications()
             return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
         }
 
-// Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
+        // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
         $project = $this->projectModel->getProjectForCustomer($projectId, $this->userId);
 
         if (!$project) {
             return redirect()->back()->with('error', 'Project not found or access denied');
         }
 
-// Nomor Tiket & Mapping Departemen
+        // Nomor Tiket & Mapping Departemen
         $ticketCount = $this->ticketModel->countTicketsByProject($projectId);
         $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
 
@@ -533,7 +533,7 @@ public function notifications()
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-$ticketId = $this->ticketModel->insert($ticketData);
+        $ticketId = $this->ticketModel->insert($ticketData);
 
         $this->handleAttachments($ticketId);
         // $this->createTicketNotification($ticketId);
@@ -591,7 +591,7 @@ $ticketId = $this->ticketModel->insert($ticketData);
         $this->db->table('notifications')->insert($notificationData);
     }
 
-public function markAllRead()
+    public function markAllRead()
     {
         $this->notificationModel->markAllAsRead($this->userId);
 

@@ -200,7 +200,7 @@ class ProjectModel extends Model
         ];
     }
 
-     /**
+    /**
      * Get recent projects with ticket counts
      */
     public function getRecentProjectsWithTicketCounts(int $limit = 5): array

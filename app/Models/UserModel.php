@@ -511,8 +511,6 @@ class UserModel extends Model
         return $roleClasses[$roleName] ?? 'role-default';
     }
 
-    
-    
         /**
          * Get user by email
          */

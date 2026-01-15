@@ -86,7 +86,7 @@ class DepartmentController extends BaseController
         $userId = session()->get('user_id');
         $db = db_connect();
 
-// Get department ID
+        // Get department ID
         $department = $this->deptDepartmentModel->findByName($departmentName);
 
         if (!$department) {
@@ -195,7 +195,7 @@ class DepartmentController extends BaseController
         $userId = session()->get('user_id');
         $db = db_connect();
 
-// Get user details
+        // Get user details
         $data['user_details'] = $this->deptUserModel->getUserDetails($userId);
 
         // Format view path

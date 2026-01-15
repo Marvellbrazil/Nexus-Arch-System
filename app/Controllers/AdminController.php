@@ -235,8 +235,8 @@ class AdminController extends BaseController
                     return $this->getProjectsTableAjax();
                 case 'get_unassigned_users':
                     return $this->getUnassignedUsersAjax();
-                // case 'bulk_assign_projects':
-                //     return $this->bulkAssignProjectsAjax();
+                    // case 'bulk_assign_projects':
+                    //     return $this->bulkAssignProjectsAjax();
                 case 'get_assignment_statistics':
                     return $this->getAssignmentStatisticsAjax();
                 default:
