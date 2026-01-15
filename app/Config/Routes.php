@@ -12,8 +12,10 @@ use App\Controllers\HomeController;
  * @var RouteCollection $routes
  */
 
-// Default route (Customer Login)
-$routes->get('/', [HomeController::class, 'index']);
+// ==================== LANDING PAGE ====================
+$routes->get('/', [HomeController::class, 'index']); // Landing Page
+
+// ==================== AUTHENTICATION ====================
 $routes->get('login', [AuthController::class, 'loginCustomer']); // Customer login page
 $routes->post('process_login', [AuthController::class, 'processLogin']);
 
@@ -30,8 +32,7 @@ $routes->post('auth/process_otp', [AuthController::class, 'processOtp']);
 $routes->get('auth/reset_password/(:any)', [AuthController::class, 'resetPassword/$1']);
 $routes->post('auth/process_reset_password', [AuthController::class, 'processResetPassword']);
 
-
-// Admin Routes
+// ==================== ADMIN ROUTES ====================
 $routes->group('admin', function ($routes) {
     // Dashboard
     $routes->get('dashboard', [AdminController::class, 'dashboard']);
@@ -125,7 +126,7 @@ $routes->group('admin', function ($routes) {
     $routes->get('logout', [AuthController::class, 'logout']);
 });
 
-// Customer Routes
+// ==================== CUSTOMER ROUTES ====================
 $routes->group('customer', function ($routes) {
     $routes->get('', function () {
         return redirect()->to('customer/dashboard');
@@ -143,7 +144,7 @@ $routes->group('customer', function ($routes) {
     $routes->get('logout', [AuthController::class, 'logout']);
 });
 
-// Support Routes
+// ==================== SUPPORT ROUTES ====================
 $routes->group('support', function ($routes) {
     // GET routes
     $routes->get('dashboard', [SupportController::class, 'dashboard']);
@@ -178,7 +179,7 @@ $routes->group('support', function ($routes) {
     });
 });
 
-// Department Routes
+// ==================== DEPARTMENT ROUTES ====================
 $routes->group('department', function ($routes) {
     // IT Support Department
     $routes->group('it-support', function ($routes) {

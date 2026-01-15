@@ -11,8 +11,24 @@ class HomeController extends BaseController
             return $this->redirectToDashboard();
         }
 
-        // Jika belum login, redirect ke login page
-        return redirect()->to('/login');
+        // Tampilkan landing page jika belum login
+        return $this->landingPage();
+    }
+
+    private function landingPage()
+    {
+        $data = [
+            'title' => 'NEXUS - Professional Ticketing System',
+            'page' => 'landing',
+            'config' => [
+                'company_name' => 'NEXUS',
+                'company_slogan' => 'Streamline Your Support Experience',
+                'contact_email' => 'support@nexus.com',
+                'contact_phone' => '+1 (555) 123-4567'
+            ]
+        ];
+
+        return view('landing_page', $data);
     }
 
     private function redirectToDashboard()
