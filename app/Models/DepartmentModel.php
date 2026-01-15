@@ -54,10 +54,151 @@ public function getDepartmentByID(int $departmentId): ?array
         return $this->find($departmentId);
     }
 
-    public function getAllDepartments()
-    {
-        return $this->get()->getResultArray();
+    /**
+ * Get all departments for admin management
+ */
+public function getAllDepartmentsForAdmin(): array
+{
+    $db = db_connect();
+    
+    return $db->table('departments d')
+        ->select('d.*, 
+            COUNT(u.user_id) as user_count,
+            COUNT(CASE WHEN u.is_active = true THEN 1 END) as active_user_count,
+            COUNT(t.ticket_id) as ticket_count,
+            COUNT(CASE WHEN t.status_id IN (1,2) THEN 1 END) as active_ticket_count')
+        ->join('users u', 'u.department_id = d.department_id', 'left')
+        ->join('tickets t', 't.department_id = d.department_id', 'left')
+        ->groupBy('d.department_id')
+        ->orderBy('d.department_name', 'ASC')
+        ->get()
+        ->getResultArray();
+}
+
+/**
+ * Get departments for DataTables with pagination
+ */
+public function getDepartmentsForDataTables(array $filters = []): array
+{
+    $db = db_connect();
+    $builder = $db->table('departments d')
+        ->select('d.*, 
+            COUNT(DISTINCT u.user_id) as user_count,
+            COUNT(DISTINCT t.ticket_id) as ticket_count')
+        ->join('users u', 'u.department_id = d.department_id', 'left')
+        ->join('tickets t', 't.department_id = d.department_id', 'left')
+        ->groupBy('d.department_id');
+
+    // Apply filters
+    if (!empty($filters['search'])) {
+        $builder->groupStart()
+            ->like('d.department_name', $filters['search'])
+            ->orLike('d.description', $filters['search'])
+            ->groupEnd();
     }
+
+    if (!empty($filters['status'])) {
+        // For departments, we check if there are active users
+        if ($filters['status'] === 'active') {
+            $builder->having('COUNT(CASE WHEN u.is_active = true THEN 1 END) >', 0);
+        } elseif ($filters['status'] === 'inactive') {
+            $builder->having('COUNT(CASE WHEN u.is_active = true THEN 1 END)', 0);
+        }
+    }
+
+    return $builder->orderBy('d.department_name', 'ASC')
+        ->get()
+        ->getResultArray();
+}
+
+/**
+ * Get department details for admin view
+ */
+public function getDepartmentDetailsForAdmin(int $departmentId): ?array
+{
+    $db = db_connect();
+    
+    $department = $db->table('departments d')
+        ->select('d.*, 
+            COUNT(DISTINCT u.user_id) as member_count,
+            COUNT(DISTINCT t.ticket_id) as ticket_count,
+            COUNT(DISTINCT CASE WHEN t.status_id IN (1,2) THEN t.ticket_id END) as active_tickets,
+            COUNT(DISTINCT CASE WHEN t.status_id IN (3,4) THEN t.ticket_id END) as resolved_tickets,
+            GROUP_CONCAT(DISTINCT u.full_name ORDER BY u.full_name SEPARATOR ", ") as member_names')
+        ->join('users u', 'u.department_id = d.department_id AND u.is_active = true', 'left')
+        ->join('tickets t', 't.department_id = d.department_id', 'left')
+        ->where('d.department_id', $departmentId)
+        ->groupBy('d.department_id')
+        ->get()
+        ->getRowArray();
+    
+    if (!$department) {
+        return null;
+    }
+
+    // Get assigned categories for this department
+    $categories = $db->table('category_department_mapping cdm')
+        ->select('c.category_name')
+        ->join('categories c', 'c.category_id = cdm.category_id')
+        ->where('cdm.department_id', $departmentId)
+        ->orderBy('c.category_name', 'ASC')
+        ->get()
+        ->getResultArray();
+    
+    $department['categories'] = array_column($categories, 'category_name');
+    
+    // Get department head (if any user is designated as head)
+    $head = $db->table('users')
+        ->select('full_name')
+        ->where('department_id', $departmentId)
+        ->where('role_id', 1) // Assuming role_id 1 is admin/head
+        ->orderBy('created_at', 'ASC')
+        ->get()
+        ->getRow();
+    
+    $department['head'] = $head ? $head->full_name : 'Not assigned';
+    
+    // Get recent members
+    $recentMembers = $db->table('users u')
+        ->select('u.user_id, u.full_name, u.email, r.role_name, u.created_at')
+        ->join('roles r', 'r.role_id = u.role_id', 'left')
+        ->where('u.department_id', $departmentId)
+        ->where('u.is_active', true)
+        ->orderBy('u.created_at', 'DESC')
+        ->limit(5)
+        ->get()
+        ->getResultArray();
+    
+    $department['recent_members'] = $recentMembers;
+    
+    return $department;
+}
+
+/**
+ * Get department statistics for quick stats
+ */
+public function getDepartmentDashboardStats(): array
+{
+    $db = db_connect();
+    
+    $stats = $db->table('departments d')
+        ->select('
+            COUNT(DISTINCT d.department_id) as total_departments,
+            COUNT(DISTINCT CASE WHEN u.user_id IS NOT NULL AND u.is_active = true THEN d.department_id END) as active_departments,
+            COUNT(DISTINCT CASE WHEN u.user_id IS NULL OR u.is_active = false THEN d.department_id END) as inactive_departments,
+            COUNT(DISTINCT u.user_id) as total_members')
+        ->join('users u', 'u.department_id = d.department_id', 'left')
+        ->get()
+        ->getRowArray();
+    
+    return $stats ?: [
+        'total_departments' => 0,
+        'active_departments' => 0,
+        'inactive_departments' => 0,
+        'total_members' => 0
+    ];
+}
+
 
     public function findByName($departmentName)
     {
