@@ -235,8 +235,8 @@ class AdminController extends BaseController
                     return $this->getProjectsTableAjax();
                 case 'get_unassigned_users':
                     return $this->getUnassignedUsersAjax();
-                case 'bulk_assign_projects':
-                    return $this->bulkAssignProjectsAjax();
+                // case 'bulk_assign_projects':
+                //     return $this->bulkAssignProjectsAjax();
                 case 'get_assignment_statistics':
                     return $this->getAssignmentStatisticsAjax();
                 default:
@@ -384,27 +384,27 @@ class AdminController extends BaseController
         ]);
     }
 
-    /**
-     * Bulk assign users to multiple projects via AJAX
-     */
-    private function bulkAssignProjectsAjax()
-    {
-        $projectIds = $this->request->getPost('project_ids');
-        $userIds = $this->request->getPost('user_ids');
-        $assignedBy = session()->get('user_id');
+    // /**
+    //  * Bulk assign users to multiple projects via AJAX
+    //  */
+    // private function bulkAssignProjectsAjax()
+    // {
+    //     $projectIds = $this->request->getPost('project_ids');
+    //     $userIds = $this->request->getPost('user_ids');
+    //     $assignedBy = session()->get('user_id');
 
-        if (empty($projectIds) || empty($userIds)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Please select at least one project and one user'
-            ]);
-        }
+    //     if (empty($projectIds) || empty($userIds)) {
+    //         return $this->response->setJSON([
+    //             'success' => false,
+    //             'message' => 'Please select at least one project and one user'
+    //         ]);
+    //     }
 
-        // Call ProjectAssignmentModel method
-        $result = $this->projectAssignmentModel->bulkAssignUsers($projectIds, $userIds, $assignedBy);
+    //     // Call ProjectAssignmentModel method
+    //     $result = $this->projectAssignmentModel->bulkAssignUsers($projectIds, $userIds, $assignedBy);
 
-        return $this->response->setJSON($result);
-    }
+    //     return $this->response->setJSON($result);
+    // }
 
     /**
      * Get assignment statistics via AJAX
@@ -561,47 +561,47 @@ class AdminController extends BaseController
         }
     }
 
-    /**
-     * Get projects for bulk assignment (AJAX)
-     */
-    public function getProjectsForBulkAssign()
-    {
-        if (!$this->request->isAJAX()) {
-            return redirect()->to('/admin/projects');
-        }
+    // /**
+    //  * Get projects for bulk assignment (AJAX)
+    //  */
+    // public function getProjectsForBulkAssign()
+    // {
+    //     if (!$this->request->isAJAX()) {
+    //         return redirect()->to('/admin/projects');
+    //     }
 
-        try {
-            $search = $this->request->getPost('search') ?? '';
+    //     try {
+    //         $search = $this->request->getPost('search') ?? '';
 
-            $db = db_connect();
+    //         $db = db_connect();
 
-            $query = $db->table('projects p')
-                ->select('p.project_id, p.project_code, p.project_name, p.is_active')
-                ->where('p.is_active', true);
+    //         $query = $db->table('projects p')
+    //             ->select('p.project_id, p.project_code, p.project_name, p.is_active')
+    //             ->where('p.is_active', true);
 
-            if (!empty($search)) {
-                $query->groupStart()
-                    ->like('p.project_name', $search)
-                    ->orLike('p.project_code', $search)
-                    ->groupEnd();
-            }
+    //         if (!empty($search)) {
+    //             $query->groupStart()
+    //                 ->like('p.project_name', $search)
+    //                 ->orLike('p.project_code', $search)
+    //                 ->groupEnd();
+    //         }
 
-            $query->orderBy('p.project_name', 'ASC');
+    //         $query->orderBy('p.project_name', 'ASC');
 
-            $projects = $query->get()->getResultArray();
+    //         $projects = $query->get()->getResultArray();
 
-            return $this->response->setJSON([
-                'success' => true,
-                'projects' => $projects
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Get projects for bulk assign error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Failed to load projects'
-            ]);
-        }
-    }
+    //         return $this->response->setJSON([
+    //             'success' => true,
+    //             'projects' => $projects
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         log_message('error', 'Get projects for bulk assign error: ' . $e->getMessage());
+    //         return $this->response->setJSON([
+    //             'success' => false,
+    //             'message' => 'Failed to load projects'
+    //         ]);
+    //     }
+    // }
 
     /**
      * Add new project via AJAX
@@ -2349,26 +2349,26 @@ class AdminController extends BaseController
         ]);
     }
 
-    /**
-     * Bulk assign users to department via AJAX
-     */
-    private function bulkAssignUsersAjax()
-    {
-        $userIds = $this->request->getPost('user_ids');
-        $departmentId = $this->request->getPost('department_id');
+    // /**
+    //  * Bulk assign users to department via AJAX
+    //  */
+    // private function bulkAssignUsersAjax()
+    // {
+    //     $userIds = $this->request->getPost('user_ids');
+    //     $departmentId = $this->request->getPost('department_id');
 
-        if (empty($userIds) || !$departmentId) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'User IDs and Department ID are required'
-            ]);
-        }
+    //     if (empty($userIds) || !$departmentId) {
+    //         return $this->response->setJSON([
+    //             'success' => false,
+    //             'message' => 'User IDs and Department ID are required'
+    //         ]);
+    //     }
 
-        // Call model method
-        $result = $this->departmentModel->bulkAssignUsers($userIds, $departmentId);
+    //     // Call model method
+    //     $result = $this->departmentModel->bulkAssignUsers($userIds, $departmentId);
 
-        return $this->response->setJSON($result);
-    }
+    //     return $this->response->setJSON($result);
+    // }
 
     /**
      * Remove users from department via AJAX
