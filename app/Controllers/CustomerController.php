@@ -13,6 +13,7 @@ use App\Models\TicketAttachmentModel;
 use App\Models\CategoryModel;
 use App\Models\DepartmentModel;
 use App\Models\CategoryDepartmentMapping;
+use CodeIgniter\I18n\Time;
 
 class CustomerController extends BaseController
 {
@@ -29,6 +30,7 @@ class CustomerController extends BaseController
     private $departmentModel;
     private $categoryDepartmentMapping;
     private $db;
+    private $currentTime;
 
     public function __construct()
     {
@@ -48,6 +50,9 @@ class CustomerController extends BaseController
         $this->categoryModel = new CategoryModel();
         $this->departmentModel = new DepartmentModel();
         $this->categoryDepartmentMapping = new CategoryDepartmentMapping();
+
+        // load common data
+        $this->currentTime = Time::now(env('app.timezone'))->toDateTimeString();
     }
 
     private function getTicketStats()

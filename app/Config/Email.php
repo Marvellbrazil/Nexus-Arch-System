@@ -6,6 +6,20 @@ use CodeIgniter\Config\BaseConfig;
 
 class Email extends BaseConfig
 {
+    public function __construct()
+    {
+        $this->fromName = 'Nexus Arch System';
+        $this->fromEmail = env('smtp.user', '');
+        $this->SMTPHost = env('smtp.host', '');
+        $this->SMTPUser = env('smtp.user', '');
+        $this->SMTPPass = env('smtp.pass', '');
+        $this->SMTPPort = env('smtp.port', '');
+        $this->protocol = env('smtp.protocol', 'smtp');
+        $this->SMTPCrypto = env('smtp.crypto', 'ssl');
+        $this->mailType = env('smtp.mailtype', 'html');
+        $this->charset = env('smtp.charset', 'UTF-8');
+    }
+
     public string $fromEmail  = '';
     public string $fromName   = '';
     public string $recipients = '';
