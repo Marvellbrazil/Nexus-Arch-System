@@ -465,10 +465,10 @@ $message = $session->getFlashdata('message');
         </div>
 
         <div class="pt-8 border-t border-secondary/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted font-medium uppercase tracking-widest">
-            <p>&copy; 2026 NEXUS TICKETING SYSTEM. ALL RIGHTS RESERVED.</p>
+            <p>&copy; 2026 NEXUS ARCH SYSTEM. ALL RIGHTS RESERVED.</p>
             <div class="flex gap-6">
-                <a href="#" class="hover:text-secondary no-underline">Privacy Policy</a>
-                <a href="#" class="hover:text-secondary no-underline">Terms of Service</a>
+                <a href="https://github.com/Yohan9822/Nexus-Arch-System" class="hover:text-secondary no-underline">GitHub</a>
+                <a href="https://wa.me/6285183282419" class="hover:text-secondary no-underline">Contacts</a>
             </div>
         </div>
     </div>
