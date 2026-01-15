@@ -519,7 +519,7 @@ class UserModel extends Model
         /**
          * Update user reset token
          */
-            public function updateUserResetToken(int $id, string $otp)
+            public function updateUserResetToken(int $id, $otp)
             {
                 return $this->update($id, ['otp' => $otp]);
             }
@@ -555,7 +555,7 @@ public function getUserDetails($userId)
             ->join('departments d', 'd.department_id = u.department_id', 'left')
             ->where('u.user_id', $userId)
             ->get()
-            ->getRowArray   ();
+            ->getRowArray();
     }
 
     public function getUserWithRole($userId)
