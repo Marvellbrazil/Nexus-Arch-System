@@ -218,7 +218,6 @@ class AuthController extends BaseController
 
     public function processForgotPassword()
     {
-        helper('my');
         $email = $this->request->getPost('email');
         $user = $this->userModel->getUserByEmail($email);
 
@@ -230,9 +229,48 @@ class AuthController extends BaseController
 
             sendEmail($email, 'OTP for Password Reset', $body);
 
-            return redirect()->to('/login')->with('success', 'Password reset instructions sent to your email');
+            return view('Auth/proceed_otp', ['email' => encode($email)]);
         }
 
         return redirect()->to('/auth/forgot_password')->with('error', 'Email not found');
+    }
+
+    public function proceedOtp()
+    {
+        return view('Auth/proceed_otp');
+    }
+
+    public function processOtp()
+    {
+        $otp = $this->request->getPost('otp');
+        $user = $this->userModel->getUserByEmail(decode($this->request->getPost('email')));
+
+        if ($user && $user['otp'] == $otp) {
+            $this->userModel->updateUserResetToken($user['user_id'], null);
+            return redirect()->to('auth/reset_password/' . encode($user['user_id']))->with('email', encode($this->request->getPost('email')));
+        } else {
+            return redirect()->to('auth/proceed_otp')->with('error', 'Invalid OTP');
+        }
+
+
+    }
+
+    public function resetPassword($userId)
+    {
+        return view('Auth/reset_password', ['userId' => encode($userId)]);
+    }
+
+    public function processResetPassword()
+    {
+        $password = $this->request->getPost('password');
+        $userId = decode($this->request->getPost('userId'));
+        $confirmPassword = $this->request->getPost('confirm_password');
+
+        if ($password !== $confirmPassword) {
+            return redirect()->to('auth/reset_password/' . $userId)->with('error', 'Passwords do not match');
+        } else {
+            $this->userModel->updateUserPassword((int) decode($userId), $password);
+            return redirect()->to('login')->with('success', 'Password successfully reset');
+        }
     }
 }

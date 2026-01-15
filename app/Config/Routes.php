@@ -25,6 +25,11 @@ $routes->get('department/login', [AuthController::class, 'loginDepartment']);
 $routes->get('logout', [AuthController::class, 'logout']);
 $routes->get('auth/forgot_password', [AuthController::class, 'forgotPassword']);
 $routes->post('auth/process_forgot_password', [AuthController::class, 'processForgotPassword']);
+$routes->get('auth/proceed_otp', [AuthController::class, 'proceedOtp']);
+$routes->post('auth/process_otp', [AuthController::class, 'processOtp']);
+$routes->get('auth/reset_password/(:any)', [AuthController::class, 'resetPassword/$1']);
+$routes->post('auth/process_reset_password', [AuthController::class, 'processResetPassword']);
+
 
 // Admin Routes
 $routes->group('admin', function ($routes) {
