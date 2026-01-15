@@ -488,9 +488,9 @@ public function notifications()
         // Get projects assigned to this customer
         $data['projects'] = $this->getAssignedProjects();
 
-$data['categories'] = $this->categoryModel->getAllCategories();
+        $data['categories'] = $this->categoryModel->getAllCategories();
         $data['priorities'] = $this->priorityModel->getAllPriorities();
-        $data['departments'] = $this->departmentModel->getAllDepartments();
+        // $data['departments'] = $this->departmentModel->getAllDepartments();
 
         return view('Customer/create_ticket', ['data' => $data]);
     }

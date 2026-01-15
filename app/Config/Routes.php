@@ -70,7 +70,25 @@ $routes->group('admin', function ($routes) {
     $routes->get('departments/dropdown', [AdminController::class, 'getDepartmentDropdown']);
     $routes->post('departments/get-categories', [AdminController::class, 'getCategories']);
 
+    // View Tickets - Main page and AJAX handlers
     $routes->get('tickets', [AdminController::class, 'viewTickets']);
+    $routes->post('tickets/ajax', [AdminController::class, 'viewTickets']); // Main AJAX handler for ticket operations
+    $routes->get('tickets/export', [AdminController::class, 'exportTickets']); // Export tickets to CSV
+    $routes->post('tickets/data', [AdminController::class, 'getTicketsData']); // Get tickets with filters and pagination
+    $routes->post('tickets/details', [AdminController::class, 'getTicketDetails']); // Get detailed ticket information
+    $routes->post('tickets/statistics', [AdminController::class, 'getTicketStatistics']); // Get ticket statistics
+    $routes->post('tickets/update-status', [AdminController::class, 'updateTicketStatus']); // Update ticket status
+    $routes->post('tickets/assign', [AdminController::class, 'assignTicket']); // Assign ticket to user
+    $routes->post('tickets/bulk-assign', [AdminController::class, 'bulkAssignTickets']); // Bulk assign tickets
+    $routes->post('tickets/add-note', [AdminController::class, 'addTicketNote']); // Add internal note to ticket
+    $routes->post('tickets/update-priority', [AdminController::class, 'updateTicketPriority']); // Update ticket priority
+    $routes->post('tickets/filters/options', [AdminController::class, 'getTicketFilterOptions']); // Get filter options (departments, priorities, statuses)
+    $routes->post('tickets/search', [AdminController::class, 'searchTickets']); // Advanced search
+    $routes->post('tickets/analytics/overview', [AdminController::class, 'getTicketAnalytics']); // Get analytics data
+    $routes->post('tickets/analytics/department', [AdminController::class, 'getDepartmentAnalytics']); // Department-wise analytics
+    $routes->post('tickets/analytics/trend', [AdminController::class, 'getTicketTrend']); // Ticket trend data
+    $routes->post('tickets/reports/generate', [AdminController::class, 'generateTicketReport']); // Generate custom reports
+    $routes->get('tickets/reports/download/(:any)', [AdminController::class, 'downloadTicketReport/$1']); // Download generated report
 
     // Manage Projects - AJAX Endpoints
     $routes->get('projects', [AdminController::class, 'manageProjects']);
@@ -107,7 +125,9 @@ $routes->group('admin', function ($routes) {
 
 // Customer Routes
 $routes->group('customer', function ($routes) {
-    $routes->get('', function () { return redirect()->to('customer/dashboard'); });
+    $routes->get('', function () {
+        return redirect()->to('customer/dashboard');
+    });
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
     $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');

@@ -36,11 +36,13 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- All Tickets -->
-        <div class="dashboard-card">
+        <div class="dashboard-card stat-card" data-stat-type="total_tickets">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-text-dark/70 text-sm font-medium mb-2">All Tickets</div>
-                    <div class="text-text-dark text-2xl font-bold">376</div>
+                    <div class="text-text-dark text-2xl font-bold stat-value">
+                        <?= esc($ticketStats['total_tickets'] ?? 0) ?>
+                    </div>
                 </div>
                 <div class="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-ticket-alt text-secondary text-xl"></i>
@@ -49,24 +51,27 @@
         </div>
 
         <!-- Open Tickets -->
-        <div class="dashboard-card">
+        <div class="dashboard-card stat-card" data-stat-type="open_tickets">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-text-dark/70 text-sm font-medium mb-2">Open Tickets</div>
-                    <div class="text-text-dark text-2xl font-bold">112</div>
+                    <div class="text-text-dark text-2xl font-bold stat-value">
+                        <?= esc($ticketStats['open_tickets'] ?? 0) ?>
+                    </div>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-clock text-blue-600 text-xl"></i>
                 </div>
             </div>
         </div>
-
         <!-- Resolved Tickets -->
-        <div class="dashboard-card">
+        <div class="dashboard-card stat-card" data-stat-type="resolved_tickets">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-text-dark/70 text-sm font-medium mb-2">Resolved Tickets</div>
-                    <div class="text-text-dark text-2xl font-bold">200</div>
+                    <div class="text-text-dark text-2xl font-bold stat-value">
+                        <?= esc($ticketStats['resolved_tickets'] ?? 0) ?>
+                    </div>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-check-circle text-green-600 text-xl"></i>
@@ -75,11 +80,13 @@
         </div>
 
         <!-- Closed Tickets -->
-        <div class="dashboard-card">
+        <div class="dashboard-card stat-card" data-stat-type="closed_tickets">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-text-dark/70 text-sm font-medium mb-2">Closed Tickets</div>
-                    <div class="text-text-dark text-2xl font-bold">64</div>
+                    <div class="text-text-dark text-2xl font-bold stat-value">
+                        <?= esc($ticketStats['closed_tickets'] ?? 0) ?>
+                    </div>
                 </div>
                 <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-times-circle text-gray-600 text-xl"></i>
@@ -110,32 +117,34 @@
                 <select id="priorityFilter"
                     class="h-10 pl-4 pr-4 bg-white rounded-lg border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
                     <option value="">All Priority</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
+                    <?php foreach ($priorities as $priority): ?>
+                        <option value="<?= strtolower($priority['priority_name'] ?? '') ?>">
+                            <?= esc($priority['priority_name'] ?? 'Unknown') ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
 
                 <!-- Department Filter -->
                 <select id="departmentFilter"
                     class="h-10 pl-4 pr-4 bg-white rounded-lg border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
                     <option value="">All Departments</option>
-                    <option value="it-support">IT Support</option>
-                    <option value="technical-support">Technical Support</option>
-                    <option value="uiux-support">UI/UX Support</option>
-                    <option value="feature-request">Feature Request</option>
-                    <option value="qa">QA Team</option>
+                    <?php foreach ($departments as $dept): ?>
+                        <option value="<?= strtolower(str_replace(' ', '-', $dept['department_name'] ?? '')) ?>">
+                            <?= esc($dept['department_name'] ?? 'Unknown') ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
+
 
                 <!-- Status Filter -->
                 <select id="statusFilter"
                     class="h-10 pl-4 pr-4 bg-white rounded-lg border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
                     <option value="">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in-progress">On Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                    <option value="need-info">Need Info</option>
+                    <?php foreach ($statuses as $status): ?>
+                        <option value="<?= strtolower(str_replace(' ', '-', $status['status_name'] ?? '')) ?>">
+                            <?= esc($status['status_name'] ?? 'Unknown') ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
 
                 <!-- Reset Button -->
@@ -592,124 +601,7 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initial data
-        let ticketsData = [
-            {
-                id: 2482,
-                title: "ERP system login not working",
-                description: "Users are unable to login to the ERP system",
-                details: "When trying to login to the ERP portal, users receive an 'Authentication Failed' error. This issue started approximately 30 minutes ago. Affects all users across different departments.\n\nError message: 'Unable to authenticate user credentials. Please contact system administrator.'\n\nTried clearing cache and cookies, but issue persists. System was working fine yesterday.",
-                priority: "high",
-                department: "it-support",
-                customer: "Deni Darmawan",
-                status: "open",
-                created: "Today, 08:30 AM",
-                updated: "5 minutes ago",
-                assignedTo: "IT Support Team",
-                activity: [
-                    { type: "created", text: "Ticket created by Deni Darmawan", time: "5 minutes ago" },
-                    { type: "assigned", text: "Assigned to IT Support department", time: "3 minutes ago" }
-                ]
-            },
-            {
-                id: 2472,
-                title: "Core network outage affecting multiple services",
-                description: "Network connectivity issues across multiple systems",
-                details: "Complete network outage affecting all services. Core router failure detected in main data center. Multiple services including email, file sharing, and database access are impacted.\n\nEmergency maintenance required. Backup systems not engaging properly.",
-                priority: "urgent",
-                department: "it-support",
-                customer: "Chelish Wijaya",
-                status: "resolved",
-                created: "Yesterday, 14:20",
-                updated: "30 minutes ago",
-                assignedTo: "Network Team",
-                activity: [
-                    { type: "created", text: "Ticket created by Chelish Wijaya", time: "2 hours ago" },
-                    { type: "assigned", text: "Escalated to Network Team", time: "1 hour ago" },
-                    { type: "resolved", text: "Network restored, router replaced", time: "30 minutes ago" }
-                ]
-            },
-            {
-                id: 2461,
-                title: "VPN connection unstable",
-                description: "VPN drops connection frequently",
-                details: "VPN connection becomes unstable after 10-15 minutes of use. Connection drops randomly and requires re-authentication. Issue occurs with both desktop and mobile VPN clients.\n\nTried different networks (office, home, mobile data) with same result. VPN logs show authentication timeouts.",
-                priority: "medium",
-                department: "feature-request",
-                customer: "Alex",
-                status: "closed",
-                created: "Apr 28, 2024",
-                updated: "1 hour ago",
-                assignedTo: "Security Team",
-                activity: [
-                    { type: "created", text: "Ticket created by Alex", time: "2 days ago" },
-                    { type: "assigned", text: "Assigned to Security Team", time: "1 day ago" },
-                    { type: "updated", text: "VPN configuration updated", time: "3 hours ago" },
-                    { type: "closed", text: "Issue resolved, ticket closed", time: "1 hour ago" }
-                ]
-            },
-            {
-                id: 2452,
-                title: "UI alignment issue in dashboard",
-                description: "Visual misalignment in main dashboard",
-                details: "Dashboard elements misaligned on screens larger than 1920px. Grid system not scaling properly. Affects all dashboard widgets and navigation panels.\n\nIssue observed in Chrome and Firefox. Safari displays correctly. CSS grid calculations appear incorrect at higher resolutions.",
-                priority: "medium",
-                department: "uiux-support",
-                customer: "Sheyl Darmanto",
-                status: "need-info",
-                created: "Apr 27, 2024",
-                updated: "Today, 09:18",
-                assignedTo: "UI/UX Team",
-                activity: [
-                    { type: "created", text: "Ticket created by Sheyl Darmanto", time: "3 days ago" },
-                    { type: "assigned", text: "Assigned to UI/UX Team", time: "2 days ago" },
-                    { type: "updated", text: "Requested additional information", time: "Today, 09:18" }
-                ]
-            },
-            {
-                id: 2440,
-                title: "Request for new email account creation",
-                description: "New employee email account needed",
-                details: "New employee starting May 1st requires email account setup. Needs standard corporate email address with full access to shared mailboxes and distribution lists.\n\nAlso requires access to Teams, SharePoint, and other collaboration tools. User will be in Marketing department.",
-                priority: "low",
-                department: "technical-support",
-                customer: "Astrid Aurel",
-                status: "in-progress",
-                created: "Apr 26, 2024",
-                updated: "Today, 08:10",
-                assignedTo: "Email Admin",
-                activity: [
-                    { type: "created", text: "Ticket created by Astrid Aurel", time: "4 days ago" },
-                    { type: "assigned", text: "Assigned to Email Admin", time: "3 days ago" },
-                    { type: "updated", text: "Account creation in progress", time: "Today, 08:10" }
-                ]
-            },
-            {
-                id: 2438,
-                title: "Database performance slow",
-                description: "Database queries taking too long",
-                details: "Production database experiencing slow query performance. Response times increased from 200ms to 5+ seconds. Affecting customer-facing applications and internal reporting tools.\n\nCPU usage spiking to 95% during peak hours. Disk I/O also showing high latency. Need performance tuning and index optimization.",
-                priority: "high",
-                department: "it-support",
-                customer: "John Smith",
-                status: "open",
-                created: "Apr 25, 2024",
-                updated: "Yesterday, 16:30",
-                assignedTo: "Database Team",
-                activity: [
-                    { type: "created", text: "Ticket created by John Smith", time: "5 days ago" },
-                    { type: "assigned", text: "Escalated to Database Team", time: "4 days ago" },
-                    { type: "updated", text: "Performance analysis in progress", time: "Yesterday, 16:30" }
-                ]
-            }
-        ];
-
-        let filteredTickets = [...ticketsData];
-        let currentPage = 1;
-        let itemsPerPage = 6;
-        let totalPages = Math.ceil(ticketsData.length / itemsPerPage);
-
+    document.addEventListener('DOMContentLoaded', function() {
         // DOM Elements
         const ticketSearch = document.getElementById('ticketSearch');
         const priorityFilter = document.getElementById('priorityFilter');
@@ -729,15 +621,18 @@
         const generateReportBtn = document.getElementById('generateReport');
         const viewAnalyticsBtn = document.getElementById('viewAnalytics');
 
+        // State
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalTickets = 0;
+        let currentFilters = {};
+
         // Initialize
         init();
 
         function init() {
-            renderTickets();
-            updatePagination();
-            updateShowingCount();
-
-            // Event listeners
+            loadTickets();
+            updateStatisticsCards();
             setupEventListeners();
         }
 
@@ -745,22 +640,20 @@
             // Search input
             if (ticketSearch) {
                 ticketSearch.addEventListener('input', debounce(() => {
-                    filterTickets();
-                }, 300));
+                    currentPage = 1;
+                    loadTickets();
+                }, 500));
             }
 
             // Filter changes
-            if (priorityFilter) {
-                priorityFilter.addEventListener('change', filterTickets);
-            }
-
-            if (departmentFilter) {
-                departmentFilter.addEventListener('change', filterTickets);
-            }
-
-            if (statusFilter) {
-                statusFilter.addEventListener('change', filterTickets);
-            }
+            [priorityFilter, departmentFilter, statusFilter].forEach(filter => {
+                if (filter) {
+                    filter.addEventListener('change', () => {
+                        currentPage = 1;
+                        loadTickets();
+                    });
+                }
+            });
 
             // Reset filters
             if (resetFilters) {
@@ -798,51 +691,94 @@
             }
         }
 
-        function renderTickets() {
+        async function loadTickets() {
+            try {
+                showLoading();
+
+                // Build filters
+                const filters = {
+                    search: ticketSearch ? ticketSearch.value.trim() : '',
+                    priority: priorityFilter ? priorityFilter.value : '',
+                    department: departmentFilter ? departmentFilter.value : '',
+                    status: statusFilter ? statusFilter.value : ''
+                };
+
+                currentFilters = filters;
+
+                // Make API call
+                const response = await fetch('/admin/tickets/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        action: 'get_tickets_data',
+                        ...filters,
+                        page: currentPage,
+                        limit: 6
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    renderTickets(data.tickets);
+                    updatePagination(data.pagination);
+                    updateShowingCount(data.pagination);
+                    updateTotalCount(data.pagination.total);
+                } else {
+                    showToast(data.message || 'Failed to load tickets', 'error');
+                    renderEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                showToast('Network error. Please try again.', 'error');
+                renderEmptyState();
+            }
+        }
+
+        function renderTickets(tickets) {
             if (!ticketsList) return;
 
             ticketsList.innerHTML = '';
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageTickets = filteredTickets.slice(startIndex, endIndex);
-
-            if (pageTickets.length === 0) {
+            if (tickets.length === 0) {
                 ticketsList.innerHTML = `
-                    <div class="py-12 text-center">
-                        <i class="fas fa-ticket-alt text-gray-300 text-4xl mb-4"></i>
-                        <p class="text-gray-500">No tickets found</p>
-                        <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
-                    </div>
-                `;
+                <div class="py-12 text-center">
+                    <i class="fas fa-ticket-alt text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No tickets found</p>
+                    <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+                </div>
+            `;
                 return;
             }
 
-            pageTickets.forEach(ticket => {
+            tickets.forEach(ticket => {
                 const ticketRow = document.createElement('div');
                 ticketRow.className = 'ticket-row';
                 ticketRow.dataset.ticketId = ticket.id;
 
                 ticketRow.innerHTML = `
-                    <div class="col-span-1 text-center text-[#475569] font-medium">#${ticket.id}</div>
-                    <div class="col-span-3">
-                        <div class="text-text-dark text-sm font-medium truncate">${ticket.title}</div>
-                        <div class="text-text-dark/50 text-xs truncate">${ticket.description}</div>
-                    </div>
-                    <div class="col-span-2 text-center">
-                        <span class="${getPriorityClass(ticket.priority)} priority-badge">
-                            ${getPriorityName(ticket.priority)}
-                        </span>
-                    </div>
-                    <div class="col-span-2 text-center text-text-dark text-sm">${getDepartmentName(ticket.department)}</div>
-                    <div class="col-span-2 text-center text-text-dark text-sm truncate">${ticket.customer}</div>
-                    <div class="col-span-1 text-center">
-                        <span class="${getStatusClass(ticket.status)} status-badge">
-                            ${getStatusName(ticket.status)}
-                        </span>
-                    </div>
-                    <div class="col-span-1 text-center text-text-dark text-sm">${ticket.updated}</div>
-                `;
+                <div class="col-span-1 text-center text-[#475569] font-medium">#${ticket.id}</div>
+                <div class="col-span-3">
+                    <div class="text-text-dark text-sm font-medium truncate">${ticket.title}</div>
+                    <div class="text-text-dark/50 text-xs truncate">${ticket.description}</div>
+                </div>
+                <div class="col-span-2 text-center">
+                    <span class="${getPriorityClass(ticket.priority_value)} priority-badge">
+                        ${ticket.priority}
+                    </span>
+                </div>
+                <div class="col-span-2 text-center text-text-dark text-sm">${ticket.department}</div>
+                <div class="col-span-2 text-center text-text-dark text-sm truncate">${ticket.customer}</div>
+                <div class="col-span-1 text-center">
+                    <span class="${getStatusClass(ticket.status_value)} status-badge">
+                        ${ticket.status}
+                    </span>
+                </div>
+                <div class="col-span-1 text-center text-text-dark text-sm">${ticket.updated}</div>
+            `;
 
                 // Add click event for viewing ticket details
                 ticketRow.addEventListener('click', () => {
@@ -851,73 +787,40 @@
 
                 ticketsList.appendChild(ticketRow);
             });
-
-            updateShowingCount();
         }
 
-        function filterTickets() {
-            const searchTerm = ticketSearch ? ticketSearch.value.toLowerCase().trim() : '';
-            const priorityValue = priorityFilter ? priorityFilter.value : '';
-            const departmentValue = departmentFilter ? departmentFilter.value : '';
-            const statusValue = statusFilter ? statusFilter.value : '';
+        async function viewTicketDetails(ticketId) {
+            try {
+                showLoadingOverlay();
 
-            filteredTickets = ticketsData.filter(ticket => {
-                // Apply search filter
-                if (searchTerm) {
-                    const searchableText = [
-                        ticket.id.toString(),
-                        ticket.title.toLowerCase(),
-                        ticket.description.toLowerCase(),
-                        ticket.customer.toLowerCase(),
-                        ticket.details.toLowerCase()
-                    ].join(' ');
+                const response = await fetch('/admin/tickets/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        action: 'get_ticket_details',
+                        ticket_id: ticketId
+                    })
+                });
 
-                    if (!searchableText.includes(searchTerm)) {
-                        return false;
-                    }
+                const data = await response.json();
+
+                if (data.success) {
+                    showTicketDetailsModal(data.ticket, data.activity);
+                } else {
+                    showToast(data.message || 'Failed to load ticket details', 'error');
                 }
-
-                // Apply priority filter
-                if (priorityValue && ticket.priority !== priorityValue) {
-                    return false;
-                }
-
-                // Apply department filter
-                if (departmentValue && ticket.department !== departmentValue) {
-                    return false;
-                }
-
-                // Apply status filter
-                if (statusValue && ticket.status !== statusValue) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            currentPage = 1;
-            renderTickets();
-            updatePagination();
+            } catch (error) {
+                console.error('Error loading ticket details:', error);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                hideLoadingOverlay();
+            }
         }
 
-        function resetAllFilters() {
-            if (ticketSearch) ticketSearch.value = '';
-            if (priorityFilter) priorityFilter.value = '';
-            if (departmentFilter) departmentFilter.value = '';
-            if (statusFilter) statusFilter.value = '';
-
-            currentPage = 1;
-            filteredTickets = [...ticketsData];
-            renderTickets();
-            updatePagination();
-
-            showToast('Filters reset', 'info');
-        }
-
-        function viewTicketDetails(ticketId) {
-            const ticket = ticketsData.find(t => t.id === ticketId);
-            if (!ticket) return;
-
+        function showTicketDetailsModal(ticket, activity) {
             // Create modal from template
             const template = document.getElementById('ticketDetailModalTemplate');
             const modal = document.importNode(template.content, true);
@@ -926,27 +829,31 @@
             modal.querySelector('#modalTicketTitle').textContent = ticket.title;
             modal.querySelector('#modalTicketDescription').textContent = ticket.description;
             modal.querySelector('#modalTicketDetails').textContent = ticket.details;
-            modal.querySelector('#modalTicketStatus').textContent = getStatusName(ticket.status);
-            modal.querySelector('#modalTicketStatus').className = `${getStatusClass(ticket.status)} status-badge`;
-            modal.querySelector('#modalTicketPriority').textContent = getPriorityName(ticket.priority);
-            modal.querySelector('#modalTicketPriority').className = `${getPriorityClass(ticket.priority)} priority-badge`;
-            modal.querySelector('#modalTicketDepartment').textContent = getDepartmentName(ticket.department);
-            modal.querySelector('#modalTicketCustomer').textContent = ticket.customer;
-            modal.querySelector('#modalTicketAssigned').textContent = ticket.assignedTo;
+            modal.querySelector('#modalTicketStatus').textContent = ticket.status;
+            modal.querySelector('#modalTicketStatus').className = `${getStatusClass(ticket.status_value)} status-badge`;
+            modal.querySelector('#modalTicketPriority').textContent = ticket.priority;
+            modal.querySelector('#modalTicketPriority').className = `${getPriorityClass(ticket.priority_value)} priority-badge`;
+            modal.querySelector('#modalTicketDepartment').textContent = ticket.department;
+            modal.querySelector('#modalTicketCustomer').textContent = `${ticket.customer} (${ticket.customer_email})`;
+            modal.querySelector('#modalTicketAssigned').textContent = ticket.assigned_to;
             modal.querySelector('#modalTicketCreated').textContent = ticket.created;
             modal.querySelector('#modalTicketUpdated').textContent = ticket.updated;
 
             // Fill activity log
             const activityLog = modal.querySelector('#activityLog');
-            activityLog.innerHTML = ticket.activity.map(activity => `
+            if (activity && activity.length > 0) {
+                activityLog.innerHTML = activity.map(act => `
                 <div class="activity-item">
-                    <div class="activity-dot ${activity.type}"></div>
+                    <div class="activity-dot ${act.type}"></div>
                     <div>
-                        <p class="text-gray-600 text-sm">${activity.text}</p>
-                        <p class="text-gray-400 text-xs">${activity.time}</p>
+                        <p class="text-gray-600 text-sm">${act.user}: ${act.text}</p>
+                        <p class="text-gray-400 text-xs">${act.time}</p>
                     </div>
                 </div>
             `).join('');
+            } else {
+                activityLog.innerHTML = '<p class="text-gray-500 text-sm">No activity recorded</p>';
+            }
 
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
@@ -961,21 +868,99 @@
             });
         }
 
+        async function updateStatisticsCards() {
+            try {
+                const response = await fetch('/admin/tickets/ajax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        action: 'get_ticket_statistics'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateStatisticsUI(data.statistics);
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        function updateStatisticsUI(stats) {
+            // Update the statistics cards with real data
+            // You'll need to add IDs to your stat cards in the HTML
+            document.querySelectorAll('.stat-card').forEach(card => {
+                const statType = card.dataset.statType;
+                if (stats[statType] !== undefined) {
+                    card.querySelector('.stat-value').textContent = stats[statType];
+                }
+            });
+        }
+
+        async function exportTickets() {
+            try {
+                showToast('Preparing export...', 'info');
+
+                // Build download URL with filters
+                const params = new URLSearchParams(currentFilters);
+                window.location.href = `/admin/tickets/export?${params.toString()}`;
+
+            } catch (error) {
+                console.error('Error exporting tickets:', error);
+                showToast('Failed to export tickets', 'error');
+            }
+        }
+
+        function bulkAssignTickets() {
+            showToast('Bulk assign feature coming soon', 'info');
+        }
+
+        function generateReport() {
+            showToast('Report generation feature coming soon', 'info');
+        }
+
+        function viewAnalytics() {
+            showToast('Analytics dashboard coming soon', 'info');
+        }
+
+        function showProjects() {
+            window.location.href = '/admin/projects';
+        }
+
+        function resetAllFilters() {
+            if (ticketSearch) ticketSearch.value = '';
+            if (priorityFilter) priorityFilter.value = '';
+            if (departmentFilter) departmentFilter.value = '';
+            if (statusFilter) statusFilter.value = '';
+
+            currentPage = 1;
+            loadTickets();
+
+            showToast('Filters reset', 'info');
+        }
+
         function changePage(page) {
             if (page < 1 || page > totalPages) return;
 
             currentPage = page;
-            renderTickets();
-            updatePagination();
+            loadTickets();
 
             // Scroll to top of tickets list
             if (ticketsList) {
-                ticketsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                ticketsList.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
         }
 
-        function updatePagination() {
-            totalPages = Math.max(1, Math.ceil(filteredTickets.length / itemsPerPage));
+        function updatePagination(pagination) {
+            totalPages = pagination.total_pages;
 
             if (currentPage > totalPages) {
                 currentPage = totalPages;
@@ -1041,78 +1026,68 @@
             pageNumbers.appendChild(button);
         }
 
-        function updateShowingCount() {
-            const startIndex = (currentPage - 1) * itemsPerPage + 1;
-            const endIndex = Math.min(startIndex + itemsPerPage - 1, filteredTickets.length);
+        function updateShowingCount(pagination) {
+            const startIndex = (currentPage - 1) * pagination.limit + 1;
+            const endIndex = Math.min(startIndex + pagination.limit - 1, pagination.total);
 
             if (showingCount) {
                 showingCount.textContent = `Showing ${startIndex}-${endIndex}`;
             }
+        }
 
+        function updateTotalCount(count) {
             if (totalCount) {
-                totalCount.textContent = filteredTickets.length;
+                totalCount.textContent = count;
             }
         }
 
-        function showProjects() {
-            showToast('Redirecting to projects page...', 'info');
-            // In real app: window.location.href = '/admin/projects';
+        function renderEmptyState() {
+            if (ticketsList) {
+                ticketsList.innerHTML = `
+                <div class="py-12 text-center">
+                    <i class="fas fa-ticket-alt text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No tickets found</p>
+                    <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+                </div>
+            `;
+            }
         }
 
-        function exportTickets() {
-            const csvContent = convertToCSV(filteredTickets);
-            downloadCSV(csvContent, 'tickets.csv');
-            showToast('Tickets exported successfully!', 'success');
+        function showLoading() {
+            if (ticketsList) {
+                ticketsList.innerHTML = `
+                <div class="space-y-4 py-4">
+                    ${Array(3).fill().map(() => `
+                        <div class="skeleton-loader h-16 rounded-lg"></div>
+                    `).join('')}
+                </div>
+            `;
+            }
         }
 
-        function bulkAssignTickets() {
-            showToast('Opening bulk assign interface...', 'info');
-            // In real app: open bulk assign modal
+        function showLoadingOverlay() {
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]';
+            overlay.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-gray-700">Loading...</span>
+                </div>
+            </div>
+        `;
+            overlay.id = 'loading-overlay';
+            document.body.appendChild(overlay);
         }
 
-        function generateReport() {
-            showToast('Generating monthly report...', 'info');
-            // In real app: generate and download report
-        }
-
-        function viewAnalytics() {
-            showToast('Loading analytics dashboard...', 'info');
-            // In real app: redirect to analytics page
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                document.body.removeChild(overlay);
+            }
         }
 
         // Utility functions
-        function getPriorityName(priority) {
-            const priorities = {
-                'urgent': 'Urgent',
-                'high': 'High',
-                'medium': 'Medium',
-                'low': 'Low'
-            };
-            return priorities[priority] || priority;
-        }
-
-        function getStatusName(status) {
-            const statuses = {
-                'open': 'Open',
-                'in-progress': 'On Progress',
-                'resolved': 'Resolved',
-                'closed': 'Closed',
-                'need-info': 'Need Info'
-            };
-            return statuses[status] || status;
-        }
-
-        function getDepartmentName(department) {
-            const departments = {
-                'it-support': 'IT Support',
-                'technical-support': 'Technical Support',
-                'uiux-support': 'UI/UX Support',
-                'feature-request': 'Feature Request',
-                'qa': 'QA Team'
-            };
-            return departments[department] || department;
-        }
-
         function getPriorityClass(priority) {
             const classes = {
                 'urgent': 'priority-urgent',
@@ -1129,7 +1104,8 @@
                 'in-progress': 'status-in-progress',
                 'resolved': 'status-resolved',
                 'closed': 'status-closed',
-                'need-info': 'status-need-info'
+                'need-info': 'status-need-info',
+                'waiting-customer-reply': 'status-need-info'
             };
             return classes[status] || 'status-open';
         }
@@ -1146,51 +1122,24 @@
             };
         }
 
-        function convertToCSV(data) {
-            const headers = ['ID', 'Title', 'Description', 'Priority', 'Department', 'Customer', 'Status', 'Created', 'Updated'];
-            const rows = data.map(ticket => [
-                ticket.id,
-                `"${ticket.title}"`,
-                `"${ticket.description}"`,
-                getPriorityName(ticket.priority),
-                getDepartmentName(ticket.department),
-                ticket.customer,
-                getStatusName(ticket.status),
-                ticket.created,
-                ticket.updated
-            ]);
-
-            return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-        }
-
-        function downloadCSV(content, filename) {
-            const blob = new Blob([content], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
         function showToast(message, type = 'info') {
             // Remove existing toasts
             document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
 
             const toast = document.createElement('div');
             toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
-                }`;
+                type === 'success' ? 'bg-green-500 text-white' :
+                    'bg-blue-500 text-white'
+            }`;
             toast.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'success' ? 'fa-check-circle' :
-                        'fa-info-circle'
-                }"></i>
-                    <span class="text-sm">${message}</span>
-                </div>
-            `;
+            <div class="flex items-center gap-2">
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                type === 'success' ? 'fa-check-circle' :
+                    'fa-info-circle'
+            }"></i>
+                <span class="text-sm">${message}</span>
+            </div>
+        `;
             document.body.appendChild(toast);
 
             setTimeout(() => {

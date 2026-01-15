@@ -270,7 +270,7 @@
                         Add New User
                     </button>
 
-                    <button id="bulkActionsBtn"
+                    <!-- <button id="bulkActionsBtn"
                         class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
                         <i class="fas fa-users"></i>
                         Bulk Actions
@@ -280,7 +280,7 @@
                         class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
                         <i class="fas fa-file-import"></i>
                         Import Users
-                    </button>
+                    </button> -->
                 </div>
             </div>
 
