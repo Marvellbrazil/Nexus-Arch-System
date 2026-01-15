@@ -218,6 +218,7 @@ class AuthController extends BaseController
 
     public function processForgotPassword()
     {
+        helper('my');
         $email = $this->request->getPost('email');
         $user = $this->userModel->getUserByEmail($email);
 

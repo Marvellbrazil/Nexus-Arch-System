@@ -25,7 +25,7 @@
 
                             <div style="text-align: center; margin: 30px 0;">
                                 <div style="display: inline-block; padding: 15px 30px; background-color: #f1f4f9; border: 2px dashed #007bff; border-radius: 8px;">
-                                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #007bff;">{{ $otp }}</span>
+                                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #007bff;"><?= $otp ?></span>
                                 </div>
                                 <p style="margin-top: 15px; font-size: 13px; color: #777777;">
                                     *Kode berlaku selama 10 menit

@@ -21,7 +21,7 @@ class UserModel extends Model
         'department_id',
         'phone_number',
         'photo_profile',
-        'reset_token'
+        'otp'
     ];
 
     // Dates
@@ -538,9 +538,9 @@ class UserModel extends Model
         /**
          * Update user reset token
          */
-            public function updateUserResetToken(int $id, string $token)
+            public function updateUserResetToken(int $id, string $otp)
             {
-                return $this->update($id, ['otp' => $token]);
+                return $this->update($id, ['otp' => $otp]);
             }
         
             /**
