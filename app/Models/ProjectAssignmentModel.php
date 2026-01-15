@@ -143,7 +143,7 @@ class ProjectAssignmentModel extends Model
     public function assignUsersToProject(int $projectId, array $userIds, int $assignedBy): array
     {
         $db = db_connect();
-        
+
         $db->transStart();
 
         try {
@@ -181,11 +181,10 @@ class ProjectAssignmentModel extends Model
                 'success' => false,
                 'message' => 'Failed to update project assignments'
             ];
-
         } catch (\Exception $e) {
             $db->transRollback();
             log_message('error', 'Assign users to project error: ' . $e->getMessage());
-            
+
             return [
                 'success' => false,
                 'message' => 'Server error: ' . $e->getMessage()
@@ -297,7 +296,7 @@ class ProjectAssignmentModel extends Model
         $db = db_connect();
 
         $totalAssignments = $db->table('project_assignments')->countAllResults();
-        
+
         $projectsWithAssignments = $db->table('project_assignments')
             ->select('COUNT(DISTINCT project_id) as count')
             ->get()

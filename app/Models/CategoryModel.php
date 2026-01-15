@@ -44,7 +44,7 @@ class CategoryModel extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-public function getCategories()
+    public function getCategories()
     {
         return $this->findAll();
     }

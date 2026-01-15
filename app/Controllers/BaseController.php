@@ -61,7 +61,7 @@ class BaseController extends Controller
                 ];
             }
         }
-        
+
         // Ensure user key is set to avoid errors in views
         if (!isset($data['user'])) {
             $data['user'] = [

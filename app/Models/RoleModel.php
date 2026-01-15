@@ -40,7 +40,7 @@ class RoleModel extends Model
 
     /**
      * Get role name by ID
-    */
+     */
     public function getRoleName($roleId)
     {
         return $this->where('role_id', $roleId)->first();
@@ -405,17 +405,17 @@ class RoleModel extends Model
         ];
     }
 
-     /**
+    /**
      * Update role permissions
      */
     public function updateRolePermissions($roleId, $permissions)
     {
         try {
             $this->db->transStart();
-            
+
             // Delete existing permissions
             $this->db->table('role_permissions')->where('role_id', $roleId)->delete();
-            
+
             // Insert new permissions
             $permissionData = [];
             foreach ($permissions as $permission) {
@@ -429,15 +429,14 @@ class RoleModel extends Model
                     'updated_at' => date('Y-m-d H:i:s')
                 ];
             }
-            
+
             if (!empty($permissionData)) {
                 $this->db->table('role_permissions')->insertBatch($permissionData);
             }
-            
+
             $this->db->transComplete();
-            
+
             return $this->db->transStatus();
-            
         } catch (\Exception $e) {
             log_message('error', 'Update role permissions error: ' . $e->getMessage());
             return false;
@@ -452,12 +451,12 @@ class RoleModel extends Model
         try {
             $defaultPermissions = $this->getDefaultPermissionsByRole($roleName);
             $allPermissions = $this->getAllPermissions();
-            
+
             $permissionData = [];
             foreach ($allPermissions as $module => $permissions) {
                 foreach ($permissions as $perm) {
                     $isAllowed = in_array($perm['key'], $defaultPermissions[$module] ?? []);
-                    
+
                     $permissionData[] = [
                         'role_id' => $roleId,
                         'permission_key' => $perm['key'],
@@ -468,11 +467,11 @@ class RoleModel extends Model
                     ];
                 }
             }
-            
+
             if (!empty($permissionData)) {
                 return $this->db->table('role_permissions')->insertBatch($permissionData);
             }
-            
+
             return false;
         } catch (\Exception $e) {
             log_message('error', 'Initialize default permissions error: ' . $e->getMessage());
@@ -480,7 +479,7 @@ class RoleModel extends Model
         }
     }
 
-     /**
+    /**
      * Check if role has specific permission
      */
     public function hasPermission($roleId, $permissionKey)
@@ -490,7 +489,7 @@ class RoleModel extends Model
             ->where('permission_key', $permissionKey)
             ->where('is_allowed', true)
             ->countAllResults();
-        
+
         return $result > 0;
     }
 
@@ -501,13 +500,13 @@ class RoleModel extends Model
     {
         $allPermissions = $this->getAllPermissions();
         $rolePermissions = $this->getRolePermissions($roleId);
-        
+
         // Create a lookup array for role permissions
         $rolePermissionLookup = [];
         foreach ($rolePermissions as $perm) {
             $rolePermissionLookup[$perm['permission_key']] = $perm['is_allowed'];
         }
-        
+
         // Combine all permissions with role's permission status
         $result = [];
         foreach ($allPermissions as $module => $permissions) {
@@ -517,7 +516,7 @@ class RoleModel extends Model
                 $result[$module][] = $perm;
             }
         }
-        
+
         return $result;
     }
 
@@ -534,19 +533,18 @@ class RoleModel extends Model
                     'message' => 'Role not found'
                 ];
             }
-            
+
             if ($this->initializeDefaultPermissions($roleId, $role['role_name'])) {
                 return [
                     'success' => true,
                     'message' => 'Role permissions reset to defaults successfully'
                 ];
             }
-            
+
             return [
                 'success' => false,
                 'message' => 'Failed to reset permissions'
             ];
-            
         } catch (\Exception $e) {
             log_message('error', 'Reset role permissions error: ' . $e->getMessage());
             return [
@@ -562,7 +560,7 @@ class RoleModel extends Model
     public function getPermissionSummary($roleId)
     {
         $permissions = $this->getRolePermissions($roleId);
-        
+
         $total = count($permissions);
         $allowed = 0;
         foreach ($permissions as $perm) {
@@ -570,7 +568,7 @@ class RoleModel extends Model
                 $allowed++;
             }
         }
-        
+
         return [
             'total' => $total,
             'allowed' => $allowed,
@@ -588,7 +586,7 @@ class RoleModel extends Model
     {
         try {
             $this->db->transStart();
-            
+
             foreach ($permissionUpdates as $update) {
                 $this->db->table('role_permissions')
                     ->where('role_id', $roleId)
@@ -598,11 +596,10 @@ class RoleModel extends Model
                         'updated_at' => date('Y-m-d H:i:s')
                     ]);
             }
-            
+
             $this->db->transComplete();
-            
+
             return $this->db->transStatus();
-            
         } catch (\Exception $e) {
             log_message('error', 'Update bulk permissions error: ' . $e->getMessage());
             return false;
@@ -616,19 +613,19 @@ class RoleModel extends Model
     {
         try {
             $sourcePermissions = $this->getRolePermissions($sourceRoleId);
-            
+
             if (empty($sourcePermissions)) {
                 return [
                     'success' => false,
                     'message' => 'Source role has no permissions to copy'
                 ];
             }
-            
+
             $this->db->transStart();
-            
+
             // Delete existing permissions from target role
             $this->db->table('role_permissions')->where('role_id', $targetRoleId)->delete();
-            
+
             // Insert copied permissions
             $permissionData = [];
             foreach ($sourcePermissions as $perm) {
@@ -642,11 +639,11 @@ class RoleModel extends Model
                     'updated_at' => date('Y-m-d H:i:s')
                 ];
             }
-            
+
             $this->db->table('role_permissions')->insertBatch($permissionData);
-            
+
             $this->db->transComplete();
-            
+
             if ($this->db->transStatus()) {
                 return [
                     'success' => true,
@@ -654,12 +651,11 @@ class RoleModel extends Model
                     'copied_count' => count($permissionData)
                 ];
             }
-            
+
             return [
                 'success' => false,
                 'message' => 'Failed to copy permissions'
             ];
-            
         } catch (\Exception $e) {
             log_message('error', 'Copy permissions error: ' . $e->getMessage());
             return [
@@ -682,13 +678,12 @@ class RoleModel extends Model
                 ->where('user_id', $userId)
                 ->get()
                 ->getRowArray();
-            
+
             if (!$user) {
                 return false;
             }
-            
+
             return $this->hasPermission($user['role_id'], $permissionKey);
-            
         } catch (\Exception $e) {
             log_message('error', 'Validate user permission error: ' . $e->getMessage());
             return false;
