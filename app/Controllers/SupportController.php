@@ -325,108 +325,82 @@ class SupportController extends BaseController
             return view('Support/notifications', $data);
         }
 
-        try {
-            // Get notifications dengan filter dari request
-            $filter = $this->request->getGet('filter');
-            $priority = $this->request->getGet('priority');
-            $search = $this->request->getGet('search');
+        // Get notifications dengan filter dari request
+        $filter = $this->request->getGet('filter');
+        $priority = $this->request->getGet('priority');
+        $search = $this->request->getGet('search');
+        $query = $db->table('notifications n')
+            ->select('n.*, 
+            t.ticket_number, 
+            t.subject as ticket_subject,
+            p.priority_name as priority_name')
+            ->join('tickets t', 't.ticket_id = n.ticket_id', 'left')
+            ->join('priorities p', 'p.priority_id = n.priority_id', 'left')
+            ->where('n.user_id', $userId);
 
-            $query = $db->table('notifications n')
-                ->select('n.*, 
-                t.ticket_number, 
-                t.subject as ticket_subject,
-                p.priority_name,
-                p.priority_id')
-                ->join('tickets t', 't.ticket_id = n.ticket_id', 'left')
-                ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
-                ->where('n.user_id', $userId);
-
-            // Apply filters
-            if ($filter && $filter !== 'all') {
-                $query->where('n.notification_type', $filter);
-            }
-
-            if ($priority && $priority !== 'all') {
-                if ($priority === 'urgent') {
-                    $query->where('p.priority_name', 'Urgent');
-                } elseif ($priority === 'high') {
-                    $query->where('p.priority_name', 'High');
-                } elseif ($priority === 'medium') {
-                    $query->where('p.priority_name', 'Medium');
-                } elseif ($priority === 'low') {
-                    $query->where('p.priority_name', 'Low');
-                }
-            }
-
-            if ($search) {
-                $query->groupStart()
-                    ->like('n.title', $search)
-                    ->orLike('n.message', $search)
-                    ->orLike('t.ticket_number', $search)
-                    ->orLike('t.subject', $search)
-                    ->groupEnd();
-            }
-
-            // Order by unread first, then newest
-            $data['notifications'] = $query->orderBy('n.is_read', 'ASC')
-                ->orderBy('n.created_at', 'DESC')
-                ->get()
-                ->getResultArray();
-
-            // Get stats dinamis
-            $currentWeekStart = date('Y-m-d', strtotime('monday this week'));
-            $currentWeekEnd = date('Y-m-d', strtotime('sunday this week'));
-
-            $data['stats'] = [
-                'total' => $db->table('notifications')
-                    ->where('user_id', $userId)
-                    ->countAllResults(),
-
-                'unread' => $db->table('notifications')
-                    ->where('user_id', $userId)
-                    ->where('is_read', false)
-                    ->countAllResults(),
-
-                'this_week' => $db->table('notifications')
-                    ->where('user_id', $userId)
-                    ->where("DATE(created_at) >= '{$currentWeekStart}'")
-                    ->where("DATE(created_at) <= '{$currentWeekEnd}'")
-                    ->countAllResults()
-            ];
-
-            // Get notification types count for filter
-            $data['notification_types'] = $db->table('notifications')
-                ->select('notification_type as type, COUNT(*) as count')
-                ->where('user_id', $userId)
-                ->groupBy('notification_type')
-                ->get()
-                ->getResultArray();
-
-            // Debug log
-            log_message('info', 'Loaded ' . count($data['notifications']) . ' notifications for user ' . $userId);
-
-        } catch (Exception $e) {
-            // Fallback data untuk development
-            log_message('error', 'Error fetching notifications: ' . $e->getMessage());
-            $data['notifications'] = $this->getSampleNotifications();
-            $data['stats'] = [
-                'total' => 24,
-                'unread' => 3,
-                'this_week' => 12
-            ];
-            $data['notification_types'] = [
-                ['type' => 'assignment', 'count' => 8],
-                ['type' => 'message', 'count' => 6],
-                ['type' => 'warning', 'count' => 4],
-                ['type' => 'resolved', 'count' => 3],
-                ['type' => 'system', 'count' => 3]
-            ];
+        // Apply filters
+        if ($filter && $filter !== 'all') {
+            $query->where('n.notification_type', $filter);
         }
 
+        if ($priority && $priority !== 'all') {
+            if ($priority === 'urgent') {
+                $query->where('p.priority_name', 'Urgent');
+            } elseif ($priority === 'high') {
+                $query->where('p.priority_name', 'High');
+            } elseif ($priority === 'medium') {
+                $query->where('p.priority_name', 'Medium');
+            } elseif ($priority === 'low') {
+                $query->where('p.priority_name', 'Low');
+            }
+        }
+
+        if ($search) {
+            $query->groupStart()
+                ->like('n.title', $search)
+                ->orLike('n.message', $search)
+                ->orLike('t.ticket_number', $search)
+                ->orLike('t.subject', $search)
+                ->groupEnd();
+        }
+
+        // Order by unread first, then newest
+        $data['notifications'] = $query->orderBy('n.is_read', 'ASC')
+            ->orderBy('n.created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // Get stats dinamis
+        $currentWeekStart = date('Y-m-d', strtotime('monday this week'));
+        $currentWeekEnd = date('Y-m-d', strtotime('sunday this week'));
+        $data['stats'] = [
+            'total' => $db->table('notifications')
+                ->where('user_id', $userId)
+                ->countAllResults(),
+            'unread' => $db->table('notifications')
+                ->where('user_id', $userId)
+                ->where('is_read', false)
+                ->countAllResults(),
+            'this_week' => $db->table('notifications')
+                ->where('user_id', $userId)
+                ->where("DATE(created_at) >= '{$currentWeekStart}'")
+                ->where("DATE(created_at) <= '{$currentWeekEnd}'")
+                ->countAllResults()
+        ];
+
+        // Get notification types count for filter
+        $data['notification_types'] = $db->table('notifications')
+            ->select('notification_type as type, COUNT(*) as count')
+            ->where('user_id', $userId)
+            ->groupBy('notification_type')
+            ->get()
+            ->getResultArray();
+
+        // Debug log
+        log_message('info', 'Loaded ' . count($data['notifications']) . ' notifications for user ' . $userId);
+            
         return view('Support/notifications', $data);
     }
-
-    // Tambahkan method ini di SupportController.php
 
     public function loadMoreNotifications()
     {
@@ -860,29 +834,21 @@ class SupportController extends BaseController
 
     public function markNotificationRead()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
-        }
+        // if (!$this->request->isAJAX()) {
+        //     return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        // }
 
-        $notificationId = $this->request->getPost('notification_id');
         $userId = session()->get('user_id');
         $db = db_connect();
 
         try {
             $db->table('notifications')
-                ->where('notification_id', $notificationId)
                 ->where('user_id', $userId)
-                ->update(['is_read' => true]);
+                ->update(['is_read' => 't']);
 
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Notification marked as read'
-            ]);
+            return redirect()->back()->with('success', 'Notifications marked as read successfully');
         } catch (Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error updating notification: ' . $e->getMessage()
-            ]);
+            return redirect()->back()->with('error', 'Failed to mark notification as read: ' . $e->getMessage());
         }
     }
 

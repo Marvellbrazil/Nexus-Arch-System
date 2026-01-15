@@ -34,7 +34,8 @@ $request = service('request');
                 <form action="<?= base_url('support/notifications/mark_read') ?>" method="POST" class="inline">
                     <?= csrf_field() ?>
                     <button type="submit"
-                        class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2">
+                        class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2"
+                        onclick="location.href = '<?= base_url('support/notifications/mark_read') ?>'">
                         <i class="fas fa-check-double"></i>
                         Mark All as Read
                     </button>
@@ -138,7 +139,7 @@ $request = service('request');
                             }
                             echo $priorityText;
                             ?>
-                        </span>
+                        </span
                         <i class="fas fa-chevron-down text-xs"></i>
                     </button>
 
@@ -233,14 +234,14 @@ $request = service('request');
                 <?php foreach ($notifications as $notification): ?>
                     <?php
                     // Determine priority
-                    $priority = strtolower($notification['priority_name'] ?? 'medium');
+                    $priority = strtolower($notification['priority_name']);
                     $priorityClass = '';
                     $priorityText = '';
 
                     switch ($priority) {
-                        case 'urgent':
+                        case 'critical':
                             $priorityClass = 'bg-[#E16D7F] text-white';
-                            $priorityText = 'Urgent';
+                            $priorityText = 'Critical';
                             break;
                         case 'high':
                             $priorityClass = 'bg-[#FFD2D2] text-red-800';
@@ -427,17 +428,17 @@ $request = service('request');
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Mark all as read button
-        const markAllReadBtn = document.querySelector('button[type="submit"]');
-        if (markAllReadBtn) {
-            markAllReadBtn.addEventListener('click', function (e) {
-                // Show loading state
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
-                this.disabled = true;
+        // const markAllReadBtn = document.querySelector('button[type="submit"]');
+        // if (markAllReadBtn) {
+        //     markAllReadBtn.addEventListener('click', function (e) {
+        //         // Show loading state
+        //         const originalText = this.innerHTML;
+        //         this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+        //         this.disabled = true;
 
-                // Form will submit normally via POST
-            });
-        }
+        //         // Form will submit normally via POST
+        //     });
+        // }
 
         // Mark individual notification as read
         document.querySelectorAll('.notification-item').forEach(item => {
