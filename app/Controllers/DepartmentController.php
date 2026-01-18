@@ -96,7 +96,7 @@ class DepartmentController extends BaseController
         $departmentId = $department['department_id'];
 
         // Get department statistics
-        $stats = $this->deptDepartmentModel->getDepartmentStatistics($departmentId);
+        $stats = $this->deptDepartmentModel->getDepartmentTicketsStatistics($departmentId);
         $assignedToMe = $this->deptTicketModel->where('department_id', $departmentId)
             ->where('assigned_to', $userId)
             ->countAllResults();

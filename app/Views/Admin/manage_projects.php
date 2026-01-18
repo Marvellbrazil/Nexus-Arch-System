@@ -2333,5 +2333,14 @@ API Integration,PROJ004,Third-party API integration,true`;
         currentPage = 1;
         loadProjectsData();
     }
+
+    async function loadUsersData() {
+    const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
+        method: 'POST',
+        body: new FormData('get_users_table') // Tambahkan parameter action: 'get_users_table'
+    });
+    const data = await response.json();
+    renderUsersTable(data.users);
+}
 </script>
 <?= $this->endSection() ?>

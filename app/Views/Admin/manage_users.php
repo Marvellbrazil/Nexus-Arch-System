@@ -171,7 +171,7 @@
                 <div class="dashboard-card-header flex justify-between items-center">
                     <div class="text-text-dark/85 text-base font-medium">User Management</div>
                     <div class="text-sm text-secondary font-medium" id="showingInfo">
-                        Loading...
+                        Total: <?= number_format($userStats['total_users'] ?? 0) ?> users
                     </div>
                 </div>
 
@@ -183,7 +183,7 @@
                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        ID
+                                        No
                                     </th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
@@ -201,33 +201,92 @@
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Status
                                     </th>
+                                    <!-- <th
+                                        class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
+                                        Created At
+                                    </th> -->
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Created
+                                        Last Login
                                     </th>
-                                    <th
+                                    <!-- <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Actions
-                                    </th>
+                                    </th> -->
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
-                                <!-- Data will be loaded via AJAX -->
+                                <?php 
+                                // Load initial users data
+                                $users = isset($initialUsers) ? $initialUsers : [];
+                                if (!empty($users)): 
+                                    $counter = 1;
+                                    foreach ($users as $user): 
+                                ?>
+                                <tr data-user-id="<?= $user['user_id'] ?>">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= $counter++ ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
+                                                <?= substr($user['full_name'], 0, 1) ?>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($user['full_name']) ?></div>
+                                                <div class="text-sm text-gray-500"><?= htmlspecialchars($user['username']) ?></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= htmlspecialchars($user['email']) ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="role-badge <?= $this->userModel->getRoleClass($user['role_name'] ?? 'Customer') ?>">
+                                            <?= htmlspecialchars($user['role_name'] ?? 'Customer') ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge <?= $user['is_active'] ? 'status-active' : 'status-inactive' ?>">
+                                            <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= date('M d, Y', strtotime($user['created_at'])) ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
+                                                data-user-id="<?= $user['user_id'] ?>">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
+                                                data-user-id="<?= $user['user_id'] ?>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
+                                                data-user-id="<?= $user['user_id'] ?>">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <button class="btn-delete-user text-red-600 hover:text-red-800" 
+                                                data-user-id="<?= $user['user_id'] ?>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                                        <p class="text-gray-500">No users found</p>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Loading State -->
-                    <div id="loadingState" class="py-8 text-center">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
-                        <p class="mt-2 text-gray-500">Loading users...</p>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div id="emptyState" class="hidden py-12 text-center">
-                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
-                        <p class="text-gray-500">No users found</p>
-                        <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
                     </div>
 
                     <!-- Pagination -->
@@ -269,18 +328,6 @@
                         <i class="fas fa-plus text-lg"></i>
                         Add New User
                     </button>
-
-                    <!-- <button id="bulkActionsBtn"
-                        class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-users"></i>
-                        Bulk Actions
-                    </button>
-
-                    <button id="importUsersBtn"
-                        class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-file-import"></i>
-                        Import Users
-                    </button> -->
                 </div>
             </div>
 
@@ -419,18 +466,6 @@
         color: white;
         margin: 0 auto 16px;
         background: linear-gradient(135deg, #665C9E, #8A84C6);
-    }
-
-    .user-info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .user-info-item:last-child {
-        border-bottom: none;
     }
 
     /* Loading animations */
