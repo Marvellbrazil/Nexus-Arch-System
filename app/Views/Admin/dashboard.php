@@ -518,18 +518,18 @@ $projectOverview = $projectOverview ?? [];
     </div>
 
     <!-- Stats Cards Grid - PURPLE THEME LIKE ORIGINAL -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Total Users Card -->
-    <div class="stat-card" onclick="showStatModal('Total Users')">
-        <div class="stat-label">Total Users</div>
-        <div class="stat-value">
-            <?= isset($stats['total_users']) ? $stats['total_users'] : '0' ?>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Users Card -->
+        <div class="stat-card" onclick="showStatModal('Total Users')">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">
+                <?= isset($stats['total_users']) ? $stats['total_users'] : '0' ?>
+            </div>
+            <div class="stat-info">All registered users</div>
+            <div class="stat-icon users">
+                <i class="fas fa-users"></i>
+            </div>
         </div>
-        <div class="stat-info">All registered users</div>
-        <div class="stat-icon users">
-            <i class="fas fa-users"></i>
-        </div>
-    </div>
 
         <!-- Total Tickets Card -->
         <div class="stat-card" onclick="showStatModal('Total Tickets')">
@@ -896,7 +896,7 @@ $projectOverview = $projectOverview ?? [];
 
 <!-- JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // Initialize animations
         initDashboardAnimations();
 
