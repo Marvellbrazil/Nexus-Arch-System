@@ -16,7 +16,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="mt-4 md:mt-[77px] p-4 md:p-[30px] relative z-10">
+<div class="mt-4 md:mt-[10px] p-4 md:p-[30px] relative z-10">
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
