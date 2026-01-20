@@ -21,7 +21,8 @@ class UserModel extends Model
         'department_id',
         'phone_number',
         'photo_profile',
-        'otp'
+        'otp',
+        'is_active'
     ];
 
     // Dates
@@ -59,6 +60,71 @@ class UserModel extends Model
     /**
      * Get users with role and department information (PostgreSQL compatible)
      */
+    /**
+ * Create new user with validation
+ */
+public function createUser(array $data): array
+{
+    try {
+        // Validasi input
+        if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+            return ['success' => false, 'message' => 'Required fields are missing'];
+        }
+
+        // Cek apakah username sudah ada
+        $existingUsername = $this->where('username', $data['username'])->first();
+        if ($existingUsername) {
+            return ['success' => false, 'message' => 'Username already exists'];
+        }
+
+        // Cek apakah email sudah ada
+        $existingEmail = $this->where('email', $data['email'])->first();
+        if ($existingEmail) {
+            return ['success' => false, 'message' => 'Email already registered'];
+        }
+
+        // Persiapkan data untuk disimpan
+        $userData = [
+            'username' => trim($data['username']),
+            'full_name' => trim($data['full_name']),
+            'email' => trim($data['email']),
+            'password' => password_hash($data['password'], PASSWORD_DEFAULT),
+            'role_id' => (int)$data['role_id'],
+            'is_active' => isset($data['is_active']) && $data['is_active'] == '1' ? true : false,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        // Tambahkan optional fields
+        if (!empty($data['department_id'])) {
+            $userData['department_id'] = (int)$data['department_id'];
+        }
+
+        if (!empty($data['phone_number'])) {
+            $userData['phone_number'] = trim($data['phone_number']);
+        }
+
+        // Simpan ke database
+        $inserted = $this->insert($userData);
+        
+        if ($inserted) {
+            $userId = $this->getInsertID();
+            return [
+                'success' => true, 
+                'message' => 'User created successfully',
+                'user_id' => $userId,
+                'data' => $userData
+            ];
+        } else {
+            return ['success' => false, 'message' => 'Failed to save user to database'];
+        }
+
+    } catch (\Exception $e) {
+        log_message('error', 'Create user error: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+    }
+}
+
     public function getUsersWithRole(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $builder = $this->db->table('users u');

@@ -40,7 +40,11 @@ $routes->group('admin', function ($routes) {
     // ==================== USER MANAGEMENT ====================
     $routes->group('users', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageUsers']);
+        $routes->post('ajax', 'AdminController::ajaxManageUsers');
+         $routes->post('ajax-add', [AdminController::class, 'ajaxAddUser']); // Route baru
         $routes->post('add', [AdminController::class, 'addUser']);
+        $routes->get('ajax-list', 'AdminController::ajaxGetUsers');
+        $routes->get('ajax-details/(:num)', 'AdminController::ajaxGetUserDetails/$1');
         $routes->post('edit/(:num)', 'AdminController::editUser/$1');
         $routes->post('delete/(:num)', 'AdminController::deleteUser/$1');
         $routes->post('change-status/(:num)', 'AdminController::changeStatus/$1');
@@ -48,6 +52,7 @@ $routes->group('admin', function ($routes) {
         $routes->get('details/(:num)', 'AdminController::getUserDetails/$1');
         $routes->get('details', [AdminController::class, 'getUserDetails']);
         $routes->get('export', [AdminController::class, 'exportUsers']);
+        $routes->post('update', [AdminController::class, 'updateUser']);
     });
 
     // ==================== ROLE MANAGEMENT ====================
