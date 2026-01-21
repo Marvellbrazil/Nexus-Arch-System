@@ -177,13 +177,25 @@
 
                 <!-- Table Container -->
                 <div class="p-4">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="hidden text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mb-4"></div>
+                        <p class="text-gray-500">Loading users...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden text-center py-8">
+                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No users found</p>
+                    </div>
+
                     <div class="overflow-x-auto rounded-lg border border-gray-200">
                         <table id="usersTable" class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-[#E3DAEE]">
                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        No
+                                        ID
                                     </th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
@@ -201,90 +213,18 @@
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <!-- <th
-                                        class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Created At
-                                    </th> -->
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Last Login
+                                        Created At
                                     </th>
-                                    <!-- <th
+                                    <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Actions
-                                    </th> -->
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
-                                <?php 
-                                // Load initial users data
-                                $users = isset($initialUsers) ? $initialUsers : [];
-                                if (!empty($users)): 
-                                    $counter = 1;
-                                    foreach ($users as $user): 
-                                ?>
-                                <tr data-user-id="<?= $user['user_id'] ?>">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= $counter++ ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
-                                                <?= substr($user['full_name'], 0, 1) ?>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($user['full_name']) ?></div>
-                                                <div class="text-sm text-gray-500"><?= htmlspecialchars($user['username']) ?></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= htmlspecialchars($user['email']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="role-badge <?= $this->userModel->getRoleClass($user['role_name'] ?? 'Customer') ?>">
-                                            <?= htmlspecialchars($user['role_name'] ?? 'Customer') ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="status-badge <?= $user['is_active'] ? 'status-active' : 'status-inactive' ?>">
-                                            <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= date('M d, Y', strtotime($user['created_at'])) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-key"></i>
-                                        </button>
-                                        <button class="btn-delete-user text-red-600 hover:text-red-800" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <?php else: ?>
-                                <tr>
-                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
-                                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
-                                        <p class="text-gray-500">No users found</p>
-                                    </td>
-                                </tr>
-                                <?php endif; ?>
+                                <!-- Data akan di-load via AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -378,10 +318,6 @@
     </div>
 </div>
 
-<!-- Modals -->
-<?= $this->include('Admin/modals/user_modal') ?>
-<?= $this->include('Admin/modals/reset_password_modal') ?>
-
 <!-- Styles -->
 <style>
     /* Status badges */
@@ -468,6 +404,18 @@
         background: linear-gradient(135deg, #665C9E, #8A84C6);
     }
 
+    /* User info items */
+    .user-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .user-info-item:last-child {
+        border-bottom: none;
+    }
+
     /* Loading animations */
     @keyframes spin {
         0% {
@@ -499,6 +447,36 @@
     .animate-slideInUp {
         animation: slideInUp 0.3s ease-out;
     }
+
+    /* Fade in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Toast notification */
+    .custom-toast {
+        animation: slideInUp 0.3s ease-out, fadeIn 0.3s ease-out;
+        transition: all 0.3s ease;
+    }
+
+    /* Error state for form fields */
+    .border-red-500 {
+        border-color: #EF4444 !important;
+    }
+
+    .bg-red-50 {
+        background-color: #FEF2F2 !important;
+    }
 </style>
 
 <!-- JavaScript -->
@@ -510,9 +488,6 @@
             this.totalPages = 1;
             this.selectedUserId = null;
             this.filters = {};
-
-            this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            this.csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content');
 
             this.init();
         }
@@ -547,8 +522,6 @@
 
             // Action elements
             this.addUserBtn = document.getElementById('addUserBtn');
-            this.bulkActionsBtn = document.getElementById('bulkActionsBtn');
-            this.importUsersBtn = document.getElementById('importUsersBtn');
             this.userDetails = document.getElementById('userDetails');
             this.userActions = document.getElementById('userActions');
         }
@@ -570,68 +543,357 @@
 
             // Action events
             this.addUserBtn.addEventListener('click', () => this.showAddUserModal());
-            this.bulkActionsBtn.addEventListener('click', () => this.showBulkActionsModal());
-            this.importUsersBtn.addEventListener('click', () => this.showImportUsersModal());
 
             // Table row click events (delegated)
             this.usersTableBody.addEventListener('click', (e) => this.handleTableClick(e));
         }
 
-        async loadUsers() {
-            try {
-                this.showLoading();
+async editUser(userId) {
+    try {
+        // Load user data first
+        const response = await fetch(`<?= base_url("admin/users/ajax-details") ?>/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
 
-                const formData = new FormData();
-                formData.append('draw', 1);
-                formData.append('start', (this.currentPage - 1) * this.pageSize);
-                formData.append('length', this.pageSize);
-                formData.append('search[value]', this.filters.search || '');
-                formData.append('role_id', this.filters.role_id || '');
-                formData.append('department_id', this.filters.department_id || '');
-                formData.append('is_active', this.filters.is_active || '');
-                formData.append('date_from', this.filters.date_from || '');
-                formData.append('date_to', this.filters.date_to || '');
-                formData.append('order[0][column]', 5); // Created at column
-                formData.append('order[0][dir]', 'desc');
+        const data = await response.json();
 
-                // Add CSRF token for CI4
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
+        if (data.success && data.user) {
+            this.showEditUserModal(data.user);
+        } else {
+            this.showToast('Failed to load user data for editing', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user for edit:', error);
+        this.showToast('Failed to load user data', 'error');
+    }
+}
+showEditUserModal(user) {
+    // Create modal HTML
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
+                    <button class="close-modal text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <form id="editUserForm">
+                    <input type="hidden" name="user_id" value="${user.user_id}">
+                    
+                    <div class="space-y-6">
+                        <!-- Basic Information Section -->
+                        <div>
+                            <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                    <input type="text" name="username" value="${user.username}" required
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="johndoe">
+                                    <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                    <input type="text" name="full_name" value="${user.full_name}" required
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="John Doe">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                    <input type="email" name="email" value="${user.email}" required
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="john@example.com">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                    <input type="text" name="phone_number" value="${user.phone_number || ''}"
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="+1234567890">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Section -->
+                        <div>
+                            <h4 class="text-lg font-medium text-text-dark mb-4">Password (Leave blank to keep current)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">New Password</label>
+                                    <input type="password" name="password" minlength="6"
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="••••••••">
+                                    <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
+                                    <input type="password" name="confirm_password"
+                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                           placeholder="••••••••">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Role & Department Section -->
+                        <div>
+                            <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                    <select name="role_id" required
+                                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                        <option value="">Select Role</option>
+                                        <?php foreach ($roles as $role): ?>
+                                            <option value="<?= $role['role_id'] ?>" ${user.role_id == <?= $role['role_id'] ?> ? 'selected' : ''}>
+                                                <?= htmlspecialchars($role['role_name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                    <select name="department_id"
+                                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                        <option value="">No Department</option>
+                                        <?php foreach ($departments as $department): ?>
+                                            <option value="<?= $department['department_id'] ?>" ${user.department_id == <?= $department['department_id'] ?> ? 'selected' : ''}>
+                                                <?= htmlspecialchars($department['department_name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Status -->
+                        <div>
+                            <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
+                                       class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                <label for="is_active_edit" class="text-gray-700 text-sm">
+                                    Account is active (user can login)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="p-6 border-t border-gray-200 flex gap-3">
+                <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i>
+                    Update User
+                </button>
+            </div>
+        </div>
+    `;
 
-                const response = await fetch('<?= base_url("admin/users") ?>', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
+    document.body.appendChild(modal);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+    // Add event listeners
+    modal.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
+    });
 
-                const data = await response.json();
+    modal.querySelector('#updateUserBtn').addEventListener('click', async () => {
+        await this.updateUser(modal, user.user_id);
+    });
 
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+        }
+    }, { once: true });
 
-                this.renderUsers(data.data);
-                this.updatePaginationInfo(data);
-                this.hideLoading();
+    // Prevent modal close when clicking inside modal
+    modal.querySelector('.bg-white').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+}
+async updateUser(modal, userId) {
+    try {
+        const form = modal.querySelector('#editUserForm');
+        const formData = new FormData(form);
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        // Validasi password jika diisi
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirm_password');
+        
+        if (password && password.length < 6) {
+            this.showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        if (password && password !== confirmPassword) {
+            this.showToast('Passwords do not match', 'error');
+            return;
+        }
 
-            } catch (error) {
-                console.error('Error loading users:', error);
-                this.showError('Failed to load users. Please try again.');
+        // Jika password tidak diisi, hapus dari formData
+        if (!password) {
+            formData.delete('password');
+            formData.delete('confirm_password');
+        }
+
+        // Validasi required fields
+        const requiredFields = ['username', 'full_name', 'email', 'role_id'];
+        for (const field of requiredFields) {
+            const value = formData.get(field);
+            if (!value || value.trim() === '') {
+                this.showToast(`${field.replace('_', ' ')} is required`, 'error');
+                return;
             }
         }
 
-        renderUsers(users) {
-            if (users.length === 0) {
+        // Show loading state
+        const updateBtn = modal.querySelector('#updateUserBtn');
+        const originalText = updateBtn.innerHTML;
+        updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        updateBtn.disabled = true;
+
+        // Send request
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        };
+        
+        // Add CSRF token header
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        
+        const response = await fetch('<?= base_url("admin/users/update") ?>', {
+            method: 'POST',
+            headers: headers,
+            body: formData
+        });
+
+        const data = await response.json();
+
+        // Restore button state
+        updateBtn.innerHTML = originalText;
+        updateBtn.disabled = false;
+
+        if (data.success) {
+            this.showToast(data.message, 'success');
+            
+            // Close modal
+            modal.remove();
+            
+            // Refresh user list
+            this.loadUsers();
+            
+            // Reload user details if this user is selected
+            if (this.selectedUserId === userId) {
+                this.loadUserDetails(userId);
+            }
+            
+        } else {
+            let errorMessage = data.message || 'Failed to update user';
+            
+            // Show validation errors if available
+            if (data.errors) {
+                const errors = Object.values(data.errors).join(', ');
+                errorMessage = errors;
+            }
+            
+            this.showToast(errorMessage, 'error');
+            
+            // Highlight error fields
+            if (data.errors) {
+                Object.keys(data.errors).forEach(fieldName => {
+                    const input = modal.querySelector(`[name="${fieldName}"]`);
+                    if (input) {
+                        input.classList.add('border-red-500', 'bg-red-50');
+                        input.addEventListener('input', function() {
+                            this.classList.remove('border-red-500', 'bg-red-50');
+                        }, { once: true });
+                    }
+                });
+            }
+        }
+
+    } catch (error) {
+        console.error('Error updating user:', error);
+        this.showToast('Error: ' + error.message, 'error');
+        
+        // Restore button state
+        const updateBtn = modal.querySelector('#updateUserBtn');
+        if (updateBtn) {
+            updateBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update User';
+            updateBtn.disabled = false;
+        }
+    }
+}
+
+async loadUsers() {
+    try {
+        this.showLoading();
+
+        // Create query parameters
+        const params = new URLSearchParams();
+        params.append('page', this.currentPage);
+        params.append('limit', this.pageSize);
+        
+        if (this.filters.search) params.append('search', this.filters.search);
+        if (this.filters.role_id) params.append('role_id', this.filters.role_id);
+        if (this.filters.department_id) params.append('department_id', this.filters.department_id);
+        if (this.filters.is_active !== undefined && this.filters.is_active !== '') params.append('is_active', this.filters.is_active);
+        if (this.filters.date_from) params.append('date_from', this.filters.date_from);
+        if (this.filters.date_to) params.append('date_to', this.filters.date_to);
+
+        // GUNAKAN ENDPOINT AJAX BARU
+        const response = await fetch(`<?= base_url("admin/users/ajax-list") ?>?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        this.renderUsers(data);
+        this.hideLoading();
+
+    } catch (error) {
+        console.error('Error loading users:', error);
+        this.showError('Failed to load users. Please try again.');
+    }
+}
+
+        renderUsers(data) {
+            if (!data.users || data.users.length === 0) {
                 this.usersTableBody.innerHTML = '';
                 this.emptyState.classList.remove('hidden');
                 this.usersTable.classList.add('hidden');
+                this.showingInfo.textContent = `Total: 0 users`;
                 return;
             }
 
@@ -639,10 +901,13 @@
             this.usersTable.classList.remove('hidden');
 
             let html = '';
+            let counter = 1;
 
-            users.forEach(user => {
+            data.users.forEach(user => {
                 const statusClass = user.is_active ? 'status-active' : 'status-inactive';
                 const statusText = user.is_active ? 'Active' : 'Inactive';
+                const avatarInitials = this.getInitials(user.full_name);
+                const roleClass = this.getRoleClass(user.role_name);
 
                 html += `
                 <tr class="${this.selectedUserId === user.user_id ? 'selected' : ''}" data-user-id="${user.user_id}">
@@ -652,11 +917,11 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
-                                ${this.getInitials(user.full_name)}
+                                ${avatarInitials}
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">${user.full_name}</div>
-                                <div class="text-sm text-gray-500">${user.username}</div>
+                                <div class="text-sm text-gray-500">@${user.username}</div>
                             </div>
                         </div>
                     </td>
@@ -664,7 +929,7 @@
                         ${user.email}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="${this.getRoleClass(user.role_name)} role-badge">
+                        <span class="${roleClass} role-badge">
                             ${user.role_name}
                         </span>
                     </td>
@@ -674,68 +939,129 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${user.created_at}
+                        ${new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        ${user.actions}
+                        <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
+                                data-user-id="${user.user_id}"
+                                title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
+                                data-user-id="${user.user_id}"
+                                title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
+                                data-user-id="${user.user_id}"
+                                title="Reset Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="btn-delete-user text-red-600 hover:text-red-800" 
+                                data-user-id="${user.user_id}"
+                                title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
                 `;
+                counter++;
             });
 
             this.usersTableBody.innerHTML = html;
+            this.showingInfo.textContent = `Total: ${data.total} users`;
+            this.updatePaginationInfo(data);
 
             // Re-bind action buttons
             this.bindActionButtons();
         }
 
-        async loadUserDetails(userId) {
-            try {
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                // Add CSRF token for CI4
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    this.renderUserDetails(data.user);
-                    this.selectedUserId = userId;
-                    this.updateSelectedRow();
-                } else {
-                    this.showToast(data.message, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error loading user details:', error);
-                this.showToast('Failed to load user details', 'error');
+async loadUserDetails(userId) {
+    console.log('=== loadUserDetails START ===');
+    console.log('User ID to load:', userId);
+    
+    try {
+        // Gunakan endpoint AJAX baru yang sudah kita buat
+        const url = `<?= base_url("admin/users/ajax-details") ?>/${userId}`;
+        console.log('Request URL:', url);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        // Cek jika response bukan JSON
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error text:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        // Parse response
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+        
+        let data;
+        try {
+            data = JSON.parse(responseText);
+            console.log('Parsed JSON data:', data);
+        } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            console.error('Response that failed to parse:', responseText);
+            throw new Error('Invalid JSON response from server');
+        }
+
+        if (data.success && data.user) {
+            console.log('User data received:', data.user);
+            this.renderUserDetails(data.user);
+            this.selectedUserId = userId;
+            this.updateSelectedRow();
+        } else {
+            console.error('API returned error:', data.message);
+            this.showToast(data.message || 'Failed to load user details', 'error');
+        }
+
+    } catch (error) {
+        console.error('Error in loadUserDetails:', error);
+        console.error('Error stack:', error.stack);
+        this.showToast('Failed to load user details: ' + error.message, 'error');
+    }
+    
+    console.log('=== loadUserDetails END ===');
+}
+
         renderUserDetails(user) {
+            const avatarInitials = this.getInitials(user.full_name);
+            const statusClass = user.is_active ? 'status-active' : 'status-inactive';
+            const statusText = user.is_active ? 'Active' : 'Inactive';
+            
+            const lastLogin = user.last_login 
+                ? new Date(user.last_login).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) 
+                : 'Never';
+
             const html = `
             <div class="animate-fadeIn">
-                <div class="user-avatar">${user.avatar_initials}</div>
+                <div class="user-avatar">${avatarInitials}</div>
                 <div class="text-center mb-6">
                     <h3 class="text-lg font-semibold text-text-dark">${user.full_name}</h3>
                     <p class="text-text-dark/60 text-sm">${user.email}</p>
-                    <span class="inline-block mt-2 ${user.is_active ? 'status-active' : 'status-inactive'} status-badge">
-                        ${user.is_active ? 'Active' : 'Inactive'}
+                    <span class="inline-block mt-2 ${statusClass} status-badge">
+                        ${statusText}
                     </span>
                 </div>
                 
@@ -758,26 +1084,18 @@
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Joined:</span>
-                        <span class="text-text-dark font-medium">${user.created_at}</span>
+                        <span class="text-text-dark font-medium">
+                            ${new Date(user.created_at).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                            })}
+                        </span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Last Login:</span>
-                        <span class="text-text-dark font-medium">${user.last_login}</span>
+                        <span class="text-text-dark font-medium">${lastLogin}</span>
                     </div>
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Total Tickets:</span>
-                        <span class="text-text-dark font-medium">${user.total_tickets}</span>
-                    </div>
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Assigned Projects:</span>
-                        <span class="text-text-dark font-medium">${user.total_projects}</span>
-                    </div>
-                    ${user.projects.length > 0 ? `
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Projects:</span>
-                        <span class="text-text-dark font-medium text-xs">${user.projects.join(', ')}</span>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
             `;
@@ -791,22 +1109,26 @@
 
             const html = `
             <div class="space-y-2 animate-fadeIn">
-                <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
+                <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" 
+                        data-user-id="${user.user_id}">
                     <i class="fas fa-edit"></i>
                     Edit User
                 </button>
                 
-                <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
+                <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" 
+                        data-user-id="${user.user_id}">
                     <i class="fas fa-key"></i>
                     Reset Password
                 </button>
                 
-                <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
+                <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" 
+                        data-user-id="${user.user_id}">
                     <i class="fas fa-power-off"></i>
                     ${isActive ? 'Deactivate Account' : 'Activate Account'}
                 </button>
                 
-                <button class="delete-user-btn w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
+                <button class="delete-user-btn w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium flex items-center justify-center gap-2" 
+                        data-user-id="${user.user_id}">
                     <i class="fas fa-trash"></i>
                     Delete User
                 </button>
@@ -858,12 +1180,13 @@
 
         updatePaginationInfo(data) {
             const start = (this.currentPage - 1) * this.pageSize + 1;
-            const end = Math.min(start + this.pageSize - 1, data.recordsFiltered);
+            const end = Math.min(start + this.pageSize - 1, data.total);
+            const totalPages = Math.ceil(data.total / this.pageSize);
 
-            this.showingInfo.textContent = `Showing ${start}-${end} of ${data.recordsFiltered} users`;
+            this.showingInfo.textContent = `Showing ${start}-${end} of ${data.total} users`;
+            this.paginationInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
 
-            this.totalPages = Math.ceil(data.recordsFiltered / this.pageSize);
-            this.paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+            this.totalPages = totalPages;
 
             // Update page numbers
             this.renderPageNumbers();
@@ -916,7 +1239,8 @@
         createPageButton(page) {
             const isActive = page === this.currentPage;
             return `
-            <button class="page-btn w-8 h-8 flex items-center justify-center rounded-lg font-medium ${isActive ? 'bg-secondary text-white' : 'bg-white/20 text-text-dark hover:bg-secondary/20'}" data-page="${page}">
+            <button class="page-btn w-8 h-8 flex items-center justify-center rounded-lg font-medium ${isActive ? 'bg-secondary text-white' : 'bg-white/20 text-text-dark hover:bg-secondary/20'}" 
+                    data-page="${page}">
                 ${page}
             </button>
             `;
@@ -930,6 +1254,7 @@
 
         hideLoading() {
             this.loadingState.classList.add('hidden');
+            this.usersTable.classList.remove('hidden');
         }
 
         showError(message) {
@@ -994,12 +1319,12 @@
                 });
             });
 
-            this.usersTableBody.querySelectorAll('.btn-edit-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.editUser(userId);
-                });
-            });
+    this.usersTableBody.querySelectorAll('.btn-edit-user').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const userId = parseInt(e.target.closest('button').dataset.userId);
+            this.editUser(userId);
+        });
+    });
 
             this.usersTableBody.querySelectorAll('.btn-reset-password').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1016,90 +1341,46 @@
             });
 
             // Bind detail action buttons
-            this.userActions.querySelectorAll('.edit-user-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.editUser(userId);
-                });
-            });
+if (this.userActions) {
+    this.userActions.querySelectorAll('.edit-user-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const userId = parseInt(e.target.closest('button').dataset.userId);
+            this.editUser(userId);
+        });
+    });
 
-            this.userActions.querySelectorAll('.reset-password-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.resetPassword(userId);
+                this.userActions.querySelectorAll('.reset-password-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = parseInt(e.target.closest('button').dataset.userId);
+                        this.resetPassword(userId);
+                    });
                 });
-            });
 
-            this.userActions.querySelectorAll('.toggle-status-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    await this.toggleUserStatus(userId);
-                });
-            });
+this.userActions.querySelectorAll('.toggle-status-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        const userId = parseInt(e.target.closest('button').dataset.userId);
+        await this.toggleUserStatus(userId);
+    });
+});
 
-            this.userActions.querySelectorAll('.delete-user-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.deleteUser(userId);
+                this.userActions.querySelectorAll('.delete-user-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = parseInt(e.target.closest('button').dataset.userId);
+                        this.deleteUser(userId);
+                    });
                 });
-            });
+            }
         }
 
         showAddUserModal() {
-            // Implementation for add user modal
-            this.showToast('Add user feature coming soon!', 'info');
-        }
-
-        showBulkActionsModal() {
-            this.showToast('Bulk actions feature coming soon!', 'info');
-        }
-
-        showImportUsersModal() {
-            this.showToast('Import users feature coming soon!', 'info');
-        }
-
-        async editUser(userId) {
-            try {
-                // Load user data for editing
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Show edit modal with user data
-                    this.showEditModal(data.user);
-                } else {
-                    this.showToast(data.message, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error loading user for edit:', error);
-                this.showToast('Failed to load user data', 'error');
-            }
-        }
-
-        showEditModal(user) {
-            // Create and show edit modal
+            // Create modal HTML
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
             modal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
                     <div class="p-6 border-b border-gray-200">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-800">Edit User</h3>
+                            <h3 class="text-xl font-semibold text-gray-800">Add New User</h3>
                             <button class="close-modal text-gray-400 hover:text-gray-600">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -1107,28 +1388,104 @@
                     </div>
                     
                     <div class="p-6">
-                        <form id="editUserForm">
-                            <input type="hidden" name="user_id" value="${user.user_id}">
+                        <form id="addUserForm">
+                            <!-- CSRF token will be added via fetch headers -->
                             
-                            <div class="space-y-4">
+                            <div class="space-y-6">
+                                <!-- Basic Information Section -->
                                 <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Full Name</label>
-                                    <input type="text" name="full_name" value="${user.full_name}" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                                    <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                            <input type="text" name="username" required
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="johndoe">
+                                            <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                            <input type="text" name="full_name" required
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="John Doe">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                            <input type="email" name="email" required
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="john@example.com">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                            <input type="text" name="phone_number"
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="+1234567890">
+                                        </div>
+                                    </div>
                                 </div>
                                 
+                                <!-- Password Section -->
                                 <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Email</label>
-                                    <input type="email" name="email" value="${user.email}" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                                    <h4 class="text-lg font-medium text-text-dark mb-4">Password</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Password *</label>
+                                            <input type="password" name="password" required minlength="6"
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="••••••••">
+                                            <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Confirm Password *</label>
+                                            <input type="password" name="confirm_password" required
+                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                   placeholder="••••••••">
+                                        </div>
+                                    </div>
                                 </div>
                                 
+                                <!-- Role & Department Section -->
                                 <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Status</label>
-                                    <select name="is_active" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                                        <option value="1" ${user.is_active ? 'selected' : ''}>Active</option>
-                                        <option value="0" ${!user.is_active ? 'selected' : ''}>Inactive</option>
-                                    </select>
+                                    <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                            <select name="role_id" required
+                                                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                <option value="">Select Role</option>
+                                                <?php foreach ($roles as $role): ?>
+                                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                            <select name="department_id"
+                                                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                <option value="">No Department</option>
+                                                <?php foreach ($departments as $department): ?>
+                                                    <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Account Status -->
+                                <div>
+                                    <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="is_active" name="is_active" value="1" checked
+                                               class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                        <label for="is_active" class="text-gray-700 text-sm">
+                                            Account is active (user can login)
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -1138,8 +1495,9 @@
                         <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                             Cancel
                         </button>
-                        <button id="saveEdit" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                            Save Changes
+                        <button id="saveUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add User
                         </button>
                     </div>
                 </div>
@@ -1152,230 +1510,299 @@
                 btn.addEventListener('click', () => modal.remove());
             });
 
-            modal.querySelector('#saveEdit').addEventListener('click', async () => {
-                await this.saveEditUser(user.user_id, modal);
+            modal.querySelector('#saveUserBtn').addEventListener('click', async () => {
+                await this.saveNewUser(modal);
             });
-        }
 
-        async saveEditUser(userId, modal) {
-            try {
-                const formData = new FormData(modal.querySelector('#editUserForm'));
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/edit") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    this.showToast(data.message, 'success');
+            // Close on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
                     modal.remove();
-                    this.loadUsers();
-                    if (this.selectedUserId === userId) {
-                        this.loadUserDetails(userId);
-                    }
-                } else {
-                    this.showToast(data.message || 'Failed to update user', 'error');
                 }
+            }, { once: true });
 
-            } catch (error) {
-                console.error('Error saving user:', error);
-                this.showToast('Failed to save changes', 'error');
-            }
-        }
-
-        async resetPassword(userId) {
-            // Show reset password modal
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-                    <div class="p-6 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-800">Reset Password</h3>
-                            <button class="close-modal text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="p-6">
-                        <form id="resetPasswordForm">
-                            <input type="hidden" name="user_id" value="${userId}">
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">New Password</label>
-                                    <input type="password" name="new_password" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
-                                    <input type="password" name="confirm_password" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 flex gap-3">
-                        <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                            Cancel
-                        </button>
-                        <button id="confirmReset" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                            Reset Password
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            // Add event listeners
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => modal.remove());
-            });
-
-            modal.querySelector('#confirmReset').addEventListener('click', async () => {
-                await this.confirmResetPassword(userId, modal);
+            // Prevent modal close when clicking inside modal
+            modal.querySelector('.bg-white').addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         }
 
-        async confirmResetPassword(userId, modal) {
-            try {
-                const formData = new FormData(modal.querySelector('#resetPasswordForm'));
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/reset-password") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    this.showToast(data.message, 'success');
-                    modal.remove();
-                } else {
-                    this.showToast(data.message || 'Failed to reset password', 'error');
-                }
-
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                this.showToast('Failed to reset password', 'error');
-            }
+        async saveNewUser(modal) {
+    try {
+        const form = modal.querySelector('#addUserForm');
+        const formData = new FormData(form);
+        
+        // Handle is_active
+        const isActiveCheckbox = modal.querySelector('#is_active');
+        if (isActiveCheckbox) {
+            formData.set('is_active', isActiveCheckbox.checked ? '1' : '0');
+        }
+        
+        // Debug: Tampilkan semua form data
+        console.log('=== FORM DATA DEBUG ===');
+        const formDataObj = {};
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+            formDataObj[pair[0]] = pair[1];
+        }
+        console.log('Full FormData object:', formDataObj);
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+        
+        console.log('CSRF Token:', csrfToken);
+        console.log('CSRF Header:', csrfHeader);
+        
+        // Validasi client-side
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirm_password');
+        
+        if (password.length < 6) {
+            this.showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            this.showToast('Passwords do not match', 'error');
+            return;
         }
 
-        async toggleUserStatus(userId) {
-            try {
-                // Get current user details first
-                const formData = new FormData();
-                formData.append('user_id', userId);
+        // Show loading state
+        const saveBtn = modal.querySelector('#saveUserBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+        saveBtn.disabled = true;
 
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
+        // Send request ke endpoint ADD langsung
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        };
+        
+        // Add CSRF token header
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        
+        console.log('Headers:', headers);
+        console.log('Endpoint:', '<?= base_url("admin/users/add") ?>');
+        
+const response = await fetch('<?= base_url("admin/users/ajax-add") ?>', {
+    method: 'POST',
+    headers: headers,
+    body: formData
+});
 
-                const detailsResponse = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
+        // Coba parse JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            data = { success: false, message: 'Invalid server response: ' + responseText };
+        }
 
-                const detailsData = await detailsResponse.json();
+        // Restore button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
 
-                if (!detailsData.success) {
-                    throw new Error('Failed to get user details');
-                }
+        console.log('Parsed response:', data);
 
-                const currentStatus = detailsData.user.is_active;
-                const newStatus = !currentStatus;
-                const action = newStatus ? 'activate' : 'deactivate';
-
-                if (!confirm(`Are you sure you want to ${action} this user?`)) {
-                    return;
-                }
-
-                // Prepare status update form
-                const updateFormData = new FormData();
-                updateFormData.append('status', newStatus ? 'active' : 'inactive');
-
-                if (this.csrfToken) {
-                    updateFormData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const updateResponse = await fetch(`<?= base_url("admin/users/change-status") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: updateFormData
-                });
-
-                const updateData = await updateResponse.json();
-
-                if (updateData.success) {
-                    this.showToast(`User ${action}d successfully`, 'success');
-                    this.loadUsers();
-
-                    // Reload details if this user is selected
-                    if (this.selectedUserId === userId) {
-                        this.loadUserDetails(userId);
+        if (data.success) {
+            this.showToast(data.message, 'success');
+            
+            // Close modal
+            modal.remove();
+            
+            // Refresh user list
+            this.loadUsers();
+            
+            // Show new user in the list
+            if (data.user_id) {
+                setTimeout(() => {
+                    this.loadUserDetails(data.user_id);
+                }, 500);
+            }
+            
+        } else {
+            let errorMessage = data.message || 'Failed to add user';
+            console.error('Error details:', data);
+            
+            this.showToast(errorMessage, 'error');
+            
+            // Highlight error fields
+            if (data.errors) {
+                Object.keys(data.errors).forEach(fieldName => {
+                    const input = modal.querySelector(`[name="${fieldName}"]`);
+                    if (input) {
+                        input.classList.add('border-red-500', 'bg-red-50');
+                        input.addEventListener('input', function() {
+                            this.classList.remove('border-red-500', 'bg-red-50');
+                        }, { once: true });
                     }
-                } else {
-                    this.showToast(updateData.message, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error toggling user status:', error);
-                this.showToast('Failed to update user status', 'error');
+                });
             }
         }
+
+    } catch (error) {
+        console.error('Error saving user:', error);
+        this.showToast('Error: ' + error.message, 'error');
+        
+        // Restore button state
+        const saveBtn = modal.querySelector('#saveUserBtn');
+        if (saveBtn) {
+            saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add User';
+            saveBtn.disabled = false;
+        }
+    }
+}
+async toggleUserStatus(userId) {
+    console.log('=== DEBUG toggleUserStatus START ===');
+    console.log('User ID:', userId);
+    
+    try {
+        if (!confirm('Are you sure you want to change this user\'s account status?')) {
+            console.log('User cancelled');
+            return;
+        }
+
+        // Show loading
+        const toggleBtn = this.userActions.querySelector('.toggle-status-btn');
+        const originalText = toggleBtn.innerHTML;
+        const originalHtml = toggleBtn.innerHTML; // Simpan HTML asli
+        toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        toggleBtn.disabled = true;
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+
+        // Gunakan FormData untuk POST request
+        const formData = new FormData();
+        formData.append('status', 'toggle');
+        formData.append('user_id', userId);
+
+        // Gunakan endpoint yang sesuai
+        const endpoint = `<?= base_url("admin/users/change-status") ?>/${userId}`;
+        console.log('Endpoint:', endpoint);
+
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        };
+        
+        // Tambahkan CSRF token jika ada
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: headers,
+            body: formData
+        });
+
+        console.log('Response status:', response.status);
+
+        // Cek jika response OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Response data:', result);
+
+        // Restore button state
+        toggleBtn.innerHTML = originalText;
+        toggleBtn.disabled = false;
+
+        if (result.success) {
+            console.log('Success! Message:', result.message);
+            console.log('New status from server:', result.new_status);
+            console.log('Status text:', result.status_text);
+            
+            this.showToast(result.message, 'success');
+            
+            // Update button text based on new status from server
+            const newStatus = result.new_status;
+            const statusText = newStatus ? 'Deactivate Account' : 'Activate Account';
+            const btnClass = newStatus ? 
+                'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' : 
+                'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
+            
+            // Update button appearance
+            toggleBtn.innerHTML = `<i class="fas fa-power-off"></i> ${statusText}`;
+            toggleBtn.className = `w-full py-3 ${btnClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`;
+            
+            // Refresh user list
+            await this.loadUsers();
+            
+            // Reload user details if this user is selected
+            if (this.selectedUserId === userId) {
+                await this.loadUserDetails(userId);
+            }
+            
+            // Update status badge di table jika user sedang ditampilkan
+            const userRow = this.usersTableBody.querySelector(`tr[data-user-id="${userId}"]`);
+            if (userRow) {
+                const statusCell = userRow.querySelector('.status-badge');
+                if (statusCell) {
+                    statusCell.textContent = newStatus ? 'Active' : 'Inactive';
+                    statusCell.className = newStatus ? 'status-active status-badge' : 'status-inactive status-badge';
+                }
+            }
+            
+        } else {
+            console.error('API error:', result.message);
+            this.showToast(result.message, 'error');
+            
+            // Kembalikan ke state semula jika error
+            toggleBtn.innerHTML = originalHtml;
+            toggleBtn.disabled = false;
+        }
+
+    } catch (error) {
+        console.error('Error in toggleUserStatus:', error);
+        this.showToast('Failed to update user status: ' + error.message, 'error');
+        
+        // Restore button state
+        const toggleBtn = this.userActions.querySelector('.toggle-status-btn');
+        if (toggleBtn) {
+            toggleBtn.innerHTML = originalText;
+            toggleBtn.disabled = false;
+        }
+    }
+    
+    console.log('=== DEBUG toggleUserStatus END ===');
+}
 
         async deleteUser(userId) {
-            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                return;
-            }
-
             try {
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
+                if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                    return;
                 }
 
                 const response = await fetch(`<?= base_url("admin/users/delete") ?>/${userId}`, {
                     method: 'POST',
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    this.showToast('User deleted successfully', 'success');
+                    this.showToast(data.message, 'success');
                     this.loadUsers();
-
+                    
                     // Clear details if deleted user was selected
                     if (this.selectedUserId === userId) {
                         this.selectedUserId = null;

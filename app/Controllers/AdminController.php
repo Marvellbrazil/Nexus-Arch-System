@@ -359,99 +359,490 @@ class AdminController extends BaseController
     }
 
     /**
+ * Handle AJAX user actions
+ */
+public function ajaxManageUsers()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
+
+    $action = $this->request->getPost('action');
+
+    switch ($action) {
+        case 'add_user':
+            return $this->ajaxAddUser();
+        case 'get_user':
+            return $this->ajaxGetUser();
+        default:
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid action'
+            ]);
+    }
+}
+
+/**
+ * AJAX: Get user details
+ */
+public function ajaxGetUserDetails($userId = null)
+{
+    // Debug
+    log_message('debug', '=== AJAX GET USER DETAILS CALLED ===');
+    log_message('debug', 'User ID: ' . $userId);
+    log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+    
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request'
+        ]);
+    }
+
+    try {
+        $userId = $userId ?: $this->request->getGet('user_id');
+        
+        if (!$userId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'User ID is required'
+            ]);
+        }
+
+        // Get user details
+        $db = db_connect();
+        $user = $db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+
+        log_message('debug', 'User query result: ' . print_r($user, true));
+
+        if (!$user) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'User not found'
+            ]);
+        }
+
+        // Format boolean untuk PostgreSQL
+        $user['is_active'] = (bool)$user['is_active'];
+        
+        log_message('debug', 'Formatted user data: ' . print_r($user, true));
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'user' => $user
+        ]);
+
+    } catch (\Exception $e) {
+        log_message('error', 'AJAX get user details error: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * AJAX: Get users list with pagination and filters
+ */
+public function ajaxGetUsers()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request'
+        ]);
+    }
+
+    try {
+        // Get parameters
+        $page = $this->request->getGet('page') ?: 1;
+        $limit = $this->request->getGet('limit') ?: 10;
+        $offset = ($page - 1) * $limit;
+
+        // Get filters
+        $filters = [
+            'search' => $this->request->getGet('search'),
+            'role_id' => $this->request->getGet('role_id'),
+            'department_id' => $this->request->getGet('department_id'),
+            'is_active' => $this->request->getGet('is_active'),
+            'date_from' => $this->request->getGet('date_from'),
+            'date_to' => $this->request->getGet('date_to')
+        ];
+
+        // Get users with filters
+        $db = db_connect();
+        $builder = $db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left');
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $builder->groupStart()
+                ->like('u.username', $filters['search'])
+                ->orLike('u.full_name', $filters['search'])
+                ->orLike('u.email', $filters['search'])
+                ->groupEnd();
+        }
+
+        if (!empty($filters['role_id'])) {
+            $builder->where('u.role_id', $filters['role_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $builder->where('u.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $builder->where('u.is_active', $filters['is_active'] == '1' ? true : false);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $builder->where('DATE(u.created_at) >=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $builder->where('DATE(u.created_at) <=', $filters['date_to']);
+        }
+
+        // Count total
+        $totalBuilder = clone $builder;
+        $total = $totalBuilder->countAllResults();
+
+        // Get paginated results
+        $users = $builder->orderBy('u.created_at', 'DESC')
+            ->limit($limit, $offset)
+            ->get()
+            ->getResultArray();
+
+        // Format users
+        $formattedUsers = [];
+        foreach ($users as $user) {
+            $formattedUsers[] = [
+                'user_id' => $user['user_id'],
+                'username' => $user['username'],
+                'full_name' => $user['full_name'],
+                'email' => $user['email'],
+                'role_name' => $user['role_name'],
+                'department_name' => $user['department_name'] ?? null,
+                'is_active' => (bool)$user['is_active'],
+                'created_at' => $user['created_at'],
+                'phone_number' => $user['phone_number'] ?? null
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'users' => $formattedUsers,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total / $limit)
+        ]);
+
+    } catch (\Exception $e) {
+        log_message('error', 'AJAX get users error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+public function ajaxAddUser()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'This endpoint requires AJAX request'
+        ]);
+    }
+    
+    try {
+        $db = db_connect();
+        
+        // Prepare data
+        $userData = [
+            'username' => $this->request->getPost('username'),
+            'full_name' => $this->request->getPost('full_name'),
+            'email' => $this->request->getPost('email'),
+            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+            'role_id' => $this->request->getPost('role_id'),
+            'is_active' => $this->request->getPost('is_active') == '1' ? true : false,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Optional fields
+        if ($this->request->getPost('department_id')) {
+            $userData['department_id'] = $this->request->getPost('department_id');
+        }
+        
+        if ($this->request->getPost('phone_number')) {
+            $userData['phone_number'] = $this->request->getPost('phone_number');
+        }
+        
+        // Gunakan query manual dengan nextval
+        $sql = "INSERT INTO users (username, full_name, email, password, role_id, department_id, phone_number, is_active, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+                RETURNING user_id";
+        
+        $query = $db->query($sql, [
+            $userData['username'],
+            $userData['full_name'],
+            $userData['email'],
+            $userData['password'],
+            $userData['role_id'],
+            $userData['department_id'] ?? null,
+            $userData['phone_number'] ?? null,
+            $userData['is_active'] ? 't' : 'f', // PostgreSQL boolean
+            $userData['created_at'],
+            $userData['updated_at']
+        ]);
+        
+        $result = $query->getRow();
+        $userId = $result->user_id;
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'User added successfully',
+            'user_id' => $userId
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Database error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+    }
+}
+    /**
      * Get user details (non-AJAX)
      */
-    public function getUserDetails($id = null)
-    {
-        $data = $this->loadCommonData();
-        $data['title'] = 'User Details - NEXUS Admin';
-
-        $userId = $id ?: $this->request->getGet('user_id');
-
-        if (!$userId) {
-            return redirect()->to('/admin/users')->with('error', 'User ID is required');
+public function getUserDetails($id = null)
+{
+    // Get user ID
+    $userId = $id ?: $this->request->getGet('user_id');
+    
+    if (!$userId) {
+        // Jika AJAX request
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'User ID is required'
+            ]);
         }
-
-        try {
-            $user = $this->userModel->getUserWithDetails($userId);
-
-            if (!$user) {
-                return redirect()->to('/admin/users')->with('error', 'User not found');
-            }
-
-            // Get user's assigned projects
-            $projects = $this->userModel->getUserProjects($userId);
-            $projectNames = array_column($projects, 'project_name');
-
-            $data['user'] = $user;
-            $data['user']['projects'] = $projectNames;
-
-            return view('Admin/user_details', $data);
-        } catch (\Exception $e) {
-            log_message('error', 'User details error: ' . $e->getMessage());
-            return redirect()->to('/admin/users')->with('error', 'Failed to load user details');
-        }
+        return redirect()->to('/admin/users')->with('error', 'User ID is required');
     }
 
-    /**
-     * Add new user (non-AJAX)
-     */
-    public function addUser()
-    {
-        if ($this->request->getMethod() !== 'post') {
-            return redirect()->to('/admin/users');
+    try {
+        // Get user details with role and department
+        $db = db_connect();
+        $user = $db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+
+        if (!$user) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+            }
+            return redirect()->to('/admin/users')->with('error', 'User not found');
         }
 
-        try {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'username' => 'required|min_length[3]|max_length[50]',
-                'full_name' => 'required|min_length[3]|max_length[100]',
-                'email' => 'required|valid_email',
-                'password' => 'required|min_length[6]',
-                'role_id' => 'required|integer',
-                'department_id' => 'permit_empty|integer',
-                'phone_number' => 'permit_empty|max_length[20]'
-            ]);
-
-            // Custom validation for unique fields
-            $validation->setRule('username', 'Username', 'is_unique[users.username]');
-            $validation->setRule('email', 'Email', 'is_unique[users.email]');
-
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('errors', $validation->getErrors());
-            }
-
-            $userData = [
-                'username' => $this->request->getPost('username'),
-                'full_name' => $this->request->getPost('full_name'),
-                'email' => $this->request->getPost('email'),
-                'password' => $this->request->getPost('password'),
-                'role_id' => $this->request->getPost('role_id'),
-                'department_id' => $this->request->getPost('department_id') ?: null,
-                'phone_number' => $this->request->getPost('phone_number'),
-                'is_active' => $this->request->getPost('is_active') ? true : false
+        // Format untuk AJAX response
+        if ($this->request->isAJAX()) {
+            // Format data untuk response
+            $formattedUser = [
+                'user_id' => $user['user_id'],
+                'username' => $user['username'],
+                'full_name' => $user['full_name'],
+                'email' => $user['email'],
+                'phone_number' => $user['phone_number'] ?? 'N/A',
+                'role_name' => $user['role_name'],
+                'department_name' => $user['department_name'] ?? 'N/A',
+                'is_active' => (bool)$user['is_active'],
+                'created_at' => $user['created_at'],
+                'last_login' => $user['last_login'] ?? null
             ];
 
-            if ($this->userModel->save($userData)) {
-                return redirect()->to('/admin/users')
-                    ->with('success', 'User added successfully')
-                    ->with('user_id', $this->userModel->getInsertID());
-            } else {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Failed to add user');
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Add user error: ' . $e->getMessage());
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Server error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => true,
+                'user' => $formattedUser
+            ]);
         }
+
+        // Untuk non-AJAX (tampilkan view)
+        $data = $this->loadCommonData();
+        $data['title'] = 'User Details - NEXUS Admin';
+        $data['user'] = $user;
+        
+        return view('Admin/user_details', $data);
+
+    } catch (\Exception $e) {
+        log_message('error', 'Get user details error: ' . $e->getMessage());
+        
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load user details: ' . $e->getMessage()
+            ]);
+        }
+        return redirect()->to('/admin/users')->with('error', 'Failed to load user details');
+    }
+}
+
+/**
+ * Add new user - FIXED VERSION untuk handle AJAX dan regular POST
+ */
+public function addUser()
+{
+    // Debug: Tampilkan method dan headers
+    log_message('debug', '=== ADD USER METHOD CALLED ===');
+    log_message('debug', 'Request Method: ' . $this->request->getMethod());
+    log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+    
+    // HAPUS pemeriksaan method yang salah
+    // if ($this->request->getMethod() !== 'post') {
+    //     log_message('debug', 'Invalid method: ' . $this->request->getMethod());
+    //     return $this->response->setJSON([
+    //         'success' => false,
+    //         'message' => 'Invalid request method. Expected POST, got ' . $this->request->getMethod()
+    //     ]);
+    // }
+    
+    // Cukup periksa apakah ini AJAX request
+    if (!$this->request->isAJAX()) {
+        log_message('debug', 'Not an AJAX request');
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'This endpoint requires AJAX request'
+        ]);
     }
 
+    try {
+        // Debug: Tampilkan semua POST data
+        $postData = $this->request->getPost();
+        log_message('debug', 'POST Data received: ' . print_r($postData, true));
+        
+        // Cek jika data kosong
+        if (empty($postData)) {
+            log_message('debug', 'POST data is empty!');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No form data received'
+            ]);
+        }
+        
+        // Validasi input
+        $validation = \Config\Services::validation();
+        
+        $validationRules = [
+            'username' => 'required|min_length[3]|max_length[50]|is_unique[users.username]',
+            'full_name' => 'required|min_length[3]|max_length[100]',
+            'email' => 'required|valid_email|is_unique[users.email]',
+            'password' => 'required|min_length[6]',
+            'role_id' => 'required|integer',
+            'department_id' => 'permit_empty|integer',
+            'phone_number' => 'permit_empty|max_length[20]',
+            'is_active' => 'permit_empty|in_list[0,1]'
+        ];
+
+        $validation->setRules($validationRules);
+
+        // Debug sebelum validasi
+        log_message('debug', 'Validation rules set');
+        log_message('debug', 'is_active value: ' . ($this->request->getPost('is_active') ?? 'NULL'));
+
+        if (!$validation->withRequest($this->request)->run()) {
+            $errors = $validation->getErrors();
+            log_message('debug', 'Validation errors: ' . print_r($errors, true));
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $errors
+            ]);
+        }
+
+        log_message('debug', 'Validation passed');
+
+        // Siapkan data user
+        $userData = [
+            'username' => trim($this->request->getPost('username')),
+            'full_name' => trim($this->request->getPost('full_name')),
+            'email' => trim($this->request->getPost('email')),
+            'password' => password_hash(trim($this->request->getPost('password')), PASSWORD_DEFAULT),
+            'role_id' => (int)$this->request->getPost('role_id'),
+            'is_active' => ($this->request->getPost('is_active') == '1') ? true : false,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        // Tambahkan optional fields
+        $departmentId = $this->request->getPost('department_id');
+        if (!empty($departmentId) && $departmentId !== '') {
+            $userData['department_id'] = (int)$departmentId;
+        }
+
+        $phoneNumber = $this->request->getPost('phone_number');
+        if (!empty($phoneNumber) && $phoneNumber !== '') {
+            $userData['phone_number'] = trim($phoneNumber);
+        }
+
+        log_message('debug', 'User data to insert: ' . print_r($userData, true));
+
+        // Coba insert menggunakan model
+        $this->userModel->setValidationRules(false); // Nonaktifkan validasi model sementara
+        
+        if ($this->userModel->insert($userData)) {
+            $userId = $this->userModel->getInsertID();
+            
+            log_message('debug', 'User inserted successfully. ID: ' . $userId);
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'User created successfully',
+                'user_id' => $userId
+            ]);
+        } else {
+            $error = $this->userModel->errors();
+            log_message('error', 'Model insert failed: ' . print_r($error, true));
+            
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to create user in database',
+                'errors' => $error
+            ]);
+        }
+
+    } catch (\Exception $e) {
+        log_message('error', 'Add user error: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
     /**
      * Edit user (non-AJAX) - FIXED VERSION
      */
