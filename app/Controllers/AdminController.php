@@ -375,8 +375,8 @@ public function ajaxManageUsers()
     switch ($action) {
         case 'add_user':
             return $this->ajaxAddUser();
-        case 'get_user':
-            return $this->ajaxGetUser();
+        // case 'get_user':
+        //     return $this->ajaxGetUser();
         default:
             return $this->response->setJSON([
                 'success' => false,
@@ -809,8 +809,8 @@ public function addUser()
 
         log_message('debug', 'User data to insert: ' . print_r($userData, true));
 
-        // Coba insert menggunakan model
-        $this->userModel->setValidationRules(false); // Nonaktifkan validasi model sementara
+        // // Coba insert menggunakan model
+        // $this->userModel->setValidationRules(false); // Nonaktifkan validasi model sementara
         
         if ($this->userModel->insert($userData)) {
             $userId = $this->userModel->getInsertID();

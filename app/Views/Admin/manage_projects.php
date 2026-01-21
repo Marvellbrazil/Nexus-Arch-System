@@ -144,26 +144,27 @@
 
         <!-- Right Column: Project Details & Actions -->
         <div class="space-y-6">
-            <!-- Di bagian Quick Actions Card -->
-<div class="dashboard-card">
-    <div class="dashboard-card-header">
-        <div class="text-text-dark/85 text-base font-medium">Quick Actions</div>
-    </div>
+            <!-- Quick Actions Card -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div class="text-text-dark/85 text-base font-medium">Quick Actions</div>
+                </div>
 
-    <div class="p-4 space-y-3">
-        <button id="addProjectBtn"
-            class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-plus text-lg"></i>
-            Add New Project
-        </button>
+                <div class="p-4 space-y-3">
+                    <button id="addProjectBtn"
+                        class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-plus text-lg"></i>
+                        Add New Project
+                    </button>
 
-        <button id="bulkAssignBtn"
-            class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-user-plus"></i>
-            Assign to Users
-        </button>
-    </div>
-</div>
+                    <button id="assignToUsersBtn"
+                        class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-user-plus"></i>
+                        Assign to Users
+                    </button>
+                </div>
+            </div>
+
             <!-- Project Detail Card -->
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
