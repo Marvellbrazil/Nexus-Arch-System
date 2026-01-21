@@ -138,59 +138,58 @@ class ProjectAssignmentModel extends Model
     }
 
     /**
-     * Assign users to a project
-     */
-    public function assignUsersToProject(int $projectId, array $userIds, int $assignedBy): array
-    {
-        $db = db_connect();
+ * Assign users to a project
+ */
+public function assignUsersToProject(int $projectId, array $userIds, int $assignedBy): array
+{
+    $db = db_connect();
 
-        $db->transStart();
+    $db->transStart();
 
-        try {
-            // Delete existing assignments for this project
-            $db->table('project_assignments')->where('project_id', $projectId)->delete();
+    try {
+        // Delete existing assignments for this project
+        $db->table('project_assignments')->where('project_id', $projectId)->delete();
 
-            // Insert new assignments
-            $assignmentData = [];
-            foreach ($userIds as $userId) {
-                $assignmentData[] = [
-                    'project_id' => $projectId,
-                    'user_id' => $userId,
-                    'assigned_by' => $assignedBy,
-                    'assigned_at' => date('Y-m-d H:i:s')
-                ];
-            }
-
-            if (!empty($assignmentData)) {
-                $db->table('project_assignments')->insertBatch($assignmentData);
-            }
-
-            $db->transComplete();
-
-            if ($db->transStatus()) {
-                log_message('info', "Project assignments updated: Project ID {$projectId} with " . count($userIds) . " users by user {$assignedBy}");
-
-                return [
-                    'success' => true,
-                    'message' => 'Project users updated successfully',
-                    'assigned_count' => count($userIds)
-                ];
-            }
-
-            return [
-                'success' => false,
-                'message' => 'Failed to update project assignments'
-            ];
-        } catch (\Exception $e) {
-            $db->transRollback();
-            log_message('error', 'Assign users to project error: ' . $e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
+        // Insert new assignments
+        $assignmentData = [];
+        foreach ($userIds as $userId) {
+            $assignmentData[] = [
+                'project_id' => $projectId,
+                'user_id' => $userId,
+                'assigned_at' => date('Y-m-d H:i:s')
             ];
         }
+
+        if (!empty($assignmentData)) {
+            $db->table('project_assignments')->insertBatch($assignmentData);
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus()) {
+            log_message('info', "Project assignments updated: Project ID {$projectId} with " . count($userIds) . " users by user {$assignedBy}");
+
+            return [
+                'success' => true,
+                'message' => 'Project users updated successfully',
+                'assigned_count' => count($userIds)
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Failed to update project assignments'
+        ];
+    } catch (\Exception $e) {
+        $db->transRollback();
+        log_message('error', 'Assign users to project error: ' . $e->getMessage());
+
+        return [
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ];
     }
+}
 
     /**
      * Remove user from project
@@ -483,94 +482,92 @@ class ProjectAssignmentModel extends Model
             ->getResultArray();
     }
 
+    // /**
+    //  * Bulk assign users to multiple projects with validation
+    //  */
+    // public function bulkAssignUsersToProjects(array $projectIds, array $userIds, int $assignedBy)
+    // {
+    //     $db = db_connect();
+    //     $totalAssignments = 0;
+    //     $errors = [];
 
+    //     $db->transStart();
 
-    /**
-     * Bulk assign users to multiple projects with validation
-     */
-    public function bulkAssignUsersToProjects(array $projectIds, array $userIds, int $assignedBy)
-    {
-        $db = db_connect();
-        $totalAssignments = 0;
-        $errors = [];
+    //     try {
+    //         foreach ($projectIds as $projectId) {
+    //             // Validate project exists and is active
+    //             $projectExists = $db->table('projects')
+    //                 ->where('project_id', $projectId)
+    //                 ->where('is_active', true)
+    //                 ->countAllResults() > 0;
 
-        $db->transStart();
+    //             if (!$projectExists) {
+    //                 $errors[] = "Project ID {$projectId} not found or inactive";
+    //                 continue;
+    //             }
 
-        try {
-            foreach ($projectIds as $projectId) {
-                // Validate project exists and is active
-                $projectExists = $db->table('projects')
-                    ->where('project_id', $projectId)
-                    ->where('is_active', true)
-                    ->countAllResults() > 0;
+    //             foreach ($userIds as $userId) {
+    //                 // Validate user exists and is active
+    //                 $userExists = $db->table('users')
+    //                     ->where('user_id', $userId)
+    //                     ->where('is_active', true)
+    //                     ->countAllResults() > 0;
 
-                if (!$projectExists) {
-                    $errors[] = "Project ID {$projectId} not found or inactive";
-                    continue;
-                }
+    //                 if (!$userExists) {
+    //                     $errors[] = "User ID {$userId} not found or inactive for project {$projectId}";
+    //                     continue;
+    //                 }
 
-                foreach ($userIds as $userId) {
-                    // Validate user exists and is active
-                    $userExists = $db->table('users')
-                        ->where('user_id', $userId)
-                        ->where('is_active', true)
-                        ->countAllResults() > 0;
+    //                 // Check if assignment already exists
+    //                 $exists = $db->table('project_assignments')
+    //                     ->where('project_id', $projectId)
+    //                     ->where('user_id', $userId)
+    //                     ->countAllResults();
 
-                    if (!$userExists) {
-                        $errors[] = "User ID {$userId} not found or inactive for project {$projectId}";
-                        continue;
-                    }
+    //                 if (!$exists) {
+    //                     $db->table('project_assignments')->insert([
+    //                         'project_id' => $projectId,
+    //                         'user_id' => $userId,
+    //                         'assigned_by' => $assignedBy,
+    //                         'assigned_at' => date('Y-m-d H:i:s'),
+    //                     ]);
+    //                     $totalAssignments++;
+    //                 }
+    //             }
+    //         }
 
-                    // Check if assignment already exists
-                    $exists = $db->table('project_assignments')
-                        ->where('project_id', $projectId)
-                        ->where('user_id', $userId)
-                        ->countAllResults();
+    //         $db->transComplete();
 
-                    if (!$exists) {
-                        $db->table('project_assignments')->insert([
-                            'project_id' => $projectId,
-                            'user_id' => $userId,
-                            'assigned_by' => $assignedBy,
-                            'assigned_at' => date('Y-m-d H:i:s'),
-                        ]);
-                        $totalAssignments++;
-                    }
-                }
-            }
+    //         if ($db->transStatus()) {
+    //             log_message('info', "Bulk assignment completed: {$totalAssignments} assignments made by user {$assignedBy}");
 
-            $db->transComplete();
+    //             $result = [
+    //                 'success' => true,
+    //                 'message' => "Successfully assigned {$totalAssignments} users to selected projects",
+    //                 'total_assignments' => $totalAssignments,
+    //                 'assigned_by' => $assignedBy
+    //             ];
 
-            if ($db->transStatus()) {
-                log_message('info', "Bulk assignment completed: {$totalAssignments} assignments made by user {$assignedBy}");
+    //             if (!empty($errors)) {
+    //                 $result['warning'] = 'Some assignments were skipped due to errors';
+    //                 $result['errors'] = $errors;
+    //             }
 
-                $result = [
-                    'success' => true,
-                    'message' => "Successfully assigned {$totalAssignments} users to selected projects",
-                    'total_assignments' => $totalAssignments,
-                    'assigned_by' => $assignedBy
-                ];
+    //             return $result;
+    //         }
 
-                if (!empty($errors)) {
-                    $result['warning'] = 'Some assignments were skipped due to errors';
-                    $result['errors'] = $errors;
-                }
+    //         // return [
+    //         //     'success' => false,
+    //         //     'message' => 'Transaction failed'
+    //         // ];
+    //     } catch (\Exception $e) {
+    //         $db->transRollback();
+    //         log_message('error', 'Bulk assign users to projects error: ' . $e->getMessage());
 
-                return $result;
-            }
-
-            // return [
-            //     'success' => false,
-            //     'message' => 'Transaction failed'
-            // ];
-        } catch (\Exception $e) {
-            $db->transRollback();
-            log_message('error', 'Bulk assign users to projects error: ' . $e->getMessage());
-
-            return [    
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ];
-        }
-    }
+    //         return [    
+    //             'success' => false,
+    //             'message' => 'Server error: ' . $e->getMessage()
+    //         ];
+    //     }
+    // }    
 }

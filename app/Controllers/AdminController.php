@@ -558,6 +558,101 @@ class AdminController extends BaseController
         }
     }
 
+    /**
+ * AJAX: Get users for assignment modal
+ */
+public function ajaxGetUsersForAssignment()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
+
+    try {
+        $search = $this->request->getPost('search') ?? '';
+        $role = $this->request->getPost('role') ?? 'all';
+        $page = $this->request->getPost('page') ?? 1;
+        $limit = $this->request->getPost('limit') ?? 20;
+
+        $db = db_connect();
+        $builder = $db->table('users u')
+            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name, u.is_active')
+            ->join('roles r', 'r.role_id = u.role_id')
+            ->where('u.is_active', true);
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('u.full_name', $search)
+                ->orLike('u.username', $search)
+                ->orLike('u.email', $search)
+                ->orLike('r.role_name', $search)
+                ->groupEnd();
+        }
+
+        if ($role !== 'all') {
+            $builder->where('r.role_name', $role);
+        }
+
+        // Count total
+        $totalBuilder = clone $builder;
+        $total = $totalBuilder->countAllResults();
+
+        // Get paginated results
+        $offset = ($page - 1) * $limit;
+        $users = $builder->orderBy('u.full_name', 'ASC')
+            ->limit($limit, $offset)
+            ->get()
+            ->getResultArray();
+
+        // Format for response
+        $formattedUsers = [];
+        foreach ($users as $user) {
+            $formattedUsers[] = [
+                'user_id' => $user['user_id'],
+                'username' => $user['username'],
+                'full_name' => $user['full_name'],
+                'email' => $user['email'],
+                'role_name' => $user['role_name'],
+                'avatar_initials' => $this->getAvatarInitials($user['full_name']),
+                'is_active' => (bool)$user['is_active']
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'users' => $formattedUsers,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total / $limit)
+        ]);
+    } catch (\Exception $e) {
+        log_message('error', 'Get users for assignment error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Get avatar initials from full name
+ */
+private function getAvatarInitials(string $fullName): string
+{
+    $names = explode(' ', $fullName);
+    $initials = '';
+    
+    foreach ($names as $name) {
+        if (strlen($initials) >= 2) break;
+        $initials .= strtoupper(substr($name, 0, 1));
+    }
+    
+    return $initials;
+}
+
     public function ajaxAddUser()
     {
         if (!$this->request->isAJAX()) {
@@ -1895,22 +1990,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Helper method to get avatar initials
-     */
-    private function getAvatarInitials(string $fullName): string
-    {
-        $names = explode(' ', $fullName);
-        $initials = '';
-
-        foreach ($names as $name) {
-            if (strlen($initials) >= 2) break;
-            $initials .= strtoupper(substr($name, 0, 1));
-        }
-
-        return $initials;
-    }
-
-    /**
      * Save category mappings for a department
      */
     private function saveCategoryMappings(int $departmentId, array $categories): void
@@ -2213,10 +2292,8 @@ class AdminController extends BaseController
     }
 
     // ==================== MANAGE PROJECTS ===========================
-// ==================== MANAGE PROJECTS - REFACTORED ====================
-
     /**
-     * Manage Projects - Main method (Refactored)
+     * Manage Projects - Main method
      */
     public function manageProjects()
     {
@@ -2234,7 +2311,7 @@ class AdminController extends BaseController
     }
 
     /**
-     * Get project details (Refactored - menggunakan model)
+     * Get project details
      */
     public function getProjectDetails($id = null)
     {
@@ -2259,83 +2336,7 @@ class AdminController extends BaseController
         $data['assigned_users'] = $assignedUsers;
 
         return view('Admin/project_details', $data);
-    }
-
-    /**
-     * View project assignments page (Refactored - menggunakan model)
-     */
-    public function viewAssignments()
-    {
-        $data = $this->loadCommonData();
-        $data['title'] = 'Project Assignments - NEXUS Admin';
-
-        $data['recentAssignments'] = $this->projectAssignmentModel->getRecentAssignments(20);
-        $data['assignmentStats'] = $this->projectAssignmentModel->getAssignmentStatistics();
-        $data['topAssignedUsers'] = $this->projectAssignmentModel->getTopAssignedUsers(10);
-        $data['projectsWithoutAssignments'] = $this->projectAssignmentModel->getProjectsWithoutAssignments();
-
-        return view('Admin/view_assignments', $data);
-    }
-
-    /**
-     * Get projects for bulk assignment (Refactored - menggunakan model)
-     */
-    public function getProjectsForBulkAssign()
-    {
-        $data = $this->loadCommonData();
-        $data['title'] = 'Bulk Assign Projects - NEXUS Admin';
-
-        $search = $this->request->getGet('search') ?? '';
-
-        $data['projects'] = $this->projectModel->getProjectsForBulkAssignment($search);
-        $data['all_users'] = $this->userModel->getActiveUsersWithRoles();
-
-        return view('Admin/bulk_assign_projects', $data);
-    }
-
-// /**
-//  * Import projects from CSV (Refactored - menggunakan model)
-//  */
-// public function importProjects()
-// {
-//     $data = $this->loadCommonData();
-//     $data['title'] = 'Import Projects - NEXUS Admin';
-
-//     if ($this->request->getMethod() === 'post') {
-//         try {
-//             $file = $this->request->getFile('projects_file');
-
-//             if (!$file || !$file->isValid()) {
-//                 return redirect()->back()->with('error', 'Please select a valid file');
-//             }
-
-//             // Validasi file type
-//             $allowedTypes = ['csv'];
-//             $extension = $file->getExtension();
-
-//             if (!in_array($extension, $allowedTypes)) {
-//                 return redirect()->back()->with('error', 'File type not supported. Please upload CSV files.');
-//             }
-
-//             // Pindahkan logika processing ke model
-//             $result = $this->projectModel->importProjectsFromCSV($file, session()->get('user_id'));
-
-//             if ($result['success']) {
-//                 return redirect()->to('/admin/projects')
-//                     ->with('success', $result['message'])
-//                     ->with('imported_count', $result['imported_count'])
-//                     ->with('error_count', $result['error_count']);
-//             } else {
-//                 return redirect()->back()->with('error', $result['message']);
-//             }
-//         } catch (\Exception $e) {
-//             log_message('error', 'Import projects error: ' . $e->getMessage());
-//             return redirect()->back()->with('error', 'Server error: ' . $e->getMessage());
-//         }
-//     }
-
-//     return view('Admin/import_projects', $data);
-// }
+    }       
     
     // ==================== AJAX METHODS PROJECTS ====================
     /**
@@ -2343,24 +2344,14 @@ class AdminController extends BaseController
      */
     public function ajaxManageProjects()
     {
-        $action = $this->request->getPost('action');
+        if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
 
-        // Debug lebih detail
-        log_message('debug', '=================== AJAX REQUEST DEBUG ===================');
-        log_message('debug', 'Action: ' . $action);
-        log_message('debug', 'Method: ' . $this->request->getMethod());
-        log_message('debug', 'isAJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
-        log_message('debug', 'Post Data: ' . json_encode($this->request->getPost()));
-        log_message('debug', 'Headers: ' . json_encode($this->request->getHeaders()));
-        log_message('debug', '=========================================================');
-
-        if (!$action) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Action parameter is required',
-                'received_data' => $this->request->getPost()
-            ]);
-        }
+    $action = $this->request->getPost('action');
 
         switch ($action) {
             case 'get_projects_table':
@@ -2871,54 +2862,6 @@ class AdminController extends BaseController
             ]);
         }
     }
-
-    // /**
-    //  * AJAX: Export projects to CSV
-    //  */
-    // private function ajaxExportProjects()
-    // {
-    //     $filters = [
-    //         'search' => $this->request->getPost('search'),
-    //         'status' => $this->request->getPost('status'),
-    //         'sort_by' => $this->request->getPost('sort_by')
-    //     ];
-
-    //     $projects = $this->projectModel->exportProjects($filters);
-
-    //     if (empty($projects)) {
-    //         return $this->response->setJSON([
-    //             'success' => false,
-    //             'message' => 'No projects found to export'
-    //         ]);
-    //     }
-
-    //     // Format data for CSV
-    //     $csvData = [];
-    //     $headers = ['ID', 'Project Code', 'Project Name', 'Description', 'Status', 'Total Tickets', 'Open Tickets', 'Created At', 'Last Updated'];
-
-    //     $csvData[] = $headers;
-
-    //     foreach ($projects as $project) {
-    //         $csvData[] = [
-    //             $project['project_id'],
-    //             $project['project_code'],
-    //             $project['project_name'],
-    //             $project['description'] ?? '',
-    //             $project['is_active'] ? 'Active' : 'Inactive',
-    //             $project['total_tickets'] ?? 0,
-    //             $project['open_tickets'] ?? 0,
-    //             $project['created_at'],
-    //             $project['updated_at'] ?? 'Never'
-    //         ];
-    //     }
-
-    //     return $this->response->setJSON([
-    //         'success' => true,
-    //         'data' => $csvData,
-    //         'count' => count($projects),
-    //         'filename' => 'projects_' . date('Y-m-d_H-i-s') . '.csv'
-    //     ]);
-    // }
 
     // ==================== SYSTEM SETTINGS ====================
     public function systemSettings()
