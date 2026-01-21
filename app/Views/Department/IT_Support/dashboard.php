@@ -21,7 +21,7 @@
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
             <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">IT Support Dashboard</h1>
-            <p class="text-sm md:text-[15px] font-light text-[#666]">Assigned tickets & progress overview</p>
+            <p class="text-sm md:text-[15px] font-light text-[#666]">Welcome back, <?= esc($user_details['full_name'] ?? 'IT Support') ?>!</p>
         </div>
 
         <!-- Action Buttons -->
@@ -43,11 +43,11 @@
                 class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#8CEAC7] to-[#6BD4B4] rounded-full flex items-center justify-center mb-3">
                 <i class="fas fa-tasks text-white text-lg md:text-xl"></i>
             </div>
-            <div class="text-3xl md:text-4xl font-bold mb-2">12</div>
+            <div class="text-3xl md:text-4xl font-bold mb-2"><?= $stats['total_tickets'] ?? 0 ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">Assigned Tickets</div>
             <div class="text-white/60 text-xs md:text-[13px] flex items-center justify-center">
                 <i class="fas fa-info-circle mr-1"></i>
-                <span>10 On Progress | 2 Need Info</span>
+                <span><?= $stats['assigned_to_me'] ?? 0 ?> Assigned to You</span>
             </div>
         </div>
 
@@ -58,21 +58,21 @@
                 class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#FF8BA7] to-[#FF6B8B] rounded-full flex items-center justify-center mb-3">
                 <i class="fas fa-exclamation-triangle text-white text-lg md:text-xl"></i>
             </div>
-            <div class="text-3xl md:text-4xl font-bold mb-2">5</div>
+            <div class="text-3xl md:text-4xl font-bold mb-2"><?= $stats['high_priority'] ?? 0 ?></div>
             <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">High Priority Tickets</div>
-            <div class="text-white/60 text-xs md:text-[13px]">4 High | 1 Urgent</div>
+            <div class="text-white/60 text-xs md:text-[13px]">Urgent attention required</div>
         </div>
 
-        <!-- Waiting for Customer Reply Card -->
+        <!-- Open Tickets Card -->
         <div
             class="bg-gradient-to-br from-[#3D3C5E] to-[#4A4570] rounded-xl p-5 md:p-6 text-white shadow-sm flex flex-col items-center justify-center text-center">
             <div
                 class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#FCD685] to-[#F9C052] rounded-full flex items-center justify-center mb-3">
                 <i class="fas fa-clock text-white text-lg md:text-xl"></i>
             </div>
-            <div class="text-3xl md:text-4xl font-bold mb-2">3</div>
-            <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">Waiting Customer Reply</div>
-            <div class="text-white/60 text-xs md:text-[13px]">Need info status</div>
+            <div class="text-3xl md:text-4xl font-bold mb-2"><?= $stats['open_tickets'] ?? 0 ?></div>
+            <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">Open Tickets</div>
+            <div class="text-white/60 text-xs md:text-[13px]">Awaiting resolution</div>
         </div>
 
         <!-- Resolved Tickets Card -->
@@ -82,9 +82,9 @@
                 class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#82B4FF] to-[#5D9CFF] rounded-full flex items-center justify-center mb-3">
                 <i class="fas fa-check-circle text-white text-lg md:text-xl"></i>
             </div>
-            <div class="text-3xl md:text-4xl font-bold mb-2">20</div>
-            <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">Resolved Tickets</div>
-            <div class="text-white/60 text-xs md:text-[13px]">4 Today | 16 This Week</div>
+            <div class="text-3xl md:text-4xl font-bold mb-2"><?= $stats['resolved_today'] ?? 0 ?></div>
+            <div class="text-white/80 text-sm md:text-[15px] font-medium mb-2">Resolved Today</div>
+            <div class="text-white/60 text-xs md:text-[13px]">Great progress!</div>
         </div>
     </div>
 
@@ -163,75 +163,53 @@
                     </tr>
                 </thead>
                 <tbody id="recentTicketsTable" class="divide-y divide-gray-200">
-                    <?php
-                    $recent_tickets = [
-                        [
-                            'id' => '#10421',
-                            'id_num' => 10421,
-                            'subject' => 'Login issue causing error message',
-                            'project' => 'Project Alpha',
-                            'priority' => 'High',
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800 border border-orange-200',
-                            'status' => 'Open',
-                            'statusColor' => 'bg-blue-100 text-blue-800 border border-blue-200',
-                            'time' => '5 minutes ago',
-                            'timestamp' => strtotime('-5 minutes'),
-                        ],
-                        [
-                            'id' => '#10422',
-                            'id_num' => 10422,
-                            'subject' => 'Feature request for new export option',
-                            'project' => 'Project Alpha',
-                            'priority' => 'Low',
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800 border border-blue-200',
-                            'status' => 'Resolved',
-                            'statusColor' => 'bg-green-100 text-green-800 border border-green-200',
-                            'time' => '1 hour ago',
-                            'timestamp' => strtotime('-1 hour'),
-                        ],
-                        [
-                            'id' => '#10423',
-                            'id_num' => 10423,
-                            'subject' => 'Fix firestorx issues neat issues',
-                            'project' => 'Project Beta',
-                            'priority' => 'High',
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800 border border-orange-200',
-                            'status' => 'Need Info',
-                            'statusColor' => 'bg-gray-100 text-gray-800 border border-gray-200',
-                            'time' => '2 hours ago',
-                            'timestamp' => strtotime('-2 hours'),
-                        ],
-                        [
-                            'id' => '#10424',
-                            'id_num' => 10424,
-                            'subject' => 'Fix safissax issues source log iss',
-                            'project' => 'Project Beta',
-                            'priority' => 'Low',
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800 border border-blue-200',
-                            'status' => 'Closed',
-                            'statusColor' => 'bg-gray-200 text-gray-800 border border-gray-300',
-                            'time' => '3 hours ago',
-                            'timestamp' => strtotime('-3 hours'),
-                        ],
-                        [
-                            'id' => '#10425',
-                            'id_num' => 10425,
-                            'subject' => 'Fix mixizading app updates',
-                            'project' => 'Project Alpha',
-                            'priority' => 'Urgent',
-                            'priority_value' => 4,
-                            'priorityColor' => 'bg-red-100 text-red-800 border border-red-200',
-                            'status' => 'In Progress',
-                            'statusColor' => 'bg-purple-100 text-purple-800 border border-purple-200',
-                            'time' => '4 hours ago',
-                            'timestamp' => strtotime('-4 hours'),
-                        ],
-                    ];
-                    ?>
+                    <?php if (!empty($recent_tickets)): ?>
+                        <?php foreach ($recent_tickets as $ticket): ?>
+                            <tr class="bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+                                <td class="py-3 px-4">
+                                    <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['ticket_number']) ?></span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div>
+                                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-xs"><?= esc($ticket['subject']) ?></p>
+                                        <p class="text-gray-500 text-xs mt-1 md:hidden"><?= esc($ticket['project_name'] ?? 'No Project') ?></p>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 hidden md:table-cell">
+                                    <span class="text-gray-700 text-sm"><?= esc($ticket['project_name'] ?? 'No Project') ?></span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['priority_name']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 hidden sm:table-cell">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['status_name']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 hidden lg:table-cell">
+                                    <span class="text-gray-600 text-sm"><?= esc($ticket['time']) ?></span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center gap-2">
+                                        <a href="<?= base_url('department/it-support/ticket_detail/') . $ticket['ticket_id'] ?>" 
+                                           class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                                            <i class="fas fa-eye text-xs"></i>
+                                            <span>View</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-400">No recent tickets found</p>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -240,7 +218,7 @@
         <div class="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
             <div class="flex items-center justify-between">
                 <div class="text-gray-600 text-sm">
-                    Showing <span id="recentShowingCount">5</span> recent tickets
+                    Showing <span id="recentShowingCount"><?= count($recent_tickets) ?></span> recent tickets
                 </div>
                 <a href="<?= base_url('department/it-support/assigned_tickets') ?>"
                     class="px-4 py-2 bg-secondary text-white text-sm font-medium rounded-lg hover:bg-[#817CB2] transition-colors flex items-center gap-2 no-underline">
@@ -251,7 +229,93 @@
         </div>
     </div>
 
+    <!-- Department Tickets Overview -->
+    <?php if (!empty($department_tickets)): ?>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-800">All Department Tickets</h2>
+            <p class="text-sm text-gray-600 mt-1">All tickets assigned to IT Support department</p>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <?php foreach ($department_tickets as $ticket): ?>
+                <div class="border rounded-lg p-4 hover:border-secondary transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-medium text-gray-800"><?= esc($ticket['ticket_number']) ?></span>
+                        <span class="text-xs px-2 py-1 rounded-full <?= $ticket['priority_id'] >= 3 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' ?>">
+                            <?= esc($ticket['priority_name']) ?>
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2 truncate"><?= esc($ticket['subject']) ?></p>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span><?= esc($ticket['customer_name']) ?></span>
+                        <span><?= date('M d, H:i', strtotime($ticket['created_at'])) ?></span>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
+    <!-- My Tickets -->
+    <?php if (!empty($my_tickets)): ?>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-800">Tickets Assigned to Me</h2>
+            <p class="text-sm text-gray-600 mt-1">Tickets specifically assigned to you</p>
+        </div>
+        
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-sm text-gray-600 border-b">
+                            <th class="pb-3">Ticket</th>
+                            <th class="pb-3">Subject</th>
+                            <th class="pb-3 hidden md:table-cell">Priority</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($my_tickets as $ticket): ?>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3">
+                                <span class="font-medium"><?= esc($ticket['ticket_number']) ?></span>
+                            </td>
+                            <td class="py-3">
+                                <p class="text-sm truncate max-w-[200px]"><?= esc($ticket['subject']) ?></p>
+                            </td>
+                            <td class="py-3 hidden md:table-cell">
+                                <span class="text-xs px-2 py-1 rounded-full <?= $ticket['priority_id'] >= 3 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' ?>">
+                                    <?= esc($ticket['priority_name']) ?>
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <span class="text-xs px-2 py-1 rounded-full <?= 
+                                    $ticket['status_id'] == 1 ? 'bg-blue-100 text-blue-800' : 
+                                    ($ticket['status_id'] == 2 ? 'bg-purple-100 text-purple-800' : 
+                                    ($ticket['status_id'] == 3 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')) 
+                                ?>">
+                                    <?= esc($ticket['status_name']) ?>
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <a href="<?= base_url('department/it-support/ticket_detail/') . $ticket['ticket_id'] ?>" 
+                                   class="text-sm text-secondary hover:underline">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <style>
@@ -261,7 +325,6 @@
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -269,12 +332,9 @@
     }
 
     @keyframes pulse {
-
-        0%,
-        100% {
+        0%, 100% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.7;
         }
@@ -293,7 +353,6 @@
         0% {
             background-color: rgba(117, 110, 164, 0.1);
         }
-
         100% {
             background-color: transparent;
         }
@@ -316,8 +375,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Recent tickets data from PHP
+        const recentTicketsData = <?= json_encode($recent_tickets) ?>;
+        
         // Render initial recent tickets table
-        renderRecentTable(<?= json_encode($recent_tickets) ?>);
+        renderRecentTable(recentTicketsData);
 
         // Add urgent pulse animation to urgent tickets
         setTimeout(() => {
@@ -365,28 +427,44 @@
                 if (!e.target.closest('a') && !e.target.closest('button')) {
                     const ticketId = this.querySelector('td:first-child span')?.textContent;
                     if (ticketId) {
-                        window.location.href = `<?= base_url('department/it-support/ticket_detail/') ?>${ticketId.replace('#', '')}`;
+                        // Extract numeric ID from ticket number
+                        const idMatch = ticketId.match(/PROJ\d+-(\d+)/);
+                        if (idMatch) {
+                            window.location.href = `<?= base_url('department/it-support/ticket_detail/') ?>${idMatch[1]}`;
+                        }
                     }
                 }
             });
         });
     });
 
-    // Recent tickets data
-    const recentTicketsData = <?= json_encode($recent_tickets) ?>;
+    let recentSortDirection = 'desc';
+    let recentSortColumn = 'id';
 
     function renderRecentTable(tickets) {
         const tbody = document.getElementById('recentTicketsTable');
         tbody.innerHTML = '';
+
+        if (tickets.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-400">No tickets found</p>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('recentShowingCount').textContent = '0';
+            return;
+        }
 
         tickets.forEach((ticket, index) => {
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             const row = document.createElement('tr');
             row.className = `${rowClass} hover-row transition-colors cursor-pointer`;
 
-            // Single View button for all tickets
             const actionButtons = `
-                <a href="<?= base_url('department/it-support/ticket_detail/') ?>${ticket.id_num}" 
+                <a href="<?= base_url('department/it-support/ticket_detail/') ?>${ticket.ticket_id}" 
                    class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
                     <i class="fas fa-eye text-xs"></i>
                     <span>View</span>
@@ -395,25 +473,25 @@
 
             row.innerHTML = `
                 <td class="py-3 px-4">
-                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
+                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.ticket_number}</span>
                 </td>
                 <td class="py-3 px-4">
                     <div>
                         <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-xs">${ticket.subject}</p>
-                        <p class="text-gray-500 text-xs mt-1 md:hidden">${ticket.project}</p>
+                        <p class="text-gray-500 text-xs mt-1 md:hidden">${ticket.project_name || 'No Project'}</p>
                     </div>
                 </td>
                 <td class="py-3 px-4 hidden md:table-cell">
-                    <span class="text-gray-700 text-sm">${ticket.project}</span>
+                    <span class="text-gray-700 text-sm">${ticket.project_name || 'No Project'}</span>
                 </td>
                 <td class="py-3 px-4">
                     <span class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
-                        ${ticket.priority}
+                        ${ticket.priority_name}
                     </span>
                 </td>
                 <td class="py-3 px-4 hidden sm:table-cell">
                     <span class="px-2 py-1 text-xs rounded-full ${ticket.statusColor} font-medium whitespace-nowrap">
-                        ${ticket.status}
+                        ${ticket.status_name}
                     </span>
                 </td>
                 <td class="py-3 px-4 hidden lg:table-cell">
@@ -437,17 +515,14 @@
             const term = searchTerm.toLowerCase();
             return (
                 ticket.subject.toLowerCase().includes(term) ||
-                ticket.id.toLowerCase().includes(term) ||
-                ticket.project.toLowerCase().includes(term) ||
-                ticket.status.toLowerCase().includes(term) ||
-                ticket.priority.toLowerCase().includes(term)
+                ticket.ticket_number.toLowerCase().includes(term) ||
+                (ticket.project_name && ticket.project_name.toLowerCase().includes(term)) ||
+                ticket.status_name.toLowerCase().includes(term) ||
+                ticket.priority_name.toLowerCase().includes(term)
             );
         });
         renderRecentTable(filtered);
     }
-
-    let recentSortDirection = 'desc';
-    let recentSortColumn = 'id';
 
     function sortRecentTickets(column) {
         if (recentSortColumn === column) {
@@ -462,24 +537,27 @@
 
             switch (column) {
                 case 'id':
-                    aValue = a.id_num;
-                    bValue = b.id_num;
+                    // Extract numeric part from ticket number
+                    const aNum = parseInt(a.ticket_number.match(/\d+/)?.[0]) || 0;
+                    const bNum = parseInt(b.ticket_number.match(/\d+/)?.[0]) || 0;
+                    aValue = aNum;
+                    bValue = bNum;
                     break;
                 case 'subject':
                     aValue = a.subject.toLowerCase();
                     bValue = b.subject.toLowerCase();
                     break;
                 case 'project':
-                    aValue = a.project.toLowerCase();
-                    bValue = b.project.toLowerCase();
+                    aValue = (a.project_name || '').toLowerCase();
+                    bValue = (b.project_name || '').toLowerCase();
                     break;
                 case 'priority':
-                    aValue = a.priority_value;
-                    bValue = b.priority_value;
+                    aValue = a.priority_id;
+                    bValue = b.priority_id;
                     break;
                 case 'status':
-                    aValue = a.status.toLowerCase();
-                    bValue = b.status.toLowerCase();
+                    aValue = a.status_name.toLowerCase();
+                    bValue = b.status_name.toLowerCase();
                     break;
                 case 'updated':
                     aValue = a.timestamp;

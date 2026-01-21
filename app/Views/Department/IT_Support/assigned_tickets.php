@@ -22,8 +22,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex-1">
                 <h1 class="text-2xl md:text-[32px] font-semibold mb-1 md:mb-[5px] text-text-dark">Assigned Tickets</h1>
-                <p class="text-sm md:text-[15px] font-light text-[#666]">Review and manage tickets assigned to IT
-                    Support department</p>
+                <p class="text-sm md:text-[15px] font-light text-[#666]">Review and manage tickets assigned to IT Support department</p>
             </div>
 
             <!-- Search and Stats -->
@@ -41,7 +40,7 @@
                 <div class="px-4 py-2 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center gap-2">
                     <i class="fas fa-tasks"></i>
                     <span class="font-medium">
-                        <span class="font-bold">6</span> Active
+                        <span class="font-bold"><?= $stats['in_progress'] ?? 0 ?></span> In Progress
                     </span>
                 </div>
             </div>
@@ -57,7 +56,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Total Assigned</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">12</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['total_tickets'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -69,7 +68,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">In Progress</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">5</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['in_progress'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -81,7 +80,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Resolved Today</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">3</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['resolved_today'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -93,7 +92,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">High Priority</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800">4</p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $stats['high_priority'] ?? 0 ?></p>
                 </div>
             </div>
         </div>
@@ -127,19 +126,18 @@
                         <select id="filterProject"
                             class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
                             <option value="all">All Projects</option>
-                            <option value="alpha">Project Alpha</option>
-                            <option value="beta">Project Beta</option>
-                            <option value="gamma">Project Gamma</option>
+                            <?php foreach ($projects as $project): ?>
+                                <option value="<?= $project['project_id'] ?>"><?= esc($project['project_name']) ?></option>
+                            <?php endforeach; ?>
                         </select>
 
                         <select id="filterStatus"
                             class="border border-gray-300 rounded-lg px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:border-secondary">
                             <option value="all">All Status</option>
-                            <option value="open">Open</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="need-info">Need Info</option>
-                            <option value="closed">Closed</option>
+                            <option value="1">Open</option>
+                            <option value="2">In Progress</option>
+                            <option value="3">Resolved</option>
+                            <option value="4">Closed</option>
                         </select>
                     </div>
 
@@ -157,19 +155,18 @@
                 <select id="filterProjectMobile"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
                     <option value="all">All Projects</option>
-                    <option value="alpha">Project Alpha</option>
-                    <option value="beta">Project Beta</option>
-                    <option value="gamma">Project Gamma</option>
+                    <?php foreach ($projects as $project): ?>
+                        <option value="<?= $project['project_id'] ?>"><?= esc($project['project_name']) ?></option>
+                    <?php endforeach; ?>
                 </select>
 
                 <select id="filterStatusMobile"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-secondary">
                     <option value="all">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="need-info">Need Info</option>
-                    <option value="closed">Closed</option>
+                    <option value="1">Open</option>
+                    <option value="2">In Progress</option>
+                    <option value="3">Resolved</option>
+                    <option value="4">Closed</option>
                 </select>
             </div>
         </div>
@@ -228,97 +225,71 @@
                     </tr>
                 </thead>
                 <tbody id="ticketsTable" class="divide-y divide-gray-200">
-                    <?php
-                    $assigned_tickets = [
-                        [
-                            'id' => '#10421',
-                            'id_num' => 10421,
-                            'subject' => 'Login issue causing error message',
-                            'project' => 'Project Alpha',
-                            'priority' => 'High',
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800',
-                            'status' => 'Open',
-                            'statusColor' => 'bg-blue-100 text-blue-800',
-                            'time' => '5 minutes ago',
-                            'timestamp' => strtotime('-5 minutes'),
-                        ],
-                        [
-                            'id' => '#10422',
-                            'id_num' => 10422,
-                            'subject' => 'Feature request for new export option',
-                            'project' => 'Project Alpha',
-                            'priority' => 'Low',
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800',
-                            'status' => 'Resolved',
-                            'statusColor' => 'bg-green-100 text-green-800',
-                            'time' => '1 hour ago',
-                            'timestamp' => strtotime('-1 hour'),
-                        ],
-                        [
-                            'id' => '#10423',
-                            'id_num' => 10423,
-                            'subject' => 'Fix firestorx issues neat issues',
-                            'project' => 'Project Beta',
-                            'priority' => 'High',
-                            'priority_value' => 3,
-                            'priorityColor' => 'bg-orange-100 text-orange-800',
-                            'status' => 'Need Info',
-                            'statusColor' => 'bg-gray-200 text-gray-800',
-                            'time' => '2 hours ago',
-                            'timestamp' => strtotime('-2 hours'),
-                        ],
-                        [
-                            'id' => '#10424',
-                            'id_num' => 10424,
-                            'subject' => 'Fix safissax issues source log iss',
-                            'project' => 'Project Beta',
-                            'priority' => 'Low',
-                            'priority_value' => 1,
-                            'priorityColor' => 'bg-blue-100 text-blue-800',
-                            'status' => 'Closed',
-                            'statusColor' => 'bg-gray-100 text-gray-800',
-                            'time' => '3 hours ago',
-                            'timestamp' => strtotime('-3 hours'),
-                        ],
-                        [
-                            'id' => '#10425',
-                            'id_num' => 10425,
-                            'subject' => 'Fix mixizading app updates',
-                            'project' => 'Project Alpha',
-                            'priority' => 'Urgent',
-                            'priority_value' => 4,
-                            'priorityColor' => 'bg-red-100 text-red-800',
-                            'status' => 'In Progress',
-                            'statusColor' => 'bg-purple-100 text-purple-800',
-                            'time' => '4 hours ago',
-                            'timestamp' => strtotime('-4 hours'),
-                        ],
-                        [
-                            'id' => '#10426',
-                            'id_num' => 10426,
-                            'subject' => 'Server downtime issue - Data Center A',
-                            'project' => 'Project Gamma',
-                            'priority' => 'Urgent',
-                            'priority_value' => 4,
-                            'priorityColor' => 'bg-red-100 text-red-800',
-                            'status' => 'In Progress',
-                            'statusColor' => 'bg-purple-100 text-purple-800',
-                            'time' => '5 hours ago',
-                            'timestamp' => strtotime('-5 hours'),
-                        ],
-                    ];
-                    ?>
+                    <?php if (!empty($tickets)): ?>
+                        <?php foreach ($tickets as $ticket): ?>
+                            <tr class="bg-white hover:bg-gray-50 transition-colors">
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['ticket_number']) ?></span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <div>
+                                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none"><?= esc($ticket['subject']) ?></p>
+                                        <p class="text-gray-500 text-xs mt-1 hidden md:block"><?= esc($ticket['project_name'] ?? 'No Project') ?></p>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
+                                    <span class="text-gray-700 text-sm"><?= esc($ticket['project_name'] ?? 'No Project') ?></span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['priority_name']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap">
+                                        <?= esc($ticket['status_name']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
+                                    <span class="text-gray-600 text-sm"><?= esc($ticket['time']) ?></span>
+                                </td>
+                                <td class="py-3 px-3 md:py-4 md:px-6">
+                                    <div class="flex items-center gap-2">
+                                        <a href="<?= base_url('department/it-support/ticket_detail/') . $ticket['ticket_id'] ?>" 
+                                           class="px-3 py-1 md:px-3 md:py-2 bg-blue-100 text-blue-700 text-xs md:text-sm rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                                            <i class="fas fa-eye text-xs"></i>
+                                            <span>View</span>
+                                        </a>
+                                        <a href="<?= base_url('department/it-support/ticket_summary/') . $ticket['ticket_id'] ?>" 
+                                           class="px-3 py-1 md:px-3 md:py-2 bg-gray-100 text-gray-700 text-xs md:text-sm rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                                            <i class="fas fa-file-alt text-xs"></i>
+                                            <span>Summary</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
+                                    <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
+                                    <p class="text-xs md:text-sm text-gray-500">You don't have any assigned tickets yet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
+        <?php if (!empty($tickets)): ?>
         <div class="p-4 md:p-6 border-t border-gray-200">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="text-gray-600 text-xs md:text-sm">
-                    Showing <span id="showingCount">6</span> of <span id="totalCount">12</span> entries
+                    Showing <span id="showingCount"><?= count($tickets) ?></span> of <span id="totalCount"><?= count($tickets) ?></span> entries
                 </div>
                 <div class="flex items-center gap-1 md:gap-2">
                     <button id="prevPage"
@@ -337,6 +308,7 @@
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Help Cards -->
@@ -371,11 +343,25 @@
             </p>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <a href="<?= base_url('department/it-support/ticket_detail/10425') ?>"
+                <?php if (!empty($tickets)): ?>
+                <?php 
+                // Find first high priority ticket
+                $highPriorityTicket = null;
+                foreach ($tickets as $ticket) {
+                    if ($ticket['priority_id'] >= 3) {
+                        $highPriorityTicket = $ticket;
+                        break;
+                    }
+                }
+                ?>
+                <?php if ($highPriorityTicket): ?>
+                <a href="<?= base_url('department/it-support/ticket_detail/') . $highPriorityTicket['ticket_id'] ?>"
                     class="px-4 md:px-6 py-2 md:py-3 bg-white text-secondary rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
                     <i class="fas fa-tools"></i>
                     <span>View Urgent Ticket</span>
                 </a>
+                <?php endif; ?>
+                <?php endif; ?>
 
                 <button onclick="generateReport()"
                     class="px-4 md:px-6 py-2 md:py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2">
@@ -398,7 +384,6 @@
         0% {
             background-color: rgba(117, 110, 164, 0.1);
         }
-
         100% {
             background-color: transparent;
         }
@@ -410,12 +395,9 @@
 
     /* Urgent priority pulse */
     @keyframes pulse-urgent {
-
-        0%,
-        100% {
+        0%, 100% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.7;
         }
@@ -427,8 +409,8 @@
 </style>
 
 <script>
-    // Ticket data
-    const ticketsData = <?= json_encode($assigned_tickets) ?>;
+    // Ticket data from PHP
+    const ticketsData = <?= json_encode($tickets) ?>;
 
     // Sorting state
     let currentSort = { column: 'date', direction: 'desc' };
@@ -536,30 +518,24 @@
         if (searchTerm) {
             filteredTickets = filteredTickets.filter(ticket =>
                 ticket.subject.toLowerCase().includes(searchTerm) ||
-                ticket.id.toLowerCase().includes(searchTerm) ||
-                ticket.project.toLowerCase().includes(searchTerm) ||
-                ticket.status.toLowerCase().includes(searchTerm)
+                ticket.ticket_number.toLowerCase().includes(searchTerm) ||
+                (ticket.project_name && ticket.project_name.toLowerCase().includes(searchTerm)) ||
+                ticket.status_name.toLowerCase().includes(searchTerm) ||
+                ticket.priority_name.toLowerCase().includes(searchTerm)
             );
         }
 
         // Apply project filter
         if (currentFilters.project !== 'all') {
             filteredTickets = filteredTickets.filter(ticket =>
-                ticket.project.toLowerCase().includes(currentFilters.project)
+                ticket.project_id == currentFilters.project
             );
         }
 
         // Apply status filter
         if (currentFilters.status !== 'all') {
-            const statusMap = {
-                'open': 'Open',
-                'in-progress': 'In Progress',
-                'resolved': 'Resolved',
-                'need-info': 'Need Info',
-                'closed': 'Closed'
-            };
             filteredTickets = filteredTickets.filter(ticket =>
-                ticket.status === statusMap[currentFilters.status]
+                ticket.status_id == currentFilters.status
             );
         }
 
@@ -569,24 +545,27 @@
 
             switch (currentSort.column) {
                 case 'id':
-                    aValue = a.id_num;
-                    bValue = b.id_num;
+                    // Extract numeric part from ticket number
+                    const aNum = parseInt(a.ticket_number.match(/\d+/)?.[0]) || 0;
+                    const bNum = parseInt(b.ticket_number.match(/\d+/)?.[0]) || 0;
+                    aValue = aNum;
+                    bValue = bNum;
                     break;
                 case 'subject':
                     aValue = a.subject.toLowerCase();
                     bValue = b.subject.toLowerCase();
                     break;
                 case 'project':
-                    aValue = a.project.toLowerCase();
-                    bValue = b.project.toLowerCase();
+                    aValue = (a.project_name || '').toLowerCase();
+                    bValue = (b.project_name || '').toLowerCase();
                     break;
                 case 'priority':
-                    aValue = a.priority_value;
-                    bValue = b.priority_value;
+                    aValue = a.priority_id;
+                    bValue = b.priority_id;
                     break;
                 case 'status':
-                    aValue = a.status.toLowerCase();
-                    bValue = b.status.toLowerCase();
+                    aValue = a.status_name.toLowerCase();
+                    bValue = b.status_name.toLowerCase();
                     break;
                 case 'updated':
                     aValue = a.timestamp;
@@ -616,31 +595,46 @@
         const tbody = document.getElementById('ticketsTable');
         tbody.innerHTML = '';
 
+        if (tickets.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
+                            <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
+                            <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
         tickets.forEach((ticket, index) => {
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             const row = document.createElement('tr');
             row.className = `${rowClass} hover-row transition-colors`;
             row.innerHTML = `
                 <td class="py-3 px-3 md:py-4 md:px-6">
-                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.id}</span>
+                    <span class="font-bold text-gray-800 text-sm md:text-base">${ticket.ticket_number}</span>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <div>
                         <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none">${ticket.subject}</p>
-                        <p class="text-gray-500 text-xs mt-1 hidden md:block">${ticket.project}</p>
+                        <p class="text-gray-500 text-xs mt-1 hidden md:block">${ticket.project_name || 'No Project'}</p>
                     </div>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
-                    <span class="text-gray-700 text-sm">${ticket.project}</span>
+                    <span class="text-gray-700 text-sm">${ticket.project_name || 'No Project'}</span>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <span class="px-2 py-1 text-xs rounded-full ${ticket.priorityColor} font-medium whitespace-nowrap">
-                        ${ticket.priority}
+                        ${ticket.priority_name}
                     </span>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
                     <span class="px-2 py-1 text-xs rounded-full ${ticket.statusColor} font-medium whitespace-nowrap">
-                        ${ticket.status}
+                        ${ticket.status_name}
                     </span>
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6 hidden md:table-cell">
@@ -648,12 +642,12 @@
                 </td>
                 <td class="py-3 px-3 md:py-4 md:px-6">
                     <div class="flex items-center gap-2">
-                        <a href="<?= base_url('department/it-support/ticket_detail/') ?>${ticket.id_num}" 
+                        <a href="<?= base_url('department/it-support/ticket_detail/') ?>${ticket.ticket_id}" 
                            class="px-3 py-1 md:px-3 md:py-2 bg-blue-100 text-blue-700 text-xs md:text-sm rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
                             <i class="fas fa-eye text-xs"></i>
                             <span>View</span>
                         </a>
-                        <a href="<?= base_url('department/it-support/ticket_summary/') ?>${ticket.id_num}" 
+                        <a href="<?= base_url('department/it-support/ticket_summary/') ?>${ticket.ticket_id}" 
                            class="px-3 py-1 md:px-3 md:py-2 bg-gray-100 text-gray-700 text-xs md:text-sm rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap flex items-center gap-1">
                             <i class="fas fa-file-alt text-xs"></i>
                             <span>Summary</span>
@@ -663,21 +657,6 @@
             `;
             tbody.appendChild(row);
         });
-
-        // If no tickets match filters
-        if (tickets.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="7" class="py-8 px-4 md:px-6 text-center text-gray-500">
-                    <div class="flex flex-col items-center justify-center">
-                        <i class="fas fa-inbox text-2xl md:text-3xl text-gray-300 mb-3"></i>
-                        <p class="text-base md:text-lg font-medium text-gray-400 mb-1">No tickets found</p>
-                        <p class="text-xs md:text-sm text-gray-500">Try adjusting your search or filters</p>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        }
     }
 
     function updateSortDropdown() {

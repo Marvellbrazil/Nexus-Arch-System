@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/it_support_layout') ?>
 
-<?= $this->section('title') ?>Ticket #<?= $ticket_id ?? '10421' ?> Detail - IT Support<?= $this->endSection() ?>
+<?= $this->section('title') ?>Ticket #<?= $ticket['ticket_number'] ?? 'Unknown' ?> Detail - IT Support<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
@@ -22,11 +22,13 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <h1 class="text-2xl md:text-[32px] font-semibold text-text-dark">Ticket
-                        #<?= $ticket_id ?? '10421' ?></h1>
+                    <h1 class="text-2xl md:text-[32px] font-semibold text-text-dark">Ticket #<?= esc($ticket['ticket_number'] ?? 'Unknown') ?></h1>
                     <div class="px-3 py-1 bg-secondary text-white text-sm font-semibold rounded-full">IT Support</div>
                 </div>
-                <p class="text-sm md:text-[15px] font-light text-[#666]">Server maintenance required • Project Alpha</p>
+                <p class="text-sm md:text-[15px] font-light text-[#666]">
+                    <?= esc($ticket['category_name'] ?? 'No category') ?> • 
+                    <?= esc($ticket['project_name'] ?? 'No project') ?>
+                </p>
             </div>
 
             <!-- Action Buttons -->
@@ -41,11 +43,11 @@
                     <i class="fas fa-expand-alt"></i>
                     Focus View
                 </button>
-                <button
+                <a href="<?= base_url('department/it-support/ticket_summary/' . ($ticket['ticket_id'] ?? '')) ?>"
                     class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-sm font-medium flex items-center gap-2">
-                    <i class="fas fa-download"></i>
-                    Export Log
-                </button>
+                    <i class="fas fa-file-alt"></i>
+                    View Summary
+                </a>
             </div>
         </div>
     </div>
@@ -59,17 +61,30 @@
                 <div>
                     <div class="text-white/80 text-sm mb-1">Status</div>
                     <div class="flex items-center gap-3">
-                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">IN PROGRESS</div>
-                        <div class="text-lg font-bold">Working on Fix</div>
+                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">
+                            <?= strtoupper($ticket['status_name'] ?? 'UNKNOWN') ?>
+                        </div>
+                        <div class="text-lg font-bold">
+                            <?= 
+                                ($ticket['status_id'] ?? 1) == 2 ? 'Working on Fix' : 
+                                (($ticket['status_id'] ?? 1) == 3 ? 'Resolved' : 
+                                (($ticket['status_id'] ?? 1) == 4 ? 'Closed' : 'Open')) 
+                            ?>
+                        </div>
                     </div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Priority</div>
-                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block">HIGH</div>
+                    <div class="px-3 py-1 <?= 
+                        ($ticket['priority_id'] ?? 1) >= 3 ? 'bg-red-500/20' : 
+                        (($ticket['priority_id'] ?? 1) == 2 ? 'bg-yellow-500/20' : 'bg-blue-500/20') 
+                    ?> rounded-full text-sm font-semibold inline-block">
+                        <?= strtoupper($ticket['priority_name'] ?? 'NORMAL') ?>
+                    </div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Category</div>
-                    <div class="text-lg font-semibold">Server Infrastructure</div>
+                    <div class="text-lg font-semibold"><?= esc($ticket['category_name'] ?? 'Uncategorized') ?></div>
                 </div>
             </div>
         </div>
@@ -81,21 +96,42 @@
                 <div>
                     <div class="flex justify-between text-sm text-gray-600 mb-1">
                         <span>Completion</span>
-                        <span>65%</span>
+                        <span>
+                            <?= 
+                                ($ticket['status_id'] ?? 1) == 1 ? '0%' : 
+                                (($ticket['status_id'] ?? 1) == 2 ? '65%' : 
+                                (($ticket['status_id'] ?? 1) == 3 ? '100%' : '100%')) 
+                            ?>
+                        </span>
                     </div>
                     <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-secondary rounded-full w-[65%]"></div>
+                        <div class="h-full bg-secondary rounded-full" 
+                             style="width: <?= 
+                                ($ticket['status_id'] ?? 1) == 1 ? '0%' : 
+                                (($ticket['status_id'] ?? 1) == 2 ? '65%' : 
+                                (($ticket['status_id'] ?? 1) == 3 ? '100%' : '100%')) 
+                             ?>"></div>
                     </div>
                 </div>
                 <div class="text-sm text-gray-600">
                     <div class="flex items-center gap-2 mb-1">
                         <i class="far fa-clock text-gray-400"></i>
-                        <span>Time spent: 3h 45m</span>
+                        <span>
+                            Created: <?= date('M d, Y H:i', strtotime($ticket['created_at'] ?? 'now')) ?>
+                        </span>
                     </div>
+                    <?php if (!empty($ticket['assigned_to_name'])): ?>
                     <div class="flex items-center gap-2">
                         <i class="fas fa-user text-gray-400"></i>
-                        <span>Assigned to: IT Support Team</span>
+                        <span>Assigned to: <?= esc($ticket['assigned_to_name']) ?></span>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($ticket['due_date'])): ?>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-calendar-day text-gray-400"></i>
+                        <span>Due: <?= date('M d, Y', strtotime($ticket['due_date'])) ?></span>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -105,23 +141,57 @@
             <h3 class="text-lg font-semibold text-gray-800 mb-4">SLA Status</h3>
             <div class="space-y-4">
                 <div>
+                    <?php 
+                    $firstResponseTime = !empty($ticket['first_response_at']) ? 
+                        (strtotime($ticket['first_response_at']) - strtotime($ticket['created_at'])) / 60 : null;
+                    $isResponseWithinSLA = $firstResponseTime !== null && $firstResponseTime <= 60; // 60 minutes SLA
+                    ?>
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-sm text-gray-600">Response Time</span>
-                        <span class="text-green-600 font-medium">✓ Within SLA</span>
+                        <span class="<?= $isResponseWithinSLA ? 'text-green-600' : 'text-red-600' ?> font-medium">
+                            <?= $isResponseWithinSLA ? '✓ Within SLA' : '✗ Exceeded SLA' ?>
+                        </span>
                     </div>
-                    <div class="text-xs text-gray-500">Initial response: 45m ago</div>
+                    <div class="text-xs text-gray-500">
+                        <?php if ($firstResponseTime !== null): ?>
+                            Initial response: <?= round($firstResponseTime) ?>m after creation
+                        <?php else: ?>
+                            No response yet
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div>
+                    <?php 
+                    $dueDate = !empty($ticket['due_date']) ? strtotime($ticket['due_date']) : null;
+                    $now = time();
+                    $isResolutionOnTrack = $dueDate === null || $dueDate > $now;
+                    $timeRemaining = $dueDate !== null ? ($dueDate - $now) / 3600 : null;
+                    ?>
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-sm text-gray-600">Resolution Time</span>
-                        <span class="text-yellow-600 font-medium">⚠ 12h remaining</span>
+                        <span class="<?= 
+                            $isResolutionOnTrack && $timeRemaining !== null && $timeRemaining > 0 ? 
+                            'text-yellow-600' : 'text-red-600' 
+                        ?> font-medium">
+                            <?= 
+                                $timeRemaining !== null && $timeRemaining > 0 ? 
+                                "⚠ " . round($timeRemaining) . "h remaining" : 
+                                ($ticket['status_id'] == 3 ? '✓ Resolved' : '✗ Overdue') 
+                            ?>
+                        </span>
                     </div>
-                    <div class="text-xs text-gray-500">Due: Today, 8:00 PM</div>
+                    <div class="text-xs text-gray-500">
+                        <?php if ($dueDate !== null): ?>
+                            Due: <?= date('M d, Y H:i', $dueDate) ?>
+                        <?php else: ?>
+                            No due date set
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="pt-3 border-t border-gray-200">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">Department</span>
-                        <span class="text-blue-600 font-medium">IT Support</span>
+                        <span class="text-blue-600 font-medium"><?= esc($ticket['department_name'] ?? 'IT Support') ?></span>
                     </div>
                 </div>
             </div>
@@ -137,239 +207,133 @@
                 <!-- Section Header -->
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-semibold text-gray-800">IT Support Conversation</h2>
+                        <h2 class="text-xl font-semibold text-gray-800">Ticket Conversation</h2>
                         <div class="text-gray-600 text-sm">
                             <i class="far fa-comments mr-1"></i>
-                            6 messages
+                            <?= count($messages ?? []) ?> messages
                         </div>
                     </div>
                 </div>
 
                 <!-- Conversation Container -->
-                <div id="conversationContainer" class="p-6 h-[500px] overflow-y-auto">
+                <div id="conversationContainer" class="p-6 max-h-[500px] overflow-y-auto">
                     <!-- Conversation Timeline -->
                     <div class="space-y-6">
-                        <!-- Date Header - Yesterday -->
-                        <div class="text-center">
-                            <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Yesterday</span>
-                        </div>
-
-                        <!-- Message 1 - Support Team (Forwarded) -->
-                        <div class="flex gap-4">
-                            <!-- Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-headset text-green-600"></i>
+                        <?php if (!empty($messages)): ?>
+                            <?php 
+                            $currentDate = null;
+                            foreach ($messages as $message): 
+                                $messageDate = date('Y-m-d', strtotime($message['created_at']));
+                                $displayDate = date('F j, Y', strtotime($message['created_at']));
+                                
+                                // Check if we need to display date header
+                                if ($currentDate !== $messageDate):
+                                    $currentDate = $messageDate;
+                                    $today = date('Y-m-d');
+                                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                                    
+                                    $dateLabel = $messageDate === $today ? 'Today' : 
+                                                ($messageDate === $yesterday ? 'Yesterday' : $displayDate);
+                            ?>
+                                <div class="text-center">
+                                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                                        <?= $dateLabel ?>
+                                    </span>
                                 </div>
-                            </div>
+                            <?php endif; ?>
 
-                            <!-- Message Content -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div>
-                                        <span class="text-gray-800 font-semibold">Support Team</span>
-                                        <span
-                                            class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support
-                                            Agent</span>
-                                    </div>
-                                    <div class="text-gray-500 text-sm ml-auto">
-                                        <i class="far fa-clock mr-1"></i>
-                                        2:30 PM
-                                    </div>
-                                </div>
-
-                                <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                                    <p class="text-gray-700 mb-3">
-                                        <span class="font-semibold">Ticket forwarded to IT Support Department</span><br>
-                                        This server issue requires infrastructure expertise. Please review the server
-                                        logs and error details provided by the customer.
-                                    </p>
-
-                                    <!-- Forward Info -->
-                                    <div
-                                        class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-200">
-                                        <i class="fas fa-share-alt text-green-600"></i>
-                                        <span class="text-green-700 text-sm font-medium">Forwarded from: Technical
-                                            Support</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Message 2 - IT Support -->
-                        <div class="flex gap-4">
-                            <!-- Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-server text-white"></i>
-                                </div>
-                            </div>
-
-                            <!-- Message Content -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div>
-                                        <span class="text-gray-800 font-semibold">IT Support</span>
-                                        <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded">IT
-                                            Specialist</span>
-                                    </div>
-                                    <div class="text-gray-500 text-sm ml-auto">
-                                        <i class="far fa-clock mr-1"></i>
-                                        3:15 PM
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-50 rounded-xl p-4">
-                                    <p class="text-gray-700 mb-3">
-                                        Received the ticket. I've accessed the server logs and identified the issue. It
-                                        appears to be a memory leak in the application server.
-                                        Need to coordinate with the development team for a potential fix.
-                                    </p>
-
-                                    <!-- Attachment -->
-                                    <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                                        <div class="w-8 h-8 bg-secondary/10 rounded flex items-center justify-center">
-                                            <i class="fas fa-file-alt text-secondary"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="text-gray-800 text-sm font-medium">server_logs_analysis.txt
+                                <!-- Message -->
+                                <div class="flex gap-4 message-item">
+                                    <!-- Avatar -->
+                                    <div class="flex-shrink-0">
+                                        <?php if (!empty($message['photo_profile'])): ?>
+                                            <img src="<?= base_url($message['photo_profile']) ?>" 
+                                                 alt="<?= esc($message['sender_name']) ?>"
+                                                 class="w-10 h-10 rounded-full object-cover border-2 border-white shadow">
+                                        <?php else: ?>
+                                            <div class="w-10 h-10 <?= 
+                                                $message['sender_id'] == $user_details['user_id'] ? 
+                                                'bg-secondary' : 'bg-green-100' 
+                                            ?> rounded-full flex items-center justify-center">
+                                                <i class="fas <?= 
+                                                    $message['sender_id'] == $user_details['user_id'] ? 
+                                                    'fa-server text-white' : 'fa-headset text-green-600' 
+                                                ?>"></i>
                                             </div>
-                                            <div class="text-gray-500 text-xs">128 KB • Log File</div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Message Content -->
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <div>
+                                                <span class="text-gray-800 font-semibold"><?= esc($message['sender_name']) ?></span>
+                                                <?php if ($message['sender_id'] == $user_details['user_id']): ?>
+                                                <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded">
+                                                    IT Support
+                                                </span>
+                                                <?php else: ?>
+                                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">
+                                                    <?= 
+                                                        $message['sender_id'] == $ticket['customer_id'] ? 'Customer' : 
+                                                        (in_array($message['sender_id'], [1, 3]) ? 'Support' : 'User')
+                                                    ?>
+                                                </span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="text-gray-500 text-sm ml-auto">
+                                                <i class="far fa-clock mr-1"></i>
+                                                <?= date('g:i A', strtotime($message['created_at'])) ?>
+                                            </div>
                                         </div>
-                                        <button class="text-gray-400 hover:text-secondary download-btn">
-                                            <i class="fas fa-download"></i>
-                                        </button>
+
+                                        <div class="<?= 
+                                            $message['sender_id'] == $user_details['user_id'] ? 
+                                            'bg-gray-50' : 'bg-green-50 border border-green-100' 
+                                        ?> rounded-xl p-4">
+                                            <p class="text-gray-700 mb-3"><?= nl2br(esc($message['message'])) ?></p>
+                                            
+                                            <?php 
+                                            // Check if this is a status update message
+                                            $isStatusUpdate = stripos($message['message'], 'status') !== false || 
+                                                             stripos($message['message'], 'resolved') !== false ||
+                                                             stripos($message['message'], 'closed') !== false;
+                                            
+                                            if ($isStatusUpdate): 
+                                            ?>
+                                            <div class="<?= 
+                                                stripos($message['message'], 'resolved') !== false || 
+                                                stripos($message['message'], 'closed') !== false ? 
+                                                'border-green-300 bg-white' : 'border-blue-300 bg-white' 
+                                            ?> flex items-center gap-2 px-3 py-2 rounded-lg border">
+                                                <i class="fas <?= 
+                                                    stripos($message['message'], 'resolved') !== false || 
+                                                    stripos($message['message'], 'closed') !== false ? 
+                                                    'fa-check-circle text-green-600' : 'fa-sync-alt text-blue-600' 
+                                                ?>"></i>
+                                                <span class="<?= 
+                                                    stripos($message['message'], 'resolved') !== false || 
+                                                    stripos($message['message'], 'closed') !== false ? 
+                                                    'text-green-700' : 'text-blue-700' 
+                                                ?> text-sm font-medium">
+                                                    <?= 
+                                                        stripos($message['message'], 'resolved') !== false ? 'Ticket resolved' : 
+                                                        (stripos($message['message'], 'closed') !== false ? 'Ticket closed' : 'Status updated') 
+                                                    ?>
+                                                </span>
+                                            </div>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="text-center py-8">
+                                <i class="fas fa-comments text-3xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500">No messages yet</p>
+                                <p class="text-gray-400 text-sm">Start the conversation by sending a message</p>
                             </div>
-                        </div>
-
-                        <!-- Date Header - Today -->
-                        <div class="text-center mt-8 pt-8 border-t border-gray-200">
-                            <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Today</span>
-                        </div>
-
-                        <!-- Message 3 - IT Support -->
-                        <div class="flex gap-4">
-                            <!-- Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-server text-white"></i>
-                                </div>
-                            </div>
-
-                            <!-- Message Content -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div>
-                                        <span class="text-gray-800 font-semibold">Michael Chen</span>
-                                        <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded">IT
-                                            Support Lead</span>
-                                    </div>
-                                    <div class="text-gray-500 text-sm ml-auto">
-                                        <i class="far fa-clock mr-1"></i>
-                                        9:30 AM • 2 hours ago
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-50 rounded-xl p-4">
-                                    <p class="text-gray-700 mb-3">
-                                        I've escalated this to our senior infrastructure engineer. The memory leak
-                                        appears to be related to the latest deployment.
-                                        We're working on a rollback plan while the development team fixes the issue.
-                                    </p>
-
-                                    <!-- Status Update -->
-                                    <div
-                                        class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-blue-200">
-                                        <i class="fas fa-sync-alt text-blue-600"></i>
-                                        <span class="text-blue-700 text-sm font-medium">Status updated to: In
-                                            Progress</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Message 4 - Support Team -->
-                        <div class="flex gap-4">
-                            <!-- Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-headset text-green-600"></i>
-                                </div>
-                            </div>
-
-                            <!-- Message Content -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div>
-                                        <span class="text-gray-800 font-semibold">Sarah Johnson</span>
-                                        <span
-                                            class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">Support
-                                            Lead</span>
-                                    </div>
-                                    <div class="text-gray-500 text-sm ml-auto">
-                                        <i class="far fa-clock mr-1"></i>
-                                        10:45 AM • 45 min ago
-                                    </div>
-                                </div>
-
-                                <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                                    <p class="text-gray-700 mb-3">
-                                        Thanks for the update. Customer has been notified about the ongoing fix. Please
-                                        keep us posted on the rollback progress.
-                                    </p>
-
-                                    <!-- Customer Note -->
-                                    <div class="text-xs text-gray-600 mt-2">
-                                        <i class="fas fa-user-circle mr-1"></i>
-                                        Customer notification sent via email
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Message 5 - IT Support (Latest) -->
-                        <div id="latestMessage" class="flex gap-4">
-                            <!-- Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-server text-white"></i>
-                                </div>
-                            </div>
-
-                            <!-- Message Content -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div>
-                                        <span class="text-gray-800 font-semibold">IT Support Team</span>
-                                        <span
-                                            class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded">Senior
-                                            Engineer</span>
-                                    </div>
-                                    <div class="text-gray-500 text-sm ml-auto">
-                                        <i class="far fa-clock mr-1"></i>
-                                        11:15 AM • 15 min ago
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-50 rounded-xl p-4">
-                                    <p class="text-gray-700 mb-3">
-                                        Rollback completed successfully. Server memory usage has stabilized. Monitoring
-                                        the situation for the next hour.
-                                        Will provide final update once confirmed stable.
-                                    </p>
-
-                                    <!-- Progress Update -->
-                                    <div
-                                        class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-200">
-                                        <i class="fas fa-check-circle text-green-600"></i>
-                                        <span class="text-green-700 text-sm font-medium">Rollback successful • Memory
-                                            stabilized</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -377,57 +341,62 @@
             <!-- Reply Section -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Internal Note</h3>
+                
+                <form action="<?= base_url('department/it-support/ticket/' . ($ticket['ticket_id'] ?? '') . '/add_message') ?>" 
+                      method="POST" id="messageForm">
+                    <?= csrf_field() ?>
+                    
+                    <div class="space-y-4">
+                        <!-- Message Input -->
+                        <div>
+                            <textarea name="message" placeholder="Add technical notes or updates..."
+                                class="w-full h-32 p-4 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 resize-none text-gray-700"
+                                rows="4" id="messageInput" required></textarea>
+                            <div class="text-gray-500 text-xs mt-1">
+                                Internal notes are visible only to IT Support and Support teams
+                            </div>
+                        </div>
 
-                <div class="space-y-4">
-                    <!-- Message Input -->
-                    <div>
-                        <textarea placeholder="Add technical notes or updates..."
-                            class="w-full h-32 p-4 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 resize-none text-gray-700"
-                            rows="4" id="messageInput"></textarea>
-                        <div class="text-gray-500 text-xs mt-1">
-                            Internal notes are visible only to IT Support and Support teams
+                        <!-- File Attachment -->
+                        <div class="flex items-center gap-4">
+                            <button type="button" id="attachFileBtn"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2">
+                                <i class="fas fa-paperclip"></i>
+                                Attach File
+                            </button>
+                            <div id="fileInfo" class="text-gray-500 text-sm">
+                                No files attached
+                            </div>
+                        </div>
+
+                        <!-- Support Options -->
+                        <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="updateStatus" name="update_status" 
+                                       class="rounded text-secondary focus:ring-secondary" value="1">
+                                <label for="updateStatus" class="text-gray-700 text-sm">Update ticket status</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="notifySupport" name="notify_support"
+                                       class="rounded text-secondary focus:ring-secondary" value="1" checked>
+                                <label for="notifySupport" class="text-gray-700 text-sm">Notify Support team</label>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3 pt-4">
+                            <button type="submit" id="sendReplyBtn"
+                                class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium flex items-center gap-2 flex-1 justify-center">
+                                <i class="fas fa-paper-plane"></i>
+                                Send Internal Note
+                            </button>
+                            <button type="button" id="cancelBtn"
+                                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1">
+                                Cancel
+                            </button>
                         </div>
                     </div>
-
-                    <!-- File Attachment -->
-                    <div class="flex items-center gap-4">
-                        <button id="attachFileBtn"
-                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2">
-                            <i class="fas fa-paperclip"></i>
-                            Attach File
-                        </button>
-                        <div id="fileInfo" class="text-gray-500 text-sm">
-                            No files attached
-                        </div>
-                    </div>
-
-                    <!-- Support Options -->
-                    <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="updateStatus" class="rounded text-secondary focus:ring-secondary"
-                                checked>
-                            <label for="updateStatus" class="text-gray-700 text-sm">Update ticket status</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="notifySupport"
-                                class="rounded text-secondary focus:ring-secondary" checked>
-                            <label for="notifySupport" class="text-gray-700 text-sm">Notify Support team</label>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3 pt-4">
-                        <button id="sendReplyBtn"
-                            class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium flex items-center gap-2 flex-1 justify-center">
-                            <i class="fas fa-paper-plane"></i>
-                            Send Internal Note
-                        </button>
-                        <button id="cancelBtn"
-                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -444,76 +413,142 @@
 
                 <div class="p-6">
                     <div class="space-y-3">
-                        <!-- Update Status (Redesigned like Support) -->
-                        <div class="space-y-3">
-                            <label class="text-gray-700 text-sm font-medium">Update Status</label>
+                        <!-- Update Status Form -->
+                        <form action="<?= base_url('department/it-support/ticket/' . ($ticket['ticket_id'] ?? '') . '/update_status') ?>" 
+                              method="POST" id="statusForm">
+                            <?= csrf_field() ?>
+                            
+                            <div class="space-y-3">
+                                <label class="text-gray-700 text-sm font-medium">Update Status</label>
 
-                            <!-- Status Options -->
-                            <div class="space-y-2">
-                                <!-- In Progress Option -->
-                                <div class="status-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                                    data-status="in-progress">
-                                    <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                        <i class="fas fa-plus text-white text-xs"></i>
+                                <!-- Status Options -->
+                                <div class="space-y-2">
+                                    <?php 
+                                    $statuses = [
+                                        ['id' => 1, 'name' => 'Open', 'desc' => 'Ticket is open and awaiting action'],
+                                        ['id' => 2, 'name' => 'In Progress', 'desc' => 'Currently working on this ticket'],
+                                        ['id' => 3, 'name' => 'Resolved', 'desc' => 'Issue has been fixed and completed'],
+                                        ['id' => 4, 'name' => 'Closed', 'desc' => 'Ticket is closed']
+                                    ];
+                                    
+                                    foreach ($statuses as $status): 
+                                        $isCurrent = ($ticket['status_id'] ?? 1) == $status['id'];
+                                    ?>
+                                    <div class="status-option flex items-center gap-3 p-3 bg-white border <?= 
+                                        $isCurrent ? 'border-secondary' : 'border-gray-300' 
+                                    ?> rounded-lg cursor-pointer hover:bg-gray-50 <?= $isCurrent ? 'selected' : '' ?>"
+                                        data-status="<?= $status['id'] ?>">
+                                        <div class="w-4 h-4 <?= 
+                                            $isCurrent ? 'bg-purple-500' : 'bg-secondary' 
+                                        ?> rounded-full flex items-center justify-center">
+                                            <i class="fas <?= 
+                                                $isCurrent ? 'fa-check' : 'fa-plus' 
+                                            ?> text-white text-xs"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-800"><?= $status['name'] ?></p>
+                                            <p class="text-gray-500 text-xs"><?= $status['desc'] ?></p>
+                                        </div>
                                     </div>
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-800">In Progress</p>
-                                        <p class="text-gray-500 text-xs">Currently working on this ticket</p>
-                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                
+                                <!-- Hidden input for status -->
+                                <input type="hidden" name="status_id" id="selectedStatus" value="<?= $ticket['status_id'] ?? 1 ?>">
+                                
+                                <!-- Notes field -->
+                                <div class="pt-2">
+                                    <textarea name="notes" placeholder="Add notes about status change (optional)"
+                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary text-sm"
+                                        rows="2"></textarea>
                                 </div>
 
-                                <!-- Waiting for Information -->
-                                <div class="status-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                                    data-status="waiting-info">
-                                    <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                        <i class="fas fa-plus text-white text-xs"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-800">Waiting for Information</p>
-                                        <p class="text-gray-500 text-xs">Need more details from support/customer</p>
-                                    </div>
-                                </div>
-
-                                <!-- Resolved -->
-                                <div class="status-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                                    data-status="resolved">
-                                    <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                        <i class="fas fa-plus text-white text-xs"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-800">Resolved</p>
-                                        <p class="text-gray-500 text-xs">Issue has been fixed and completed</p>
-                                    </div>
-                                </div>
-
-                                <!-- On Hold -->
-                                <div class="status-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                                    data-status="on-hold">
-                                    <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                        <i class="fas fa-plus text-white text-xs"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-800">On Hold</p>
-                                        <p class="text-gray-500 text-xs">Paused due to external dependencies</p>
-                                    </div>
+                                <!-- Action Buttons -->
+                                <div class="space-y-2 pt-4">
+                                    <button type="submit" id="updateTicketBtn"
+                                        class="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium">
+                                        Update Status
+                                    </button>
+                                    
+                                    <?php if (($ticket['status_id'] ?? 1) != 3 && ($ticket['status_id'] ?? 1) != 4): ?>
+                                    <button type="button" id="markResolvedBtn"
+                                        class="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center justify-center gap-2">
+                                        <i class="fas fa-check-circle"></i>
+                                        Mark as Resolved
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="space-y-2 pt-4">
-                            <button id="updateTicketBtn"
-                                class="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium">
-                                Update Status
-                            </button>
-
-
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
 
-
+            <!-- Ticket Details Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-secondary"></i>
+                        Ticket Details
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Customer</p>
+                            <p class="font-medium text-gray-800"><?= esc($ticket['customer_name'] ?? 'Unknown') ?></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Email</p>
+                            <p class="font-medium text-gray-800"><?= esc($ticket['customer_email'] ?? 'No email') ?></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Project</p>
+                            <p class="font-medium text-gray-800"><?= esc($ticket['project_name'] ?? 'No project') ?></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Category</p>
+                            <p class="font-medium text-gray-800"><?= esc($ticket['category_name'] ?? 'Uncategorized') ?></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Created</p>
+                            <p class="font-medium text-gray-800">
+                                <?= date('M d, Y H:i', strtotime($ticket['created_at'] ?? 'now')) ?>
+                            </p>
+                        </div>
+                        
+                        <?php if (!empty($ticket['updated_at'])): ?>
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Last Updated</p>
+                            <p class="font-medium text-gray-800">
+                                <?= date('M d, Y H:i', strtotime($ticket['updated_at'])) ?>
+                            </p>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($attachments)): ?>
+                        <div class="pt-4 border-t border-gray-200">
+                            <p class="text-gray-600 text-sm mb-3">Attachments</p>
+                            <div class="space-y-2">
+                                <?php foreach ($attachments as $attachment): ?>
+                                <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                                    <i class="fas fa-file text-secondary"></i>
+                                    <span class="text-sm truncate flex-1"><?= esc($attachment['file_name']) ?></span>
+                                    <span class="text-xs text-gray-500"><?= 
+                                        round($attachment['file_size'] / 1024, 1) ?>KB
+                                    </span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -525,7 +560,6 @@
             opacity: 0;
             transform: translateY(10px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -533,12 +567,9 @@
     }
 
     @keyframes pulse {
-
-        0%,
-        100% {
+        0%, 100% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.5;
         }
@@ -635,7 +666,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Auto-scroll to latest message
+        // Auto-scroll to bottom of conversation
         const conversationContainer = document.getElementById('conversationContainer');
         if (conversationContainer) {
             setTimeout(() => {
@@ -675,7 +706,7 @@
                         <div class="flex items-center gap-2 animate-fadeIn">
                             <i class="fas fa-file text-secondary"></i>
                             <span class="text-gray-700">${file.name} (${fileSize} MB)</span>
-                            <button class="ml-2 text-red-500 hover:text-red-700 remove-file-btn">
+                            <button class="ml-2 text-red-500 hover:text-red-700 remove-file-btn" type="button">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -694,22 +725,15 @@
             });
         }
 
-        // Ticket Actions
-        const updateTicketBtn = document.getElementById('updateTicketBtn');
-        const markResolvedBtn = document.getElementById('markResolvedBtn');
-
-        // Status selection (like department selection in Support)
+        // Status selection
         document.querySelectorAll('.status-option').forEach(option => {
             option.addEventListener('click', function () {
                 // Remove selection from all
                 document.querySelectorAll('.status-option').forEach(opt => {
                     opt.classList.remove('selected');
-                    const icon = opt.querySelector('.w-4.h-4');
-                    if (icon.querySelector('.fa-check')) {
-                        icon.classList.remove('bg-purple-500');
-                        icon.classList.add('bg-secondary');
-                        icon.innerHTML = '<i class="fas fa-plus text-white text-xs"></i>';
-                    }
+                    opt.querySelector('.w-4.h-4').classList.remove('bg-purple-500');
+                    opt.querySelector('.w-4.h-4').classList.add('bg-secondary');
+                    opt.querySelector('.w-4.h-4 i').className = 'fas fa-plus text-white text-xs';
                 });
 
                 // Select this option
@@ -717,163 +741,67 @@
                 const icon = this.querySelector('.w-4.h-4');
                 icon.classList.remove('bg-secondary');
                 icon.classList.add('bg-purple-500');
-                icon.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+                icon.querySelector('i').className = 'fas fa-check text-white text-xs';
+
+                // Update hidden input value
+                const statusId = this.getAttribute('data-status');
+                document.getElementById('selectedStatus').value = statusId;
 
                 // Update button text
                 const statusName = this.querySelector('.font-medium').textContent;
-                document.getElementById('updateTicketBtn').innerHTML = `Update to ${statusName}`;
+                document.getElementById('updateTicketBtn').textContent = `Update to ${statusName}`;
             });
         });
 
-        // Set default selected status to "In Progress"
-        const inProgressOption = document.querySelector('.status-option[data-status="in-progress"]');
-        if (inProgressOption) {
-            inProgressOption.click();
-        }
-
-        // Update Ticket Status
-        if (updateTicketBtn) {
-            updateTicketBtn.addEventListener('click', function () {
-                const selectedOption = document.querySelector('.status-option.selected');
-                if (!selectedOption) {
-                    showToast('Please select a status first', 'error');
-                    return;
-                }
-
-                const newStatus = selectedOption.dataset.status;
-                const statusName = selectedOption.querySelector('.font-medium').textContent;
-
-                if (confirm(`Update ticket status to "${statusName}"?`)) {
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-                    this.disabled = true;
-
-                    setTimeout(() => {
-                        this.innerHTML = 'Update Status';
-                        this.disabled = false;
-
-                        // Update UI
-                        const statusBadge = document.querySelector('.px-3.py-1.bg-white\\/20');
-                        const statusText = document.querySelector('.text-lg.font-bold');
-
-                        if (statusBadge) {
-                            statusBadge.textContent = statusName.toUpperCase();
-
-                            // Change badge color based on status
-                            statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold inline-block';
-                            if (newStatus === 'resolved') {
-                                statusBadge.classList.add('bg-green-500', 'text-white');
-                            } else if (newStatus === 'in-progress') {
-                                statusBadge.classList.add('bg-blue-500', 'text-white');
-                            } else if (newStatus === 'waiting-info') {
-                                statusBadge.classList.add('bg-yellow-500', 'text-white');
-                            } else if (newStatus === 'on-hold') {
-                                statusBadge.classList.add('bg-gray-500', 'text-white');
-                            } else {
-                                statusBadge.classList.add('bg-white/20', 'text-white');
-                            }
-                        }
-
-                        if (statusText) {
-                            statusText.textContent = statusName;
-                        }
-
-                        showToast(`Status updated to ${statusName}`, 'success');
-
-                        // Add timeline entry
-                        addTimelineEntry('Status updated', `Changed to ${statusName}`);
-
-                    }, 1000);
-                }
-            });
-        }
-
-        // Mark as Resolved
+        // Mark as Resolved button
+        const markResolvedBtn = document.getElementById('markResolvedBtn');
         if (markResolvedBtn) {
             markResolvedBtn.addEventListener('click', function () {
-                if (confirm('Mark this ticket as resolved? This will notify the Support team.')) {
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Marking...';
-                    this.disabled = true;
-
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-check-circle"></i> Resolved';
-                        this.classList.remove('bg-green-500', 'hover:bg-green-600');
-                        this.classList.add('bg-green-600', 'hover:bg-green-700');
-
-                        // Update status selection
-                        const resolvedOption = document.querySelector('.status-option[data-status="resolved"]');
-                        if (resolvedOption) {
-                            resolvedOption.click();
-                        }
-
-                        // Update UI
-                        const statusBadge = document.querySelector('.px-3.py-1.bg-white\\/20');
-                        const statusText = document.querySelector('.text-lg.font-bold');
-
-                        if (statusBadge) {
-                            statusBadge.textContent = 'RESOLVED';
-                            statusBadge.classList.remove('bg-white/20');
-                            statusBadge.classList.add('bg-green-500', 'text-white');
-                        }
-
-                        if (statusText) {
-                            statusText.textContent = 'Resolved';
-                        }
-
-                        // Update progress bar
-                        const progressBar = document.querySelector('.h-full.bg-secondary.rounded-full');
-                        if (progressBar) {
-                            progressBar.style.width = '100%';
-                        }
-
-                        showToast('Ticket marked as resolved', 'success');
-
-                        // Add timeline entry
-                        addTimelineEntry('Resolved', 'Ticket marked as resolved');
-
-                        // Add resolved message to conversation
-                        addResolvedMessage();
-
-                    }, 1000);
+                // Select resolved status (ID 3)
+                const resolvedOption = document.querySelector('.status-option[data-status="3"]');
+                if (resolvedOption) {
+                    resolvedOption.click();
+                    
+                    // Set notes to indicate automatic resolution
+                    const notesField = document.querySelector('textarea[name="notes"]');
+                    if (notesField) {
+                        notesField.value = 'Ticket marked as resolved by IT Support team.';
+                    }
+                    
+                    // Submit the form
+                    document.getElementById('statusForm').submit();
                 }
             });
         }
 
-        // Send Reply/Internal Note
-        const sendReplyBtn = document.getElementById('sendReplyBtn');
-        if (sendReplyBtn) {
-            sendReplyBtn.addEventListener('click', function () {
+        // Form submission handling
+        const messageForm = document.getElementById('messageForm');
+        if (messageForm) {
+            messageForm.addEventListener('submit', function (e) {
                 const message = messageInput.value.trim();
                 if (!message) {
-                    alert('Please write a message before sending');
+                    e.preventDefault();
+                    showToast('Please write a message before sending', 'error');
                     return;
                 }
-
-                const updateStatus = document.getElementById('updateStatus').checked;
-                const notifySupport = document.getElementById('notifySupport').checked;
-
+                
                 // Show loading state
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-                this.disabled = true;
+                const sendBtn = document.getElementById('sendReplyBtn');
+                if (sendBtn) {
+                    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                    sendBtn.disabled = true;
+                }
+            });
+        }
 
-                // Simulate sending
-                setTimeout(() => {
-                    // Reset button
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-
-                    // Add message to conversation
-                    addInternalNote(message, notifySupport);
-
-                    // Clear form
-                    messageInput.value = '';
-                    messageInput.style.height = 'auto';
-                    if (fileInfo) fileInfo.innerHTML = 'No files attached';
-
-                    // Show success message
-                    showToast('Internal note added successfully', 'success');
-
-                }, 1500);
+        const statusForm = document.getElementById('statusForm');
+        if (statusForm) {
+            statusForm.addEventListener('submit', function (e) {
+                const updateBtn = document.getElementById('updateTicketBtn');
+                if (updateBtn) {
+                    updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                    updateBtn.disabled = true;
+                }
             });
         }
 
@@ -884,18 +812,10 @@
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 if (fileInfo) fileInfo.innerHTML = 'No files attached';
-                document.getElementById('updateStatus').checked = true;
+                document.getElementById('updateStatus').checked = false;
                 document.getElementById('notifySupport').checked = true;
             });
         }
-
-        // Download buttons
-        document.querySelectorAll('.download-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const fileName = this.closest('.bg-white')?.querySelector('.text-gray-800')?.textContent || 'file';
-                alert(`Downloading ${fileName}...`);
-            });
-        });
 
         // Focus View Button
         const focusViewBtn = document.getElementById('focusViewBtn');
@@ -906,144 +826,6 @@
         }
 
         // Utility functions
-        function addInternalNote(text, notifySupport = true) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            const newMessage = document.createElement('div');
-            newMessage.className = 'flex gap-4 animate-fadeIn';
-            newMessage.innerHTML = `
-            <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                    <i class="fas fa-server text-white"></i>
-                </div>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                    <div>
-                        <span class="text-gray-800 font-semibold">IT Support Team</span>
-                        <span class="ml-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded">Internal Note</span>
-                    </div>
-                    <div class="text-gray-500 text-sm ml-auto">
-                        <i class="far fa-clock mr-1"></i>
-                        ${timeString} • Just now
-                    </div>
-                </div>
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <p class="text-gray-700">${text}</p>
-                    ${notifySupport ?
-                    '<div class="text-xs text-gray-600 mt-2"><i class="fas fa-bell mr-1"></i>Support team notified</div>' :
-                    ''
-                }
-                </div>
-            </div>
-        `;
-
-            // Append to conversation
-            const conversationTimeline = document.querySelector('#conversationContainer .space-y-6');
-            if (conversationTimeline) {
-                conversationTimeline.appendChild(newMessage);
-
-                // Scroll to new message
-                setTimeout(() => {
-                    if (conversationContainer) {
-                        conversationContainer.scrollTop = conversationContainer.scrollHeight;
-                    }
-                }, 100);
-            }
-        }
-
-        function addResolvedMessage() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            const resolvedMessage = document.createElement('div');
-            resolvedMessage.className = 'flex gap-4 animate-fadeIn';
-            resolvedMessage.innerHTML = `
-            <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check text-white"></i>
-                </div>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                    <div>
-                        <span class="text-gray-800 font-semibold">IT Support Team</span>
-                        <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Resolution</span>
-                    </div>
-                    <div class="text-gray-500 text-sm ml-auto">
-                        <i class="far fa-clock mr-1"></i>
-                        ${timeString} • Just now
-                    </div>
-                </div>
-                <div class="bg-green-50 rounded-xl p-4 border border-green-200">
-                    <p class="text-gray-700 mb-3">
-                        <strong>Ticket marked as resolved.</strong> Server issue has been fixed and all services are running normally.
-                    </p>
-                    <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-300">
-                        <i class="fas fa-check-circle text-green-600"></i>
-                        <span class="text-green-700 text-sm font-medium">Issue resolved successfully</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-            // Append to conversation
-            const conversationTimeline = document.querySelector('#conversationContainer .space-y-6');
-            if (conversationTimeline) {
-                conversationTimeline.appendChild(resolvedMessage);
-
-                // Scroll to new message
-                setTimeout(() => {
-                    if (conversationContainer) {
-                        conversationContainer.scrollTop = conversationContainer.scrollHeight;
-                    }
-                }, 100);
-            }
-        }
-
-        function addTimelineEntry(title, description) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            const timelineContainer = document.querySelector('.space-y-4');
-            if (!timelineContainer) return;
-
-            const timelineEntry = document.createElement('div');
-            timelineEntry.className = 'flex items-start gap-3 animate-fadeIn';
-            timelineEntry.innerHTML = `
-            <div class="flex-shrink-0">
-                <div class="w-6 h-6 bg-secondary rounded-full flex items-center justify-center">
-                    <i class="fas fa-sync-alt text-white text-xs"></i>
-                </div>
-            </div>
-            <div>
-                <div class="text-gray-800 font-medium text-sm">${title}</div>
-                <div class="text-gray-500 text-xs">${timeString} • ${description}</div>
-            </div>
-        `;
-
-            // Insert before the current status entry
-            const currentStatus = timelineContainer.querySelector('.animate-pulse');
-            if (currentStatus && currentStatus.parentNode) {
-                timelineContainer.insertBefore(timelineEntry, currentStatus.parentNode);
-            } else {
-                timelineContainer.appendChild(timelineEntry);
-            }
-        }
-
         function openFocusView() {
             // Create modal
             const modal = document.createElement('div');
@@ -1051,7 +833,7 @@
             modal.innerHTML = `
             <div class="focus-view-header">
                 <div class="flex items-center gap-3">
-                    <h2 class="text-white text-xl font-bold">Focus View - Ticket #<?= $ticket_id ?? '10421' ?></h2>
+                    <h2 class="text-white text-xl font-bold">Focus View - Ticket #<?= esc($ticket['ticket_number'] ?? 'Unknown') ?></h2>
                     <span class="px-2 py-1 bg-secondary text-white text-xs rounded">IT Support</span>
                 </div>
                 <button id="closeFocusView" class="text-white hover:text-gray-300 text-xl">
@@ -1060,9 +842,13 @@
             </div>
             <div class="focus-view-body bg-gray-900">
                 <div class="max-w-6xl mx-auto">
+                    <!-- Ticket Header -->
                     <div class="bg-gray-800 rounded-xl p-6 mb-6">
-                        <h3 class="text-white text-lg font-bold mb-2">Server Maintenance Required</h3>
-                        <p class="text-gray-300">Project Alpha • Category: Server Infrastructure</p>
+                        <h3 class="text-white text-lg font-bold mb-2"><?= esc($ticket['subject'] ?? 'No subject') ?></h3>
+                        <p class="text-gray-300">
+                            <?= esc($ticket['project_name'] ?? 'No project') ?> • 
+                            <?= esc($ticket['category_name'] ?? 'Uncategorized') ?>
+                        </p>
                     </div>
                     
                     <!-- Technical Details -->
@@ -1071,43 +857,67 @@
                             <h4 class="text-white font-bold mb-3">Technical Details</h4>
                             <div class="space-y-2 text-gray-300 text-sm">
                                 <div class="flex justify-between">
-                                    <span>Server:</span>
-                                    <span class="font-medium">SRV-ALPHA-01</span>
+                                    <span>Customer:</span>
+                                    <span class="font-medium"><?= esc($ticket['customer_name'] ?? 'Unknown') ?></span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span>Environment:</span>
-                                    <span class="font-medium">Production</span>
+                                    <span>Status:</span>
+                                    <span class="<?= 
+                                        ($ticket['status_id'] ?? 1) == 3 ? 'text-green-400' : 
+                                        (($ticket['status_id'] ?? 1) == 2 ? 'text-yellow-400' : 'text-red-400') 
+                                    ?> font-medium">
+                                        <?= esc($ticket['status_name'] ?? 'Unknown') ?>
+                                    </span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span>Issue Type:</span>
-                                    <span class="text-red-400 font-medium">Memory Leak</span>
+                                    <span>Priority:</span>
+                                    <span class="<?= 
+                                        ($ticket['priority_id'] ?? 1) >= 3 ? 'text-red-400' : 
+                                        (($ticket['priority_id'] ?? 1) == 2 ? 'text-yellow-400' : 'text-green-400') 
+                                    ?> font-medium">
+                                        <?= esc($ticket['priority_name'] ?? 'Normal') ?>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="bg-gray-800 rounded-xl p-6">
-                            <h4 class="text-white font-bold mb-3">Ticket Status</h4>
+                            <h4 class="text-white font-bold mb-3">Timeline</h4>
                             <div class="space-y-2 text-gray-300 text-sm">
                                 <div class="flex justify-between">
-                                    <span>Priority:</span>
-                                    <span class="text-red-400 font-medium">High</span>
+                                    <span>Created:</span>
+                                    <span class="font-medium"><?= date('M d, H:i', strtotime($ticket['created_at'] ?? 'now')) ?></span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span>Status:</span>
-                                    <span class="text-yellow-400 font-medium">In Progress</span>
+                                    <span>Last Updated:</span>
+                                    <span class="font-medium"><?= date('M d, H:i', strtotime($ticket['updated_at'] ?? $ticket['created_at'] ?? 'now')) ?></span>
                                 </div>
+                                <?php if (!empty($ticket['due_date'])): ?>
                                 <div class="flex justify-between">
-                                    <span>SLA Status:</span>
-                                    <span class="text-green-400 font-medium">On Track</span>
+                                    <span>Due:</span>
+                                    <span class="<?= 
+                                        strtotime($ticket['due_date']) > time() ? 'text-green-400' : 'text-red-400' 
+                                    ?> font-medium">
+                                        <?= date('M d, H:i', strtotime($ticket['due_date'])) ?>
+                                    </span>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         
                         <div class="bg-gray-800 rounded-xl p-6">
                             <h4 class="text-white font-bold mb-3">Quick Actions</h4>
                             <div class="space-y-3">
-                                <button class="w-full bg-secondary text-white py-2 rounded-lg text-sm">Update Status</button>
-                                <button class="w-full bg-green-600 text-white py-2 rounded-lg text-sm">Mark Resolved</button>
+                                <button onclick="submitStatusForm()" 
+                                        class="w-full bg-secondary text-white py-2 rounded-lg text-sm">
+                                    Update Status
+                                </button>
+                                <?php if (($ticket['status_id'] ?? 1) != 3 && ($ticket['status_id'] ?? 1) != 4): ?>
+                                <button onclick="markAsResolved()" 
+                                        class="w-full bg-green-600 text-white py-2 rounded-lg text-sm">
+                                    Mark Resolved
+                                </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -1116,7 +926,25 @@
                     <div class="bg-gray-800 rounded-xl p-6">
                         <h4 class="text-white font-bold mb-4">Recent Conversation</h4>
                         <div class="space-y-4 max-h-[300px] overflow-y-auto pr-4">
-                            ${conversationContainer ? conversationContainer.innerHTML : ''}
+                            <?php if (!empty($messages)): ?>
+                                <?php foreach (array_slice($messages, -5) as $message): ?>
+                                <div class="bg-gray-700 rounded p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-white font-medium"><?= esc($message['sender_name']) ?></span>
+                                        <span class="text-gray-400 text-sm"><?= 
+                                            date('H:i', strtotime($message['created_at'])) 
+                                        ?></span>
+                                    </div>
+                                    <p class="text-gray-300 text-sm"><?= 
+                                        strlen($message['message']) > 150 ? 
+                                        substr($message['message'], 0, 150) . '...' : 
+                                        $message['message'] 
+                                    ?></p>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="text-gray-400 text-center">No messages yet</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -1141,16 +969,19 @@
                 }
             });
         }
-
-        // Quick Links click handlers
-        document.querySelectorAll('.bg-white\\/10.rounded-lg').forEach(link => {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                const linkText = this.querySelector('span').textContent;
-                showToast(`Opening ${linkText}...`, 'info');
-            });
-        });
     });
+
+    function submitStatusForm() {
+        document.getElementById('statusForm').submit();
+    }
+    
+    function markAsResolved() {
+        const resolvedOption = document.querySelector('.status-option[data-status="3"]');
+        if (resolvedOption) {
+            resolvedOption.click();
+            document.getElementById('statusForm').submit();
+        }
+    }
 
     function showToast(message, type = 'info') {
         // Remove existing toasts
@@ -1192,6 +1023,15 @@
     
     .animate-fadeIn {
         animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeInUp {
+        animation: fadeInUp 0.5s ease-out;
     }
 `;
     document.head.appendChild(style);
