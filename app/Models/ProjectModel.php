@@ -49,58 +49,58 @@ class ProjectModel extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    /**
-     * Get recent projects with ticket counts
-     */
-    public function getRecentProjects(int $limit = 5): array
-    {
-        $db = db_connect();
+    // /**
+    //  * Get recent projects with ticket counts
+    //  */
+    // public function getRecentProjects(int $limit = 5): array
+    // {
+    //     $db = db_connect();
 
-        $recentProjects = $db->table('projects')
-            ->select('projects.*')
-            ->where('is_active', true)
-            ->orderBy('created_at', 'DESC')
-            ->limit($limit)
-            ->get()
-            ->getResultArray();
+    //     $recentProjects = $db->table('projects')
+    //         ->select('projects.*')
+    //         ->where('is_active', true)
+    //         ->orderBy('created_at', 'DESC')
+    //         ->limit($limit)
+    //         ->get()
+    //         ->getResultArray();
 
-        // Add ticket counts to recent projects
-        foreach ($recentProjects as &$project) {
-            $project['total_tickets'] = $db->table('tickets')
-                ->where('project_id', $project['project_id'])
-                ->countAllResults();
+    //     // Add ticket counts to recent projects
+    //     foreach ($recentProjects as &$project) {
+    //         $project['total_tickets'] = $db->table('tickets')
+    //             ->where('project_id', $project['project_id'])
+    //             ->countAllResults();
 
-            $project['open_tickets'] = $db->table('tickets')
-                ->where('project_id', $project['project_id'])
-                ->groupStart()
-                ->where('status_id', 1)
-                ->orWhere('status_id', 2)
-                ->groupEnd()
-                ->countAllResults();
-        }
+    //         $project['open_tickets'] = $db->table('tickets')
+    //             ->where('project_id', $project['project_id'])
+    //             ->groupStart()
+    //             ->where('status_id', 1)
+    //             ->orWhere('status_id', 2)
+    //             ->groupEnd()
+    //             ->countAllResults();
+    //     }
 
-        return $recentProjects;
-    }
+    //     return $recentProjects;
+    // }
 
-    /**
-     * Get project overview with ticket counts
-     */
-    public function getProjectOverview(int $limit = 5): array
-    {
-        $db = db_connect();
+    // /**
+    //  * Get project overview with ticket counts
+    //  */
+    // public function getProjectOverview(int $limit = 5): array
+    // {
+    //     $db = db_connect();
 
-        $projects = $db->table('projects p')
-            ->select('p.*, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
-            ->where('p.is_active', 1)
-            ->orderBy('p.created_at', 'DESC')
-            ->limit($limit)
-            ->get()
-            ->getResultArray();
+    //     $projects = $db->table('projects p')
+    //         ->select('p.*, 
+    //             (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
+    //             (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
+    //         ->where('p.is_active', 1)
+    //         ->orderBy('p.created_at', 'DESC')
+    //         ->limit($limit)
+    //         ->get()
+    //         ->getResultArray();
 
-        return $projects;
-    }
+    //     return $projects;
+    // }
 
     /**
      * Check if project code exists
@@ -544,15 +544,15 @@ public function getProjectsWithTicketCounts(): array
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
-            // Check if project code already exists
-            if ($this->projectCodeExists($projectData['project_code'])) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => 'Project code already exists'
-                ];
-                continue;
-            }
+            // // Check if project code already exists
+            // if ($this->projectCodeExists($projectData['project_code'])) {
+            //     $errorCount++;
+            //     $errors[] = [
+            //         'row' => $rowNumber,
+            //         'error' => 'Project code already exists'
+            //     ];
+            //     continue;
+            // }
 
             // Save project
             try {
@@ -623,10 +623,10 @@ public function getProjectsWithTicketCounts(): array
                 $projectCode = strtoupper(trim($projectData['project_code']));
                 if ($this->projectCodeExists($projectCode)) {
                     $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => "Project code '{$projectCode}' already exists"
-                    ];
+                    // $errors[] = [
+                    //     'row' => $rowNumber,
+                    //     'error' => "Project code '{$projectCode}' already exists"
+                    // ];
                     continue;
                 }
 
@@ -699,10 +699,10 @@ public function getProjectsWithTicketCounts(): array
 
             // Check if project code exists
             if (isset($data['project_code']) && $this->projectCodeExists($data['project_code'])) {
-                return [
-                    'success' => false,
-                    'message' => 'Project code already exists'
-                ];
+                // return [
+                //     'success' => false,
+                //     'message' => 'Project code already exists'
+                // ];
             }
 
             if ($this->insert($data)) {
@@ -736,13 +736,13 @@ public function getProjectsWithTicketCounts(): array
             if (isset($data['project_code'])) {
                 $data['project_code'] = strtoupper(trim($data['project_code']));
 
-                // Check if project code exists (excluding current project)
-                if ($this->projectCodeExists($data['project_code'], $projectId)) {
-                    return [
-                        'success' => false,
-                        'message' => 'Project code already exists'
-                    ];
-                }
+                // // Check if project code exists (excluding current project)
+                // if ($this->projectCodeExists($data['project_code'], $projectId)) {
+                //     return [
+                //         'success' => false,
+                //         'message' => 'Project code already exists'
+                //     ];
+                // }
             }
 
             $data['updated_at'] = date('Y-m-d H:i:s');
