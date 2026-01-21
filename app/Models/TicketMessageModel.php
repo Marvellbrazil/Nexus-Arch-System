@@ -12,61 +12,57 @@ class TicketMessageModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['ticket_id', 'sender_id', 'message', 'is_internal'];
-
-    protected bool $allowEmptyInserts = false;
-    protected bool $updateOnlyChanged = true;
-
-    protected array $casts = [];
-    protected array $castHandlers = [];
+    protected $allowedFields    = ['ticket_id', 'sender_id', 'message'];
 
     // Dates
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
-    protected $deletedField  = 'deleted_at';
-
-    // Validation
-    protected $validationRules      = [];
-    protected $validationMessages   = [];
-    protected $skipValidation       = false;
-    protected $cleanValidationRules = true;
-
-    // Callbacks
-    protected $allowCallbacks = true;
-    protected $beforeInsert   = [];
-    protected $afterInsert    = [];
-    protected $beforeUpdate   = [];
-    protected $afterUpdate    = [];
-    protected $beforeFind     = [];
-    protected $afterFind      = [];
-    protected $beforeDelete   = [];
-    protected $afterDelete    = [];
+    protected $updatedField  = null;
+    protected $deletedField  = null;
 
     public function getMessagesForTicket($ticketId)
     {
-        return $this->builder('ticket_messages tm')
-            ->select('tm.*, u.full_name, u.photo_profile, r.role_name')
-            ->join('users u', 'u.user_id = tm.sender_id')
-            ->join('roles r', 'r.role_id = u.role_id')
+        return $this->select('tm.*, u.full_name, u.photo_profile, r.role_name')
+            ->from('ticket_messages tm', true)
+            ->join('users u', 'u.user_id = tm.sender_id', 'left')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
             ->where('tm.ticket_id', $ticketId)
             ->orderBy('tm.created_at', 'ASC')
             ->get()
             ->getResultArray();
     }
 
-    public function getRecentActivityForProject($projectId, $userId)
+    public function getNewMessages($ticketId, $lastMessageId = 0)
     {
-        return $this->builder('ticket_messages tm')
-            ->select('tm.*, t.subject, u.full_name, u.photo_profile')
-            ->join('tickets t', 't.ticket_id = tm.ticket_id')
-            ->join('users u', 'u.user_id = tm.sender_id')
-            ->where('t.project_id', $projectId)
-            ->where('t.customer_id', $userId)
-            ->orderBy('tm.created_at', 'DESC')
-            ->limit(5)
+        return $this->select('tm.*, u.full_name, u.photo_profile, r.role_name')
+            ->from('ticket_messages tm', true)
+            ->join('users u', 'u.user_id = tm.sender_id', 'left')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('tm.ticket_id', $ticketId)
+            ->where('tm.message_id >', $lastMessageId)
+            ->orderBy('tm.created_at', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    public function addMessage($ticketId, $senderId, $message)
+    {
+        return $this->insert([
+            'ticket_id' => $ticketId,
+            'sender_id' => $senderId,
+            'message' => $message,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    public function getLastMessageId($ticketId)
+    {
+        $result = $this->select('message_id')
+            ->where('ticket_id', $ticketId)
+            ->orderBy('message_id', 'DESC')
+            ->first();
+        
+        return $result ? $result['message_id'] : 0;
     }
 }
