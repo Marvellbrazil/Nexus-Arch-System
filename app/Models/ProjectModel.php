@@ -26,7 +26,7 @@ class ProjectModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -135,20 +135,21 @@ class ProjectModel extends Model
     }
 
     /**
-     * Get projects with ticket counts
-     */
-    public function getProjectsWithTicketCounts(): array
-    {
-        $db = db_connect();
+ * Get projects with ticket counts (UPDATED WITH CONSISTENT ORDERING)
+ */
+public function getProjectsWithTicketCounts(): array
+{
+    $db = db_connect();
 
-        return $db->table('projects p')
-            ->select('p.*, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
-            ->orderBy('p.created_at', 'DESC')
-            ->get()
-            ->getResultArray();
-    }
+    return $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.project_id), 0) as assigned_users')
+        ->orderBy('p.project_id', 'ASC') // Default order by project_id ASC untuk konsistensi
+        ->get()
+        ->getResultArray();
+}
 
     /**
      * Change project status
@@ -789,4 +790,99 @@ class ProjectModel extends Model
 
         return $query->get()->getResultArray();
     }
+
+    /**
+ * Search projects with filters for AJAX table (UPDATED FOR POSTGRESQL)
+ */
+public function searchProjectsForTable(array $filters = [], int $start = 0, int $length = 10): array
+{
+    $db = db_connect();
+
+    $builder = $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.project_id), 0) as assigned_users');
+
+    // Apply search dengan ILIKE untuk PostgreSQL
+    if (!empty($filters['search'])) {
+        $builder->groupStart()
+            ->like('p.project_name', $filters['search'], 'both', null, true)  // Parameter ke-5 = true untuk ILIKE
+            ->orLike('p.project_code', $filters['search'], 'both', null, true)
+            ->orLike('p.description', $filters['search'], 'both', null, true)
+            ->groupEnd();
+    }
+
+    // Apply status filter
+    if (!empty($filters['status'])) {
+        if ($filters['status'] === 'active') {
+            $builder->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $builder->where('p.is_active', false);
+        }
+        // Add other status filters if needed
+    }
+
+    // Apply sorting
+    if (!empty($filters['sort_by'])) {
+        switch ($filters['sort_by']) {
+            case 'name':
+                $builder->orderBy('p.project_name', $filters['sort_order'] ?? 'asc');
+                break;
+            case 'id':
+                $builder->orderBy('p.project_id', $filters['sort_order'] ?? 'asc');
+                break;
+            case 'tickets':
+                $builder->orderBy('total_tickets', $filters['sort_order'] ?? 'desc');
+                break;
+            default:
+                $builder->orderBy('p.created_at', 'DESC');
+        }
+    } else {
+        $builder->orderBy('p.created_at', 'DESC');
+    }
+
+    // Apply pagination
+    $builder->limit($length, $start);
+
+    return $builder->get()->getResultArray();
+}
+
+/**
+ * Count filtered projects for pagination
+ */
+public function countFilteredProjects(array $filters = []): int
+{
+    $db = db_connect();
+
+    $builder = $db->table('projects p');
+
+    // Apply search
+    if (!empty($filters['search'])) {
+        $builder->groupStart()
+            ->like('p.project_name', $filters['search'])
+            ->orLike('p.project_code', $filters['search'])
+            ->orLike('p.description', $filters['search'])
+            ->groupEnd();
+    }
+
+    // Apply status filter
+    if (!empty($filters['status'])) {
+        if ($filters['status'] === 'active') {
+            $builder->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $builder->where('p.is_active', false);
+        }
+    }
+
+    return $builder->countAllResults();
+}
+
+/**
+ * Count all projects
+ */
+public function countAll(): int
+{
+    return $this->builder()->countAllResults();
+}
 }

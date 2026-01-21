@@ -1625,25 +1625,203 @@ class SupportController extends BaseController
         return redirect()->to(site_url('support/ticket_in_progress'))->with('success', 'Ticket forwarded to department');
     }
 
-    public function markTicketResolved($ticketId)
-    {
-        $db = db_connect();
+    // Di SupportController.php - GANTI method markTicketResolved() dengan yang ini:
 
-        // Cari status_id untuk "Resolved"
+public function markTicketResolved($ticketId)
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+
+    $db = db_connect();
+    $supportUserId = session()->get('user_id');
+    
+    log_message('debug', 'Mark resolved called for ticket: ' . $ticketId . ' by user: ' . $supportUserId);
+
+    try {
+        // 1. CARI STATUS "Closed" (gunakan nama status sesuai database Anda)
         $status = $db->table('statuses')
-            ->where('status_name', 'Resolved')
-            ->orWhere('status_name', 'Closed')
+            ->where('status_name', 'Closed') // Ganti dengan nama status yang sesuai
             ->get()
             ->getRowArray();
 
-        $db->table('tickets')
+        if (!$status) {
+            // Jika tidak ada status "Closed", coba "Resolved"
+            $status = $db->table('statuses')
+                ->where('status_name', 'Resolved')
+                ->get()
+                ->getRowArray();
+            
+            if (!$status) {
+                // Jika tidak ada juga, ambil status pertama yang bukan Open
+                $status = $db->table('statuses')
+                    ->where('status_name !=', 'Open')
+                    ->orderBy('status_id', 'DESC')
+                    ->get()
+                    ->getRowArray();
+                
+                if (!$status) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'No appropriate status found in database'
+                    ]);
+                }
+            }
+        }
+
+        
+        $ticket = $db->table('tickets')
+            ->select('tickets.*, statuses.status_name as current_status')
+            ->join('statuses', 'statuses.status_id = tickets.status_id', 'left')
+            ->where('tickets.ticket_id', $ticketId)
+            ->get()
+            ->getRowArray();
+
+        if (!$ticket) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Ticket not found'
+            ]);
+        }
+
+        // 3. UPDATE STATUS TIKET
+        $updateResult = $db->table('tickets')
             ->where('ticket_id', $ticketId)
             ->update([
-                'status_id' => $status ? $status['status_id'] : 3,
+                'status_id' => $status['status_id'],
+                'resolved_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
-                'resolved_at' => date('Y-m-d H:i:s')
+                // 'resolved_by' => $supportUserId,
+                'assigned_to' => $supportUserId // Pastikan ticket diassign ke support yang close
             ]);
 
-        return redirect()->to(site_url('support/ticket_detail/' . $ticketId))->with('success', 'Ticket marked as resolved');
+        if (!$updateResult) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update ticket status'
+            ]);
+        }
+
+        // // 4. BUAT NOTIFIKASI UNTUK CUSTOMER
+        // $customerId = $ticket['customer_id'];
+        // if ($customerId) {
+        //     // Dapatkan nama support agent
+        //     $supportUser = $db->table('users')
+        //         ->select('full_name')
+        //         ->where('user_id', $supportUserId)
+        //         ->get()
+        //         ->getRowArray();
+            
+        //     $supportName = $supportUser['full_name'] ?? 'Support Team';
+            
+        //     // Buat notifikasi
+        //     $notificationData = [
+        //         'user_id' => $customerId,
+        //         'title' => 'Ticket #' . ($ticket['ticket_number'] ?? $ticketId) . ' Closed',
+        //         'message' => 'Your ticket "' . ($ticket['subject'] ?? '') . '" has been resolved and closed by ' . $supportName,
+        //         'notification_type' => 'ticket_closed',
+        //         'priority' => 'medium',
+        //         'ticket_id' => $ticketId,
+        //         'is_read' => false,
+        //         'created_at' => date('Y-m-d H:i:s')
+        //     ];
+            
+        //     // Perbaiki untuk PostgreSQL boolean
+        //     $notificationData['is_read'] = false; // PostgreSQL akan konversi ke boolean
+            
+        //     $db->table('notifications')->insert($notificationData);
+            
+        //     log_message('debug', 'Notification created for customer: ' . $customerId);
+        // }
+
+        // 5. TAMBAHKAN PESAN OTOMATIS KE CONVERSATION
+        if ($db->tableExists('ticket_messages')) {
+            $fields = $db->getFieldNames('ticket_messages');
+            
+            $messageData = [
+                'ticket_id' => $ticketId,
+                'message' => '✅ Ticket has been marked as ' . $status['status_name'] . ' by support team.',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Add sender berdasarkan struktur tabel
+            if (in_array('sender_id', $fields)) {
+                $messageData['sender_id'] = $supportUserId;
+            } elseif (in_array('user_id', $fields)) {
+                $messageData['user_id'] = $supportUserId;
+            } elseif (in_array('created_by', $fields)) {
+                $messageData['created_by'] = $supportUserId;
+            }
+
+            $db->table('ticket_messages')->insert($messageData);
+            log_message('debug', 'Auto-message added to ticket conversation');
+        }
+
+        // 6. LOG ACTIVITY (opsional)
+        if ($db->tableExists('ticket_activities')) {
+            $db->table('ticket_activities')->insert([
+                'ticket_id' => $ticketId,
+                'user_id' => $supportUserId,
+                'activity_type' => 'ticket_closed',
+                'description' => 'Ticket marked as ' . $status['status_name'],
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        // 7. RETURN SUCCESS
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Ticket successfully marked as ' . $status['status_name'],
+            'status_name' => $status['status_name'], // Kirim nama status untuk update UI
+            'redirect' => base_url('support/ticket_detail/' . $ticketId)
+        ]);
+
+    } catch (Exception $e) {
+        log_message('error', 'Error in markTicketResolved: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
     }
+}
+
+// // TAMBAHKAN method helper untuk mengatasi masalah boolean di PostgreSQL
+// private function createNotification($userId, $title, $message, $type = 'system', $priority = 'medium', $ticketId = null)
+// {
+//     $db = db_connect();
+
+//     if (!$db->tableExists('notifications')) {
+//         log_message('error', 'Notifications table does not exist');
+//         return false;
+//     }
+
+//     try {
+//         // PERBAIKI: Handle boolean untuk PostgreSQL
+//         $data = [
+//             'user_id' => $userId,
+//             'title' => $title,
+//             'message' => $message,
+//             'notification_type' => $type,
+//             'priority' => $priority,
+//             'ticket_id' => $ticketId,
+//             'created_at' => date('Y-m-d H:i:s'),
+//             'updated_at' => date('Y-m-d H:i:s')
+//         ];
+
+//         // Untuk PostgreSQL, boolean bisa menggunakan TRUE/FALSE
+//         // Atau jika kolom is_read ada, set ke false
+//         $fields = $db->getFieldNames('notifications');
+//         if (in_array('is_read', $fields)) {
+//             $data['is_read'] = false; // PostgreSQL akan handle ini sebagai boolean
+//         }
+
+//         $result = $db->table('notifications')->insert($data);
+        
+//         log_message('info', 'Notification created for user ' . $userId . ': ' . $title);
+//         return $result;
+//     } catch (Exception $e) {
+//         log_message('error', 'Error creating notification: ' . $e->getMessage());
+//         return false;
+//     }
+// }
 }

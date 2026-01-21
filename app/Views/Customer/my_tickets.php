@@ -631,6 +631,30 @@
         updateLastUpdatedTimes();
         setInterval(updateLastUpdatedTimes, 60000);
     });
+
+    // Function untuk update status ticket secara real-time (optional)
+function updateTicketStatus(ticketId, newStatus) {
+    // Update di table jika ticket ada di halaman saat ini
+    const ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`);
+    if (ticketRow) {
+        const statusCell = ticketRow.querySelector('.status-cell');
+        if (statusCell) {
+            const statusBadge = statusCell.querySelector('span');
+            if (statusBadge) {
+                statusBadge.textContent = newStatus;
+                
+                // Update warna berdasarkan status
+                if (newStatus === 'Closed') {
+                    statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium whitespace-nowrap';
+                } else if (newStatus === 'Resolved') {
+                    statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium whitespace-nowrap';
+                }
+            }
+        }
+    }
+}
+
+
 </script>
 
 <?= $this->endSection() ?>

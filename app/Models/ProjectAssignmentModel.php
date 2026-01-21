@@ -21,7 +21,7 @@ class ProjectAssignmentModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -483,12 +483,12 @@ class ProjectAssignmentModel extends Model
             ->getResultArray();
     }
 
-    // Tambahkan di bagian akhir class ProjectAssignmentModel sebelum tutup }
+
 
     /**
      * Bulk assign users to multiple projects with validation
      */
-    public function bulkAssignUsersToProjects(array $projectIds, array $userIds, int $assignedBy): array
+    public function bulkAssignUsersToProjects(array $projectIds, array $userIds, int $assignedBy)
     {
         $db = db_connect();
         $totalAssignments = 0;
@@ -533,8 +533,6 @@ class ProjectAssignmentModel extends Model
                             'user_id' => $userId,
                             'assigned_by' => $assignedBy,
                             'assigned_at' => date('Y-m-d H:i:s'),
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'updated_at' => date('Y-m-d H:i:s')
                         ]);
                         $totalAssignments++;
                     }
@@ -561,15 +559,15 @@ class ProjectAssignmentModel extends Model
                 return $result;
             }
 
-            return [
-                'success' => false,
-                'message' => 'Transaction failed'
-            ];
+            // return [
+            //     'success' => false,
+            //     'message' => 'Transaction failed'
+            // ];
         } catch (\Exception $e) {
             $db->transRollback();
             log_message('error', 'Bulk assign users to projects error: ' . $e->getMessage());
 
-            return [
+            return [    
                 'success' => false,
                 'message' => 'Server error: ' . $e->getMessage()
             ];

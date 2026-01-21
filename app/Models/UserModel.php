@@ -57,13 +57,12 @@ class UserModel extends Model
     protected $beforeUpdate = ['hashPassword'];
 
     /**
-     * Get users with role and department information (PostgreSQL compatible)
+     * Get users with role and department information
      */
     public function getUsersWithRole(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $builder = $this->db->table('users u');
 
-        // PostgreSQL specific - use proper boolean handling
         $builder->select('u.*, r.role_name, r.role_id, d.department_name, d.department_id')
             ->join('roles r', 'r.role_id = u.role_id', 'left')
             ->join('departments d', 'd.department_id = u.department_id', 'left');
@@ -83,7 +82,7 @@ class UserModel extends Model
     }
 
     /**
-     * Count users with filters (PostgreSQL compatible)
+     * Count users with filters
      */
     public function countFilteredUsers(array $filters = []): int
     {
@@ -104,11 +103,11 @@ class UserModel extends Model
 
         // Total users
         $totalUsers = $db->table('users')->countAll();
-        
+
         // Active/inactive users
         $activeUsers = $db->table('users')->where('is_active', true)->countAllResults();
         $inactiveUsers = $db->table('users')->where('is_active', false)->countAllResults();
-        
+
         // Users by role
         $usersByRole = $db->table('users u')
             ->select('r.role_name, COUNT(*) as count')
@@ -142,9 +141,9 @@ class UserModel extends Model
     public function getUserTrend(): array
     {
         $db = db_connect();
-        
+
         $lastWeek = date('Y-m-d', strtotime('-7 days'));
-        
+
         $currentWeekUsers = $db->table('users')
             ->where('created_at >=', $lastWeek)
             ->countAllResults();
@@ -180,7 +179,7 @@ class UserModel extends Model
     public function exportUsers(array $filters = []): array
     {
         $db = db_connect();
-        
+
         $query = $db->table('users u')
             ->select('u.user_id, u.username, u.full_name, u.email, 
                      r.role_name, d.department_name, 
@@ -382,20 +381,20 @@ class UserModel extends Model
     /**
      * Search active users
      */
-        public function searchActiveUsers(string $keyword): array
-        {
-            return $this->builder()
-                ->select('user_id, username, full_name, email')
-                ->where('is_active', true)
-                ->groupStart()
-                ->like('full_name', $keyword)
-                ->orLike('username', $keyword)
-                ->orLike('email', $keyword)
-                ->groupEnd()
-                ->orderBy('full_name', 'ASC')
-                ->get()
-                ->getResultArray();
-        }
+    public function searchActiveUsers(string $keyword): array
+    {
+        return $this->builder()
+            ->select('user_id, username, full_name, email')
+            ->where('is_active', true)
+            ->groupStart()
+            ->like('full_name', $keyword)
+            ->orLike('username', $keyword)
+            ->orLike('email', $keyword)
+            ->groupEnd()
+            ->orderBy('full_name', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 
     /**
      * Get user statistics for dashboard
@@ -406,11 +405,11 @@ class UserModel extends Model
 
         // Total users
         $totalUsers = $db->table('users')->countAll();
-        
+
         // Active/inactive users
         $activeUsers = $db->table('users')->where('is_active', true)->countAllResults();
         $inactiveUsers = $db->table('users')->where('is_active', false)->countAllResults();
-        
+
         // Users by role
         $usersByRole = $db->table('users u')
             ->select('r.role_name, COUNT(*) as count')
@@ -492,47 +491,47 @@ class UserModel extends Model
         return $roleClasses[$roleName] ?? 'role-default';
     }
 
-        /**
-         * Get user by email
-         */
-        public function getUserByEmail(string $email)
-        {
-            return $this->where('email', $email)->first();
-        }
-    
-        /**
-         * Update a user record
-         */
-        public function updateUser(int $id, array $data)
-        {
-            return $this->update($id, $data);
-        }
-        
-        /**
-         * Update user password
-         */
-        public function updateUserPassword(int $id, string $password)
-        {
-            return $this->update($id, ['password' => $password]);
-        }
-    
-        /**
-         * Update user reset token
-         */
-            public function updateUserResetToken(int $id, $otp)
-            {
-                return $this->update($id, ['otp' => $otp]);
-            }
-        
-            /**
-             * Get basic user details
-             */
-            public function getBasicUserDetails(int $userId)
-            {
-                return $this->select('username, full_name, email, photo_profile')
-                            ->where('user_id', $userId)
-                            ->first();
-            }
+    /**
+     * Get user by email
+     */
+    public function getUserByEmail(string $email)
+    {
+        return $this->where('email', $email)->first();
+    }
+
+    /**
+     * Update a user record
+     */
+    public function updateUser(int $id, array $data)
+    {
+        return $this->update($id, $data);
+    }
+
+    /**
+     * Update user password
+     */
+    public function updateUserPassword(int $id, string $password)
+    {
+        return $this->update($id, ['password' => $password]);
+    }
+
+    /**
+     * Update user reset token
+     */
+    public function updateUserResetToken(int $id, $otp)
+    {
+        return $this->update($id, ['otp' => $otp]);
+    }
+
+    /**
+     * Get basic user details
+     */
+    public function getBasicUserDetails(int $userId)
+    {
+        return $this->select('username, full_name, email, photo_profile')
+            ->where('user_id', $userId)
+            ->first();
+    }
 
     public function getProjectTeamMembers(int $projectId, int $excludeUserId): array
     {
@@ -547,7 +546,7 @@ class UserModel extends Model
             ->getResultArray();
     }
 
-public function getUserDetails($userId)
+    public function getUserDetails($userId)
     {
         return $this->builder('users u')
             ->select('u.*, r.role_name, d.department_name')
@@ -567,4 +566,6 @@ public function getUserDetails($userId)
             ->get()
             ->getRowArray();
     }
+
+    
 }

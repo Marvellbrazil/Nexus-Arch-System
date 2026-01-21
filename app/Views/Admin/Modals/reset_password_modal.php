@@ -1,4 +1,4 @@
-<!-- resources/views/Admin/modals/reset_password_modal.php -->
+<!-- resources/views/Admin/modals/reset_password_modal.php
 <div id="resetPasswordModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
     <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
         <div class="p-6 border-b border-gray-200">
@@ -41,4 +41,4 @@
             </button>
         </div>
     </div>
-</div>
+</div> -->
