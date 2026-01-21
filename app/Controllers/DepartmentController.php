@@ -14,7 +14,6 @@ class DepartmentController extends BaseController
     private $deptDepartmentModel;
     private $deptTicketModel;
 
-    // DepartmentController.php - PERBAIKAN constructor dan validation
     public function __construct()
     {
         helper('url');
@@ -34,6 +33,12 @@ class DepartmentController extends BaseController
         $this->departmentName = session()->get('department_name');
         $this->userId = session()->get('user_id');
 
+        // DEBUG: Tampilkan department dari session untuk troubleshooting
+        // Jika ada masalah UI/UX Support masuk ke IT Support, uncomment baris berikut:
+        // echo "DEBUG - Session Department Name: " . $this->departmentName;
+        // echo " | User ID: " . $this->userId;
+        // die();
+
         // Jika tidak ada department_name di session, force logout
         if (!$this->departmentName) {
             session()->destroy();
@@ -46,7 +51,7 @@ class DepartmentController extends BaseController
         $this->deptTicketModel = new TicketModel();
     }
 
-    // Tambahkan method untuk get deptType dari URL
+    // Method untuk get deptType dari URL
     private function getDeptTypeFromUrl()
     {
         $uri = service('uri');
@@ -62,7 +67,6 @@ class DepartmentController extends BaseController
         return null;
     }
 
-    // Perbaiki method dashboard
     public function dashboard($deptType = null)
     {
         // Jika $deptType tidak diberikan, ambil dari URL
@@ -70,15 +74,31 @@ class DepartmentController extends BaseController
             $deptType = $this->getDeptTypeFromUrl();
         }
 
-        // DEBUG: Cek nilai
-        // echo "Dept Type: " . $deptType;
-        // echo " | Dept Name: " . $this->departmentName;
+        // DEBUG: Untuk troubleshooting masalah UI/UX Support masuk ke IT Support
+        // echo "DEBUG dashboard()<br>";
+        // echo "Dept Type from URL: " . htmlspecialchars($deptType) . "<br>";
+        // echo "Department Name from Session: " . htmlspecialchars($this->departmentName) . "<br>";
+        
+        // Get mapping untuk debugging
+        $departmentMap = [
+            'it-support' => 'IT Support',
+            'technical-support' => 'Technical Support',
+            'uiux-support' => 'UI/UX Support',
+            'feature-request' => 'Feature Request'
+        ];
+        
+        $expectedDeptName = $departmentMap[$deptType] ?? 'Unknown';
+        // echo "Expected Dept from URL: " . htmlspecialchars($expectedDeptName) . "<br>";
         // die();
 
         // Validasi department
         $departmentName = $this->validateDepartment($deptType);
         if (!$departmentName) {
-            return redirect()->to('/login')->with('error', 'Unauthorized department access. Expected: ' . $this->departmentName);
+            $errorMsg = "Unauthorized department access. ";
+            $errorMsg .= "You are logged in as <strong>" . htmlspecialchars($this->departmentName) . "</strong>, ";
+            $errorMsg .= "but trying to access <strong>" . htmlspecialchars($expectedDeptName) . "</strong> dashboard.";
+            
+            return redirect()->to('/login')->with('error', $errorMsg);
         }
 
         $data = $this->loadCommonData();
@@ -90,7 +110,7 @@ class DepartmentController extends BaseController
         $department = $this->deptDepartmentModel->findByName($departmentName);
 
         if (!$department) {
-            return redirect()->to('/login')->with('error', 'Department not found');
+            return redirect()->to('/login')->with('error', 'Department not found in database: ' . $departmentName);
         }
 
         $departmentId = $department['department_id'];
@@ -115,6 +135,10 @@ class DepartmentController extends BaseController
 
         $data['view'] = "Department/{$this->formatDepartmentView($departmentName)}/dashboard";
 
+        // Debug view path
+        // echo "View Path: " . $data['view'];
+        // die();
+
         return view($data['view'], $data);
     }
 
@@ -122,22 +146,24 @@ class DepartmentController extends BaseController
     {
         // Jika $deptType tidak diberikan, ambil dari URL
         if ($deptType === null) {
-            // Dapatkan bagian URL setelah 'department/'
-            $uri = service('uri');
-            $segments = $uri->getSegments();
-
-            // Cari index 'department'
-            $deptIndex = array_search('department', $segments);
-
-            if ($deptIndex !== false && isset($segments[$deptIndex + 1])) {
-                $deptType = $segments[$deptIndex + 1]; // 'it-support', 'technical-support', dll
-            }
+            $deptType = $this->getDeptTypeFromUrl();
         }
 
         // Department validation
         $departmentName = $this->validateDepartment($deptType);
         if (!$departmentName) {
-            return redirect()->to('/login')->with('error', 'Unauthorized department access');
+            $departmentMap = [
+                'it-support' => 'IT Support',
+                'technical-support' => 'Technical Support',
+                'uiux-support' => 'UI/UX Support',
+                'feature-request' => 'Feature Request'
+            ];
+            
+            $expectedDeptName = $departmentMap[$deptType] ?? 'Unknown';
+            $errorMsg = "Unauthorized access. You are <strong>" . htmlspecialchars($this->departmentName) . "</strong>, ";
+            $errorMsg .= "cannot access <strong>" . htmlspecialchars($expectedDeptName) . "</strong> assigned tickets.";
+            
+            return redirect()->to('/login')->with('error', $errorMsg);
         }
 
         $data = $this->loadCommonData();
@@ -146,11 +172,12 @@ class DepartmentController extends BaseController
         $db = db_connect();
 
         // Get department ID
-        $department = $db->table('departments')
-            ->where('department_name', $departmentName)
-            ->get()
-            ->getRowArray();
-
+        $department = $this->deptDepartmentModel->findByName($departmentName);
+        
+        if (!$department) {
+            return redirect()->to('/login')->with('error', 'Department not found: ' . $departmentName);
+        }
+        
         $departmentId = $department['department_id'];
 
         // Get tickets assigned to me
@@ -171,29 +198,34 @@ class DepartmentController extends BaseController
 
         return view($data['view'], $data);
     }
+
     public function profile($deptType = null)
     {
         // Jika $deptType tidak diberikan, ambil dari URL
         if ($deptType === null) {
-            $uri = service('uri');
-            $segments = $uri->getSegments();
-            $deptIndex = array_search('department', $segments);
-
-            if ($deptIndex !== false && isset($segments[$deptIndex + 1])) {
-                $deptType = $segments[$deptIndex + 1];
-            }
+            $deptType = $this->getDeptTypeFromUrl();
         }
 
         // Department validation
         $departmentName = $this->validateDepartment($deptType);
         if (!$departmentName) {
-            return redirect()->to('/login')->with('error', 'Unauthorized department access');
+            $departmentMap = [
+                'it-support' => 'IT Support',
+                'technical-support' => 'Technical Support',
+                'uiux-support' => 'UI/UX Support',
+                'feature-request' => 'Feature Request'
+            ];
+            
+            $expectedDeptName = $departmentMap[$deptType] ?? 'Unknown';
+            $errorMsg = "Unauthorized access. You are <strong>" . htmlspecialchars($this->departmentName) . "</strong>, ";
+            $errorMsg .= "cannot access <strong>" . htmlspecialchars($expectedDeptName) . "</strong> profile.";
+            
+            return redirect()->to('/login')->with('error', $errorMsg);
         }
 
         $data = $this->loadCommonData();
 
         $userId = session()->get('user_id');
-        $db = db_connect();
 
         // Get user details
         $data['user_details'] = $this->deptUserModel->getUserDetails($userId);
@@ -203,7 +235,11 @@ class DepartmentController extends BaseController
 
         // Jika file view tidak ada, gunakan default
         if (!file_exists(APPPATH . "Views/{$viewPath}.php")) {
-            $viewPath = "Department/IT_Support/profile_it_support";
+            // Coba alternatif
+            $altViewPath = "Department/{$this->formatDepartmentView($departmentName)}/profile";
+            if (!file_exists(APPPATH . "Views/{$altViewPath}.php")) {
+                $viewPath = "Department/IT_Support/profile_it_support";
+            }
         }
 
         return view($viewPath, $data);
@@ -213,19 +249,24 @@ class DepartmentController extends BaseController
     {
         // Jika $deptType tidak diberikan, ambil dari URL
         if ($deptType === null) {
-            $uri = service('uri');
-            $segments = $uri->getSegments();
-            $deptIndex = array_search('department', $segments);
-
-            if ($deptIndex !== false && isset($segments[$deptIndex + 1])) {
-                $deptType = $segments[$deptIndex + 1];
-            }
+            $deptType = $this->getDeptTypeFromUrl();
         }
 
         // Department validation
         $departmentName = $this->validateDepartment($deptType);
         if (!$departmentName) {
-            return redirect()->to('/login')->with('error', 'Unauthorized department access');
+            $departmentMap = [
+                'it-support' => 'IT Support',
+                'technical-support' => 'Technical Support',
+                'uiux-support' => 'UI/UX Support',
+                'feature-request' => 'Feature Request'
+            ];
+            
+            $expectedDeptName = $departmentMap[$deptType] ?? 'Unknown';
+            $errorMsg = "Unauthorized access. You are <strong>" . htmlspecialchars($this->departmentName) . "</strong>, ";
+            $errorMsg .= "cannot access <strong>" . htmlspecialchars($expectedDeptName) . "</strong> notifications.";
+            
+            return redirect()->to('/login')->with('error', $errorMsg);
         }
 
         $data = $this->loadCommonData();
@@ -246,6 +287,24 @@ class DepartmentController extends BaseController
         return redirect()->to('/login')->with('success', 'Logged out successfully');
     }
 
+    // Tambahkan method untuk debugging session
+    public function debugSession()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return "Not logged in";
+        }
+        
+        $debugInfo = [
+            'user_id' => session()->get('user_id'),
+            'role_name' => session()->get('role_name'),
+            'department_name' => session()->get('department_name'),
+            'isLoggedIn' => session()->get('isLoggedIn'),
+            'all_session_data' => session()->get()
+        ];
+        
+        return "<pre>" . print_r($debugInfo, true) . "</pre>";
+    }
+
     private function validateDepartment($deptType)
     {
         $departmentMap = [
@@ -255,10 +314,22 @@ class DepartmentController extends BaseController
             'feature-request' => 'Feature Request'
         ];
 
-        $departmentName = $departmentMap[$deptType] ?? null;
+        $departmentNameFromUrl = $departmentMap[$deptType] ?? null;
 
-        if ($departmentName && $departmentName === $this->departmentName) {
-            return $departmentName;
+        if (!$departmentNameFromUrl) {
+            // Debug: Tampilkan mapping yang tidak ditemukan
+            // echo "DEBUG validateDepartment: DeptType '{$deptType}' not found in map<br>";
+            return null;
+        }
+
+        // Debug: Bandingkan department dari URL dengan session
+        // echo "DEBUG validateDepartment:<br>";
+        // echo "Department from URL: '{$departmentNameFromUrl}'<br>";
+        // echo "Department from Session: '{$this->departmentName}'<br>";
+        // echo "Match? " . ($departmentNameFromUrl === $this->departmentName ? 'YES' : 'NO') . "<br>";
+
+        if ($departmentNameFromUrl === $this->departmentName) {
+            return $departmentNameFromUrl;
         }
 
         return null;
@@ -274,5 +345,20 @@ class DepartmentController extends BaseController
         ];
 
         return $mapping[$departmentName] ?? str_replace(' ', '_', $departmentName);
+    }
+
+    // Method untuk load data umum yang digunakan di semua halaman
+    protected function loadCommonData()
+    {
+        $data = [
+            'title' => 'Department Dashboard',
+            'user_id' => $this->userId,
+            'role_name' => session()->get('role_name'),
+            'department_name' => $this->departmentName,
+            'user_details' => $this->deptUserModel->getUserDetails($this->userId),
+            'active_menu' => 'dashboard'
+        ];
+
+        return $data;
     }
 }

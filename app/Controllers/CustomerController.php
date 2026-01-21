@@ -75,7 +75,300 @@ class CustomerController extends BaseController
         // It will be removed once the refactoring is complete.
         return $this->ticketModel->getTicketCountByStatus($this->userId, $statusName);
     }
+// Di dalam class CustomerController, tambahkan:
 
+public function sendMessage()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $ticketId = $this->request->getPost('ticket_id');
+    $message = $this->request->getPost('message');
+    $userId = session()->get('user_id');
+    
+    log_message('debug', 'sendMessage called - Ticket: ' . $ticketId . ', User: ' . $userId);
+    
+    if (empty($message)) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Message cannot be empty']);
+    }
+    
+    $db = db_connect();
+    
+    // Validasi ticket ownership
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->where('customer_id', $userId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) {
+        log_message('error', 'Ticket not found or unauthorized - Ticket: ' . $ticketId . ', User: ' . $userId);
+        return $this->response->setJSON(['success' => false, 'message' => 'Ticket not found or unauthorized']);
+    }
+    
+    try {
+        // Simpan pesan - PERBAIKAN DISINI
+        log_message('debug', 'Inserting message into ticket_messages');
+        
+        // Gunakan query builder untuk menghindari SQL syntax error
+        $db->table('ticket_messages')->insert([
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'message' => $message,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        $messageId = $db->insertID();
+        
+        if (!$messageId) {
+            log_message('error', 'Failed to get insert ID');
+            throw new \Exception('Failed to save message - no insert ID returned');
+        }
+        
+        log_message('debug', 'Message saved with ID: ' . $messageId);
+        
+        // Update ticket timestamp
+        $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->update(['updated_at' => date('Y-m-d H:i:s')]);
+        
+        // Get complete message data
+        $newMessage = $db->table('ticket_messages tm')
+            ->select('tm.*, u.full_name, u.photo_profile, r.role_name')
+            ->join('users u', 'u.user_id = tm.sender_id', 'left')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('tm.message_id', $messageId)
+            ->get()
+            ->getRowArray();
+        
+        // Buat notifikasi untuk support/department
+        $this->sendCustomerMessageNotification($ticketId, $userId, $message);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Message sent successfully',
+            'data' => $newMessage
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error in sendMessage: ' . $e->getMessage());
+        log_message('error', 'Error trace: ' . $e->getTraceAsString());
+        
+        // Dapatkan error database jika ada
+        $dbError = $db->error();
+        if ($dbError) {
+            log_message('error', 'Database error: ' . print_r($dbError, true));
+        }
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage() . ' - DB Error: ' . ($dbError['message'] ?? 'Unknown')
+        ]);
+    }
+}
+
+public function getNewMessages()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $ticketId = $this->request->getGet('ticket_id');
+    $lastMessageId = $this->request->getGet('last_message_id') ?? 0;
+    
+    // Validasi ticket ownership
+    $userId = session()->get('user_id');
+    $db = db_connect();
+    
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->where('customer_id', $userId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+    }
+    
+    $messageModel = new \App\Models\TicketMessageModel();
+    $messages = $messageModel->getNewMessages($ticketId, $lastMessageId);
+    
+    // Format messages untuk response
+    $formattedMessages = [];
+    foreach ($messages as $message) {
+        $formattedMessages[] = [
+            'message_id' => $message['message_id'],
+            'sender_id' => $message['sender_id'],
+            'sender_name' => $message['full_name'],
+            'sender_role' => $message['role_name'],
+            'message' => $message['message'],
+            'created_at' => $message['created_at'],
+            'time_ago' => $this->formatTimeAgo($message['created_at']),
+            'is_current_user' => $message['sender_id'] == $userId
+        ];
+    }
+    
+    return $this->response->setJSON([
+        'success' => true,
+        'messages' => $formattedMessages,
+        'last_message_id' => !empty($messages) ? end($messages)['message_id'] : $lastMessageId
+    ]);
+}
+
+private function sendCustomerMessageNotification($ticketId, $senderId, $messageText)
+{
+    $db = db_connect();
+    
+    // Get ticket info
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) return;
+    
+    // Tentukan penerima notifikasi (Support/Department)
+    $recipients = [];
+    
+    // Support yang assign (jika ada)
+    if ($ticket['assigned_to'] && $ticket['assigned_to'] != $senderId) {
+        $recipients[] = $ticket['assigned_to'];
+    }
+    
+    // Department (jika ada)
+    if ($ticket['department_id']) {
+        $deptUsers = $db->table('users')
+            ->select('user_id')
+            ->where('department_id', $ticket['department_id'])
+            ->where('user_id !=', $senderId)
+            ->get()
+            ->getResultArray();
+        
+        foreach ($deptUsers as $user) {
+            $recipients[] = $user['user_id'];
+        }
+    }
+    
+    // Jika tidak ada yang diassign, notifikasi ke semua support
+    if (empty($recipients)) {
+        $supportUsers = $db->table('users u')
+            ->select('u.user_id')
+            ->join('roles r', 'r.role_id = u.role_id')
+            ->where('r.role_name', 'Support')
+            ->where('u.user_id !=', $senderId)
+            ->where('u.is_active', true)
+            ->get()
+            ->getResultArray();
+        
+        foreach ($supportUsers as $user) {
+            $recipients[] = $user['user_id'];
+        }
+    }
+    
+    // Buat notifikasi
+    $sender = $db->table('users')
+        ->select('full_name')
+        ->where('user_id', $senderId)
+        ->get()
+        ->getRowArray();
+    
+    $senderName = $sender ? $sender['full_name'] : 'Customer';
+    
+    foreach (array_unique($recipients) as $recipientId) {
+        $db->table('notifications')->insert([
+            'user_id' => $recipientId,
+            'ticket_id' => $ticketId,
+            'title' => 'Customer replied to ticket #' . ($ticket['ticket_number'] ?? $ticketId),
+            'message' => $senderName . ': ' . substr($messageText, 0, 100) . (strlen($messageText) > 100 ? '...' : ''),
+            'notification_type' => 'message',
+            'is_read' => false,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+}
+
+private function formatTimeAgo($datetime)
+{
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) {
+        return 'Just now';
+    } elseif ($diff < 3600) {
+        $minutes = floor($diff / 60);
+        return $minutes . ' minute' . ($minutes > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 604800) {
+        $days = floor($diff / 86400);
+        return $days . ' day' . ($days > 1 ? 's' : '') . ' ago';
+    } else {
+        return date('M d, Y', $time);
+    }
+}
+// Di SupportController.php dan CustomerController.php
+public function uploadAttachment()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $ticketId = $this->request->getPost('ticket_id');
+    $file = $this->request->getFile('file');
+    $userId = session()->get('user_id');
+    
+    if (!$file || !$file->isValid()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid file']);
+    }
+    
+    // Validasi file size (max 10MB)
+    if ($file->getSize() > 10 * 1024 * 1024) {
+        return $this->response->setJSON(['success' => false, 'message' => 'File size exceeds 10MB limit']);
+    }
+    
+    // Validasi file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 
+                    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'text/plain'];
+    
+    if (!in_array($file->getClientMimeType(), $allowedTypes)) {
+        return $this->response->setJSON(['success' => false, 'message' => 'File type not allowed']);
+    }
+    
+    $uploadPath = WRITEPATH . 'uploads/tickets/' . $ticketId . '/';
+    
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+    }
+    
+    $newName = $file->getRandomName();
+    
+    if ($file->move($uploadPath, $newName)) {
+        $db = db_connect();
+        
+        // Save to ticket_attachments
+        $db->table('ticket_attachments')->insert([
+            'ticket_id' => $ticketId,
+            'uploaded_by' => $userId,
+            'file_name' => $file->getClientName(),
+            'file_path' => 'uploads/tickets/' . $ticketId . '/' . $newName,
+            'file_type' => $file->getClientMimeType(),
+            'file_size' => $file->getSize(),
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'File uploaded successfully',
+            'file_name' => $file->getClientName()
+        ]);
+    }
+    
+    return $this->response->setJSON(['success' => false, 'message' => 'Failed to upload file']);
+}
     public function dashboard()
     {
         $data = $this->loadCommonData();
@@ -211,39 +504,27 @@ class CustomerController extends BaseController
         return $ticket;
     }
 
-    // Helper method for relative time
-    private function formatTimeAgo($timestamp)
-    {
-        $now = time();
-        $diff = $now - $timestamp;
-
-        if ($diff < 60)
-            return 'Just now';
-        if ($diff < 3600)
-            return floor($diff / 60) . ' min ago';
-        if ($diff < 86400)
-            return floor($diff / 3600) . ' hours ago';
-        if ($diff < 604800)
-            return floor($diff / 86400) . ' days ago';
-
-        return date('M d, Y, h:i A', $timestamp);
-    }
-
+    
+    
     public function ticketDetail($id)
-    {
-        $data = $this->loadCommonData();
-        $ticket = $this->ticketModel->getTicketDetails($id, $this->userId);
+{
+    $data = $this->loadCommonData();
+    $ticket = $this->ticketModel->getTicketDetails($id, $this->userId);
 
-        if (!$ticket) {
-            return redirect()->to('/customer/my_tickets')->with('error', 'Ticket not found');
-        }
-
-        $data['ticket'] = $ticket;
-        $data['messages'] = $this->ticketMessageModel->getMessagesForTicket($id);
-        $data['attachments'] = $this->ticketAttachmentModel->getAttachmentsForTicket($id);
-
-        return view('Customer/ticket_detail', ['data' => $data]);
+    if (!$ticket) {
+        return redirect()->to('/customer/my_tickets')->with('error', 'Ticket not found');
     }
+
+    $data['ticket'] = $ticket;
+    $data['ticket_id'] = $id; // Tambahkan ini
+    $data['messages'] = $this->ticketMessageModel->getMessagesForTicket($id);
+    $data['attachments'] = $this->ticketAttachmentModel->getAttachmentsForTicket($id);
+    
+    // Tambahkan role ke data yang dikirim ke view
+    $data['user_role'] = session()->get('role'); // <-- INI PENTING
+
+    return view('Customer/ticket_detail', ['data' => $data]);
+}
 
     public function projectDetail($projectId)
     {

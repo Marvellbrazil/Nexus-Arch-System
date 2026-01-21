@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/customer_layout') ?>
 
-<?= $this->section('title') ?>Ticket #12345 Detail - NEXUS<?= $this->endSection() ?>
+<?= $this->section('title') ?>Ticket #<?= $data['ticket']['ticket_number'] ?? '12345' ?> Detail - NEXUS<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
@@ -16,18 +16,21 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="mt-[77px] p-[30px] relative z-10">
+<div class="mt-[77px] p-[30px] relative z-10"
+     data-ticket-id="<?= $data['ticket']['ticket_id'] ?? '' ?>"
+     data-user-id="<?= session()->get('user_id') ?>"
+     data-user-role="<?= $data['user_role'] ?? session()->get('role') ?? 'Customer' ?>"> <!-- PERBAIKAN DISINI -->
     <!-- Page Header -->
     <div class="mb-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-[32px] font-semibold mb-2 text-text-dark"><?= $data['ticket']['ticket_number'] ?></h1>
-                <p class="text-[15px] text-[#000]"><?= $data['ticket']['subject'] ?></p>
+                <h1 class="text-[32px] font-semibold mb-2 text-text-dark"><?= $data['ticket']['ticket_number'] ?? 'N/A' ?></h1>
+                <p class="text-[15px] text-[#000]"><?= esc($data['ticket']['subject'] ?? 'No Subject') ?></p>
             </div>
 
             <!-- Action Buttons -->
             <div class="flex gap-3">
-                <a href="<?= base_url('dashboard/my_tickets') ?>"
+                <a href="<?= base_url('customer/my_tickets') ?>"
                     class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all text-sm font-medium flex items-center gap-2">
                     <i class="fas fa-arrow-left"></i>
                     Back to Tickets
@@ -50,16 +53,16 @@
                 <div>
                     <div class="text-white/80 text-sm mb-1">Status</div>
                     <div class="flex items-center gap-3">
-                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold"><?= $data['ticket']['status_name'] ?></div>
+                        <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold"><?= $data['ticket']['status_name'] ?? 'Open' ?></div>
                     </div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Priority</div>
-                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block"><?= $data['ticket']['priority_name'] ?></div>
+                    <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block"><?= $data['ticket']['priority_name'] ?? 'Medium' ?></div>
                 </div>
                 <div>
                     <div class="text-white/80 text-sm mb-1">Created</div>
-                    <div class="text-lg font-semibold"><?= date('F d, Y', strtotime($data['ticket']['created_at'])) ?></div>
+                    <div class="text-lg font-semibold"><?= date('F d, Y', strtotime($data['ticket']['created_at'] ?? 'now')) ?></div>
                 </div>
             </div>
         </div>
@@ -80,7 +83,7 @@
                 <div class="text-sm text-gray-600">
                     <div class="flex items-center gap-2 mb-1">
                         <i class="far fa-clock text-gray-400"></i>
-                        <span>Last update: <?= date('F d, Y H:i:s', strtotime($data['ticket']['updated_at'])) ?></span>
+                        <span>Last update: <?= date('F d, Y H:i:s', strtotime($data['ticket']['updated_at'] ?? 'now')) ?></span>
                     </div>
                     <div class="text-secondary font-medium">Accepted by Support Team</div>
                 </div>
@@ -95,12 +98,12 @@
                     <i class="fas fa-tools text-secondary text-xl"></i>
                 </div>
                 <div>
-                    <div class="text-gray-800 font-semibold"><?= $data['ticket']['category_name'] ?></div>
-                    <div class="text-gray-600 text-sm"><?= $data['ticket']['department_name'] ?></div>
+                    <div class="text-gray-800 font-semibold"><?= $data['ticket']['category_name'] ?? 'Technical' ?></div>
+                    <div class="text-gray-600 text-sm"><?= $data['ticket']['department_name'] ?? 'IT Support' ?></div>
                 </div>
             </div>
             <p class="text-gray-600 text-sm">
-                Dashboard access problem with error message "Access Denied"
+                <?= esc($data['ticket']['subject'] ?? 'No description') ?>
             </p>
         </div>
     </div>
@@ -113,51 +116,71 @@
                 <h2 class="text-xl font-semibold text-gray-800">Conversation</h2>
                 <div class="text-gray-600 text-sm">
                     <i class="far fa-comments mr-1"></i>
-                    4 messages
+                    <span id="messageCount"><?= count($data['messages'] ?? []) ?></span> messages
                 </div>
             </div>
         </div>
 
         <!-- Conversation Container (Scrollable) -->
         <div id="conversationContainer" class="p-6 h-[500px] overflow-y-auto">
-            <?php foreach ($data['messages'] as $message) : ?>
+            <?php if (!empty($data['messages'])): ?>
                 <div class="space-y-6">
-                <!-- Date Header - February 19 -->
-                <div class="text-center">
-                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full"><?= date('j F Y, H:i', strtotime($message['created_at'])) ?></span>
-                </div>
-
-                <!-- Message 1 - Customer (OLDEST) -->
-                <div class="flex gap-4">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600"></i>
-                        </div>
-                    </div>
-
-                    <!-- Message Content -->
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div>
-                                <span class="text-gray-800 font-semibold"><?= $message['full_name'] ?></span>
-                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded"><?= $message['role_name'] ?></span>
+                    <?php 
+                    $currentDate = null;
+                    foreach ($data['messages'] as $message): 
+                        $messageDate = date('F j, Y', strtotime($message['created_at']));
+                    ?>
+                        <?php if ($messageDate != $currentDate): ?>
+                            <!-- Date Header -->
+                            <div class="text-center">
+                                <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                                    <?= $messageDate ?>
+                                </span>
                             </div>
-                            <div class="text-gray-500 text-sm ml-auto">
-                                <i class="far fa-clock mr-1"></i>
-                                <?= date('H:i', strtotime($message['created_at'])) ?>
+                            <?php $currentDate = $messageDate; ?>
+                        <?php endif; ?>
+                        
+                        <!-- Message -->
+                        <div class="flex gap-4 message-item" data-message-id="<?= $message['message_id'] ?? '' ?>">
+                            <!-- Avatar -->
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 <?= $message['role_name'] === 'Customer' ? 'bg-blue-100' : 'bg-green-100' ?> rounded-full flex items-center justify-center">
+                                    <?php if ($message['role_name'] === 'Customer'): ?>
+                                        <i class="fas fa-user text-blue-600"></i>
+                                    <?php else: ?>
+                                        <i class="fas fa-headset text-green-600"></i>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Message Content -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div>
+                                        <span class="text-gray-800 font-semibold"><?= esc($message['full_name'] ?? 'Unknown') ?></span>
+                                        <span class="ml-2 px-2 py-0.5 <?= $message['role_name'] === 'Customer' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700' ?> text-xs rounded">
+                                            <?= $message['role_name'] ?? 'User' ?>
+                                        </span>
+                                    </div>
+                                    <div class="text-gray-500 text-sm ml-auto">
+                                        <i class="far fa-clock mr-1"></i>
+                                        <?= date('H:i', strtotime($message['created_at'])) ?>
+                                    </div>
+                                </div>
+
+                                <div class="<?= $message['role_name'] === 'Customer' ? 'bg-gray-50' : 'bg-green-50' ?> rounded-xl p-4">
+                                    <p class="text-gray-700"><?= nl2br(esc($message['message'] ?? '')) ?></p>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <p class="text-gray-700 mb-3">
-                                <?= $message['message'] ?>
-                            </p>
-                            <!-- Attachment -->
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
+            <?php else: ?>
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-comments text-3xl mb-3"></i>
+                    <p>No messages yet. Start the conversation!</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -168,7 +191,7 @@
         <div class="space-y-4">
             <!-- Message Input -->
             <div>
-                <textarea placeholder="Type your message here..."
+                <textarea id="messageInput" placeholder="Type your message here..."
                     class="w-full h-32 p-4 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 resize-none text-gray-700"
                     rows="4"></textarea>
                 <div class="text-gray-500 text-xs mt-1">
@@ -197,7 +220,7 @@
                 </button>
                 <button id="cancelBtn"
                     class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1">
-                    Cancel
+                    Clear
                 </button>
             </div>
         </div>
@@ -205,30 +228,35 @@
 </div>
 
 <style>
-    /* Animations */
+    /* Auto-resize textarea */
+    textarea {
+        min-height: 48px;
+        max-height: 200px;
+        resize: none;
+        transition: height 0.2s;
+    }
+
+    /* Message animations */
     @keyframes slideIn {
         from {
             opacity: 0;
             transform: translateY(10px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
+    .message-item {
+        animation: slideIn 0.3s ease-out;
     }
 
-    /* Custom scrollbar for conversation container */
+    /* Scrollbar styling */
+    #conversationContainer {
+        scroll-behavior: smooth;
+    }
+
     #conversationContainer::-webkit-scrollbar {
         width: 8px;
     }
@@ -247,248 +275,88 @@
         background: #a8a8a8;
     }
 
-    /* Message hover effects */
-    .bg-gray-50:hover {
-        background-color: #f8fafc;
+    /* Typing indicator */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 12px;
+        background: #f3f4f6;
+        border-radius: 16px;
+        width: fit-content;
+        margin: 8px 0;
     }
 
-    .bg-green-50:hover {
-        background-color: #f0fdf4;
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #6b7280;
+        border-radius: 50%;
+        animation: typing 1.4s infinite ease-in-out;
     }
 
-    /* Transition effects */
-    .transition-all {
-        transition: all 0.2s ease;
-    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
-    .transition-colors {
-        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    @keyframes typing {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
     }
-
-    /* New message animation */
-    .new-message {
-        animation: slideIn 0.3s ease-out;
-    }
-
-    /* Scroll to bottom button */
-    #scrollToBottomBtn {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    /* Conversation container styling */
-    #conversationContainer {
-        scroll-behavior: smooth;
+    
+    /* Online indicator */
+    .online-indicator {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        border: 2px solid white;
     }
 </style>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Get conversation container
-        const conversationContainer = document.getElementById('conversationContainer');
+// Debug session data
+console.log('=== SESSION DEBUG ===');
+console.log('User ID from session():', '<?= session()->get('user_id') ?>');
+console.log('Role from session():', '<?= session()->get('role') ?>');
+console.log('User role from $data:', '<?= $data['user_role'] ?? 'NOT SET' ?>');
 
-        // Auto-scroll to latest message when page loads
-        setTimeout(() => {
-            if (conversationContainer) {
-                conversationContainer.scrollTop = conversationContainer.scrollHeight;
-            }
-        }, 100);
-
-        // Textarea auto-resize
-        const textarea = document.querySelector('textarea');
-        if (textarea) {
-            textarea.addEventListener('input', function () {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
-        }
-
-        // File attachment
-        const attachBtn = document.getElementById('attachFileBtn');
-        const fileInfo = document.getElementById('fileInfo');
-
-        if (attachBtn && fileInfo) {
-            attachBtn.addEventListener('click', function () {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*,.pdf,.doc,.docx,.txt';
-                input.onchange = function (e) {
-                    if (e.target.files.length > 0) {
-                        const file = e.target.files[0];
-                        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-
-                        if (fileSize > 10) {
-                            alert('File size exceeds 10MB limit');
-                            return;
-                        }
-
-                        fileInfo.innerHTML = `
-                        <div class="flex items-center gap-2 animate-slide-in">
-                            <i class="fas fa-file text-secondary"></i>
-                            <span class="text-gray-700">${file.name} (${fileSize} MB)</span>
-                            <button class="ml-2 text-red-500 hover:text-red-700 remove-file-btn">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-
-                        // Add remove file button handler
-                        const removeBtn = fileInfo.querySelector('.remove-file-btn');
-                        if (removeBtn) {
-                            removeBtn.addEventListener('click', function () {
-                                fileInfo.innerHTML = 'No files attached';
-                            });
-                        }
-                    }
-                };
-                input.click();
-            });
-        }
-
-        // Send reply button
-        const sendBtn = document.getElementById('sendReplyBtn');
-        if (sendBtn) {
-            sendBtn.addEventListener('click', function () {
-                const message = textarea.value.trim();
-                if (!message) {
-                    alert('Please write a message before sending');
-                    return;
-                }
-
-                // Show loading state
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-                this.disabled = true;
-
-                // Simulate sending delay
-                setTimeout(() => {
-                    // Reset button
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-
-                    // Add new message to conversation
-                    addNewMessage(message);
-
-                    // Clear form
-                    textarea.value = '';
-                    textarea.style.height = 'auto';
-                    if (fileInfo) fileInfo.innerHTML = 'No files attached';
-
-                }, 1500);
-            });
-        }
-
-        // Cancel button
-        const cancelBtn = document.getElementById('cancelBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function () {
-                textarea.value = '';
-                textarea.style.height = 'auto';
-                if (fileInfo) fileInfo.innerHTML = 'No files attached';
-            });
-        }
-
-        // Download buttons
-        document.querySelectorAll('.download-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const fileName = this.closest('.bg-white')?.querySelector('.text-gray-800')?.textContent || 'file';
-                alert(`Downloading ${fileName}...`);
-            });
-        });
-
-        // Function to add new message
-        function addNewMessage(text) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            // Create new message element
-            const newMessage = document.createElement('div');
-            newMessage.className = 'flex gap-4 new-message';
-            newMessage.innerHTML = `
-            <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-user text-blue-600"></i>
-                </div>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                    <div>
-                        <span class="text-gray-800 font-semibold">You</span>
-                        <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Customer</span>
-                    </div>
-                    <div class="text-gray-500 text-sm ml-auto">
-                        <i class="far fa-clock mr-1"></i>
-                        ${timeString} • Just now
-                    </div>
-                </div>
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <p class="text-gray-700">${text}</p>
-                </div>
-            </div>
-        `;
-
-            // Get conversation timeline container
-            const conversationTimeline = conversationContainer.querySelector('.space-y-6');
-
-            // Check if we need to create "Today" section
-            let todaySection = conversationTimeline.querySelector('div:has(span:contains("Today"))');
-
-            if (!todaySection) {
-                // Create new "Today" section
-                todaySection = document.createElement('div');
-                todaySection.innerHTML = `
-                <div class="text-center mt-8 pt-8 border-t border-gray-200">
-                    <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">Today</span>
-                </div>
-            `;
-                conversationTimeline.appendChild(todaySection);
-            }
-
-            // Add message to the bottom of the conversation (after today section)
-            conversationTimeline.appendChild(newMessage);
-
-            // Scroll to new message
-            setTimeout(() => {
-                conversationContainer.scrollTop = conversationContainer.scrollHeight;
-            }, 100);
-        }
-
-        // Show scroll to bottom button when user scrolls up
-        conversationContainer.addEventListener('scroll', function () {
-            const isScrolledUp = this.scrollTop < (this.scrollHeight - this.clientHeight - 100);
-
-            // Remove existing button if any
-            const existingBtn = document.getElementById('scrollToBottomBtn');
-            if (existingBtn) {
-                existingBtn.remove();
-            }
-
-            // Add scroll to bottom button if user is not at bottom
-            if (isScrolledUp) {
-                const scrollBtn = document.createElement('button');
-                scrollBtn.id = 'scrollToBottomBtn';
-                scrollBtn.className = 'fixed bottom-32 right-8 bg-secondary text-white p-3 rounded-full shadow-lg hover:bg-secondary/90 transition-colors z-10';
-                scrollBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                scrollBtn.title = 'Scroll to latest message';
-
-                scrollBtn.addEventListener('click', function () {
-                    conversationContainer.scrollTop = conversationContainer.scrollHeight;
-                });
-
-                document.body.appendChild(scrollBtn);
-            }
-        });
-
-        // Export button
-        const exportBtn = document.querySelector('button:contains("Export")');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', function () {
-                alert('Exporting conversation...');
-            });
-        }
-    });
+// Set default jika kosong
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('[data-ticket-id]');
+    if (container && (!container.dataset.userRole || container.dataset.userRole === '')) {
+        console.log('userRole is empty, setting default to "Customer"');
+        container.dataset.userRole = 'Customer';
+    }
+});
 </script>
+<script src="/js/chat.js"></script>
+<script>
+// Auto-resize textarea
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+document.querySelectorAll('textarea').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+        autoResizeTextarea(this);
+    });
+    // Initial resize
+    autoResizeTextarea(textarea);
+});
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// Export button
+document.querySelector('button:contains("Export")')?.addEventListener('click', function() {
+    alert('Exporting conversation...');
+});
+</script>
+
 <?= $this->endSection() ?>

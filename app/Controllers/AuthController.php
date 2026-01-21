@@ -12,12 +12,14 @@ class AuthController extends BaseController
     public $userModel;
     public $roleModel;
     public $departmentModel;
+    
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
         $this->departmentModel = new DepartmentModel();
     }
+    
     public function loginCustomer()
     {
         // Jika sudah login, redirect ke dashboard sesuai role
@@ -155,12 +157,22 @@ class AuthController extends BaseController
             'user_id' => $user['user_id'],
             'role_name' => $roleName,
             'department_name' => $department ? $department['department_name'] : null,
+            'department_id' => $user['department_id'], // Tambahkan department_id ke session
             'isLoggedIn' => true,
         ];
 
+        // DEBUG: Untuk troubleshooting masalah department
+        // echo "DEBUG - AuthController::processLogin()<br>";
+        // echo "User ID: " . $user['user_id'] . "<br>";
+        // echo "Role Name: " . $roleName . "<br>";
+        // echo "Department ID from DB: " . $user['department_id'] . "<br>";
+        // echo "Department Name from DB: " . ($department ? $department['department_name'] : 'NULL') . "<br>";
+        // echo "Setting session department_name: " . $sessionData['department_name'] . "<br>";
+        // die();
+
         session()->set($sessionData);
 
-        // // Update last login
+        // Update last login (jika ada method ini)
         // $this->userModel->updateLastLogin($user['user_id']);
 
         return $this->redirectToDashboard();
@@ -170,6 +182,15 @@ class AuthController extends BaseController
     {
         $roleName = session()->get('role_name');
         $departmentName = session()->get('department_name');
+
+        // DEBUG: Lihat data session sebelum redirect
+        // echo "DEBUG - redirectToDashboard()<br>";
+        // echo "Role from Session: " . $roleName . "<br>";
+        // echo "Department from Session: " . $departmentName . "<br>";
+        // echo "All Session Data: <pre>";
+        // print_r(session()->get());
+        // echo "</pre>";
+        // die();
 
         switch ($roleName) {
             case 'Admin':
@@ -194,11 +215,26 @@ class AuthController extends BaseController
                     'Feature Request' => 'feature-request'
                 ];
 
-                if (isset($deptUrls[$departmentName])) {
-                    return redirect()->to('/department/' . $deptUrls[$departmentName] . '/dashboard');
-                }
+                // Debug mapping
+                // echo "DEBUG - Department Redirect Mapping:<br>";
+                // echo "Department Name from Session: " . $departmentName . "<br>";
+                // echo "Mapped URL: " . ($deptUrls[$departmentName] ?? 'NOT FOUND') . "<br>";
 
-                return redirect()->to('/department/login')->with('error', 'Invalid department assignment');
+                if (isset($deptUrls[$departmentName])) {
+                    $redirectUrl = '/department/' . $deptUrls[$departmentName] . '/dashboard';
+                    // echo "Redirecting to: " . $redirectUrl . "<br>";
+                    // die();
+                    return redirect()->to($redirectUrl);
+                } else {
+                    // Debug: Tampilkan semua kemungkinan department
+                    // echo "Available departments in mapping:<br>";
+                    // foreach ($deptUrls as $key => $value) {
+                    //     echo "- " . $key . " => " . $value . "<br>";
+                    // }
+                    // die();
+                    
+                    return redirect()->to('/department/login')->with('error', 'Invalid department assignment. Department "' . $departmentName . '" not found in mapping.');
+                }
 
             default:
                 return redirect()->to('/login')->with('error', 'Invalid role assignment');
@@ -251,8 +287,6 @@ class AuthController extends BaseController
         } else {
             return redirect()->to('auth/proceed_otp')->with('error', 'Invalid OTP');
         }
-
-
     }
 
     public function resetPassword($userId)
@@ -272,5 +306,24 @@ class AuthController extends BaseController
             $this->userModel->updateUserPassword((int) decode($userId), $password);
             return redirect()->to('login')->with('success', 'Password successfully reset');
         }
+    }
+    
+    // Tambahkan method untuk debugging session
+    public function debugAuthSession()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return "Not logged in";
+        }
+        
+        $debugInfo = [
+            'user_id' => session()->get('user_id'),
+            'role_name' => session()->get('role_name'),
+            'department_name' => session()->get('department_name'),
+            'department_id' => session()->get('department_id'),
+            'isLoggedIn' => session()->get('isLoggedIn'),
+            'all_session_data' => session()->get()
+        ];
+        
+        return "<pre>" . print_r($debugInfo, true) . "</pre>";
     }
 }

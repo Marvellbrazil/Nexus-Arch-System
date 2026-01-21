@@ -849,7 +849,202 @@ class SupportController extends BaseController
             return redirect()->back()->with('error', 'Failed to mark notification as read: ' . $e->getMessage());
         }
     }
+// Di dalam SupportController.php, tambahkan method berikut:
 
+public function sendMessage()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $ticketId = $this->request->getPost('ticket_id');
+    $message = $this->request->getPost('message');
+    $userId = session()->get('user_id');
+    $userRole = session()->get('role');
+    
+    log_message('debug', 'Support sendMessage called - Ticket: ' . $ticketId . ', User: ' . $userId);
+    
+    if (empty($message)) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Message cannot be empty']);
+    }
+    
+    $db = db_connect();
+    
+    // Validasi ticket authorization (support bisa akses semua ticket)
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) {
+        log_message('error', 'Ticket not found - Ticket: ' . $ticketId);
+        return $this->response->setJSON(['success' => false, 'message' => 'Ticket not found']);
+    }
+    
+    try {
+        // Simpan pesan
+        log_message('debug', 'Support inserting message into ticket_messages');
+        
+        $db->table('ticket_messages')->insert([
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'message' => $message,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        $messageId = $db->insertID();
+        
+        if (!$messageId) {
+            log_message('error', 'Failed to get insert ID for support message');
+            throw new \Exception('Failed to save message');
+        }
+        
+        log_message('debug', 'Support message saved with ID: ' . $messageId);
+        
+        // Update ticket timestamp
+        $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->update([
+                'updated_at' => date('Y-m-d H:i:s'),
+                'assigned_to' => $userId // Auto-assign jika belum diassign
+            ]);
+        
+        // Get complete message data
+        $newMessage = $db->table('ticket_messages tm')
+            ->select('tm.*, u.full_name, u.photo_profile, r.role_name')
+            ->join('users u', 'u.user_id = tm.sender_id', 'left')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->where('tm.message_id', $messageId)
+            ->get()
+            ->getRowArray();
+        
+        // Buat notifikasi untuk customer
+        $this->sendSupportMessageNotification($ticketId, $userId, $message);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Message sent successfully',
+            'data' => $newMessage
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error in Support sendMessage: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+public function getNewMessages()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $ticketId = $this->request->getGet('ticket_id');
+    $lastMessageId = $this->request->getGet('last_message_id') ?? 0;
+    
+    $userId = session()->get('user_id');
+    $db = db_connect();
+    
+    // Validasi ticket access (support bisa akses semua)
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Ticket not found']);
+    }
+    
+    $messageModel = new \App\Models\TicketMessageModel();
+    $messages = $messageModel->getNewMessages($ticketId, $lastMessageId);
+    
+    // Format messages untuk response
+    $formattedMessages = [];
+    foreach ($messages as $message) {
+        $formattedMessages[] = [
+            'message_id' => $message['message_id'],
+            'sender_id' => $message['sender_id'],
+            'sender_name' => $message['full_name'],
+            'sender_role' => $message['role_name'],
+            'message' => $message['message'],
+            'created_at' => $message['created_at'],
+            'time_ago' => $this->formatTimeAgo($message['created_at']),
+            'is_current_user' => $message['sender_id'] == $userId
+        ];
+    }
+    
+    return $this->response->setJSON([
+        'success' => true,
+        'messages' => $formattedMessages,
+        'last_message_id' => !empty($messages) ? end($messages)['message_id'] : $lastMessageId
+    ]);
+}
+
+private function sendSupportMessageNotification($ticketId, $senderId, $messageText)
+{
+    $db = db_connect();
+    
+    // Get ticket info
+    $ticket = $db->table('tickets')
+        ->where('ticket_id', $ticketId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$ticket) return;
+    
+    // Customer sebagai penerima notifikasi
+    $customerId = $ticket['customer_id'];
+    
+    // Dapatkan nama support agent
+    $sender = $db->table('users u')
+        ->select('u.full_name, r.role_name')
+        ->join('roles r', 'r.role_id = u.role_id')
+        ->where('u.user_id', $senderId)
+        ->get()
+        ->getRowArray();
+    
+    $senderName = $sender ? $sender['full_name'] : 'Support Agent';
+    $senderRole = $sender ? $sender['role_name'] : 'Support';
+    
+    // Buat notifikasi untuk customer
+    if ($customerId) {
+        $db->table('notifications')->insert([
+            'user_id' => $customerId,
+            'ticket_id' => $ticketId,
+            'title' => $senderRole . ' replied to your ticket #' . ($ticket['ticket_number'] ?? $ticketId),
+            'message' => $senderName . ': ' . substr($messageText, 0, 100) . (strlen($messageText) > 100 ? '...' : ''),
+            'notification_type' => 'message',
+            'is_read' => false,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+}
+
+private function formatTimeAgo($datetime)
+{
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) return 'Just now';
+    if ($diff < 3600) {
+        $minutes = floor($diff / 60);
+        return $minutes . ' minute' . ($minutes > 1 ? 's' : '') . ' ago';
+    }
+    if ($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
+    }
+    if ($diff < 604800) {
+        $days = floor($diff / 86400);
+        return $days . ' day' . ($days > 1 ? 's' : '') . ' ago';
+    }
+    
+    return date('M d, Y', $time);
+}
     public function profile()
     {
         $data = $this->loadCommonData();

@@ -41,7 +41,7 @@ $routes->group('admin', function ($routes) {
     $routes->group('users', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageUsers']);
         $routes->post('ajax', 'AdminController::ajaxManageUsers');
-        $routes->post('ajax-add', [AdminController::class, 'ajaxAddUser']); // Route baru
+        $routes->post('ajax-add', [AdminController::class, 'ajaxAddUser']);
         $routes->post('add', [AdminController::class, 'addUser']);
         $routes->get('ajax-list', 'AdminController::ajaxGetUsers');
         $routes->get('ajax-details/(:num)', 'AdminController::ajaxGetUserDetails/$1');
@@ -96,23 +96,55 @@ $routes->group('admin', function ($routes) {
     });
 
     // ==================== PROJECT MANAGEMENT ====================
-    $routes->group('projects', function ($routes) {
-        $routes->get('/', [AdminController::class, 'manageProjects']);
-        $routes->get('details/(:num)', 'AdminController::getProjectDetails/$1');
-        $routes->get('assignments', [AdminController::class, 'viewAssignments']);
-        $routes->get('bulk-assign', [AdminController::class, 'getProjectsForBulkAssign']);
-        $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
-        $routes->post('ajax-create', [AdminController::class, 'ajaxCreateProjects']);
-        $routes->post('ajax-assign-users', [AdminController::class, 'ajaxAssignUsersToProjects']);
-        $routes->post('ajax-get-details', [AdminController::class, 'ajaxGetProjectDetails']);
-        $routes->post('create', [AdminController::class, 'createProject']);
-        $routes->post('edit/(:num)', 'AdminController::editProject/$1');
-        $routes->post('delete/(:num)', 'AdminController::deleteProject/$1');
-        $routes->post('change-status/(:num)', 'AdminController::changeStatus/$1');
+$routes->group('projects', function ($routes) {
+    // Main pages - GET
+    $routes->get('/', [AdminController::class, 'manageProjects']);
+    $routes->get('details/(:num)', 'AdminController::getProjectDetails/$1');
+    $routes->get('details', [AdminController::class, 'getProjectDetails']);
+    $routes->get('search', [AdminController::class, 'searchProjects']);
+    $routes->get('statistics', [AdminController::class, 'getProjectOverviewStats']);
+    $routes->get('recent', [AdminController::class, 'getRecentProjects']);
+    $routes->get('validate-code', [AdminController::class, 'validateProjectCode']);
+    $routes->get('import', [AdminController::class, 'importProjects']);
+    $routes->get('export', [AdminController::class, 'exportProjects']);
+    $routes->get('download-template', [AdminController::class, 'downloadProjectTemplate']);
+    
+    // Bulk assign pages - GET
+    $routes->get('bulk-assign', [AdminController::class, 'getProjectsForBulkAssign']);
+    $routes->get('unassigned-users/(:num)', 'AdminController::getUnassignedUsers/$1');
+    $routes->get('assignments', [AdminController::class, 'viewAssignments']);
+    
+    // ==================== AJAX ENDPOINTS ====================
+    // Semua endpoint AJAX menggunakan POST
+    $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
+    $routes->post('ajax-create', [AdminController::class, 'ajaxCreateProject']);
+    $routes->post('ajax-update', [AdminController::class, 'ajaxUpdateProject']);
+    $routes->post('ajax-validate-code', [AdminController::class, 'ajaxValidateProjectCode']);
+    $routes->post('ajax-get-details', [AdminController::class, 'ajaxGetProjectDetails']);
+    $routes->post('ajax-bulk-assign', [AdminController::class, 'ajaxBulkAssignProjects']);
+    $routes->post('ajax-delete', [AdminController::class, 'ajaxDeleteProject']);
+    $routes->post('ajax-change-status', [AdminController::class, 'ajaxChangeProjectStatus']);
+    
+    // ==================== STANDARD FORM SUBMISSIONS ====================
+    // Untuk non-AJAX submissions (fallback)
+    $routes->post('add', [AdminController::class, 'addProject']);
+    $routes->post('edit', [AdminController::class, 'editProject']);
+    $routes->post('delete', [AdminController::class, 'deleteProject']);
+    $routes->post('change-status', [AdminController::class, 'changeProjectStatus']);
+    $routes->post('manage-users', [AdminController::class, 'manageProjectUsers']);
+    $routes->post('remove-user', [AdminController::class, 'removeUserFromProject']);
+    $routes->post('clear-assignments', [AdminController::class, 'clearProjectAssignments']);
+    $routes->post('bulk-assign', [AdminController::class, 'bulkAssignProjects']);
+    $routes->post('import', [AdminController::class, 'importProjects']); // Process import
+});
 
-        // ==================== SYSTEM SETTINGS ====================
-        $routes->get('logout', [AuthController::class, 'logout']);
-    });
+$routes->group('assignments', function ($routes) {
+    $routes->get('/', [AdminController::class, 'viewAssignments']);
+    $routes->get('export', [AdminController::class, 'exportAssignments']);
+});
+
+    $routes->get('settings', [AdminController::class, 'systemSettings']);
+    $routes->get('logout', [AuthController::class, 'logout']);
 });
 
 // ==================== CUSTOMER ROUTES ====================
@@ -120,16 +152,30 @@ $routes->group('customer', function ($routes) {
     $routes->get('', function () {
         return redirect()->to('customer/dashboard');
     });
+    
+    // Dashboard & Profile
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
-    $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
-    $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
-    $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
-    $routes->post('process_create_ticket', [CustomerController::class, 'processCreateTicket']);
-    $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
     $routes->get('profile', [CustomerController::class, 'profile']);
     $routes->post('profile/update', [CustomerController::class, 'updateProfile']);
+    
+    // Tickets
+    $routes->get('my_tickets', [CustomerController::class, 'myTickets']);
+    $routes->get('ticket_detail/(:num)', 'CustomerController::ticketDetail/$1');
+    $routes->get('create_ticket', [CustomerController::class, 'createTicket']);
+    $routes->post('process_create_ticket', [CustomerController::class, 'processCreateTicket']);
+    
+    // Projects
+    $routes->get('project_detail/(:num)', 'CustomerController::projectDetail/$1');
+    
+    // Notifications
     $routes->get('notifications', [CustomerController::class, 'notifications']);
     $routes->get('notifications/mark_all_read', [CustomerController::class, 'markAllRead']);
+    
+    // CHAT ROUTES - DITAMBAHKAN DISINI
+    $routes->post('chat/send', 'CustomerController::sendMessage');
+    $routes->get('chat/get-new', 'CustomerController::getNewMessages');
+    $routes->post('chat/upload-attachment', 'CustomerController::uploadAttachment');
+    
     $routes->get('logout', [AuthController::class, 'logout']);
 });
 
@@ -142,30 +188,38 @@ $routes->group('support', function ($routes) {
     $routes->get('ticket_summary/(:num)', [SupportController::class, 'ticketSummary/$1']);
     $routes->get('ticket_in_progress', [SupportController::class, 'ticketInProgress']);
     $routes->get('department_conversation/(:num)', [SupportController::class, 'departmentConversation/$1']);
-    $routes->get('notifications', [SupportController::class, 'notifications']);
     $routes->get('profile', [SupportController::class, 'profile']);
-    $routes->get('logout', [AuthController::class, 'logout']);
-
-    // POST routes
-    $routes->post('notifications/mark_all_read', [SupportController::class, 'markAllRead']); // NEW: untuk mark all
+    
+    // Notifications
+    $routes->get('notifications', [SupportController::class, 'notifications']);
+    $routes->post('notifications/mark_all_read', [SupportController::class, 'markAllRead']);
+    $routes->post('notifications/mark_read', [SupportController::class, 'markNotificationRead']);
+    $routes->post('notifications/load_more', [SupportController::class, 'loadMoreNotifications']);
+    $routes->get('notifications/get', [SupportController::class, 'getNotifications']);
+    $routes->get('notifications/unread_count', [SupportController::class, 'getUnreadCount']);
+    
+    // Ticket actions
     $routes->post('ticket/assign/(:num)', [SupportController::class, 'assignTicket/$1']);
     $routes->post('ticket/forward/(:num)', [SupportController::class, 'forwardTicket/$1']);
     $routes->post('ticket/mark_resolved/(:num)', [SupportController::class, 'markTicketResolved/$1']);
-    $routes->post('tickets/load_more', [SupportController::class, 'loadMoreTickets']); // For tickets in progress
-    $routes->post('update_profile', [SupportController::class, 'updateProfile']); // NEW: update profile
-    $routes->post('update_status', [SupportController::class, 'updateStatus']); // NEW: update agent status
-
-    $routes->group('notifications', function ($routes) {
-        $routes->post('mark_read', [SupportController::class, 'markNotificationRead']);
-        $routes->post('load_more', [SupportController::class, 'loadMoreNotifications']);
-        $routes->get('get', [SupportController::class, 'getNotifications']);
-        $routes->get('unread_count', [SupportController::class, 'getUnreadCount']);
-    });
-
+    $routes->post('tickets/load_more', [SupportController::class, 'loadMoreTickets']);
+    
+    // Profile
+    $routes->post('update_profile', [SupportController::class, 'updateProfile']);
+    $routes->post('update_status', [SupportController::class, 'updateStatus']);
+    
+    // CHAT ROUTES - DITAMBAHKAN DISINI
+    $routes->post('chat/send', [SupportController::class, 'sendMessage']);
+    $routes->get('chat/get-new', [SupportController::class, 'getNewMessages']);
+    $routes->post('chat/upload-attachment', [SupportController::class, 'uploadAttachment']);
+    
+    // AJAX
     $routes->group('ajax', function ($routes) {
         $routes->post('update_agent_status', [SupportController::class, 'updateAgentStatus']);
         $routes->get('get_agent_stats', [SupportController::class, 'getAgentStats']);
     });
+    
+    $routes->get('logout', [AuthController::class, 'logout']);
 });
 
 // ==================== DEPARTMENT ROUTES ====================
