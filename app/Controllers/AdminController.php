@@ -319,7 +319,7 @@ class AdminController extends BaseController
 
     // ==================== MANAGE USERS ===========================
     /**
-     * Manage Users - Main method
+     *   - Main method
      */
     public function manageUsers()
     {
@@ -358,368 +358,6 @@ class AdminController extends BaseController
         return view('Admin/manage_users', $data);
     }
 
-    /**
-     * Handle AJAX user actions
-     */
-    public function ajaxManageUsers()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Invalid request method'
-            ]);
-        }
-
-        $action = $this->request->getPost('action');
-
-        switch ($action) {
-            case 'add_user':
-                return $this->ajaxAddUser();
-                // case 'get_user':
-                //     return $this->ajaxGetUser();
-            default:
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Invalid action'
-                ]);
-        }
-    }
-
-    /**
-     * AJAX: Get user details
-     */
-    public function ajaxGetUserDetails($userId = null)
-    {
-        // Debug
-        log_message('debug', '=== AJAX GET USER DETAILS CALLED ===');
-        log_message('debug', 'User ID: ' . $userId);
-        log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
-
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Invalid request'
-            ]);
-        }
-
-        try {
-            $userId = $userId ?: $this->request->getGet('user_id');
-
-            if (!$userId) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'User ID is required'
-                ]);
-            }
-
-            // Get user details
-            $db = db_connect();
-            $user = $db->table('users u')
-                ->select('u.*, r.role_name, d.department_name')
-                ->join('roles r', 'r.role_id = u.role_id', 'left')
-                ->join('departments d', 'd.department_id = u.department_id', 'left')
-                ->where('u.user_id', $userId)
-                ->get()
-                ->getRowArray();
-
-            log_message('debug', 'User query result: ' . print_r($user, true));
-
-            if (!$user) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'User not found'
-                ]);
-            }
-
-            // Format boolean untuk PostgreSQL
-            $user['is_active'] = (bool)$user['is_active'];
-
-            log_message('debug', 'Formatted user data: ' . print_r($user, true));
-
-            return $this->response->setJSON([
-                'success' => true,
-                'user' => $user
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX get user details error: ' . $e->getMessage());
-            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * AJAX: Get users list with pagination and filters
-     */
-    public function ajaxGetUsers()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Invalid request'
-            ]);
-        }
-
-        try {
-            // Get parameters
-            $page = $this->request->getGet('page') ?: 1;
-            $limit = $this->request->getGet('limit') ?: 10;
-            $offset = ($page - 1) * $limit;
-
-            // Get filters
-            $filters = [
-                'search' => $this->request->getGet('search'),
-                'role_id' => $this->request->getGet('role_id'),
-                'department_id' => $this->request->getGet('department_id'),
-                'is_active' => $this->request->getGet('is_active'),
-                'date_from' => $this->request->getGet('date_from'),
-                'date_to' => $this->request->getGet('date_to')
-            ];
-
-            // Get users with filters
-            $db = db_connect();
-            $builder = $db->table('users u')
-                ->select('u.*, r.role_name, d.department_name')
-                ->join('roles r', 'r.role_id = u.role_id', 'left')
-                ->join('departments d', 'd.department_id = u.department_id', 'left');
-
-            // Apply filters
-            if (!empty($filters['search'])) {
-                $builder->groupStart()
-                    ->like('u.username', $filters['search'])
-                    ->orLike('u.full_name', $filters['search'])
-                    ->orLike('u.email', $filters['search'])
-                    ->groupEnd();
-            }
-
-            if (!empty($filters['role_id'])) {
-                $builder->where('u.role_id', $filters['role_id']);
-            }
-
-            if (!empty($filters['department_id'])) {
-                $builder->where('u.department_id', $filters['department_id']);
-            }
-
-            if (isset($filters['is_active']) && $filters['is_active'] !== '') {
-                $builder->where('u.is_active', $filters['is_active'] == '1' ? true : false);
-            }
-
-            if (!empty($filters['date_from'])) {
-                $builder->where('DATE(u.created_at) >=', $filters['date_from']);
-            }
-
-            if (!empty($filters['date_to'])) {
-                $builder->where('DATE(u.created_at) <=', $filters['date_to']);
-            }
-
-            // Count total
-            $totalBuilder = clone $builder;
-            $total = $totalBuilder->countAllResults();
-
-            // Get paginated results
-            $users = $builder->orderBy('u.created_at', 'DESC')
-                ->limit($limit, $offset)
-                ->get()
-                ->getResultArray();
-
-            // Format users
-            $formattedUsers = [];
-            foreach ($users as $user) {
-                $formattedUsers[] = [
-                    'user_id' => $user['user_id'],
-                    'username' => $user['username'],
-                    'full_name' => $user['full_name'],
-                    'email' => $user['email'],
-                    'role_name' => $user['role_name'],
-                    'department_name' => $user['department_name'] ?? null,
-                    'is_active' => (bool)$user['is_active'],
-                    'created_at' => $user['created_at'],
-                    'phone_number' => $user['phone_number'] ?? null
-                ];
-            }
-
-            return $this->response->setJSON([
-                'success' => true,
-                'users' => $formattedUsers,
-                'total' => $total,
-                'page' => $page,
-                'limit' => $limit,
-                'total_pages' => ceil($total / $limit)
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX get users error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
- * AJAX: Get users for assignment modal
- */
-public function ajaxGetUsersForAssignment()
-{
-    if (!$this->request->isAJAX()) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid request method'
-        ]);
-    }
-
-    try {
-        $search = $this->request->getPost('search') ?? '';
-        $role = $this->request->getPost('role') ?? 'all';
-        $page = $this->request->getPost('page') ?? 1;
-        $limit = $this->request->getPost('limit') ?? 20;
-
-        $db = db_connect();
-        $builder = $db->table('users u')
-            ->select('u.user_id, u.username, u.full_name, u.email, r.role_name, u.is_active')
-            ->join('roles r', 'r.role_id = u.role_id')
-            ->where('u.is_active', true);
-
-        if (!empty($search)) {
-            $builder->groupStart()
-                ->like('u.full_name', $search)
-                ->orLike('u.username', $search)
-                ->orLike('u.email', $search)
-                ->orLike('r.role_name', $search)
-                ->groupEnd();
-        }
-
-        if ($role !== 'all') {
-            $builder->where('r.role_name', $role);
-        }
-
-        // Count total
-        $totalBuilder = clone $builder;
-        $total = $totalBuilder->countAllResults();
-
-        // Get paginated results
-        $offset = ($page - 1) * $limit;
-        $users = $builder->orderBy('u.full_name', 'ASC')
-            ->limit($limit, $offset)
-            ->get()
-            ->getResultArray();
-
-        // Format for response
-        $formattedUsers = [];
-        foreach ($users as $user) {
-            $formattedUsers[] = [
-                'user_id' => $user['user_id'],
-                'username' => $user['username'],
-                'full_name' => $user['full_name'],
-                'email' => $user['email'],
-                'role_name' => $user['role_name'],
-                'avatar_initials' => $this->getAvatarInitials($user['full_name']),
-                'is_active' => (bool)$user['is_active']
-            ];
-        }
-
-        return $this->response->setJSON([
-            'success' => true,
-            'users' => $formattedUsers,
-            'total' => $total,
-            'page' => $page,
-            'limit' => $limit,
-            'total_pages' => ceil($total / $limit)
-        ]);
-    } catch (\Exception $e) {
-        log_message('error', 'Get users for assignment error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
-    }
-}
-
-/**
- * Get avatar initials from full name
- */
-private function getAvatarInitials(string $fullName): string
-{
-    $names = explode(' ', $fullName);
-    $initials = '';
-    
-    foreach ($names as $name) {
-        if (strlen($initials) >= 2) break;
-        $initials .= strtoupper(substr($name, 0, 1));
-    }
-    
-    return $initials;
-}
-
-    public function ajaxAddUser()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'This endpoint requires AJAX request'
-            ]);
-        }
-
-        try {
-            $db = db_connect();
-
-            // Prepare data
-            $userData = [
-                'username' => $this->request->getPost('username'),
-                'full_name' => $this->request->getPost('full_name'),
-                'email' => $this->request->getPost('email'),
-                'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-                'role_id' => $this->request->getPost('role_id'),
-                'is_active' => $this->request->getPost('is_active') == '1' ? true : false,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-
-            // Optional fields
-            if ($this->request->getPost('department_id')) {
-                $userData['department_id'] = $this->request->getPost('department_id');
-            }
-
-            if ($this->request->getPost('phone_number')) {
-                $userData['phone_number'] = $this->request->getPost('phone_number');
-            }
-
-            // Gunakan query manual dengan nextval
-            $sql = "INSERT INTO users (username, full_name, email, password, role_id, department_id, phone_number, is_active, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
-                RETURNING user_id";
-
-            $query = $db->query($sql, [
-                $userData['username'],
-                $userData['full_name'],
-                $userData['email'],
-                $userData['password'],
-                $userData['role_id'],
-                $userData['department_id'] ?? null,
-                $userData['phone_number'] ?? null,
-                $userData['is_active'] ? 't' : 'f', // PostgreSQL boolean
-                $userData['created_at'],
-                $userData['updated_at']
-            ]);
-
-            $result = $query->getRow();
-            $userId = $result->user_id;
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'User added successfully',
-                'user_id' => $userId
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Database error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Database error: ' . $e->getMessage()
-            ]);
-        }
-    }
     /**
      * Get user details (non-AJAX)
      */
@@ -1156,7 +794,386 @@ private function getAvatarInitials(string $fullName): string
         }
     }
 
-    
+    // ==================== AJAX METHODS PROJECTS ====================
+    /**
+     * Handle AJAX user actions
+     */
+    public function ajaxManageUsers()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        $action = $this->request->getPost('action');
+
+        switch ($action) {
+            case 'add_user':
+                return $this->ajaxAddUser();
+                // case 'get_user':
+                //     return $this->ajaxGetUser();
+            default:
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ]);
+        }
+    }
+
+    /**
+     * AJAX: Get user details
+     */
+    public function ajaxGetUserDetails($userId = null)
+    {
+        // Debug
+        log_message('debug', '=== AJAX GET USER DETAILS CALLED ===');
+        log_message('debug', 'User ID: ' . $userId);
+        log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request'
+            ]);
+        }
+
+        try {
+            $userId = $userId ?: $this->request->getGet('user_id');
+
+            if (!$userId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User ID is required'
+                ]);
+            }
+
+            // Get user details
+            $db = db_connect();
+            $user = $db->table('users u')
+                ->select('u.*, r.role_name, d.department_name')
+                ->join('roles r', 'r.role_id = u.role_id', 'left')
+                ->join('departments d', 'd.department_id = u.department_id', 'left')
+                ->where('u.user_id', $userId)
+                ->get()
+                ->getRowArray();
+
+            log_message('debug', 'User query result: ' . print_r($user, true));
+
+            if (!$user) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+            }
+
+            // Format boolean untuk PostgreSQL
+            $user['is_active'] = (bool)$user['is_active'];
+
+            log_message('debug', 'Formatted user data: ' . print_r($user, true));
+
+            return $this->response->setJSON([
+                'success' => true,
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'AJAX get user details error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Di dalam AdminController.php - perbarui method ajaxGetUsers()
+
+    public function ajaxGetUsers()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request'
+            ]);
+        }
+
+        try {
+            // Get parameters
+            $page = $this->request->getGet('page') ?: 1;
+            $limit = 5; // Ubah menjadi 5 user per halaman
+            $offset = ($page - 1) * $limit;
+
+            // Get filters
+            $filters = [
+                'search' => $this->request->getGet('search'),
+                'role_id' => $this->request->getGet('role_id'),
+                'department_id' => $this->request->getGet('department_id'),
+                'is_active' => $this->request->getGet('is_active'),
+                'date_from' => $this->request->getGet('date_from'),
+                'date_to' => $this->request->getGet('date_to')
+            ];
+
+            $db = db_connect();
+            $builder = $db->table('users u')
+                ->select('u.*, r.role_name, d.department_name, r.role_priority')
+                ->join('roles r', 'r.role_id = u.role_id', 'left')
+                ->join('departments d', 'd.department_id = u.department_id', 'left');
+
+            // Apply filters
+            if (!empty($filters['search'])) {
+                $searchTerm = $filters['search'];
+                $builder->groupStart()
+                    ->like('u.username', $searchTerm)
+                    ->orLike('u.full_name', $searchTerm)
+                    ->orLike('u.email', $searchTerm)
+                    ->orLike('r.role_name', $searchTerm)
+                    ->orLike('d.department_name', $searchTerm)
+                    ->groupEnd();
+            }
+
+            if (!empty($filters['role_id'])) {
+                $builder->where('u.role_id', $filters['role_id']);
+            }
+
+            if (!empty($filters['department_id'])) {
+                $builder->where('u.department_id', $filters['department_id']);
+            }
+
+            if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+                $isActive = $filters['is_active'] == '1' ? true : false;
+                $builder->where('u.is_active', $isActive);
+            }
+
+            if (!empty($filters['date_from'])) {
+                $builder->where('DATE(u.created_at) >=', $filters['date_from']);
+            }
+
+            if (!empty($filters['date_to'])) {
+                $builder->where('DATE(u.created_at) <=', $filters['date_to']);
+            }
+
+            // === ORDERING BERDASARKAN ROLE PRIORITY ===
+            // Order berdasarkan role priority: Admin -> Department -> Support -> Customer
+            $builder->orderBy("
+            CASE 
+                WHEN r.role_name = 'Admin' THEN 1
+                WHEN r.role_name LIKE 'Department%' THEN 2
+                WHEN r.role_name = 'Support' THEN 3
+                WHEN r.role_name = 'Customer' THEN 4
+                ELSE 5
+            END", 'ASC')
+                ->orderBy('d.department_name', 'ASC') // Untuk Department, urut berdasarkan nama department
+                ->orderBy('u.created_at', 'ASC'); // User baru di bawah user lama
+
+            // Count total
+            $totalBuilder = clone $builder;
+            $total = $totalBuilder->countAllResults();
+
+            // Get paginated results
+            $users = $builder->limit($limit, $offset)
+                ->get()
+                ->getResultArray();
+
+            // === BERI NOMOR URUT BERDASARKAN ORDER YANG TELAH DITENTUKAN ===
+            $startNumber = $offset + 1;
+            $formattedUsers = [];
+
+            foreach ($users as $index => $user) {
+                $formattedUsers[] = [
+                    'row_number' => $startNumber + $index,
+                    'user_id' => $user['user_id'],
+                    'username' => $user['username'],
+                    'full_name' => $user['full_name'],
+                    'email' => $user['email'],
+                    'role_name' => $user['role_name'],
+                    'department_name' => $user['department_name'] ?? null,
+                    'is_active' => (bool)$user['is_active'],
+                    'created_at' => $user['created_at'],
+                    'phone_number' => $user['phone_number'] ?? null
+                ];
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'users' => $formattedUsers,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'total_pages' => ceil($total / $limit)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'AJAX get users error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get users for assignment modal
+     */
+    public function ajaxGetUsersForAssignment()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $search = $this->request->getPost('search') ?? '';
+            $role = $this->request->getPost('role') ?? 'all';
+            $page = $this->request->getPost('page') ?? 1;
+            $limit = $this->request->getPost('limit') ?? 20;
+
+            $db = db_connect();
+            $builder = $db->table('users u')
+                ->select('u.user_id, u.username, u.full_name, u.email, r.role_name, u.is_active')
+                ->join('roles r', 'r.role_id = u.role_id')
+                ->where('u.is_active', true);
+
+            if (!empty($search)) {
+                $builder->groupStart()
+                    ->like('u.full_name', $search)
+                    ->orLike('u.username', $search)
+                    ->orLike('u.email', $search)
+                    ->orLike('r.role_name', $search)
+                    ->groupEnd();
+            }
+
+            if ($role !== 'all') {
+                $builder->where('r.role_name', $role);
+            }
+
+            // Count total
+            $totalBuilder = clone $builder;
+            $total = $totalBuilder->countAllResults();
+
+            // Get paginated results
+            $offset = ($page - 1) * $limit;
+            $users = $builder->orderBy('u.full_name', 'ASC')
+                ->limit($limit, $offset)
+                ->get()
+                ->getResultArray();
+
+            // Format for response
+            $formattedUsers = [];
+            foreach ($users as $user) {
+                $formattedUsers[] = [
+                    'user_id' => $user['user_id'],
+                    'username' => $user['username'],
+                    'full_name' => $user['full_name'],
+                    'email' => $user['email'],
+                    'role_name' => $user['role_name'],
+                    'avatar_initials' => $this->getAvatarInitials($user['full_name']),
+                    'is_active' => (bool)$user['is_active']
+                ];
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'users' => $formattedUsers,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'total_pages' => ceil($total / $limit)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get users for assignment error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get avatar initials from full name
+     */
+    private function getAvatarInitials(string $fullName): string
+    {
+        $names = explode(' ', $fullName);
+        $initials = '';
+
+        foreach ($names as $name) {
+            if (strlen($initials) >= 2) break;
+            $initials .= strtoupper(substr($name, 0, 1));
+        }
+
+        return $initials;
+    }
+
+    public function ajaxAddUser()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'This endpoint requires AJAX request'
+            ]);
+        }
+
+        try {
+            $db = db_connect();
+
+            // Prepare data
+            $userData = [
+                'username' => $this->request->getPost('username'),
+                'full_name' => $this->request->getPost('full_name'),
+                'email' => $this->request->getPost('email'),
+                'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+                'role_id' => $this->request->getPost('role_id'),
+                'is_active' => $this->request->getPost('is_active') == '1' ? true : false,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Optional fields
+            if ($this->request->getPost('department_id')) {
+                $userData['department_id'] = $this->request->getPost('department_id');
+            }
+
+            if ($this->request->getPost('phone_number')) {
+                $userData['phone_number'] = $this->request->getPost('phone_number');
+            }
+
+            // Gunakan query manual dengan nextval
+            $sql = "INSERT INTO users (username, full_name, email, password, role_id, department_id, phone_number, is_active, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+                RETURNING user_id";
+
+            $query = $db->query($sql, [
+                $userData['username'],
+                $userData['full_name'],
+                $userData['email'],
+                $userData['password'],
+                $userData['role_id'],
+                $userData['department_id'] ?? null,
+                $userData['phone_number'] ?? null,
+                $userData['is_active'] ? 't' : 'f', // PostgreSQL boolean
+                $userData['created_at'],
+                $userData['updated_at']
+            ]);
+
+            $result = $query->getRow();
+            $userId = $result->user_id;
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'User added successfully',
+                'user_id' => $userId
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Database error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Database error: ' . $e->getMessage()
+            ]);
+        }
+    }
 
     // ==================== MANAGE ROLES ===========================
     /**
@@ -2337,76 +2354,76 @@ private function getAvatarInitials(string $fullName): string
 
         return view('Admin/project_details', $data);
     }
-    
+
     /**
- * Get project statistics (total tickets, open tickets, etc.)
- */
-private function getProjectStatistics(int $projectId): array
-{
-    $db = db_connect();
-    
-    // Total tickets
-    $totalTickets = $db->table('tickets')
-        ->where('project_id', $projectId)
-        ->countAllResults();
-    
-    // Open tickets (status_id 1 = Open, 2 = In Progress)
-    $openTickets = $db->table('tickets')
-        ->where('project_id', $projectId)
-        ->whereIn('status_id', [1, 2])
-        ->countAllResults();
-    
-    // Resolved tickets
-    $resolvedTickets = $db->table('tickets')
-        ->where('project_id', $projectId)
-        ->where('status_id', 3)
-        ->countAllResults();
-    
-    // Closed tickets
-    $closedTickets = $db->table('tickets')
-        ->where('project_id', $projectId)
-        ->where('status_id', 4)
-        ->countAllResults();
-    
-    return [
-        'total_tickets' => $totalTickets,
-        'open_tickets' => $openTickets,
-        'resolved_tickets' => $resolvedTickets,
-        'closed_tickets' => $closedTickets,
-        'completion_rate' => $totalTickets > 0 ? 
-            round((($resolvedTickets + $closedTickets) / $totalTickets) * 100, 1) : 0
-    ];
-}
+     * Get project statistics (total tickets, open tickets, etc.)
+     */
+    private function getProjectStatistics(int $projectId): array
+    {
+        $db = db_connect();
 
-/**
- * Change project status (non-AJAX)
- */
-public function changeProjectStatus()
-{
-    if ($this->request->getMethod() !== 'post') {
-        return redirect()->to('/admin/projects');
+        // Total tickets
+        $totalTickets = $db->table('tickets')
+            ->where('project_id', $projectId)
+            ->countAllResults();
+
+        // Open tickets (status_id 1 = Open, 2 = In Progress)
+        $openTickets = $db->table('tickets')
+            ->where('project_id', $projectId)
+            ->whereIn('status_id', [1, 2])
+            ->countAllResults();
+
+        // Resolved tickets
+        $resolvedTickets = $db->table('tickets')
+            ->where('project_id', $projectId)
+            ->where('status_id', 3)
+            ->countAllResults();
+
+        // Closed tickets
+        $closedTickets = $db->table('tickets')
+            ->where('project_id', $projectId)
+            ->where('status_id', 4)
+            ->countAllResults();
+
+        return [
+            'total_tickets' => $totalTickets,
+            'open_tickets' => $openTickets,
+            'resolved_tickets' => $resolvedTickets,
+            'closed_tickets' => $closedTickets,
+            'completion_rate' => $totalTickets > 0 ?
+                round((($resolvedTickets + $closedTickets) / $totalTickets) * 100, 1) : 0
+        ];
     }
 
-    try {
-        $projectId = $this->request->getPost('project_id');
-        $isActive = $this->request->getPost('is_active') == '1' ? true : false;
-
-        if (!$projectId) {
-            return redirect()->back()->with('error', 'Project ID is required');
+    /**
+     * Change project status (non-AJAX)
+     */
+    public function changeProjectStatus()
+    {
+        if ($this->request->getMethod() !== 'post') {
+            return redirect()->to('/admin/projects');
         }
 
-        if ($this->projectModel->update($projectId, ['is_active' => $isActive])) {
-            $action = $isActive ? 'activated' : 'deactivated';
-            return redirect()->to('/admin/projects')
-                ->with('success', "Project {$action} successfully");
-        }
+        try {
+            $projectId = $this->request->getPost('project_id');
+            $isActive = $this->request->getPost('is_active') == '1' ? true : false;
 
-        return redirect()->back()->with('error', 'Failed to change project status');
-    } catch (\Exception $e) {
-        log_message('error', 'Change project status error: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Server error: ' . $e->getMessage());
+            if (!$projectId) {
+                return redirect()->back()->with('error', 'Project ID is required');
+            }
+
+            if ($this->projectModel->update($projectId, ['is_active' => $isActive])) {
+                $action = $isActive ? 'activated' : 'deactivated';
+                return redirect()->to('/admin/projects')
+                    ->with('success', "Project {$action} successfully");
+            }
+
+            return redirect()->back()->with('error', 'Failed to change project status');
+        } catch (\Exception $e) {
+            log_message('error', 'Change project status error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Server error: ' . $e->getMessage());
+        }
     }
-}
     
     // ==================== AJAX METHODS PROJECTS ====================
     /**
@@ -2415,13 +2432,13 @@ public function changeProjectStatus()
     public function ajaxManageProjects()
     {
         if (!$this->request->isAJAX()) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid request method'
-        ]);
-    }
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
 
-    $action = $this->request->getPost('action');
+        $action = $this->request->getPost('action');
 
         switch ($action) {
             case 'get_projects_table':
@@ -2640,131 +2657,131 @@ public function changeProjectStatus()
     }
 
     /**
- * AJAX: Update project - FIXED VERSION
- */
-private function ajaxUpdateProject()
-{
-    try {
-        $projectId = $this->request->getPost('project_id');
+     * AJAX: Update project - FIXED VERSION
+     */
+    private function ajaxUpdateProject()
+    {
+        try {
+            $projectId = $this->request->getPost('project_id');
 
-        if (!$projectId) {
+            if (!$projectId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project ID is required'
+                ]);
+            }
+
+            // Validate input
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'project_name' => 'required|min_length[3]|max_length[100]',
+                'project_code' => 'required|min_length[2]|max_length[20]|regex_match[/^[A-Z0-9]+$/]',
+                'description' => 'permit_empty|max_length[500]',
+                'is_active' => 'required|in_list[0,1]' // Pastikan required dan valid
+            ]);
+
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
+            // Get data
+            $projectData = [
+                'project_name' => trim($this->request->getPost('project_name')),
+                'project_code' => strtoupper(trim($this->request->getPost('project_code'))),
+                'description' => trim($this->request->getPost('description') ?? ''),
+                'is_active' => $this->request->getPost('is_active') === '1' ? true : false,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Check if project code exists (excluding current)
+            if ($this->projectModel->projectCodeExists($projectData['project_code'], $projectId)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project code already exists'
+                ]);
+            }
+
+            // Update project menggunakan metode save
+            if ($this->projectModel->save(['project_id' => $projectId] + $projectData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Project updated successfully'
+                ]);
+            }
+
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Project ID is required'
+                'message' => 'Failed to update project'
             ]);
-        }
-
-        // Validate input
-        $validation = \Config\Services::validation();
-        $validation->setRules([
-            'project_name' => 'required|min_length[3]|max_length[100]',
-            'project_code' => 'required|min_length[2]|max_length[20]|regex_match[/^[A-Z0-9]+$/]',
-            'description' => 'permit_empty|max_length[500]',
-            'is_active' => 'required|in_list[0,1]' // Pastikan required dan valid
-        ]);
-
-        if (!$validation->withRequest($this->request)->run()) {
+        } catch (\Exception $e) {
+            log_message('error', 'Update project error: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validation->getErrors()
+                'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
-
-        // Get data
-        $projectData = [
-            'project_name' => trim($this->request->getPost('project_name')),
-            'project_code' => strtoupper(trim($this->request->getPost('project_code'))),
-            'description' => trim($this->request->getPost('description') ?? ''),
-            'is_active' => $this->request->getPost('is_active') === '1' ? true : false,
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        // Check if project code exists (excluding current)
-        if ($this->projectModel->projectCodeExists($projectData['project_code'], $projectId)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Project code already exists'
-            ]);
-        }
-
-        // Update project menggunakan metode save
-        if ($this->projectModel->save(['project_id' => $projectId] + $projectData)) {
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Project updated successfully'
-            ]);
-        }
-
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Failed to update project'
-        ]);
-    } catch (\Exception $e) {
-        log_message('error', 'Update project error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
     }
-}
 
     /**
- * AJAX: Get project details with consistent ticket counts
- */
-public function ajaxGetProjectDetails()
-{
-    if (!$this->request->isAJAX()) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid request method'
-        ]);
-    }
-
-    try {
-        $projectId = $this->request->getPost('project_id');
-
-        if (!$projectId) {
+     * AJAX: Get project details with consistent ticket counts
+     */
+    public function ajaxGetProjectDetails()
+    {
+        if (!$this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Project ID is required'
+                'message' => 'Invalid request method'
             ]);
         }
 
-        // Get project with user details
-        $project = $this->projectModel->getProjectWithUser($projectId);
+        try {
+            $projectId = $this->request->getPost('project_id');
 
-        if (!$project) {
+            if (!$projectId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project ID is required'
+                ]);
+            }
+
+            // Get project with user details
+            $project = $this->projectModel->getProjectWithUser($projectId);
+
+            if (!$project) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project not found'
+                ]);
+            }
+
+            // Get consistent project statistics
+            $projectStats = $this->getProjectStatistics($projectId);
+
+            // Merge statistics with project data
+            $project = array_merge($project, $projectStats);
+
+            // Get assigned users
+            $assignedUsers = $this->projectAssignmentModel->getAssignedUsersForProject($projectId);
+
+            $project['is_active'] = (bool)$project['is_active'];
+
+            return $this->response->setJSON([
+                'success' => true,
+                'project' => $project,
+                'assigned_users' => $assignedUsers
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'AJAX get project details error: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Project not found'    
+                'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
-
-        // Get consistent project statistics
-        $projectStats = $this->getProjectStatistics($projectId);
-        
-        // Merge statistics with project data
-        $project = array_merge($project, $projectStats);
-
-        // Get assigned users
-        $assignedUsers = $this->projectAssignmentModel->getAssignedUsersForProject($projectId);
-
-        $project['is_active'] = (bool)$project['is_active'];
-
-        return $this->response->setJSON([
-            'success' => true,
-            'project' => $project,
-            'assigned_users' => $assignedUsers
-        ]);
-    } catch (\Exception $e) {
-        log_message('error', 'AJAX get project details error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
     }
-}
 
     /**
      * AJAX: Get all users for bulk assignment
@@ -2891,113 +2908,113 @@ public function ajaxGetProjectDetails()
         }
     }
 
-/**
- * AJAX: Change project status
- */
-public function ajaxChangeProjectStatus()
-{
-    if (!$this->request->isAJAX()) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid request method'
-        ]);
-    }
-
-    try {
-        $projectId = $this->request->getPost('project_id');
-        $isActive = $this->request->getPost('is_active') == '1' ? true : false;
-
-        if (!$projectId) {
+    /**
+     * AJAX: Change project status
+     */
+    public function ajaxChangeProjectStatus()
+    {
+        if (!$this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Project ID is required'
+                'message' => 'Invalid request method'
             ]);
         }
 
-        // Update project status
-        $updated = $this->projectModel->update($projectId, [
-            'is_active' => $isActive,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
+        try {
+            $projectId = $this->request->getPost('project_id');
+            $isActive = $this->request->getPost('is_active') == '1' ? true : false;
 
-        if ($updated) {
-            $action = $isActive ? 'activated' : 'deactivated';
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => "Project {$action} successfully"
+            if (!$projectId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project ID is required'
+                ]);
+            }
+
+            // Update project status
+            $updated = $this->projectModel->update($projectId, [
+                'is_active' => $isActive,
+                'updated_at' => date('Y-m-d H:i:s')
             ]);
-        }
 
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Failed to update project status'
-        ]);
-    } catch (\Exception $e) {
-        log_message('error', 'Change project status error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
-    }
-}
+            if ($updated) {
+                $action = $isActive ? 'activated' : 'deactivated';
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => "Project {$action} successfully"
+                ]);
+            }
 
-/**
- * AJAX: Delete project
- */
-public function ajaxDeleteProject()
-{
-    if (!$this->request->isAJAX()) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid request method'
-        ]);
-    }
-
-    try {
-        $projectId = $this->request->getPost('project_id');
-
-        if (!$projectId) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Project ID is required'
+                'message' => 'Failed to update project status'
             ]);
-        }
-
-        // Check if project has tickets
-        $ticketCount = $this->ticketModel->where('project_id', $projectId)->countAllResults();
-        
-        if ($ticketCount > 0) {
+        } catch (\Exception $e) {
+            log_message('error', 'Change project status error: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => "Cannot delete project with {$ticketCount} ticket(s). Please reassign or delete the tickets first."
+                'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
-
-        // Delete project assignments first
-        $this->projectAssignmentModel->where('project_id', $projectId)->delete();
-
-        // Delete project
-        $deleted = $this->projectModel->delete($projectId);
-
-        if ($deleted) {
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Project deleted successfully'
-            ]);
-        }
-
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Failed to delete project'
-        ]);
-    } catch (\Exception $e) {
-        log_message('error', 'Delete project error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
     }
-}
+
+    /**
+     * AJAX: Delete project
+     */
+    public function ajaxDeleteProject()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $projectId = $this->request->getPost('project_id');
+
+            if (!$projectId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Project ID is required'
+                ]);
+            }
+
+            // Check if project has tickets
+            $ticketCount = $this->ticketModel->where('project_id', $projectId)->countAllResults();
+
+            if ($ticketCount > 0) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => "Cannot delete project with {$ticketCount} ticket(s). Please reassign or delete the tickets first."
+                ]);
+            }
+
+            // Delete project assignments first
+            $this->projectAssignmentModel->where('project_id', $projectId)->delete();
+
+            // Delete project
+            $deleted = $this->projectModel->delete($projectId);
+
+            if ($deleted) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Project deleted successfully'
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to delete project'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Delete project error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
 
     // ==================== SYSTEM SETTINGS ====================
     public function systemSettings()
@@ -3007,12 +3024,4 @@ public function ajaxDeleteProject()
 
         return view('Admin/system_settings', $data);
     }
-
-    /**
-     * Format time ago
-     */
-    // private function formatTimeAgo($datetime): string
-    // {
-    //     return $this->formatDate($datetime); // Reuse formatDate for now
-    // }
 }

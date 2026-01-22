@@ -103,9 +103,8 @@ $routes->group('admin', function ($routes) {
         $routes->get('details', [AdminController::class, 'getProjectDetails']);
         $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
         $routes->post('ajax-get-users-for-assignment', [AdminController::class, 'ajaxGetUsersForAssignment']);
-        
+
         // ==================== STANDARD FORM SUBMISSIONS ====================
-        // Untuk non-AJAX submissions (fallback)
         $routes->post('add', [AdminController::class, 'addProject']);
         $routes->post('edit', [AdminController::class, 'editProject']);
         $routes->post('delete', [AdminController::class, 'deleteProject']);
@@ -174,7 +173,7 @@ $routes->group('support', function ($routes) {
     $routes->post('update_internal_status/(:num)', [SupportController::class, 'updateInternalStatus/$1']);
     $routes->get('internal_status_info/(:num)', [SupportController::class, 'getInternalStatusInfo/$1']);
 
-        // ==================== INTERNAL DEPARTMENT CHAT ====================
+    // ==================== INTERNAL DEPARTMENT CHAT ====================
     $routes->group('internal_chat', function ($routes) {
         $routes->post('send/(:num)', [SupportController::class, 'sendInternalMessage/$1']);
         $routes->get('messages/(:num)', [SupportController::class, 'getInternalMessages/$1']);
@@ -204,7 +203,7 @@ $routes->group('support', function ($routes) {
     $routes->post('chat/send', [SupportController::class, 'sendMessage']);
     $routes->get('chat/get-new', [SupportController::class, 'getNewMessages']);
     $routes->post('chat/upload-attachment', [SupportController::class, 'uploadAttachment']);
-    
+
     // PERBAIKAN: Hapus route DepartmentChatController yang tidak ada
     // $routes->post('department_chat/send', [DepartmentChatController::class, 'sendDepartmentMessage']);
     // $routes->get('department_chat/messages', [DepartmentChatController::class, 'getDepartmentMessages']);
@@ -226,75 +225,75 @@ $routes->group('department', function ($routes) {
     $routes->post('chat/send/(:num)', [DepartmentController::class, 'sendChatMessage/$1']);
     $routes->get('chat/messages/(:num)', [DepartmentController::class, 'getChatMessages/$1']);
     $routes->get('chat/get_new/(:num)', [DepartmentController::class, 'getNewChatMessages/$1']);
-    
+
     // IT Support Department - TAMBAHKAN ROUTE UNTUK STATUS CHECKING
     $routes->group('it-support', function ($routes) {
         $routes->get('dashboard', [DepartmentController::class, 'dashboard']);
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
-        
+
         // Resolution routes
         $routes->post('ticket/mark_resolved/(:num)', [DepartmentController::class, 'markAsResolved/$1']);
-        
+
         // TAMBAHKAN ROUTE UNTUK REAL-TIME STATUS CHECKING
-        $routes->get('ticket/status_info/(:num)', function($ticketId) {
+        $routes->get('ticket/status_info/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatusInfo($ticketId);
         });
-        $routes->get('ticket/status/(:num)', function($ticketId) {
+        $routes->get('ticket/status/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatus($ticketId);
         });
-        $routes->get('ticket/check_status/(:num)', function($ticketId) {
+        $routes->get('ticket/check_status/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->checkTicketStatus($ticketId);
         });
-        
+
         $routes->get('assigned_tickets', [DepartmentController::class, 'assignedTickets']);
-        $routes->get('ticket_detail/(:num)', function($ticketId) {
+        $routes->get('ticket_detail/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->ticketDetail($ticketId, 'it-support');
         });
-        $routes->get('ticket_summary/(:num)', function($ticketId) {
+        $routes->get('ticket_summary/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->ticketSummary($ticketId, 'it-support');
         });
         $routes->get('profile', [DepartmentController::class, 'profile']);
         $routes->get('notifications', [DepartmentController::class, 'notifications']);
         $routes->get('logout', [AuthController::class, 'logout']);
-        
+
         // Chat routes - Department ↔ Support
         $routes->post('chat/send/(:num)', [DepartmentController::class, 'sendChatMessage/$1']);
         $routes->get('chat/messages/(:num)', [DepartmentController::class, 'getChatMessages/$1']);
         $routes->get('chat/get_new/(:num)', [DepartmentController::class, 'getNewChatMessages/$1']);
     });
-    
+
     // Technical Support Department - TAMBAHKAN JUGA
     $routes->group('technical-support', function ($routes) {
         $routes->get('dashboard', [DepartmentController::class, 'dashboard']);
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
         $routes->post('ticket/mark_resolved/(:num)', [DepartmentController::class, 'markAsResolved/$1']);
-        
+
         // Status checking routes
-        $routes->get('ticket/status_info/(:num)', function($ticketId) {
+        $routes->get('ticket/status_info/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatusInfo($ticketId);
         });
-        $routes->get('ticket/status/(:num)', function($ticketId) {
+        $routes->get('ticket/status/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatus($ticketId);
         });
-        
+
         $routes->get('assigned_tickets', [DepartmentController::class, 'assignedTickets']);
-        $routes->get('ticket_detail/(:num)', function($ticketId) {
+        $routes->get('ticket_detail/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->ticketDetail($ticketId, 'technical-support');
         });
         $routes->get('profile', [DepartmentController::class, 'profile']);
         $routes->get('notifications', [DepartmentController::class, 'notifications']);
         $routes->get('logout', [AuthController::class, 'logout']);
-        
+
         // Chat routes
         $routes->post('chat/send/(:num)', [DepartmentController::class, 'sendChatMessage/$1']);
         $routes->get('chat/messages/(:num)', [DepartmentController::class, 'getChatMessages/$1']);
@@ -307,26 +306,26 @@ $routes->group('department', function ($routes) {
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
         $routes->post('ticket/mark_resolved/(:num)', [DepartmentController::class, 'markAsResolved/$1']);
-        
+
         // Status checking routes
-        $routes->get('ticket/status_info/(:num)', function($ticketId) {
+        $routes->get('ticket/status_info/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatusInfo($ticketId);
         });
-        $routes->get('ticket/status/(:num)', function($ticketId) {
+        $routes->get('ticket/status/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatus($ticketId);
         });
-        
+
         $routes->get('assigned_tickets', [DepartmentController::class, 'assignedTickets']);
-        $routes->get('ticket_detail/(:num)', function($ticketId) {
+        $routes->get('ticket_detail/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->ticketDetail($ticketId, 'uiux-support');
         });
         $routes->get('profile', [DepartmentController::class, 'profile']);
         $routes->get('notifications', [DepartmentController::class, 'notifications']);
         $routes->get('logout', [AuthController::class, 'logout']);
-        
+
         // Chat routes
         $routes->post('chat/send/(:num)', [DepartmentController::class, 'sendChatMessage/$1']);
         $routes->get('chat/messages/(:num)', [DepartmentController::class, 'getChatMessages/$1']);
@@ -339,26 +338,26 @@ $routes->group('department', function ($routes) {
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
         $routes->post('ticket/mark_resolved/(:num)', [DepartmentController::class, 'markAsResolved/$1']);
-        
+
         // Status checking routes
-        $routes->get('ticket/status_info/(:num)', function($ticketId) {
+        $routes->get('ticket/status_info/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatusInfo($ticketId);
         });
-        $routes->get('ticket/status/(:num)', function($ticketId) {
+        $routes->get('ticket/status/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->getTicketStatus($ticketId);
         });
-        
+
         $routes->get('assigned_tickets', [DepartmentController::class, 'assignedTickets']);
-        $routes->get('ticket_detail/(:num)', function($ticketId) {
+        $routes->get('ticket_detail/(:num)', function ($ticketId) {
             $controller = new DepartmentController();
             return $controller->ticketDetail($ticketId, 'feature-request');
         });
         $routes->get('profile', [DepartmentController::class, 'profile']);
         $routes->get('notifications', [DepartmentController::class, 'notifications']);
         $routes->get('logout', [AuthController::class, 'logout']);
-        
+
         // Chat routes
         $routes->post('chat/send/(:num)', [DepartmentController::class, 'sendChatMessage/$1']);
         $routes->get('chat/messages/(:num)', [DepartmentController::class, 'getChatMessages/$1']);

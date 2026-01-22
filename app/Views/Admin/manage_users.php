@@ -91,76 +91,101 @@
                 <div class="p-4 space-y-4">
                     <!-- Search Bar -->
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-muted">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
                             <i class="fas fa-search"></i>
                         </div>
-                        <input type="text" placeholder="Search users by name, email, role..." id="userSearch"
-                            class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
+                        <input
+                            type="text"
+                            placeholder="Search users by name, email, role..."
+                            id="userSearch"
+                            class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 placeholder:text-gray-400">
+                        <!-- Clear button -->
+                        <button
+                            id="clearSearch"
+                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
 
                     <!-- Filter Options -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Role Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Role</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Role</label>
                             <select id="roleFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Roles</option>
                                 <?php foreach ($roles as $role): ?>
-                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?>
-                                    </option>
+                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
 
                         <!-- Department Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Department</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Department</label>
                             <select id="departmentFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Departments</option>
                                 <?php foreach ($departments as $department): ?>
                                     <option value="<?= $department['department_id'] ?>">
-                                        <?= htmlspecialchars($department['department_name']) ?></option>
+                                        <?= htmlspecialchars($department['department_name']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
 
                         <!-- Status Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Status</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Status</label>
                             <select id="statusFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Status</option>
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Date Range Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Date From</label>
-                            <input type="date" id="dateFrom"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Date From</label>
+                            <div class="relative">
+                                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
+                                    <i class="fas fa-calendar-alt text-sm"></i>
+                                </div>
+                                <input type="date" id="dateFrom"
+                                    class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 cursor-pointer">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Date To</label>
-                            <input type="date" id="dateTo"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Date To</label>
+                            <div class="relative">
+                                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
+                                    <i class="fas fa-calendar-alt text-sm"></i>
+                                </div>
+                                <input type="date" id="dateTo"
+                                    class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 cursor-pointer">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3">
+                    <!-- Action Button -->
+                    <div class="pt-2">
                         <button id="resetFilters"
-                            class="flex-1 h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
+                            class="w-full h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
                             Reset Filters
-                        </button>
-                        <button id="exportUsers"
-                            class="flex-1 h-12 bg-white text-secondary border border-secondary rounded-xl hover:bg-secondary/5 transition-colors font-medium">
-                            Export Users
                         </button>
                     </div>
                 </div>
@@ -177,12 +202,6 @@
 
                 <!-- Table Container -->
                 <div class="p-4">
-                    <!-- Loading State -->
-                    <div id="loadingState" class="hidden text-center py-8">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mb-4"></div>
-                        <p class="text-gray-500">Loading users...</p>
-                    </div>
-
                     <!-- Empty State -->
                     <div id="emptyState" class="hidden text-center py-8">
                         <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
@@ -195,7 +214,7 @@
                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        ID
+                                        No.
                                     </th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
@@ -231,22 +250,19 @@
 
                     <!-- Pagination -->
                     <div class="border-t border-gray-200 mt-4 pt-4">
-                        <div class="flex justify-between items-center">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <div class="text-text-dark/70 text-sm">
                                 <span id="paginationInfo">Page 1 of 1</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button id="prevPage"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fas fa-chevron-left text-sm"></i>
-                                </button>
+
+                            <div class="flex items-center gap-1">
+
+
                                 <div id="pageNumbers" class="flex items-center gap-1">
                                     <!-- Page numbers will be populated here -->
                                 </div>
-                                <button id="nextPage"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fas fa-chevron-right text-sm"></i>
-                                </button>
+
+
                             </div>
                         </div>
                     </div>
@@ -416,34 +432,6 @@
         border-bottom: none;
     }
 
-    /* Loading animations */
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .animate-spin {
-        animation: spin 1s linear infinite;
-    }
-
-    /* Modal animations */
-    @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     .animate-slideInUp {
         animation: slideInUp 0.3s ease-out;
     }
@@ -477,14 +465,81 @@
     .bg-red-50 {
         background-color: #FEF2F2 !important;
     }
+
+    /* Tambahkan di bagian <style> */
+    .pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .page-btn {
+        min-width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .page-btn.active {
+        box-shadow: 0 2px 4px rgba(102, 92, 158, 0.2);
+    }
+
+    .pagination-ellipsis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        color: #9ca3af;
+    }
+
+    /* Responsive pagination */
+    @media (max-width: 768px) {
+        .pagination-container {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .pagination-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        .pagination-buttons {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 
-<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     class UserManager {
         constructor() {
             this.currentPage = 1;
-            this.pageSize = 10;
+            this.pageSize = 5; // Ubah menjadi 5 user per halaman
             this.totalPages = 1;
             this.selectedUserId = null;
             this.filters = {};
@@ -500,559 +555,534 @@
 
         cacheElements() {
             // Table elements
-            this.usersTable = document.getElementById('usersTable');
-            this.usersTableBody = document.getElementById('usersTableBody');
-            this.loadingState = document.getElementById('loadingState');
-            this.emptyState = document.getElementById('emptyState');
-            this.showingInfo = document.getElementById('showingInfo');
-            this.paginationInfo = document.getElementById('paginationInfo');
-            this.pageNumbers = document.getElementById('pageNumbers');
-            this.prevPage = document.getElementById('prevPage');
-            this.nextPage = document.getElementById('nextPage');
+            this.$usersTable = $('#usersTable');
+            this.$usersTableBody = $('#usersTableBody');
+            this.$emptyState = $('#emptyState');
+            this.$showingInfo = $('#showingInfo');
+            this.$paginationInfo = $('#paginationInfo');
+            this.$pageNumbers = $('#pageNumbers');
+            this.$prevPage = $('#prevPage');
+            this.$nextPage = $('#nextPage');
 
             // Filter elements
-            this.userSearch = document.getElementById('userSearch');
-            this.roleFilter = document.getElementById('roleFilter');
-            this.departmentFilter = document.getElementById('departmentFilter');
-            this.statusFilter = document.getElementById('statusFilter');
-            this.dateFrom = document.getElementById('dateFrom');
-            this.dateTo = document.getElementById('dateTo');
-            this.resetFilters = document.getElementById('resetFilters');
-            this.exportUsers = document.getElementById('exportUsers');
+            this.$userSearch = $('#userSearch');
+            this.$clearSearch = $('#clearSearch');
+            this.$roleFilter = $('#roleFilter');
+            this.$departmentFilter = $('#departmentFilter');
+            this.$statusFilter = $('#statusFilter');
+            this.$dateFrom = $('#dateFrom');
+            this.$dateTo = $('#dateTo');
+            this.$resetFilters = $('#resetFilters');
 
             // Action elements
-            this.addUserBtn = document.getElementById('addUserBtn');
-            this.userDetails = document.getElementById('userDetails');
-            this.userActions = document.getElementById('userActions');
+            this.$addUserBtn = $('#addUserBtn');
+            this.$userDetails = $('#userDetails');
+            this.$userActions = $('#userActions');
         }
 
         bindEvents() {
             // Search and filter events
-            this.userSearch.addEventListener('input', this.debounce(() => this.handleFilterChange(), 300));
-            this.roleFilter.addEventListener('change', () => this.handleFilterChange());
-            this.departmentFilter.addEventListener('change', () => this.handleFilterChange());
-            this.statusFilter.addEventListener('change', () => this.handleFilterChange());
-            this.dateFrom.addEventListener('change', () => this.handleFilterChange());
-            this.dateTo.addEventListener('change', () => this.handleFilterChange());
-            this.resetFilters.addEventListener('click', () => this.resetAllFilters());
-            this.exportUsers.addEventListener('click', () => this.exportUsersData());
+            this.$userSearch.on('input', this.debounce(() => this.handleFilterChange(), 300));
+            this.$roleFilter.on('change', () => this.handleFilterChange());
+            this.$departmentFilter.on('change', () => this.handleFilterChange());
+            this.$statusFilter.on('change', () => this.handleFilterChange());
+            this.$dateFrom.on('change', () => this.handleFilterChange());
+            this.$dateTo.on('change', () => this.handleFilterChange());
+            this.$resetFilters.on('click', () => this.resetAllFilters());
 
             // Pagination events
-            this.prevPage.addEventListener('click', () => this.changePage(this.currentPage - 1));
-            this.nextPage.addEventListener('click', () => this.changePage(this.currentPage + 1));
+            this.$prevPage.on('click', () => this.changePage(this.currentPage - 1));
+            this.$nextPage.on('click', () => this.changePage(this.currentPage + 1));
 
             // Action events
-            this.addUserBtn.addEventListener('click', () => this.showAddUserModal());
+            this.$addUserBtn.on('click', () => this.showAddUserModal());
 
             // Table row click events (delegated)
-            this.usersTableBody.addEventListener('click', (e) => this.handleTableClick(e));
+            this.$usersTableBody.on('click', (e) => this.handleTableClick(e));
         }
 
-async editUser(userId) {
-    try {
-        // Load user data first
-        const response = await fetch(`<?= base_url("admin/users/ajax-details") ?>/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+        // Tambah method untuk handle search input dan clear
+        handleSearchInput() {
+            const searchValue = this.$userSearch.val();
+
+            // Show/hide clear button
+            if (searchValue.length > 0) {
+                this.$clearSearch.removeClass('hidden');
+            } else {
+                this.$clearSearch.addClass('hidden');
             }
-        });
 
-        const data = await response.json();
-
-        if (data.success && data.user) {
-            this.showEditUserModal(data.user);
-        } else {
-            this.showToast('Failed to load user data for editing', 'error');
-        }
-    } catch (error) {
-        console.error('Error loading user for edit:', error);
-        this.showToast('Failed to load user data', 'error');
-    }
-}
-showEditUserModal(user) {
-    // Create modal HTML
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-    modal.innerHTML = `
-        <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
-                    <button class="close-modal text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="p-6">
-                <form id="editUserForm">
-                    <input type="hidden" name="user_id" value="${user.user_id}">
-                    
-                    <div class="space-y-6">
-                        <!-- Basic Information Section -->
-                        <div>
-                            <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Username *</label>
-                                    <input type="text" name="username" value="${user.username}" required
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="johndoe">
-                                    <p class="text-xs text-gray-500 mt-1">Must be unique</p>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
-                                    <input type="text" name="full_name" value="${user.full_name}" required
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="John Doe">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Email *</label>
-                                    <input type="email" name="email" value="${user.email}" required
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="john@example.com">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
-                                    <input type="text" name="phone_number" value="${user.phone_number || ''}"
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="+1234567890">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Password Section -->
-                        <div>
-                            <h4 class="text-lg font-medium text-text-dark mb-4">Password (Leave blank to keep current)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">New Password</label>
-                                    <input type="password" name="password" minlength="6"
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="••••••••">
-                                    <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
-                                    <input type="password" name="confirm_password"
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                           placeholder="••••••••">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Role & Department Section -->
-                        <div>
-                            <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Role *</label>
-                                    <select name="role_id" required
-                                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                        <option value="">Select Role</option>
-                                        <?php foreach ($roles as $role): ?>
-                                            <option value="<?= $role['role_id'] ?>" ${user.role_id == <?= $role['role_id'] ?> ? 'selected' : ''}>
-                                                <?= htmlspecialchars($role['role_name']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Department</label>
-                                    <select name="department_id"
-                                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                        <option value="">No Department</option>
-                                        <?php foreach ($departments as $department): ?>
-                                            <option value="<?= $department['department_id'] ?>" ${user.department_id == <?= $department['department_id'] ?> ? 'selected' : ''}>
-                                                <?= htmlspecialchars($department['department_name']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Account Status -->
-                        <div>
-                            <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
-                            <div class="flex items-center space-x-3">
-                                <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
-                                       class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
-                                <label for="is_active_edit" class="text-gray-700 text-sm">
-                                    Account is active (user can login)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancel
-                </button>
-                <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
-                    <i class="fas fa-save mr-2"></i>
-                    Update User
-                </button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Add event listeners
-    modal.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => modal.remove());
-    });
-
-    modal.querySelector('#updateUserBtn').addEventListener('click', async () => {
-        await this.updateUser(modal, user.user_id);
-    });
-
-    // Close on ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            modal.remove();
-        }
-    }, { once: true });
-
-    // Prevent modal close when clicking inside modal
-    modal.querySelector('.bg-white').addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
-}
-async updateUser(modal, userId) {
-    try {
-        const form = modal.querySelector('#editUserForm');
-        const formData = new FormData(form);
-        
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
-        
-        // Validasi password jika diisi
-        const password = formData.get('password');
-        const confirmPassword = formData.get('confirm_password');
-        
-        if (password && password.length < 6) {
-            this.showToast('Password must be at least 6 characters', 'error');
-            return;
-        }
-        
-        if (password && password !== confirmPassword) {
-            this.showToast('Passwords do not match', 'error');
-            return;
+            // Trigger filter change
+            this.handleFilterChange();
         }
 
-        // Jika password tidak diisi, hapus dari formData
-        if (!password) {
-            formData.delete('password');
-            formData.delete('confirm_password');
+        clearSearch() {
+            this.$userSearch.val('');
+            this.$clearSearch.addClass('hidden');
+            this.handleFilterChange();
+            this.showToast('Search cleared', 'info');
         }
 
-        // Validasi required fields
-        const requiredFields = ['username', 'full_name', 'email', 'role_id'];
-        for (const field of requiredFields) {
-            const value = formData.get(field);
-            if (!value || value.trim() === '') {
-                this.showToast(`${field.replace('_', ' ')} is required`, 'error');
-                return;
-            }
-        }
-
-        // Show loading state
-        const updateBtn = modal.querySelector('#updateUserBtn');
-        const originalText = updateBtn.innerHTML;
-        updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
-        updateBtn.disabled = true;
-
-        // Send request
-        const headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        };
-        
-        // Add CSRF token header
-        if (csrfToken && csrfHeader) {
-            headers[csrfHeader] = csrfToken;
-        }
-        
-        const response = await fetch('<?= base_url("admin/users/update") ?>', {
-            method: 'POST',
-            headers: headers,
-            body: formData
-        });
-
-        const data = await response.json();
-
-        // Restore button state
-        updateBtn.innerHTML = originalText;
-        updateBtn.disabled = false;
-
-        if (data.success) {
-            this.showToast(data.message, 'success');
-            
-            // Close modal
-            modal.remove();
-            
-            // Refresh user list
-            this.loadUsers();
-            
-            // Reload user details if this user is selected
-            if (this.selectedUserId === userId) {
-                this.loadUserDetails(userId);
-            }
-            
-        } else {
-            let errorMessage = data.message || 'Failed to update user';
-            
-            // Show validation errors if available
-            if (data.errors) {
-                const errors = Object.values(data.errors).join(', ');
-                errorMessage = errors;
-            }
-            
-            this.showToast(errorMessage, 'error');
-            
-            // Highlight error fields
-            if (data.errors) {
-                Object.keys(data.errors).forEach(fieldName => {
-                    const input = modal.querySelector(`[name="${fieldName}"]`);
-                    if (input) {
-                        input.classList.add('border-red-500', 'bg-red-50');
-                        input.addEventListener('input', function() {
-                            this.classList.remove('border-red-500', 'bg-red-50');
-                        }, { once: true });
+        async editUser(userId) {
+            try {
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
+
+                if (response.success && response.user) {
+                    this.showEditUserModal(response.user);
+                } else {
+                    this.showToast('Failed to load user data for editing', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading user for edit:', error);
+                this.showToast('Failed to load user data', 'error');
             }
         }
 
-    } catch (error) {
-        console.error('Error updating user:', error);
-        this.showToast('Error: ' + error.message, 'error');
-        
-        // Restore button state
-        const updateBtn = modal.querySelector('#updateUserBtn');
-        if (updateBtn) {
-            updateBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update User';
-            updateBtn.disabled = false;
+        showEditUserModal(user) {
+            // Create modal HTML
+            const modalHTML = `
+                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="editUserModal">
+                    <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            <form id="editUserForm">
+                                <input type="hidden" name="user_id" value="${user.user_id}">
+                                
+                                <div class="space-y-6">
+                                    <!-- Basic Information Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                                <input type="text" name="username" value="${user.username}" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="johndoe">
+                                                <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                                <input type="text" name="full_name" value="${user.full_name}" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="John Doe">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                                <input type="email" name="email" value="${user.email}" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="john@example.com">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                                <input type="text" name="phone_number" value="${user.phone_number || ''}"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="+1234567890">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Password Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Password (Leave blank to keep current)</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">New Password</label>
+                                                <input type="password" name="password" minlength="6"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
+                                                <input type="password" name="confirm_password"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Role & Department Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                                <select name="role_id" required
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">Select Role</option>
+                                                    <?php foreach ($roles as $role): ?>
+                                                        <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                                <select name="department_id"
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">No Department</option>
+                                                    <?php foreach ($departments as $department): ?>
+                                                        <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Account Status -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
+                                                   class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                            <label for="is_active_edit" class="text-gray-700 text-sm">
+                                                Account is active (user can login)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="p-6 border-t border-gray-200 flex gap-3">
+                            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                                <i class="fas fa-save mr-2"></i>
+                                Update User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('body').append(modalHTML);
+            const $modal = $('#editUserModal');
+
+            // Set select values
+            $modal.find('select[name="role_id"]').val(user.role_id);
+            $modal.find('select[name="department_id"]').val(user.department_id || '');
+
+            // Add event listeners
+            $modal.find('.close-modal').on('click', () => $modal.remove());
+
+            $modal.find('#updateUserBtn').on('click', async () => {
+                await this.updateUser($modal, user.user_id);
+            });
+
+            // Close on ESC key
+            $(document).on('keydown.editUser', (e) => {
+                if (e.key === 'Escape') {
+                    $modal.remove();
+                    $(document).off('keydown.editUser');
+                }
+            });
+
+            // Prevent modal close when clicking inside modal
+            $modal.find('.bg-white').on('click', (e) => {
+                e.stopPropagation();
+            });
         }
-    }
-}
 
-async loadUsers() {
-    try {
-        this.showLoading();
+        async updateUser($modal, userId) {
+            try {
+                const $form = $modal.find('#editUserForm');
+                const formData = $form.serializeArray();
 
-        // Create query parameters
-        const params = new URLSearchParams();
-        params.append('page', this.currentPage);
-        params.append('limit', this.pageSize);
-        
-        if (this.filters.search) params.append('search', this.filters.search);
-        if (this.filters.role_id) params.append('role_id', this.filters.role_id);
-        if (this.filters.department_id) params.append('department_id', this.filters.department_id);
-        if (this.filters.is_active !== undefined && this.filters.is_active !== '') params.append('is_active', this.filters.is_active);
-        if (this.filters.date_from) params.append('date_from', this.filters.date_from);
-        if (this.filters.date_to) params.append('date_to', this.filters.date_to);
+                // Convert to object for validation
+                const formDataObj = {};
+                formData.forEach(item => {
+                    formDataObj[item.name] = item.value;
+                });
 
-        // GUNAKAN ENDPOINT AJAX BARU
-        const response = await fetch(`<?= base_url("admin/users/ajax-list") ?>?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                // Validasi password jika diisi
+                const password = formDataObj.password;
+                const confirmPassword = formDataObj.confirm_password;
+
+                if (password && password.length < 6) {
+                    this.showToast('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                if (password && password !== confirmPassword) {
+                    this.showToast('Passwords do not match', 'error');
+                    return;
+                }
+
+                // Validasi required fields
+                const requiredFields = ['username', 'full_name', 'email', 'role_id'];
+                for (const field of requiredFields) {
+                    const value = formDataObj[field];
+                    if (!value || value.trim() === '') {
+                        this.showToast(`${field.replace('_', ' ')} is required`, 'error');
+                        return;
+                    }
+                }
+
+                // Show loading state
+                const $updateBtn = $modal.find('#updateUserBtn');
+                const originalText = $updateBtn.html();
+                $updateBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Updating...');
+                $updateBtn.prop('disabled', true);
+
+                // Send request
+                const response = await $.ajax({
+                    url: '<?= base_url("admin/users/update") ?>',
+                    method: 'POST',
+                    data: $form.serialize(),
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                // Restore button state
+                $updateBtn.html(originalText);
+                $updateBtn.prop('disabled', false);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+
+                    // Close modal
+                    $modal.remove();
+
+                    // Refresh user list
+                    this.loadUsers();
+
+                    // Reload user details if this user is selected
+                    if (this.selectedUserId === userId) {
+                        this.loadUserDetails(userId);
+                    }
+
+                } else {
+                    let errorMessage = response.message || 'Failed to update user';
+
+                    // Show validation errors if available
+                    if (response.errors) {
+                        const errors = Object.values(response.errors).join(', ');
+                        errorMessage = errors;
+                    }
+
+                    this.showToast(errorMessage, 'error');
+
+                    // Highlight error fields
+                    if (response.errors) {
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $input.one('input', function() {
+                                    $(this).removeClass('border-red-500 bg-red-50');
+                                });
+                            }
+                        });
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error updating user:', error);
+                this.showToast('Error: ' + error.responseJSON?.message || error.statusText || 'Update failed', 'error');
+
+                // Restore button state
+                const $updateBtn = $modal.find('#updateUserBtn');
+                if ($updateBtn.length) {
+                    $updateBtn.html('<i class="fas fa-save mr-2"></i>Update User');
+                    $updateBtn.prop('disabled', false);
+                }
             }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        this.renderUsers(data);
-        this.hideLoading();
+        async loadUsers() {
+            try {
+                // Create query parameters
+                const params = {
+                    page: this.currentPage,
+                    limit: this.pageSize,
+                    ...this.filters
+                };
 
-    } catch (error) {
-        console.error('Error loading users:', error);
-        this.showError('Failed to load users. Please try again.');
-    }
-}
+                // Remove undefined values
+                Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-list") ?>`,
+                    method: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                this.renderUsers(response);
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                this.showError('Failed to load users. Please try again.');
+            }
+        }
+
+        // Update bagian renderUsers() pada class UserManager di manage_users.php
 
         renderUsers(data) {
             if (!data.users || data.users.length === 0) {
-                this.usersTableBody.innerHTML = '';
-                this.emptyState.classList.remove('hidden');
-                this.usersTable.classList.add('hidden');
-                this.showingInfo.textContent = `Total: 0 users`;
+                this.$usersTableBody.empty();
+                this.$emptyState.removeClass('hidden');
+                this.$usersTable.addClass('hidden');
+                this.$showingInfo.text(`Total: 0 users`);
                 return;
             }
 
-            this.emptyState.classList.add('hidden');
-            this.usersTable.classList.remove('hidden');
+            this.$emptyState.addClass('hidden');
+            this.$usersTable.removeClass('hidden');
 
             let html = '';
-            let counter = 1;
 
+            // Gunakan row_number dari server untuk nomor urut yang konsisten
             data.users.forEach(user => {
                 const statusClass = user.is_active ? 'status-active' : 'status-inactive';
                 const statusText = user.is_active ? 'Active' : 'Inactive';
                 const avatarInitials = this.getInitials(user.full_name);
                 const roleClass = this.getRoleClass(user.role_name);
 
+                // === ID MENJADI NOMOR URUT DARI SERVER ===
+                const rowNumber = user.row_number || user.user_id;
+
                 html += `
-                <tr class="${this.selectedUserId === user.user_id ? 'selected' : ''}" data-user-id="${user.user_id}">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        #${user.user_id}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
-                                ${avatarInitials}
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">${user.full_name}</div>
-                                <div class="text-sm text-gray-500">@${user.username}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${user.email}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="${roleClass} role-badge">
-                            ${user.role_name}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="${statusClass} status-badge">
-                            ${statusText}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
-                                data-user-id="${user.user_id}"
-                                title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
-                                data-user-id="${user.user_id}"
-                                title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
-                                data-user-id="${user.user_id}"
-                                title="Reset Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="btn-delete-user text-red-600 hover:text-red-800" 
-                                data-user-id="${user.user_id}"
-                                title="Delete User">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                `;
-                counter++;
+        <tr class="${this.selectedUserId === user.user_id ? 'selected' : ''}" data-user-id="${user.user_id}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${rowNumber}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
+                        ${avatarInitials}
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${user.full_name}</div>
+                        <div class="text-sm text-gray-500">@${user.username}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${user.email}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="${roleClass} role-badge">
+                    ${user.role_name}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="${statusClass} status-badge">
+                    ${statusText}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
+                        data-user-id="${user.user_id}"
+                        title="View Details">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
+                        data-user-id="${user.user_id}"
+                        title="Edit User">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
+                        data-user-id="${user.user_id}"
+                        title="Reset Password">
+                    <i class="fas fa-key"></i>
+                </button>
+                <button class="btn-delete-user text-red-600 hover:text-red-800" 
+                        data-user-id="${user.user_id}"
+                        title="Delete User">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+        `;
             });
 
-            this.usersTableBody.innerHTML = html;
-            this.showingInfo.textContent = `Total: ${data.total} users`;
+            this.$usersTableBody.html(html);
+            this.$showingInfo.text(`Total: ${data.total} users`);
             this.updatePaginationInfo(data);
 
             // Re-bind action buttons
             this.bindActionButtons();
         }
 
-async loadUserDetails(userId) {
-    console.log('=== loadUserDetails START ===');
-    console.log('User ID to load:', userId);
-    
-    try {
-        // Gunakan endpoint AJAX baru yang sudah kita buat
-        const url = `<?= base_url("admin/users/ajax-details") ?>/${userId}`;
-        console.log('Request URL:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+        async loadUserDetails(userId) {
+            console.log('=== loadUserDetails START ===');
+            console.log('User ID to load:', userId);
+
+            try {
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Response data:', response);
+
+                if (response.success && response.user) {
+                    console.log('User data received:', response.user);
+                    this.renderUserDetails(response.user);
+                    this.selectedUserId = userId;
+                    this.updateSelectedRow();
+                } else {
+                    console.error('API returned error:', response.message);
+                    this.showToast(response.message || 'Failed to load user details', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error in loadUserDetails:', error);
+                console.error('Error response:', error.responseText);
+                this.showToast('Failed to load user details: ' + (error.responseJSON?.message || error.statusText), 'error');
             }
-        });
 
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        // Cek jika response bukan JSON
-        const contentType = response.headers.get('content-type');
-        console.log('Content-Type:', contentType);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Response error text:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
+            console.log('=== loadUserDetails END ===');
         }
-
-        // Parse response
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-        
-        let data;
-        try {
-            data = JSON.parse(responseText);
-            console.log('Parsed JSON data:', data);
-        } catch (jsonError) {
-            console.error('JSON parse error:', jsonError);
-            console.error('Response that failed to parse:', responseText);
-            throw new Error('Invalid JSON response from server');
-        }
-
-        if (data.success && data.user) {
-            console.log('User data received:', data.user);
-            this.renderUserDetails(data.user);
-            this.selectedUserId = userId;
-            this.updateSelectedRow();
-        } else {
-            console.error('API returned error:', data.message);
-            this.showToast(data.message || 'Failed to load user details', 'error');
-        }
-
-    } catch (error) {
-        console.error('Error in loadUserDetails:', error);
-        console.error('Error stack:', error.stack);
-        this.showToast('Failed to load user details: ' + error.message, 'error');
-    }
-    
-    console.log('=== loadUserDetails END ===');
-}
 
         renderUserDetails(user) {
             const avatarInitials = this.getInitials(user.full_name);
             const statusClass = user.is_active ? 'status-active' : 'status-inactive';
             const statusText = user.is_active ? 'Active' : 'Inactive';
-            
-            const lastLogin = user.last_login 
-                ? new Date(user.last_login).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
+
+            const lastLogin = user.last_login ?
+                new Date(user.last_login).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                }) 
-                : 'Never';
+                }) :
+                'Never';
 
             const html = `
             <div class="animate-fadeIn">
@@ -1100,7 +1130,7 @@ async loadUserDetails(userId) {
             </div>
             `;
 
-            this.userDetails.innerHTML = html;
+            this.$userDetails.html(html);
             this.updateUserActions(user);
         }
 
@@ -1135,18 +1165,18 @@ async loadUserDetails(userId) {
             </div>
             `;
 
-            this.userActions.innerHTML = html;
+            this.$userActions.html(html);
             this.bindActionButtons();
         }
 
         handleFilterChange() {
             this.filters = {
-                search: this.userSearch.value,
-                role_id: this.roleFilter.value,
-                department_id: this.departmentFilter.value,
-                is_active: this.statusFilter.value,
-                date_from: this.dateFrom.value,
-                date_to: this.dateTo.value
+                search: this.$userSearch.val(),
+                role_id: this.$roleFilter.val(),
+                department_id: this.$departmentFilter.val(),
+                is_active: this.$statusFilter.val(),
+                date_from: this.$dateFrom.val(),
+                date_to: this.$dateTo.val()
             };
 
             this.currentPage = 1;
@@ -1154,12 +1184,12 @@ async loadUserDetails(userId) {
         }
 
         resetAllFilters() {
-            this.userSearch.value = '';
-            this.roleFilter.value = '';
-            this.departmentFilter.value = '';
-            this.statusFilter.value = '';
-            this.dateFrom.value = '';
-            this.dateTo.value = '';
+            this.$userSearch.val('');
+            this.$roleFilter.val('');
+            this.$departmentFilter.val('');
+            this.$statusFilter.val('');
+            this.$dateFrom.val('');
+            this.$dateTo.val('');
 
             this.filters = {};
             this.currentPage = 1;
@@ -1174,116 +1204,177 @@ async loadUserDetails(userId) {
             this.currentPage = page;
             this.loadUsers();
 
-            // Scroll to top of table
-            this.usersTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Scroll to top of table dengan animasi smooth
+            $('html, body').animate({
+                scrollTop: this.$usersTable.offset().top - 100
+            }, 300);
+
+            // Update URL tanpa reload (optional)
+            this.updateURL();
+        }
+
+        updateURL() {
+            const url = new URL(window.location);
+            const params = new URLSearchParams(url.search);
+
+            // Update atau tambah parameter page
+            params.set('page', this.currentPage);
+
+            // Update URL tanpa reload page
+            const newUrl = `${url.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
         }
 
         updatePaginationInfo(data) {
-            const start = (this.currentPage - 1) * this.pageSize + 1;
-            const end = Math.min(start + this.pageSize - 1, data.total);
+            const start = Math.max(1, (this.currentPage - 1) * this.pageSize + 1);
+            const end = Math.min(start + data.users.length - 1, data.total);
             const totalPages = Math.ceil(data.total / this.pageSize);
 
-            this.showingInfo.textContent = `Showing ${start}-${end} of ${data.total} users`;
-            this.paginationInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+            // Update showing info
+            if (data.total > 0) {
+                this.$showingInfo.text(`Showing ${start}-${end} of ${data.total} users`);
+            } else {
+                this.$showingInfo.text(`Total: 0 users`);
+            }
+
+            this.$paginationInfo.text(`Page ${this.currentPage} of ${totalPages}`);
 
             this.totalPages = totalPages;
 
             // Update page numbers
             this.renderPageNumbers();
 
-            // Update prev/next buttons
-            this.prevPage.disabled = this.currentPage === 1;
-            this.nextPage.disabled = this.currentPage === this.totalPages;
+            // Update prev/next buttons (simple)
+            this.$prevPage.prop('disabled', this.currentPage === 1);
+            this.$nextPage.prop('disabled', this.currentPage === this.totalPages || this.totalPages === 0);
+
+            // Update extended buttons di renderPageNumbers sudah handle
         }
 
         renderPageNumbers() {
             let html = '';
+            const totalPages = this.totalPages;
+            const currentPage = this.currentPage;
 
-            // Always show first page
-            html += this.createPageButton(1);
+            // Jumlah maksimum tombol yang ditampilkan
+            const maxVisibleButtons = 2;
 
-            // Show ellipsis if needed
-            if (this.currentPage > 3) {
-                html += '<span class="px-2 text-gray-400">...</span>';
+            // Hitung range tombol yang akan ditampilkan
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+
+            // Sesuaikan startPage jika endPage mencapai totalPages
+            if (endPage - startPage + 1 < maxVisibleButtons) {
+                startPage = Math.max(1, endPage - maxVisibleButtons + 1);
             }
 
-            // Show pages around current page
-            const startPage = Math.max(2, this.currentPage - 1);
-            const endPage = Math.min(this.totalPages - 1, this.currentPage + 1);
+            // Tombol Previous (khusus untuk mobile/desktop berbeda)
+            html += `
+        <button class="prev-btn-extended w-10 h-8 flex items-center justify-center rounded-lg bg-white/20 text-text-dark hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${currentPage === 1 ? 'disabled' : ''}
+                data-page="${currentPage - 1}"
+                title="Previous Page">
+            <i class="fas fa-chevron-left text-xs"></i>
+        </button>
+    `;
 
+            // Tombol halaman pertama
+            if (startPage > 1) {
+                html += this.createPageButton(1);
+                if (startPage > 2) {
+                    html += '<span class="px-2 text-gray-400">...</span>';
+                }
+            }
+
+            // Tombol halaman tengah
             for (let i = startPage; i <= endPage; i++) {
                 html += this.createPageButton(i);
             }
 
-            // Show ellipsis if needed
-            if (this.currentPage < this.totalPages - 2) {
-                html += '<span class="px-2 text-gray-400">...</span>';
+            // Tombol halaman terakhir
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += '<span class="px-2 text-gray-400">...</span>';
+                }
+                if (totalPages > 1) {
+                    html += this.createPageButton(totalPages);
+                }
             }
 
-            // Always show last page if not first
-            if (this.totalPages > 1) {
-                html += this.createPageButton(this.totalPages);
-            }
+            // Tombol Next
+            html += `
+        <button class="next-btn-extended w-10 h-8 flex items-center justify-center rounded-lg bg-white/20 text-text-dark hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${currentPage === totalPages ? 'disabled' : ''}
+                data-page="${currentPage + 1}"
+                title="Next Page">
+            <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+    `;
 
-            this.pageNumbers.innerHTML = html;
+            this.$pageNumbers.html(html);
 
             // Add event listeners to page buttons
-            this.pageNumbers.querySelectorAll('.page-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const page = parseInt(btn.dataset.page);
+            this.$pageNumbers.find('.page-btn').off('click').on('click', (e) => {
+                e.preventDefault();
+                const page = parseInt($(e.currentTarget).data('page'));
+                if (page >= 1 && page <= this.totalPages) {
                     this.changePage(page);
-                });
+                }
+            });
+
+            // Add event listeners untuk extended buttons
+            this.$pageNumbers.find('.prev-btn-extended').off('click').on('click', (e) => {
+                e.preventDefault();
+                if (this.currentPage > 1) {
+                    this.changePage(this.currentPage - 1);
+                }
+            });
+
+            this.$pageNumbers.find('.next-btn-extended').off('click').on('click', (e) => {
+                e.preventDefault();
+                if (this.currentPage < this.totalPages) {
+                    this.changePage(this.currentPage + 1);
+                }
             });
         }
 
         createPageButton(page) {
             const isActive = page === this.currentPage;
             return `
-            <button class="page-btn w-8 h-8 flex items-center justify-center rounded-lg font-medium ${isActive ? 'bg-secondary text-white' : 'bg-white/20 text-text-dark hover:bg-secondary/20'}" 
-                    data-page="${page}">
-                ${page}
-            </button>
-            `;
-        }
-
-        showLoading() {
-            this.loadingState.classList.remove('hidden');
-            this.usersTable.classList.add('hidden');
-            this.emptyState.classList.add('hidden');
-        }
-
-        hideLoading() {
-            this.loadingState.classList.add('hidden');
-            this.usersTable.classList.remove('hidden');
+    <button class="page-btn min-w-8 h-8 px-3 flex items-center justify-center rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-secondary text-white shadow-sm' : 'bg-white/20 text-text-dark hover:bg-secondary/20 hover:text-secondary'}" 
+            data-page="${page}"
+            title="Page ${page}">
+        ${page}
+    </button>
+    `;
         }
 
         showError(message) {
-            this.emptyState.innerHTML = `
+            this.$emptyState.html(`
                 <i class="fas fa-exclamation-triangle text-red-300 text-4xl mb-4"></i>
                 <p class="text-red-500">${message}</p>
                 <button class="mt-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors" onclick="userManager.loadUsers()">
                     Retry
                 </button>
-            `;
-            this.emptyState.classList.remove('hidden');
-            this.usersTable.classList.add('hidden');
-            this.loadingState.classList.add('hidden');
+            `);
+            this.$emptyState.removeClass('hidden');
+            this.$usersTable.addClass('hidden');
         }
 
         handleTableClick(event) {
-            const row = event.target.closest('tr[data-user-id]');
-            if (!row) return;
+            const $row = $(event.target).closest('tr[data-user-id]');
+            if (!$row.length) return;
 
-            const userId = parseInt(row.dataset.userId);
+            const userId = parseInt($row.data('user-id'));
 
             // Check if click was on an action button
-            const actionBtn = event.target.closest('.btn-view-user, .btn-edit-user, .btn-reset-password, .btn-delete-user');
-            if (actionBtn) {
+            const $actionBtn = $(event.target).closest('.btn-view-user, .btn-edit-user, .btn-reset-password, .btn-delete-user');
+            if ($actionBtn.length) {
                 event.stopPropagation();
 
-                const action = actionBtn.classList.contains('btn-view-user') ? 'view' :
-                    actionBtn.classList.contains('btn-edit-user') ? 'edit' :
-                        actionBtn.classList.contains('btn-reset-password') ? 'reset' : 'delete';
+                const action = $actionBtn.hasClass('btn-view-user') ? 'view' :
+                    $actionBtn.hasClass('btn-edit-user') ? 'edit' :
+                    $actionBtn.hasClass('btn-reset-password') ? 'reset' : 'delete';
 
                 this.handleAction(action, userId);
                 return;
@@ -1312,476 +1403,410 @@ async loadUserDetails(userId) {
 
         bindActionButtons() {
             // Bind table action buttons
-            this.usersTableBody.querySelectorAll('.btn-view-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.loadUserDetails(userId);
-                });
+            this.$usersTableBody.find('.btn-view-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.loadUserDetails(userId);
             });
 
-    this.usersTableBody.querySelectorAll('.btn-edit-user').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const userId = parseInt(e.target.closest('button').dataset.userId);
-            this.editUser(userId);
-        });
-    });
-
-            this.usersTableBody.querySelectorAll('.btn-reset-password').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.resetPassword(userId);
-                });
+            this.$usersTableBody.find('.btn-edit-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.editUser(userId);
             });
 
-            this.usersTableBody.querySelectorAll('.btn-delete-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.deleteUser(userId);
-                });
+            this.$usersTableBody.find('.btn-reset-password').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.resetPassword(userId);
+            });
+
+            this.$usersTableBody.find('.btn-delete-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.deleteUser(userId);
             });
 
             // Bind detail action buttons
-if (this.userActions) {
-    this.userActions.querySelectorAll('.edit-user-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const userId = parseInt(e.target.closest('button').dataset.userId);
-            this.editUser(userId);
-        });
-    });
-
-                this.userActions.querySelectorAll('.reset-password-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const userId = parseInt(e.target.closest('button').dataset.userId);
-                        this.resetPassword(userId);
-                    });
+            if (this.$userActions.length) {
+                this.$userActions.find('.edit-user-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    this.editUser(userId);
                 });
 
-this.userActions.querySelectorAll('.toggle-status-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-        const userId = parseInt(e.target.closest('button').dataset.userId);
-        await this.toggleUserStatus(userId);
-    });
-});
+                this.$userActions.find('.reset-password-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    this.resetPassword(userId);
+                });
 
-                this.userActions.querySelectorAll('.delete-user-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const userId = parseInt(e.target.closest('button').dataset.userId);
-                        this.deleteUser(userId);
-                    });
+                this.$userActions.find('.toggle-status-btn').off('click').on('click', async (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    await this.toggleUserStatus(userId);
+                });
+
+                this.$userActions.find('.delete-user-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    this.deleteUser(userId);
                 });
             }
         }
 
         showAddUserModal() {
             // Create modal HTML
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
-                    <div class="p-6 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-800">Add New User</h3>
-                            <button class="close-modal text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times"></i>
+            const modalHTML = `
+                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="addUserModal">
+                    <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-semibold text-gray-800">Add New User</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            <form id="addUserForm">
+                                <!-- CSRF token will be added via fetch headers -->
+                                
+                                <div class="space-y-6">
+                                    <!-- Basic Information Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                                <input type="text" name="username" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="johndoe">
+                                                <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                                <input type="text" name="full_name" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="John Doe">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                                <input type="email" name="email" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="john@example.com">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                                <input type="text" name="phone_number"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="+1234567890">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Password Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Password</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Password *</label>
+                                                <input type="password" name="password" required minlength="6"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Confirm Password *</label>
+                                                <input type="password" name="confirm_password" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Role & Department Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                                <select name="role_id" required
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">Select Role</option>
+                                                    <?php foreach ($roles as $role): ?>
+                                                        <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                                <select name="department_id"
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">No Department</option>
+                                                    <?php foreach ($departments as $department): ?>
+                                                        <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Account Status -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" id="is_active" name="is_active" value="1" checked
+                                                   class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                            <label for="is_active" class="text-gray-700 text-sm">
+                                                Account is active (user can login)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="p-6 border-t border-gray-200 flex gap-3">
+                            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button id="saveUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add User
                             </button>
                         </div>
-                    </div>
-                    
-                    <div class="p-6">
-                        <form id="addUserForm">
-                            <!-- CSRF token will be added via fetch headers -->
-                            
-                            <div class="space-y-6">
-                                <!-- Basic Information Section -->
-                                <div>
-                                    <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Username *</label>
-                                            <input type="text" name="username" required
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="johndoe">
-                                            <p class="text-xs text-gray-500 mt-1">Must be unique</p>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
-                                            <input type="text" name="full_name" required
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="John Doe">
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Email *</label>
-                                            <input type="email" name="email" required
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="john@example.com">
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
-                                            <input type="text" name="phone_number"
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="+1234567890">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Password Section -->
-                                <div>
-                                    <h4 class="text-lg font-medium text-text-dark mb-4">Password</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Password *</label>
-                                            <input type="password" name="password" required minlength="6"
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="••••••••">
-                                            <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Confirm Password *</label>
-                                            <input type="password" name="confirm_password" required
-                                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                   placeholder="••••••••">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Role & Department Section -->
-                                <div>
-                                    <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Role *</label>
-                                            <select name="role_id" required
-                                                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                                <option value="">Select Role</option>
-                                                <?php foreach ($roles as $role): ?>
-                                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-gray-600 text-sm mb-2">Department</label>
-                                            <select name="department_id"
-                                                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                                <option value="">No Department</option>
-                                                <?php foreach ($departments as $department): ?>
-                                                    <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Account Status -->
-                                <div>
-                                    <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
-                                    <div class="flex items-center space-x-3">
-                                        <input type="checkbox" id="is_active" name="is_active" value="1" checked
-                                               class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
-                                        <label for="is_active" class="text-gray-700 text-sm">
-                                            Account is active (user can login)
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 flex gap-3">
-                        <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                            Cancel
-                        </button>
-                        <button id="saveUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
-                            <i class="fas fa-plus mr-2"></i>
-                            Add User
-                        </button>
                     </div>
                 </div>
             `;
 
-            document.body.appendChild(modal);
+            $('body').append(modalHTML);
+            const $modal = $('#addUserModal');
 
             // Add event listeners
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => modal.remove());
-            });
+            $modal.find('.close-modal').on('click', () => $modal.remove());
 
-            modal.querySelector('#saveUserBtn').addEventListener('click', async () => {
-                await this.saveNewUser(modal);
+            $modal.find('#saveUserBtn').on('click', async () => {
+                await this.saveNewUser($modal);
             });
 
             // Close on ESC key
-            document.addEventListener('keydown', function(e) {
+            $(document).on('keydown.addUser', (e) => {
                 if (e.key === 'Escape') {
-                    modal.remove();
+                    $modal.remove();
+                    $(document).off('keydown.addUser');
                 }
-            }, { once: true });
+            });
 
             // Prevent modal close when clicking inside modal
-            modal.querySelector('.bg-white').addEventListener('click', (e) => {
+            $modal.find('.bg-white').on('click', (e) => {
                 e.stopPropagation();
             });
         }
 
-        async saveNewUser(modal) {
-    try {
-        const form = modal.querySelector('#addUserForm');
-        const formData = new FormData(form);
-        
-        // Handle is_active
-        const isActiveCheckbox = modal.querySelector('#is_active');
-        if (isActiveCheckbox) {
-            formData.set('is_active', isActiveCheckbox.checked ? '1' : '0');
-        }
-        
-        // Debug: Tampilkan semua form data
-        console.log('=== FORM DATA DEBUG ===');
-        const formDataObj = {};
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ': ' + pair[1]);
-            formDataObj[pair[0]] = pair[1];
-        }
-        console.log('Full FormData object:', formDataObj);
-        
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
-        
-        console.log('CSRF Token:', csrfToken);
-        console.log('CSRF Header:', csrfHeader);
-        
-        // Validasi client-side
-        const password = formData.get('password');
-        const confirmPassword = formData.get('confirm_password');
-        
-        if (password.length < 6) {
-            this.showToast('Password must be at least 6 characters', 'error');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            this.showToast('Passwords do not match', 'error');
-            return;
-        }
+        async saveNewUser($modal) {
+            try {
+                const $form = $modal.find('#addUserForm');
+                const formData = $form.serializeArray();
 
-        // Show loading state
-        const saveBtn = modal.querySelector('#saveUserBtn');
-        const originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-        saveBtn.disabled = true;
+                // Convert to object for validation
+                const formDataObj = {};
+                formData.forEach(item => {
+                    formDataObj[item.name] = item.value;
+                });
 
-        // Send request ke endpoint ADD langsung
-        const headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        };
-        
-        // Add CSRF token header
-        if (csrfToken && csrfHeader) {
-            headers[csrfHeader] = csrfToken;
-        }
-        
-        console.log('Headers:', headers);
-        console.log('Endpoint:', '<?= base_url("admin/users/add") ?>');
-        
-const response = await fetch('<?= base_url("admin/users/ajax-add") ?>', {
-    method: 'POST',
-    headers: headers,
-    body: formData
-});
+                // Handle is_active
+                const isActiveCheckbox = $modal.find('#is_active');
+                if (isActiveCheckbox.length) {
+                    formDataObj.is_active = isActiveCheckbox.prop('checked') ? '1' : '0';
+                }
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', [...response.headers.entries()]);
-        
-        const responseText = await response.text();
-        console.log('Response text:', responseText);
-        
-        // Coba parse JSON
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error('Failed to parse JSON:', e);
-            data = { success: false, message: 'Invalid server response: ' + responseText };
-        }
+                // Debug: Tampilkan semua form data
+                console.log('=== FORM DATA DEBUG ===');
+                console.log('Full FormData object:', formDataObj);
 
-        // Restore button state
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+                // Validasi client-side
+                const password = formDataObj.password;
+                const confirmPassword = formDataObj.confirm_password;
 
-        console.log('Parsed response:', data);
+                if (password && password.length < 6) {
+                    this.showToast('Password must be at least 6 characters', 'error');
+                    return;
+                }
 
-        if (data.success) {
-            this.showToast(data.message, 'success');
-            
-            // Close modal
-            modal.remove();
-            
-            // Refresh user list
-            this.loadUsers();
-            
-            // Show new user in the list
-            if (data.user_id) {
-                setTimeout(() => {
-                    this.loadUserDetails(data.user_id);
-                }, 500);
-            }
-            
-        } else {
-            let errorMessage = data.message || 'Failed to add user';
-            console.error('Error details:', data);
-            
-            this.showToast(errorMessage, 'error');
-            
-            // Highlight error fields
-            if (data.errors) {
-                Object.keys(data.errors).forEach(fieldName => {
-                    const input = modal.querySelector(`[name="${fieldName}"]`);
-                    if (input) {
-                        input.classList.add('border-red-500', 'bg-red-50');
-                        input.addEventListener('input', function() {
-                            this.classList.remove('border-red-500', 'bg-red-50');
-                        }, { once: true });
+                if (password !== confirmPassword) {
+                    this.showToast('Passwords do not match', 'error');
+                    return;
+                }
+
+                // Show loading state
+                const $saveBtn = $modal.find('#saveUserBtn');
+                const originalText = $saveBtn.html();
+                $saveBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Saving...');
+                $saveBtn.prop('disabled', true);
+
+                // Send request ke endpoint ADD langsung
+                const response = await $.ajax({
+                    url: '<?= base_url("admin/users/ajax-add") ?>',
+                    method: 'POST',
+                    data: $form.serialize(),
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-            }
-        }
 
-    } catch (error) {
-        console.error('Error saving user:', error);
-        this.showToast('Error: ' + error.message, 'error');
-        
-        // Restore button state
-        const saveBtn = modal.querySelector('#saveUserBtn');
-        if (saveBtn) {
-            saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add User';
-            saveBtn.disabled = false;
-        }
-    }
-}
-async toggleUserStatus(userId) {
-    console.log('=== DEBUG toggleUserStatus START ===');
-    console.log('User ID:', userId);
-    
-    try {
-        if (!confirm('Are you sure you want to change this user\'s account status?')) {
-            console.log('User cancelled');
-            return;
-        }
+                console.log('Parsed response:', response);
 
-        // Show loading
-        const toggleBtn = this.userActions.querySelector('.toggle-status-btn');
-        const originalText = toggleBtn.innerHTML;
-        const originalHtml = toggleBtn.innerHTML; // Simpan HTML asli
-        toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
-        toggleBtn.disabled = true;
+                // Restore button state
+                $saveBtn.html(originalText);
+                $saveBtn.prop('disabled', false);
 
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+                if (response.success) {
+                    this.showToast(response.message, 'success');
 
-        // Gunakan FormData untuk POST request
-        const formData = new FormData();
-        formData.append('status', 'toggle');
-        formData.append('user_id', userId);
+                    // Close modal
+                    $modal.remove();
 
-        // Gunakan endpoint yang sesuai
-        const endpoint = `<?= base_url("admin/users/change-status") ?>/${userId}`;
-        console.log('Endpoint:', endpoint);
+                    // Refresh user list
+                    this.loadUsers();
 
-        const headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        };
-        
-        // Tambahkan CSRF token jika ada
-        if (csrfToken && csrfHeader) {
-            headers[csrfHeader] = csrfToken;
-        }
+                    // Show new user in the list
+                    if (response.user_id) {
+                        setTimeout(() => {
+                            this.loadUserDetails(response.user_id);
+                        }, 500);
+                    }
 
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: headers,
-            body: formData
-        });
+                } else {
+                    let errorMessage = response.message || 'Failed to add user';
+                    console.error('Error details:', response);
 
-        console.log('Response status:', response.status);
+                    this.showToast(errorMessage, 'error');
 
-        // Cek jika response OK
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+                    // Highlight error fields
+                    if (response.errors) {
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $input.one('input', function() {
+                                    $(this).removeClass('border-red-500 bg-red-50');
+                                });
+                            }
+                        });
+                    }
+                }
 
-        const result = await response.json();
-        console.log('Response data:', result);
+            } catch (error) {
+                console.error('Error saving user:', error);
+                this.showToast('Error: ' + (error.responseJSON?.message || error.statusText || 'Save failed'), 'error');
 
-        // Restore button state
-        toggleBtn.innerHTML = originalText;
-        toggleBtn.disabled = false;
-
-        if (result.success) {
-            console.log('Success! Message:', result.message);
-            console.log('New status from server:', result.new_status);
-            console.log('Status text:', result.status_text);
-            
-            this.showToast(result.message, 'success');
-            
-            // Update button text based on new status from server
-            const newStatus = result.new_status;
-            const statusText = newStatus ? 'Deactivate Account' : 'Activate Account';
-            const btnClass = newStatus ? 
-                'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' : 
-                'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
-            
-            // Update button appearance
-            toggleBtn.innerHTML = `<i class="fas fa-power-off"></i> ${statusText}`;
-            toggleBtn.className = `w-full py-3 ${btnClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`;
-            
-            // Refresh user list
-            await this.loadUsers();
-            
-            // Reload user details if this user is selected
-            if (this.selectedUserId === userId) {
-                await this.loadUserDetails(userId);
-            }
-            
-            // Update status badge di table jika user sedang ditampilkan
-            const userRow = this.usersTableBody.querySelector(`tr[data-user-id="${userId}"]`);
-            if (userRow) {
-                const statusCell = userRow.querySelector('.status-badge');
-                if (statusCell) {
-                    statusCell.textContent = newStatus ? 'Active' : 'Inactive';
-                    statusCell.className = newStatus ? 'status-active status-badge' : 'status-inactive status-badge';
+                // Restore button state
+                const $saveBtn = $modal.find('#saveUserBtn');
+                if ($saveBtn.length) {
+                    $saveBtn.html('<i class="fas fa-plus mr-2"></i>Add User');
+                    $saveBtn.prop('disabled', false);
                 }
             }
-            
-        } else {
-            console.error('API error:', result.message);
-            this.showToast(result.message, 'error');
-            
-            // Kembalikan ke state semula jika error
-            toggleBtn.innerHTML = originalHtml;
-            toggleBtn.disabled = false;
         }
 
-    } catch (error) {
-        console.error('Error in toggleUserStatus:', error);
-        this.showToast('Failed to update user status: ' + error.message, 'error');
-        
-        // Restore button state
-        const toggleBtn = this.userActions.querySelector('.toggle-status-btn');
-        if (toggleBtn) {
-            toggleBtn.innerHTML = originalText;
-            toggleBtn.disabled = false;
+        async toggleUserStatus(userId) {
+            console.log('=== DEBUG toggleUserStatus START ===');
+            console.log('User ID:', userId);
+
+            try {
+                if (!confirm('Are you sure you want to change this user\'s account status?')) {
+                    console.log('User cancelled');
+                    return;
+                }
+
+                // Show loading
+                const $toggleBtn = this.$userActions.find('.toggle-status-btn');
+                const originalHtml = $toggleBtn.html();
+                $toggleBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Updating...');
+                $toggleBtn.prop('disabled', true);
+
+                // Gunakan endpoint yang sesuai
+                const endpoint = `<?= base_url("admin/users/change-status") ?>/${userId}`;
+                console.log('Endpoint:', endpoint);
+
+                const response = await $.ajax({
+                    url: endpoint,
+                    method: 'POST',
+                    data: {
+                        status: 'toggle',
+                        user_id: userId
+                    },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Response data:', response);
+
+                // Restore button state
+                $toggleBtn.html(originalHtml);
+                $toggleBtn.prop('disabled', false);
+
+                if (response.success) {
+                    console.log('Success! Message:', response.message);
+                    console.log('New status from server:', response.new_status);
+                    console.log('Status text:', response.status_text);
+
+                    this.showToast(response.message, 'success');
+
+                    // Update button text based on new status from server
+                    const newStatus = response.new_status;
+                    const statusText = newStatus ? 'Deactivate Account' : 'Activate Account';
+                    const btnClass = newStatus ?
+                        'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' :
+                        'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
+
+                    // Update button appearance
+                    $toggleBtn.html(`<i class="fas fa-power-off"></i> ${statusText}`);
+                    $toggleBtn.removeClass().addClass(`toggle-status-btn w-full py-3 ${btnClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`);
+
+                    // Refresh user list
+                    await this.loadUsers();
+
+                    // Reload user details if this user is selected
+                    if (this.selectedUserId === userId) {
+                        await this.loadUserDetails(userId);
+                    }
+
+                    // Update status badge di table jika user sedang ditampilkan
+                    const $userRow = this.$usersTableBody.find(`tr[data-user-id="${userId}"]`);
+                    if ($userRow.length) {
+                        const $statusCell = $userRow.find('.status-badge');
+                        if ($statusCell.length) {
+                            $statusCell.text(newStatus ? 'Active' : 'Inactive');
+                            $statusCell.removeClass().addClass(newStatus ? 'status-active status-badge' : 'status-inactive status-badge');
+                        }
+                    }
+
+                } else {
+                    console.error('API error:', response.message);
+                    this.showToast(response.message, 'error');
+
+                    // Kembalikan ke state semula jika error
+                    $toggleBtn.html(originalHtml);
+                    $toggleBtn.prop('disabled', false);
+                }
+
+            } catch (error) {
+                console.error('Error in toggleUserStatus:', error);
+                this.showToast('Failed to update user status: ' + (error.responseJSON?.message || error.statusText), 'error');
+
+                // Restore button state
+                const $toggleBtn = this.$userActions.find('.toggle-status-btn');
+                if ($toggleBtn.length) {
+                    $toggleBtn.html(originalHtml);
+                    $toggleBtn.prop('disabled', false);
+                }
+            }
+
+            console.log('=== DEBUG toggleUserStatus END ===');
         }
-    }
-    
-    console.log('=== DEBUG toggleUserStatus END ===');
-}
 
         async deleteUser(userId) {
             try {
@@ -1789,33 +1814,32 @@ async toggleUserStatus(userId) {
                     return;
                 }
 
-                const response = await fetch(`<?= base_url("admin/users/delete") ?>/${userId}`, {
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/delete") ?>/${userId}`,
                     method: 'POST',
+                    dataType: 'json',
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
-                    this.showToast(data.message, 'success');
+                if (response.success) {
+                    this.showToast(response.message, 'success');
                     this.loadUsers();
-                    
+
                     // Clear details if deleted user was selected
                     if (this.selectedUserId === userId) {
                         this.selectedUserId = null;
-                        this.userDetails.innerHTML = `
+                        this.$userDetails.html(`
                             <div class="flex flex-col items-center justify-center py-8 text-center">
                                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                     <i class="fas fa-user text-gray-400 text-xl"></i>
                                 </div>
                                 <p class="text-text-dark/60 text-sm">Select a user to view details</p>
                             </div>
-                        `;
+                        `);
 
-                        this.userActions.innerHTML = `
+                        this.$userActions.html(`
                             <div class="space-y-2">
                                 <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                                     <i class="fas fa-edit mr-2"></i>
@@ -1832,43 +1856,26 @@ async toggleUserStatus(userId) {
                                     Deactivate Account
                                 </button>
                             </div>
-                        `;
+                        `);
                     }
                 } else {
-                    this.showToast(data.message, 'error');
+                    this.showToast(response.message, 'error');
                 }
 
             } catch (error) {
                 console.error('Error deleting user:', error);
-                this.showToast('Failed to delete user', 'error');
+                this.showToast('Failed to delete user: ' + (error.responseJSON?.message || error.statusText), 'error');
             }
-        }
-
-        exportUsersData() {
-            // Build export URL with current filters
-            const params = new URLSearchParams();
-
-            if (this.filters.search) params.append('search', this.filters.search);
-            if (this.filters.role_id) params.append('role_id', this.filters.role_id);
-            if (this.filters.department_id) params.append('department_id', this.filters.department_id);
-            if (this.filters.is_active !== undefined) params.append('is_active', this.filters.is_active);
-            if (this.filters.date_from) params.append('date_from', this.filters.date_from);
-            if (this.filters.date_to) params.append('date_to', this.filters.date_to);
-
-            const url = `<?= base_url("admin/users/export") ?>?${params.toString()}`;
-            window.location.href = url;
         }
 
         updateSelectedRow() {
             // Remove selected class from all rows
-            this.usersTableBody.querySelectorAll('tr').forEach(row => {
-                row.classList.remove('selected');
-            });
+            this.$usersTableBody.find('tr').removeClass('selected');
 
             // Add selected class to current row
-            const selectedRow = this.usersTableBody.querySelector(`tr[data-user-id="${this.selectedUserId}"]`);
-            if (selectedRow) {
-                selectedRow.classList.add('selected');
+            const $selectedRow = this.$usersTableBody.find(`tr[data-user-id="${this.selectedUserId}"]`);
+            if ($selectedRow.length) {
+                $selectedRow.addClass('selected');
             }
         }
 
@@ -1899,27 +1906,30 @@ async toggleUserStatus(userId) {
 
         showToast(message, type = 'info') {
             // Remove existing toasts
-            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+            $('.custom-toast').remove();
 
-            const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
-                }`;
-            toast.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'success' ? 'fa-check-circle' :
-                        'fa-info-circle'
-                }"></i>
-                    <span class="text-sm">${message}</span>
+            const toast = $(`
+                <div class="custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
+                        type === 'success' ? 'bg-green-500 text-white' :
+                            'bg-blue-500 text-white'
+                    }">
+                    <div class="flex items-center gap-2">
+                        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                        type === 'success' ? 'fa-check-circle' :
+                            'fa-info-circle'
+                    }"></i>
+                        <span class="text-sm">${message}</span>
+                    </div>
                 </div>
-            `;
-            document.body.appendChild(toast);
+            `);
+
+            $('body').append(toast);
 
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.css({
+                    'opacity': '0',
+                    'transform': 'translateY(-10px)'
+                });
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
@@ -1938,7 +1948,7 @@ async toggleUserStatus(userId) {
     }
 
     // Initialize UserManager when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
+    $(document).ready(() => {
         window.userManager = new UserManager();
     });
 </script>

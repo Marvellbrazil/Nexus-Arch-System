@@ -99,10 +99,10 @@
                         <?php if (!empty($projects)): ?>
                             <?php $rowNumber = 1; ?>
                             <?php foreach ($projects as $project): ?>
-                                 <div class="project-row cursor-pointer hover:bg-[#F8F7FC]"
-                        data-project-id="<?= $project['project_id'] ?>"
-                        data-created-at="<?= $project['created_at'] ?>"
-                        onclick="selectProject(<?= $project['project_id'] ?>)">
+                                <div class="project-row cursor-pointer hover:bg-[#F8F7FC]"
+                                    data-project-id="<?= $project['project_id'] ?>"
+                                    data-created-at="<?= $project['created_at'] ?>"
+                                    onclick="selectProject(<?= $project['project_id'] ?>)">
                                     <!-- No. -->
                                     <div class="col-span-1 text-text-dark/60 font-medium text-center py-4">
                                         <?= $rowNumber++ ?>.
@@ -124,18 +124,18 @@
                                     </div>
 
                                     <!-- Status -->
-                                     <div class="col-span-3 py-4">
-                            <?php
-                            // FIX: Gunakan nilai is_active langsung dari database
-                            $isActive = (bool)($project['is_active'] ?? false);
-                            $status = $isActive ? 'active' : 'inactive';
-                            $statusClass = $status === 'active' ? 'status-active' : 'status-inactive';
-                            $statusText = $status === 'active' ? 'Active' : 'Inactive';
-                            ?>
-                            <span class="<?= $statusClass ?> status-badge" data-status="<?= $status ?>">
-                                <?= $statusText ?>
-                            </span>
-                        </div>  
+                                    <div class="col-span-3 py-4">
+                                        <?php
+                                        // FIX: Gunakan nilai is_active langsung dari database
+                                        $isActive = (bool)($project['is_active'] ?? false);
+                                        $status = $isActive ? 'active' : 'inactive';
+                                        $statusClass = $status === 'active' ? 'status-active' : 'status-inactive';
+                                        $statusText = $status === 'active' ? 'Active' : 'Inactive';
+                                        ?>
+                                        <span class="<?= $statusClass ?> status-badge" data-status="<?= $status ?>">
+                                            <?= $statusText ?>
+                                        </span>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -963,7 +963,7 @@
         border-top: 1px solid #e5e7eb;
         padding-top: 1rem;
     }
-    
+
     #projectsPagination button:disabled {
         cursor: not-allowed;
         opacity: 0.5;
@@ -1083,44 +1083,44 @@
             // Calculate total pages
             const totalProjects = <?= $total_projects ?? 0 ?>;
             totalPages = Math.ceil(totalProjects / projectsPerPage);
-            
+
             // Render first page
             renderPagination();
             showPage(1);
         }
-        
+
         function showPage(pageNumber) {
             currentPage = pageNumber;
-            
+
             // Hide all projects
             $('.project-row').hide();
-            
+
             // Calculate which projects to show
             const startIndex = (pageNumber - 1) * projectsPerPage;
             const endIndex = startIndex + projectsPerPage;
-            
+
             // Show only projects for this page
             $('.project-row').slice(startIndex, endIndex).show();
-            
+
             // Update row numbers
             updateRowNumbersForPage(pageNumber);
-            
+
             // Update pagination UI
             renderPagination();
         }
-        
+
         function updateRowNumbersForPage(pageNumber) {
             const startNumber = (pageNumber - 1) * projectsPerPage + 1;
-            
+
             $('.project-row:visible').each(function(index) {
                 $(this).find('.col-span-1').text(`${startNumber + index}.`);
             });
         }
-        
+
         function renderPagination() {
             // Remove existing pagination if any
             $('#projectsPagination').remove();
-            
+
             // Create pagination container
             const paginationHtml = `
                 <div id="projectsPagination" class="mt-6 flex items-center justify-between">
@@ -1144,24 +1144,24 @@
                     </div>
                 </div>
             `;
-            
+
             // Insert after projects list
             $('.dashboard-card:has(#projectsList)').append(paginationHtml);
         }
-        
+
         function generatePageButtons() {
             let buttons = '';
             const maxVisiblePages = 5;
-            
+
             // Calculate start and end page numbers
             let startPage = Math.max(1, currentPage - 2);
             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
+
             // Adjust start page if we're at the end
             if (endPage - startPage + 1 < maxVisiblePages) {
                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
             }
-            
+
             // Previous pages ellipsis
             if (startPage > 1) {
                 buttons += `
@@ -1171,7 +1171,7 @@
                     <span class="px-2 text-text-dark/50">...</span>
                 `;
             }
-            
+
             // Page buttons
             for (let i = startPage; i <= endPage; i++) {
                 buttons += `
@@ -1180,7 +1180,7 @@
                     </button>
                 `;
             }
-            
+
             // Next pages ellipsis
             if (endPage < totalPages) {
                 buttons += `
@@ -1190,29 +1190,29 @@
                     </button>
                 `;
             }
-            
+
             return buttons;
         }
-        
+
         // ==================== PAGINATION GLOBAL FUNCTIONS ====================
         window.previousPage = function() {
             if (currentPage > 1) {
                 showPage(currentPage - 1);
             }
         }
-        
+
         window.nextPage = function() {
             if (currentPage < totalPages) {
                 showPage(currentPage + 1);
             }
         }
-        
+
         window.goToPage = function(pageNumber) {
             if (pageNumber >= 1 && pageNumber <= totalPages) {
                 showPage(pageNumber);
             }
         }
-        
+
         // ==================== PROJECT MANAGEMENT ====================
         // Project selection
         function selectProject(projectId) {
@@ -1296,7 +1296,7 @@
             });
 
             // Determine status text and class
-           const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
+            const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
             const statusClass = isActive ? 'status-active' : 'status-inactive';
             const statusText = isActive ? 'Active' : 'Inactive';
 
@@ -2301,18 +2301,18 @@
             const search = $('#projectSearch').val().toLowerCase();
             const status = $('#statusFilter').val();
             const $rows = $('.project-row');
-            
+
             let visibleCount = 0;
-            
+
             $rows.each(function() {
                 const $row = $(this);
                 const projectName = $row.find('.col-span-4 .font-medium').text().toLowerCase();
                 const projectCode = $row.find('.col-span-2 .font-medium').text().toLowerCase();
                 const statusText = $row.find('.status-badge').attr('data-status');
-                
+
                 const matchesSearch = !search || projectName.includes(search) || projectCode.includes(search);
                 const matchesStatus = !status || statusText === status;
-                
+
                 if (matchesSearch && matchesStatus) {
                     $row.show();
                     visibleCount++;
@@ -2320,13 +2320,13 @@
                     $row.hide();
                 }
             });
-            
+
             // Update project count
             updateProjectCount(visibleCount);
-            
+
             // Update pagination based on filtered results
             updatePaginationAfterFilter(visibleCount);
-            
+
             // Show/hide no results message
             $('.no-results-message').remove();
             if (visibleCount === 0) {
@@ -2512,7 +2512,7 @@
         // ==================== INITIALIZE ON PAGE LOAD ====================
         // Initialize pagination on page load
         initializePagination();
-        
+
         // Initialize search and filter
         initializeSearchAndFilter();
 
