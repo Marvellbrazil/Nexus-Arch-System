@@ -103,7 +103,7 @@ $routes->group('admin', function ($routes) {
         $routes->get('details', [AdminController::class, 'getProjectDetails']);
         $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
         $routes->post('ajax-get-users-for-assignment', [AdminController::class, 'ajaxGetUsersForAssignment']);
-
+        
         // ==================== STANDARD FORM SUBMISSIONS ====================
         // Untuk non-AJAX submissions (fallback)
         $routes->post('add', [AdminController::class, 'addProject']);

@@ -2666,7 +2666,7 @@ private function getAvatarInitials(string $fullName): string
             if (!$project) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Project not found'
+                    'message' => 'Project not found'    
                 ]);
             }
 
@@ -2862,6 +2862,75 @@ private function getAvatarInitials(string $fullName): string
             ]);
         }
     }
+
+public function ajaxGetProjectsPaginated()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
+
+    try {
+        $page = $this->request->getPost('page') ?: 1;
+        $limit = 5; // 5 project per halaman
+        $offset = ($page - 1) * $limit;
+        
+        // Get search and filter parameters
+        $search = $this->request->getPost('search') ?? '';
+        $status = $this->request->getPost('status') ?? '';
+        
+        $db = db_connect();
+        $builder = $db->table('projects p')
+            ->select('p.*, 
+                COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+                COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets')
+            ->orderBy('p.project_id', 'ASC');
+        
+        // Apply search filter
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('p.project_name', $search)
+                ->orLike('p.project_code', $search)
+                ->groupEnd();
+        }
+        
+        // Apply status filter
+        if (!empty($status)) {
+            if ($status === 'active') {
+                $builder->where('p.is_active', true);
+            } elseif ($status === 'inactive') {
+                $builder->where('p.is_active', false);
+            }
+        }
+        
+        // Count total results for pagination
+        $totalBuilder = clone $builder;
+        $totalProjects = $totalBuilder->countAllResults();
+        
+        // Get paginated results
+        $projects = $builder->limit($limit, $offset)->get()->getResultArray();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'projects' => $projects,
+            'pagination' => [
+                'page' => (int)$page,
+                'limit' => $limit,
+                'total' => $totalProjects,
+                'total_pages' => ceil($totalProjects / $limit)
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Get projects paginated error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
 
     // ==================== SYSTEM SETTINGS ====================
     public function systemSettings()

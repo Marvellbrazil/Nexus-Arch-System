@@ -125,8 +125,7 @@ class ProjectModel extends Model
         $db = db_connect();
 
         $result = $db->table('projects p')
-            ->select('p.*, u.full_name as user_full_name, u.email as user_email')
-            ->join('users u', 'u.user_id = p.user_id', 'left')
+            ->select('p.*')
             ->where('p.project_id', $projectId)
             ->get()
             ->getRowArray();
@@ -486,112 +485,112 @@ public function getProjectsWithTicketCounts(): array
         return $stats;
     }
 
-    /**
-     * Import projects from CSV
-     */
-    public function importProjectsFromCSV($file, $userId): array
-    {
-        $importedCount = 0;
-        $errorCount = 0;
-        $errors = [];
+    // /**
+    //  * Import projects from CSV
+    //  */
+    // public function importProjectsFromCSV($file, $userId): array
+    // {
+    //     $importedCount = 0;
+    //     $errorCount = 0;
+    //     $errors = [];
 
-        // Move file to writable directory
-        $filePath = WRITEPATH . 'uploads/' . $file->getName();
-        $file->move(WRITEPATH . 'uploads/', $file->getName());
+    //     // Move file to writable directory
+    //     $filePath = WRITEPATH . 'uploads/' . $file->getName();
+    //     $file->move(WRITEPATH . 'uploads/', $file->getName());
 
-        // Read CSV file
-        $handle = fopen($filePath, 'r');
-        $headers = fgetcsv($handle); // Read headers
+    //     // Read CSV file
+    //     $handle = fopen($filePath, 'r');
+    //     $headers = fgetcsv($handle); // Read headers
 
-        // Required columns
-        $requiredColumns = ['project_name', 'project_code'];
+    //     // Required columns
+    //     $requiredColumns = ['project_name', 'project_code'];
 
-        // Validate headers
-        foreach ($requiredColumns as $column) {
-            if (!in_array($column, $headers)) {
-                return [
-                    'success' => false,
-                    'message' => "Missing required column: {$column}"
-                ];
-            }
-        }
+    //     // Validate headers
+    //     foreach ($requiredColumns as $column) {
+    //         if (!in_array($column, $headers)) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "Missing required column: {$column}"
+    //             ];
+    //         }
+    //     }
 
-        $rowNumber = 1;
-        while (($row = fgetcsv($handle)) !== false) {
-            $rowNumber++;
+    //     $rowNumber = 1;
+    //     while (($row = fgetcsv($handle)) !== false) {
+    //         $rowNumber++;
 
-            // Map row data to associative array
-            $data = array_combine($headers, $row);
+    //         // Map row data to associative array
+    //         $data = array_combine($headers, $row);
 
-            // Validate required fields
-            if (empty($data['project_name']) || empty($data['project_code'])) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => 'Project name and code are required'
-                ];
-                continue;
-            }
+    //         // Validate required fields
+    //         if (empty($data['project_name']) || empty($data['project_code'])) {
+    //             $errorCount++;
+    //             $errors[] = [
+    //                 'row' => $rowNumber,
+    //                 'error' => 'Project name and code are required'
+    //             ];
+    //             continue;
+    //         }
 
-            // Prepare project data
-            $projectData = [
-                'project_name' => trim($data['project_name']),
-                'project_code' => strtoupper(trim($data['project_code'])),
-                'description' => $data['description'] ?? null,
-                'is_active' => isset($data['is_active']) ?
-                    (strtolower($data['is_active']) === 'true' || $data['is_active'] === '1') : true,
-                'user_id' => $userId,
-                'created_at' => date('Y-m-d H:i:s')
-            ];
+    //         // Prepare project data
+    //         $projectData = [
+    //             'project_name' => trim($data['project_name']),
+    //             'project_code' => strtoupper(trim($data['project_code'])),
+    //             'description' => $data['description'] ?? null,
+    //             'is_active' => isset($data['is_active']) ?
+    //                 (strtolower($data['is_active']) === 'true' || $data['is_active'] === '1') : true,
+    //             'user_id' => $userId,
+    //             'created_at' => date('Y-m-d H:i:s')
+    //         ];
 
-            // // Check if project code already exists
-            // if ($this->projectCodeExists($projectData['project_code'])) {
-            //     $errorCount++;
-            //     $errors[] = [
-            //         'row' => $rowNumber,
-            //         'error' => 'Project code already exists'
-            //     ];
-            //     continue;
-            // }
+    //         // // Check if project code already exists
+    //         // if ($this->projectCodeExists($projectData['project_code'])) {
+    //         //     $errorCount++;
+    //         //     $errors[] = [
+    //         //         'row' => $rowNumber,
+    //         //         'error' => 'Project code already exists'
+    //         //     ];
+    //         //     continue;
+    //         // }
 
-            // Save project
-            try {
-                if ($this->insert($projectData)) {
-                    $importedCount++;
-                } else {
-                    $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => 'Failed to save project'
-                    ];
-                }
-            } catch (\Exception $e) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         // Save project
+    //         try {
+    //             if ($this->insert($projectData)) {
+    //                 $importedCount++;
+    //             } else {
+    //                 $errorCount++;
+    //                 $errors[] = [
+    //                     'row' => $rowNumber,
+    //                     'error' => 'Failed to save project'
+    //                 ];
+    //             }
+    //         } catch (\Exception $e) {
+    //             $errorCount++;
+    //             $errors[] = [
+    //                 'row' => $rowNumber,
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
 
-        fclose($handle);
+    //     fclose($handle);
 
-        // Clean up - delete temporary file
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
+    //     // Clean up - delete temporary file
+    //     if (file_exists($filePath)) {
+    //         unlink($filePath);
+    //     }
 
-        return [
-            'success' => true,
-            'message' => "Imported {$importedCount} projects successfully" .
-                ($errorCount > 0 ? " with {$errorCount} errors" : ""),
-            'imported_count' => $importedCount,
-            'error_count' => $errorCount,
-            'errors' => $errors
-        ];
-    }
+    //     return [
+    //         'success' => true,
+    //         'message' => "Imported {$importedCount} projects successfully" .
+    //             ($errorCount > 0 ? " with {$errorCount} errors" : ""),
+    //         'imported_count' => $importedCount,
+    //         'error_count' => $errorCount,
+    //         'errors' => $errors
+    //     ];
+    // }
 
-    // Tambahkan di bagian akhir class ProjectModel sebelum tutup }
+    // // Tambahkan di bagian akhir class ProjectModel sebelum tutup }
 
     /**
      * Bulk import projects from array data
@@ -688,7 +687,6 @@ public function getProjectsWithTicketCounts(): array
     public function createProject(array $data, int $userId): array
     {
         try {
-            $data['user_id'] = $userId;
             $data['created_at'] = date('Y-m-d H:i:s');
             $data['updated_at'] = date('Y-m-d H:i:s');
 

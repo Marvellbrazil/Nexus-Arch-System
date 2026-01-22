@@ -174,43 +174,29 @@
                 <div id="projectDetails" class="p-4">
                     <?php if (!empty($projects)): ?>
                         <?php $firstProject = $projects[0]; ?>
+                        <!-- Default view akan ditampilkan saat pertama kali load -->
                         <div id="defaultProjectView">
-                            <div class="project-avatar"><?= substr($firstProject['project_code'], 0, 2) ?></div>
                             <div class="text-center mb-6">
-                                <h3 class="text-lg font-semibold text-text-dark"><?= esc($firstProject['project_name']) ?></h3>
-                                <p class="text-text-dark/60 text-sm"><?= $firstProject['project_code'] ?></p>
-                                <?php
-                                $status = $firstProject['is_active'] ? 'active' : 'inactive';
-                                $statusClass = $status === 'active' ? 'status-active' : 'status-inactive';
-                                ?>
-                                <span class="inline-block mt-2 <?= $statusClass ?> status-badge">
-                                    <?= $status === 'active' ? 'Active' : 'Inactive' ?>
-                                </span>
+                                <div class="flex flex-col items-center justify-center py-8 text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fas fa-folder-open text-gray-400 text-xl"></i>
+                                    </div>
+                                    <p class="text-text-dark/60 text-sm">Select a project to view details</p>
+                                </div>
                             </div>
 
                             <div class="space-y-2">
-                                <div class="project-info-item">
-                                    <span class="text-text-dark/70 text-sm">Description:</span>
-                                    <span class="text-text-dark font-medium text-right text-xs"><?= $firstProject['description'] ? esc($firstProject['description']) : 'No description' ?></span>
-                                </div>
-                                <div class="project-info-item">
-                                    <span class="text-text-dark/70 text-sm">Total Tickets:</span>
-                                    <span class="text-text-dark font-medium"><?= $firstProject['total_tickets'] ?? 0 ?></span>
-                                </div>
-                                <div class="project-info-item">
-                                    <span class="text-text-dark/70 text-sm">Created:</span>
-                                    <span class="text-text-dark font-medium"><?= date('M d, Y', strtotime($firstProject['created_at'])) ?></span>
-                                </div>
+
                             </div>
                         </div>
-                        <!-- Dynamic content will be loaded here -->
+                        <!-- Dynamic content akan diisi di sini ketika project dipilih -->
                         <div id="dynamicProjectView" class="hidden"></div>
                     <?php else: ?>
                         <div class="flex flex-col items-center justify-center py-8 text-center">
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                 <i class="fas fa-project-diagram text-gray-400 text-xl"></i>
                             </div>
-                            <p class="text-text-dark/60 text-sm">Select a project to view details</p>
+                            <p class="text-text-dark/60 text-sm">No projects available</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -402,7 +388,7 @@
                             </select>
                         </div>
                         <div class="text-xs text-gray-500">
-                            <span id="selectedUsersCount">0</span> users selected | 
+                            <span id="selectedUsersCount">0</span> users selected |
                             <span id="totalUsersCount">0</span> total users
                         </div>
                     </div>
@@ -461,7 +447,7 @@
                             Showing <span id="usersStart">0</span>-<span id="usersEnd">0</span> of <span id="usersTotal">0</span> users
                         </div>
                         <div class="flex items-center gap-2">
-                            <button id="prevPageBtn" 
+                            <button id="prevPageBtn"
                                 class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="fas fa-chevron-left text-xs"></i>
                             </button>
@@ -477,7 +463,7 @@
                     <div id="selectedUsersPreview" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
                         <div class="flex items-center justify-between mb-2">
                             <div class="text-sm font-medium text-gray-700">Selected Users:</div>
-                            <button type="button" onclick="clearSelection()" 
+                            <button type="button" onclick="clearSelection()"
                                 class="text-xs text-red-600 hover:text-red-700">
                                 Clear All
                             </button>
@@ -962,10 +948,11 @@
         function loadProjectDetails(projectId) {
             if (!projectId) return;
 
+            // Kirim request AJAX untuk mendapatkan detail project
             const formData = new FormData();
-            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
             formData.append('action', 'get_project_details');
             formData.append('project_id', projectId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
             $.ajax({
                 url: '<?= base_url('admin/projects/ajax-manage') ?>',
@@ -974,31 +961,67 @@
                 processData: false,
                 contentType: false,
                 dataType: 'json',
+                beforeSend: function() {
+                    // Tampilkan loading state di project details
+                    $('#projectDetails').html(`
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mb-4"></div>
+                    <p class="text-text-dark/60 text-sm">Loading project details...</p>
+                </div>
+            `);
+                },
                 success: function(data) {
                     if (data.success) {
-                        currentProjectData = data.project;
-                        updateProjectDetails(data.project);
-                        updateProjectActions(data.project);
+                        // Update project details card
+                        updateProjectDetailsCard(data.project);
+
+                        // Update project actions buttons
+                        updateProjectActionsButtons(data.project);
+                    } else {
+                        showToast(data.message || 'Failed to load project details', 'error');
+                        $('#projectDetails').html(`
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <p class="text-text-dark/60 text-sm">Failed to load project details</p>
+                    </div>
+                `);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
+                    console.error('Error loading project details:', error);
                     showToast('Failed to load project details', 'error');
+                    $('#projectDetails').html(`
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <p class="text-text-dark/60 text-sm">Failed to load project details</p>
+                </div>
+            `);
                 }
             });
         }
 
         // Update project details UI
-        function updateProjectDetails(project) {
-            const $dynamicView = $('#dynamicProjectView');
-            const $defaultView = $('#defaultProjectView');
+        function updateProjectDetailsCard(project) {
+            if (!project) return;
 
-            $defaultView.addClass('hidden');
+            // Format created date
+            const createdDate = new Date(project.created_at);
+            const formattedDate = createdDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
 
+            // Determine status text and class
             const status = project.is_active ? 'active' : 'inactive';
             const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
             const statusText = status === 'active' ? 'Active' : 'Inactive';
 
+            // HTML untuk project details
             const html = `
         <div>
             <div class="project-avatar">${project.project_code ? project.project_code.substring(0, 2) : 'PR'}</div>
@@ -1017,24 +1040,25 @@
                 </div>
                 <div class="project-info-item">
                     <span class="text-text-dark/70 text-sm">Total Tickets:</span>
-                    <span class="text-text-dark font-medium">${project.total_tickets || 0}</span>
+                    <span class="text-text-dark font-medium">${project.total_tickets ?? 0}</span>
+                </div>  
+                <div class="project-info-item">
+                    <span class="text-text-dark/70 text-sm">Status:</span>
+                    <span class="${statusClass} status-badge text-xs">${statusText}</span>
                 </div>
                 <div class="project-info-item">
                     <span class="text-text-dark/70 text-sm">Created:</span>
-                    <span class="text-text-dark font-medium">${new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span class="text-text-dark font-medium">${formattedDate}</span>
                 </div>
             </div>
         </div>`;
 
-            $dynamicView.html(html).removeClass('hidden');
+            $('#projectDetails').html(html);
         }
 
         // Update project actions UI
-        function updateProjectActions(project) {
-            const $projectActions = $('#projectActions');
-            if (!$projectActions.length) return;
-
-            const status = project.is_active ? 'active' : 'inactive';
+        function updateProjectActionsButtons(project) {
+            if (!project) return;
 
             const html = `
         <div class="space-y-2">
@@ -1057,7 +1081,7 @@
             </button>
         </div>`;
 
-            $projectActions.html(html);
+            $('#projectActions').html(html);
         }
 
         // Edit Project
@@ -1277,7 +1301,7 @@
                         `);
                         $pagination.addClass('hidden');
                     }
-                    
+
                     // Update total count
                     $('#totalUsersCount').text(data.total || 0);
                 },
@@ -1367,15 +1391,15 @@
 
             if (data.total > 0 && data.total_pages > 1) {
                 $pagination.removeClass('hidden');
-                
+
                 const start = ((data.page - 1) * data.limit) + 1;
                 const end = Math.min(data.page * data.limit, data.total);
-                
+
                 $usersStart.text(start);
                 $usersEnd.text(end);
                 $usersTotal.text(data.total);
                 $currentPage.text(data.page);
-                
+
                 $prevBtn.prop('disabled', data.page <= 1);
                 $nextBtn.prop('disabled', data.page >= data.total_pages);
             } else {
@@ -1392,13 +1416,13 @@
             $userCheckboxes.off('change').on('change', function() {
                 const userId = parseInt($(this).val());
                 const isChecked = $(this).is(':checked');
-                
+
                 if (isChecked) {
                     selectedUserIds.add(userId);
                 } else {
                     selectedUserIds.delete(userId);
                 }
-                
+
                 updateSelectedUsersCount();
                 updateSelectedUsersPreview();
                 updateSelectAllCheckbox();
@@ -1408,18 +1432,18 @@
             $selectAll.off('change').on('change', function() {
                 const isChecked = $(this).is(':checked');
                 const $visibleCheckboxes = $('.user-checkbox:visible');
-                
+
                 $visibleCheckboxes.each(function() {
                     const userId = parseInt($(this).val());
                     $(this).prop('checked', isChecked);
-                    
+
                     if (isChecked) {
                         selectedUserIds.add(userId);
                     } else {
                         selectedUserIds.delete(userId);
                     }
                 });
-                
+
                 updateSelectedUsersCount();
                 updateSelectedUsersPreview();
             });
@@ -1428,7 +1452,7 @@
         // Update selected users count
         function updateSelectedUsersCount() {
             $('#selectedUsersCount').text(selectedUserIds.size);
-            
+
             // Enable/disable submit button
             const projectSelected = $('#assignProjectSelect').val() !== '';
             $('#submitAssignUsersBtn').prop('disabled', selectedUserIds.size === 0 || !projectSelected);
@@ -1500,10 +1524,10 @@
         function initializeAssignUsersModal() {
             // Clear previous selections
             selectedUserIds.clear();
-            
+
             // Load users on modal open
             loadUsers(1, '', 'all');
-            
+
             // Search with debounce
             let searchTimeout;
             $('#searchUsers').off('input').on('input', function() {
@@ -1542,22 +1566,22 @@
             // Reset form elements
             $('#searchUsers').val('');
             $('#userRoleFilter').val('all');
-            
+
             // Reset selection
             selectedUserIds.clear();
-            
+
             // Reset checkboxes
             $('#selectAllUsers').prop('checked', false).prop('indeterminate', false);
-            
+
             // Reset UI
             updateSelectedUsersCount();
             $('#selectedUsersPreview').addClass('hidden');
-            
+
             // Reset project select if no project selected
             if (!selectedProjectId) {
                 $('#assignProjectSelect').val('');
             }
-            
+
             // Load fresh user list
             loadUsers(1, '', 'all');
         }
@@ -1565,7 +1589,7 @@
         // Submit assign users
         function submitAssignUsers() {
             const projectId = $('#assignProjectSelect').val();
-            
+
             if (!projectId) {
                 showToast('Please select a project first', 'error');
                 return;
@@ -1600,16 +1624,16 @@
                 success: function(data) {
                     $submitBtn.html(originalText);
                     $submitBtn.prop('disabled', false);
-                    
+
                     if (data.success) {
                         showToast(`Successfully assigned ${userIds.length} user(s) to project`, 'success');
                         closeModal('assignToUsersModal');
-                        
+
                         // Refresh project details if viewing the same project
                         if (selectedProjectId == projectId) {
                             loadProjectDetails(selectedProjectId);
                         }
-                        
+
                         // Clear selection
                         selectedUserIds.clear();
                     } else {
@@ -1952,21 +1976,21 @@
         });
     });
 
-//     // ==================== GLOBAL FUNCTIONS (accessible from onclick) ====================
-//     // These need to be global for onclick handlers in HTML
-//     window.removeUserFromSelection = function(userId) {
-//         // This function is called from the user tag remove button
-//         const event = new Event('removeUser');
-//         event.userId = userId;
-//         document.dispatchEvent(event);
-//     };
-
-//     // Add event listener for removeUser event
-//     document.addEventListener('removeUser', function(e) {
-//         // Implementation is in the main jQuery document ready function
-//         // The actual function is defined inside $(document).ready()
-//         // This is just a bridge
-//         console.log('Remove user event triggered:', e.userId);
-//     });
+    //     // ==================== GLOBAL FUNCTIONS (accessible from onclick) ====================
+    //     // These need to be global for onclick handlers in HTML
+    //     window.removeUserFromSelection = function(userId) {
+    //         // This function is called from the user tag remove button
+    //         const event = new Event('removeUser');
+    //         event.userId = userId;
+    //         document.dispatchEvent(event);
+    //     };
+                        
+    //     // Add event listener for removeUser event
+    //     document.addEventListener('removeUser', function(e) {
+    //         // Implementation is in the main jQuery document ready function
+    //         // The actual function is defined inside $(document).ready()
+    //         // This is just a bridge
+    //         console.log('Remove user event triggered:', e.userId);
+    //     });
 </script>
 <?= $this::endSection() ?>
