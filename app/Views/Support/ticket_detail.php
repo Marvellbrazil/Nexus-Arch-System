@@ -313,68 +313,89 @@
                 </div>
             </div>
 
-            <!-- Assign to Department Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-secondary/10 to-secondary/5">
-                    <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fas fa-building text-secondary"></i>
-                        Assign to Department
-                    </h2>
-                </div>
+            <!-- Di file ticket_detail.php, ganti bagian Department Options dengan: -->
 
-                <div class="p-6">
-                    <div class="mb-4">
-                        <p class="text-gray-600 text-sm mb-3">Select appropriate department for this ticket:</p>
+<!-- Assign to Department Card -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-secondary/10 to-secondary/5">
+        <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <i class="fas fa-building text-secondary"></i>
+            Assign to Department
+        </h2>
+    </div>
 
-                        <!-- Department Options -->
-                        <div class="space-y-2 mb-4">
-                            <div class="department-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" data-department="technical">
-                                <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-plus text-white text-xs"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Technical Support</p>
-                                    <p class="text-gray-500 text-xs">Login, authentication, access issues</p>
-                                </div>
-                            </div>
+    <div class="p-6">
+        <div class="mb-4">
+            <p class="text-gray-600 text-sm mb-3">Select appropriate department for this ticket:</p>
 
-                            <div class="department-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" data-department="it">
-                                <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-plus text-white text-xs"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">IT Infrastructure</p>
-                                    <p class="text-gray-500 text-xs">System, server, network problems</p>
-                                </div>
-                            </div>
-
-                            <div class="department-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" data-department="development">
-                                <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-plus text-white text-xs"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Development</p>
-                                    <p class="text-gray-500 text-xs">Bugs, features, code issues</p>
-                                </div>
-                            </div>
-
-                            <div class="department-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" data-department="qa">
-                                <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
-                                    <i class="fas fa-plus text-white text-xs"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Quality Assurance</p>
-                                    <p class="text-gray-500 text-xs">Testing, verification, validation</p>
-                                </div>
-                            </div>
+            <!-- Department Options -->
+            <div class="space-y-2 mb-4" id="departmentOptions">
+                <?php
+                // Load departments from database
+                $db = db_connect();
+                $departments = $db->table('departments')
+                    ->orderBy('department_name', 'ASC')
+                    ->get()
+                    ->getResultArray();
+                
+                // Get current ticket category
+                $ticketCategoryId = $ticket['category_id'] ?? null;
+                $suggestedDepartmentId = null;
+                
+                if ($ticketCategoryId) {
+                    // Find suggested department based on category
+                    $suggestedDept = $db->table('category_department_mapping')
+                        ->where('category_id', $ticketCategoryId)
+                        ->get()
+                        ->getRowArray();
+                    
+                    if ($suggestedDept) {
+                        $suggestedDepartmentId = $suggestedDept['department_id'];
+                    }
+                }
+                
+                foreach ($departments as $dept):
+                    $isSuggested = $dept['department_id'] == $suggestedDepartmentId;
+                    $deptSlug = strtolower(str_replace([' ', '/'], '-', $dept['department_name']));
+                ?>
+                    <div class="department-option flex items-center gap-3 p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" 
+                         data-department-id="<?= $dept['department_id'] ?>"
+                         data-department="<?= $deptSlug ?>">
+                        <div class="w-4 h-4 bg-secondary rounded-full flex items-center justify-center">
+                            <i class="fas fa-plus text-white text-xs"></i>
                         </div>
-
-                        <button id="assignDepartmentBtn" class="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium">
-                            Forward to Selected Department
-                        </button>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <p class="font-medium text-gray-800"><?= htmlspecialchars($dept['department_name']) ?></p>
+                                <?php if ($isSuggested): ?>
+                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                                        Suggested
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-gray-500 text-xs"><?= htmlspecialchars($dept['description'] ?? 'No description available') ?></p>
+                        </div>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
+
+            <!-- Hidden form for department assignment -->
+            <form id="assignDepartmentForm" method="POST" action="<?= base_url('support/ticket/forward/' . ($ticket['ticket_id'] ?? $ticket_id)) ?>">
+                <input type="hidden" name="department_id" id="selectedDepartmentId">
+                <div class="mb-4">
+                    <textarea name="notes" id="departmentNotes" 
+                        placeholder="Add notes for the department (optional)" 
+                        class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                        rows="3"></textarea>
+                </div>
+                <button type="submit" id="assignDepartmentBtn" 
+                    class="w-full px-4 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium">
+                    Forward to Selected Department
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
             <!-- Ticket Info Card -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
@@ -818,13 +839,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Department selection
+        // Department selection
     document.querySelectorAll('.department-option').forEach(option => {
         option.addEventListener('click', function() {
             // Remove selection from all
             document.querySelectorAll('.department-option').forEach(opt => {
-                opt.classList.remove('selected');
+                opt.classList.remove('selected', 'border-secondary', 'bg-secondary/5');
+                opt.style.borderWidth = '1px';
                 const icon = opt.querySelector('.w-4.h-4');
-                if (icon.querySelector('.fa-check')) {
+                if (icon) {
                     icon.classList.remove('bg-purple-500');
                     icon.classList.add('bg-secondary');
                     icon.innerHTML = '<i class="fas fa-plus text-white text-xs"></i>';
@@ -832,49 +855,131 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Select this option
-            this.classList.add('selected');
+            this.classList.add('selected', 'border-secondary', 'bg-secondary/5');
+            this.style.borderWidth = '2px';
             const icon = this.querySelector('.w-4.h-4');
             icon.classList.remove('bg-secondary');
             icon.classList.add('bg-purple-500');
             icon.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
 
+            // Set selected department ID
+            const departmentId = this.dataset.departmentId;
+            const departmentName = this.querySelector('.font-medium').textContent;
+            
+            document.getElementById('selectedDepartmentId').value = departmentId;
+            
             // Update button text
-            const deptName = this.querySelector('.font-medium').textContent;
             const assignBtn = document.getElementById('assignDepartmentBtn');
             if (assignBtn) {
-                assignBtn.innerHTML = `Forward to ${deptName}`;
+                assignBtn.innerHTML = `Forward to ${departmentName}`;
             }
         });
     });
     
-    // Scroll to bottom button functionality
-    const conversationContainer = document.getElementById('conversationContainer');
-    if (conversationContainer) {
-        conversationContainer.addEventListener('scroll', function() {
-            const isScrolledUp = this.scrollTop < (this.scrollHeight - this.clientHeight - 100);
-            
-            // Remove existing button if any
-            const existingBtn = document.getElementById('scrollToBottomBtn');
-            if (existingBtn) {
-                existingBtn.remove();
+   // Department form submission
+const assignDepartmentForm = document.getElementById('assignDepartmentForm');
+if (assignDepartmentForm) {
+    assignDepartmentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const departmentId = document.getElementById('selectedDepartmentId').value;
+        const notes = document.getElementById('departmentNotes').value;
+        const ticketId = <?= $ticket['ticket_id'] ?? $ticket_id ?>;
+        
+        if (!departmentId) {
+            showToast('Please select a department first', 'error');
+            return;
+        }
+        
+        // Show loading
+        const button = document.getElementById('assignDepartmentBtn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Forwarding...';
+        button.disabled = true;
+        
+        // Submit via AJAX - GUNAKAN ROUTE YANG BENAR
+        fetch(`<?= base_url('support/ticket/forward/') ?>${ticketId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `department_id=${departmentId}&notes=${encodeURIComponent(notes)}`
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-            
-            // Add scroll to bottom button if user is not at bottom
-            if (isScrolledUp) {
-                const scrollBtn = document.createElement('button');
-                scrollBtn.id = 'scrollToBottomBtn';
-                scrollBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                scrollBtn.title = 'Scroll to latest message';
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Ticket forwarded to department successfully!', 'success');
                 
-                scrollBtn.addEventListener('click', function() {
-                    conversationContainer.scrollTop = conversationContainer.scrollHeight;
-                });
+                // Update UI immediately
+                const assignedToText = document.getElementById('assignedToText');
+                if (assignedToText) {
+                    assignedToText.textContent = 'Department Assigned';
+                    assignedToText.classList.add('text-secondary');
+                }
                 
-                document.body.appendChild(scrollBtn);
+                const statusBadge = document.querySelector('.bg-gradient-to-r .px-3.py-1');
+                if (statusBadge) {
+                    statusBadge.textContent = 'IN PROGRESS';
+                    statusBadge.classList.remove('bg-white/20');
+                    statusBadge.classList.add('bg-yellow-500');
+                }
+                
+                // Redirect to ticket_in_progress page after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = '<?= base_url("support/ticket_in_progress") ?>';
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Error forwarding ticket');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast(error.message || 'Failed to forward ticket to department', 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
         });
-    }
+    });
+}
 });
+
+// Function untuk show toast notification
+function showToast(message, type = 'info') {
+    // Remove existing toasts
+    document.querySelectorAll('.toast-notification').forEach(toast => toast.remove());
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas ${getToastIcon(type)} text-lg"></i>
+            <span class="text-sm">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function getToastIcon(type) {
+    switch(type) {
+        case 'success': return 'fa-check-circle';
+        case 'error': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        default: return 'fa-info-circle';
+    }
+}
 
 // Request notification permission
 if ('Notification' in window && Notification.permission === 'default') {
