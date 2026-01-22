@@ -383,53 +383,48 @@ public function getTicketStatus($ticketId)
 
         // Di dalam method dashboard() di DepartmentController, update bagian get recent tickets:
 
-// Get recent tickets (last 5) - ONLY tickets assigned to this department by Support
-$recentTickets = $this->db->table('tickets t')
-    ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
-             u.full_name as customer_name, proj.project_name, proj.project_code,
-             u2.full_name as assigned_by_name, u3.full_name as support_assigner')
-    ->join('priorities p', 'p.priority_id = t.priority_id')
-    ->join('statuses s', 's.status_id = t.status_id')
-    ->join('categories cat', 'cat.category_id = t.category_id')
-    ->join('users u', 'u.user_id = t.customer_id')
-    ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-    ->join('users u2', 'u2.user_id = t.assigned_to', 'left') // Currently assigned to
-    ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left')
-    ->join('users u3', 'u3.user_id = ta.assigned_by', 'left') // Support who assigned to department
-    ->where('t.department_id', $departmentId)
-    ->where('t.assigned_to IS NOT NULL') // Only tickets that have been assigned
-    ->where('t.status_id IN (1,2)') // Open or In Progress
-    ->orderBy('t.updated_at', 'DESC')
-    ->limit(5)
-    ->get()
-    ->getResultArray();
-
-// Jika tabel ticket_assignments tidak ada, gunakan log dari ticket_messages
-if (empty($recentTickets) || !$this->db->tableExists('ticket_assignments')) {
-    // Alternatif: Cari ticket yang memiliki pesan dari Support tentang assignment
     $recentTickets = $this->db->table('tickets t')
         ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
                  u.full_name as customer_name, proj.project_name, proj.project_code,
-                 u2.full_name as assigned_to_name')
+                 u2.full_name as assigned_to_name, u3.full_name as support_assigner,
+                 ta.assignment_notes, ta.created_at as forwarded_at')
         ->join('priorities p', 'p.priority_id = t.priority_id')
         ->join('statuses s', 's.status_id = t.status_id')
         ->join('categories cat', 'cat.category_id = t.category_id')
         ->join('users u', 'u.user_id = t.customer_id')
         ->join('projects proj', 'proj.project_id = t.project_id', 'left')
         ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
-        ->where('t.department_id', $departmentId)
-        ->where('t.assigned_to IS NOT NULL')
-        ->where('EXISTS (
-            SELECT 1 FROM ticket_messages tm 
-            WHERE tm.ticket_id = t.ticket_id 
-            AND tm.message LIKE "%assigned to department%" 
-            OR tm.message LIKE "%forwarded to department%"
-        )')
-        ->orderBy('t.updated_at', 'DESC')
+        ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left')
+        ->join('users u3', 'u3.user_id = ta.assigned_by', 'left')
+        ->where('t.department_id', $departmentId) // HANYA INI YANG PENTING
+        ->where('t.department_resolved_at IS NULL') // Belum di-resolve oleh department
+        ->orderBy('ta.created_at', 'DESC') // Urutkan berdasarkan kapan di-forward
         ->limit(5)
         ->get()
         ->getResultArray();
-}
+
+
+    // PERBAIKAN: Jika tabel ticket_assignments tidak ada
+    if (empty($recentTickets) || !$this->db->tableExists('ticket_assignments')) {
+        // Alternatif: Ambil semua ticket yang department_id = department ini
+        $recentTickets = $this->db->table('tickets t')
+            ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
+                     u.full_name as customer_name, proj.project_name, proj.project_code,
+                     u2.full_name as assigned_to_name')
+            ->join('priorities p', 'p.priority_id = t.priority_id')
+            ->join('statuses s', 's.status_id = t.status_id')
+            ->join('categories cat', 'cat.category_id = t.category_id')
+            ->join('users u', 'u.user_id = t.customer_id')
+            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
+            ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
+            ->where('t.department_id', $departmentId) // INI KUNCI UTAMA
+            ->where('t.department_resolved_at IS NULL') // Belum di-resolve
+            ->whereIn('t.status_id', [1, 2]) // Open atau In Progress
+            ->orderBy('t.updated_at', 'DESC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
+    }
 
         // Format recent tickets data
         foreach ($recentTickets as &$ticket) {
@@ -529,34 +524,35 @@ public function assignedTickets($deptType = null)
     // Get all projects for filter
     $data['projects'] = $this->projectModel->findAll();
     
-    // **PERBAIKAN: Gunakan metode sama seperti di dashboard**
-    // Hanya ticket yang di-assign oleh Support ke department ini
-    $db = $this->db;
-    
-    // Query untuk mendapatkan ticket yang di-assign oleh Support (mirip dengan di dashboard)
-    $assignedTickets = $db->table('tickets t')
+    // **PERBAIKAN: Query yang benar untuk CodeIgniter**
+    $assignedTickets = $this->db->table('tickets t')
         ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
                  u.full_name as customer_name, proj.project_name, proj.project_code,
-                 u2.full_name as assigned_to_name, u3.full_name as support_assigner')
+                 u2.full_name as assigned_to_name, ta.assignment_notes,
+                 ta.created_at as forwarded_at')
         ->join('priorities p', 'p.priority_id = t.priority_id')
         ->join('statuses s', 's.status_id = t.status_id')
         ->join('categories cat', 'cat.category_id = t.category_id')
         ->join('users u', 'u.user_id = t.customer_id')
         ->join('projects proj', 'proj.project_id = t.project_id', 'left')
         ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
-        ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left')
-        ->join('users u3', 'u3.user_id = ta.assigned_by', 'left')
-        ->where('t.department_id', $departmentId)
-        ->where('t.assigned_to IS NOT NULL') // Only tickets that have been assigned
-        ->where('t.status_id IN (1,2)') // Open or In Progress
+        ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left') // PERBAIKAN DI SINI
+        ->where('t.department_id', $departmentId) // KUNCI: department_id harus sama
+        ->where('t.department_resolved_at IS NULL') // Belum di-resolve oleh department
         ->orderBy('t.updated_at', 'DESC')
         ->get()
         ->getResultArray();
 
-    // Jika tabel ticket_assignments tidak ada atau data kosong, coba alternatif
-    if (empty($assignedTickets) || !$this->db->tableExists('ticket_assignments')) {
-        // Alternatif: Cari ticket yang memiliki pesan dari Support tentang assignment
-        $assignedTickets = $db->table('tickets t')
+    // Debugging
+    log_message('debug', '=== DEPARTMENT TICKETS DEBUG ===');
+    log_message('debug', 'Department: ' . $departmentName . ' (ID: ' . $departmentId . ')');
+    log_message('debug', 'Tickets found: ' . count($assignedTickets));
+    
+    // Jika tidak ada data, coba alternatif query (tanpa ticket_assignments)
+    if (empty($assignedTickets)) {
+        log_message('debug', 'Trying alternative query...');
+        
+        $assignedTickets = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
                      u.full_name as customer_name, proj.project_name, proj.project_code,
                      u2.full_name as assigned_to_name')
@@ -567,18 +563,17 @@ public function assignedTickets($deptType = null)
             ->join('projects proj', 'proj.project_id = t.project_id', 'left')
             ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
             ->where('t.department_id', $departmentId)
-            ->where('t.assigned_to IS NOT NULL')
-            ->where('EXISTS (
-                SELECT 1 FROM ticket_messages tm 
-                WHERE tm.ticket_id = t.ticket_id 
-                AND (tm.message LIKE "%assigned to department%" 
-                     OR tm.message LIKE "%forwarded to department%"
-                     OR tm.message LIKE "%department assignment%")
-                AND tm.sender_id IN (SELECT user_id FROM users WHERE role_id = 3)
-            )')
+            ->where('t.department_resolved_at IS NULL')
             ->orderBy('t.updated_at', 'DESC')
             ->get()
             ->getResultArray();
+            
+        log_message('debug', 'Alternative query found: ' . count($assignedTickets) . ' tickets');
+    }
+
+    // Log detail tiap ticket untuk debugging
+    foreach ($assignedTickets as $index => $ticket) {
+        log_message('debug', "Ticket #{$index}: ID={$ticket['ticket_id']}, DeptID={$ticket['department_id']}, Subject={$ticket['subject']}");
     }
 
     // Jika user filter "My Tickets" aktif, filter lagi
@@ -587,6 +582,7 @@ public function assignedTickets($deptType = null)
         $assignedTickets = array_filter($assignedTickets, function($ticket) use ($userFilter) {
             return $ticket['assigned_to'] == $userFilter;
         });
+        $assignedTickets = array_values($assignedTickets); // Reset keys
     }
 
     // Format tickets data

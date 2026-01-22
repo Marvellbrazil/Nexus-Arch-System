@@ -2703,7 +2703,7 @@ public function forwardTicket($ticketId)
     $assignToUserId = $this->request->getPost('assign_to_user'); // Opsional: assign ke user tertentu
     
     $db = db_connect();
-    $supportUserId = session()->get('user_id');
+    $supportUserId = session()->get('user_id'); // INI YANG BENAR
     
     if (!$departmentId) {
         return $this->response->setJSON([
@@ -2753,7 +2753,7 @@ public function forwardTicket($ticketId)
         
         $deptName = $department ? $department['department_name'] : 'Department';
         
-        // Add system message
+        // Add system message - PERBAIKAN: gunakan $supportUserId, bukan $userId
         $message = "Ticket forwarded to " . $deptName . " department";
         if ($notes) {
             $message .= " with notes: " . $notes;
@@ -2761,7 +2761,7 @@ public function forwardTicket($ticketId)
         
         $db->table('ticket_messages')->insert([
             'ticket_id' => $ticketId,
-            'sender_id' => $userId,
+            'sender_id' => $supportUserId, // INI YANG DIPERBAIKI
             'message' => $message,
             'created_at' => date('Y-m-d H:i:s')
         ]);
