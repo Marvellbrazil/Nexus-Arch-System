@@ -47,8 +47,6 @@
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
-                                <option value="completed">Completed</option>
-                                <option value="on-hold">On Hold</option>
                             </select>
                         </div>
 
@@ -101,9 +99,10 @@
                         <?php if (!empty($projects)): ?>
                             <?php $rowNumber = 1; ?>
                             <?php foreach ($projects as $project): ?>
-                                <div class="project-row cursor-pointer hover:bg-[#F8F7FC]"
-                                    data-project-id="<?= $project['project_id'] ?>"
-                                    onclick="selectProject(<?= $project['project_id'] ?>)">
+                                 <div class="project-row cursor-pointer hover:bg-[#F8F7FC]"
+                        data-project-id="<?= $project['project_id'] ?>"
+                        data-created-at="<?= $project['created_at'] ?>"
+                        onclick="selectProject(<?= $project['project_id'] ?>)">
                                     <!-- No. -->
                                     <div class="col-span-1 text-text-dark/60 font-medium text-center py-4">
                                         <?= $rowNumber++ ?>.
@@ -125,15 +124,18 @@
                                     </div>
 
                                     <!-- Status -->
-                                    <div class="col-span-3 py-4">
-                                        <?php
-                                        $status = $project['is_active'] ? 'active' : 'inactive';
-                                        $statusClass = $status === 'active' ? 'status-active' : ($status === 'completed' ? 'status-completed' : ($status === 'on-hold' ? 'status-onhold' : 'status-inactive'));
-                                        ?>
-                                        <span class="<?= $statusClass ?> status-badge">
-                                            <?= $status === 'active' ? 'Active' : ($status === 'completed' ? 'Completed' : ($status === 'on-hold' ? 'On Hold' : 'Inactive')) ?>
-                                        </span>
-                                    </div>
+                                     <div class="col-span-3 py-4">
+                            <?php
+                            // FIX: Gunakan nilai is_active langsung dari database
+                            $isActive = (bool)($project['is_active'] ?? false);
+                            $status = $isActive ? 'active' : 'inactive';
+                            $statusClass = $status === 'active' ? 'status-active' : 'status-inactive';
+                            $statusText = $status === 'active' ? 'Active' : 'Inactive';
+                            ?>
+                            <span class="<?= $statusClass ?> status-badge" data-status="<?= $status ?>">
+                                <?= $statusText ?>
+                            </span>
+                        </div>  
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -166,39 +168,27 @@
             </div>
 
             <!-- Project Detail Card -->
+            <!-- Project Detail Card -->
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <div class="text-text-dark/85 text-base font-medium">Project Details</div>
                 </div>
 
                 <div id="projectDetails" class="p-4">
-                    <?php if (!empty($projects)): ?>
-                        <?php $firstProject = $projects[0]; ?>
-                        <!-- Default view akan ditampilkan saat pertama kali load -->
-                        <div id="defaultProjectView">
-                            <div class="text-center mb-6">
-                                <div class="flex flex-col items-center justify-center py-8 text-center">
-                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                        <i class="fas fa-folder-open text-gray-400 text-xl"></i>
-                                    </div>
-                                    <p class="text-text-dark/60 text-sm">Select a project to view details</p>
+                    <!-- SELALU TAMPILKAN DEFAULT VIEW AWAL -->
+                    <div id="defaultProjectView">
+                        <div class="text-center mb-6">
+                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fas fa-folder-open text-gray-400 text-xl"></i>
                                 </div>
-                            </div>
-
-                            <div class="space-y-2">
-
+                                <p class="text-text-dark/60 text-sm">Select a project to view details</p>
                             </div>
                         </div>
-                        <!-- Dynamic content akan diisi di sini ketika project dipilih -->
-                        <div id="dynamicProjectView" class="hidden"></div>
-                    <?php else: ?>
-                        <div class="flex flex-col items-center justify-center py-8 text-center">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-project-diagram text-gray-400 text-xl"></i>
-                            </div>
-                            <p class="text-text-dark/60 text-sm">No projects available</p>
-                        </div>
-                    <?php endif; ?>
+                    </div>
+
+                    <!-- Dynamic content akan diisi di sini ketika project dipilih -->
+                    <div id="dynamicProjectView" class="hidden"></div>
                 </div>
             </div>
 
@@ -209,43 +199,21 @@
                 </div>
 
                 <div id="projectActions" class="p-4 space-y-3">
-                    <?php if (!empty($projects)): ?>
-                        <?php $firstProject = $projects[0]; ?>
-                        <div class="space-y-2">
-                            <button onclick="editProject(<?= $firstProject['project_id'] ?>)"
-                                class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-                                <i class="fas fa-edit"></i>
-                                Edit Project
-                            </button>
-
-                            <button onclick="deleteProject(<?= $firstProject['project_id'] ?>)"
-                                class="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2">
-                                <i class="fas fa-trash"></i>
-                                Delete Project
-                            </button>
-
-                            <button onclick="changeStatus(<?= $firstProject['project_id'] ?>, <?= $firstProject['is_active'] ? 'false' : 'true' ?>)"
-                                class="w-full py-3 <?= $firstProject['is_active'] ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200' ?> rounded-xl hover:<?= $firstProject['is_active'] ? 'bg-red-100' : 'bg-green-100' ?> transition-colors font-medium flex items-center justify-center gap-2">
-                                <i class="fas fa-power-off"></i>
-                                <?= $firstProject['is_active'] ? 'Deactivate Project' : 'Activate Project' ?>
-                            </button>
-                        </div>
-                    <?php else: ?>
-                        <div class="space-y-2">
-                            <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                <i class="fas fa-edit mr-2"></i>
-                                Edit Project
-                            </button>
-                            <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                <i class="fas fa-trash mr-2"></i>
-                                Delete Project
-                            </button>
-                            <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                <i class="fas fa-power-off mr-2"></i>
-                                Change Status
-                            </button>
-                        </div>
-                    <?php endif; ?>
+                    <!-- SELALU TAMPILKAN TOMBOL DISABLED PADA AWAL -->
+                    <div class="space-y-2">
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit Project
+                        </button>
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete Project
+                        </button>
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-power-off mr-2"></i>
+                            Change Status
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,7 +234,7 @@
         <div class="p-6">
             <form id="addProjectForm" class="space-y-4">
                 <?= csrf_field() ?>
-                <input type="hidden" name="action" value="add_project">
+                <input type="hidden" name="action" value="create_project">
 
                 <!-- Project Name -->
                 <div>
@@ -307,12 +275,27 @@
                     <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
                 </div>
 
-                <!-- Status -->
-                <div>
-                    <label class="flex items-center space-x-3 cursor-pointer">
-                        <input type="checkbox" id="newProjectActive" name="is_active" value="1" checked
-                            class="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2">
-                        <span class="text-gray-700 text-sm font-medium">Set as active project</span>
+                <!-- Status Toggle - Diperbaiki -->
+                <div class="pt-2">
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center">
+                            <div class="relative">
+                                <input type="checkbox" id="newProjectActive" name="is_active"
+                                    class="sr-only peer" value="1" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                                         peer-focus:ring-secondary/20 rounded-full peer 
+                                         peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                         after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                         after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                         after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary">
+                                </div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Set as active project</span>
+                        </div>
+                        <span id="statusIndicator"
+                            class="text-sm font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                            Active
+                        </span>
                     </label>
                 </div>
             </form>
@@ -518,7 +501,9 @@
                         Project Name <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="editProjectName" name="project_name" required
-                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all"
                         maxlength="100">
                 </div>
 
@@ -528,8 +513,11 @@
                         Project Code <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="editProjectCode" name="project_code" required
-                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all uppercase"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all uppercase"
                         maxlength="20">
+                    <p class="text-xs text-gray-500 mt-1">Uppercase letters and numbers only</p>
                 </div>
 
                 <!-- Description -->
@@ -538,32 +526,114 @@
                         Description
                     </label>
                     <textarea id="editProjectDescription" name="description" rows="3"
-                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all resize-none"
                         maxlength="500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
                 </div>
 
                 <!-- Status -->
                 <div>
-                    <label for="editProjectStatus" class="block text-gray-700 text-sm font-medium mb-2">
-                        Status
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="editProjectActive" name="is_active" value="1"
+                            class="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2">
+                        <span class="text-gray-700 text-sm font-medium">Set as active project</span>
                     </label>
-                    <select id="editProjectStatus" name="is_active"
-                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
                 </div>
             </form>
         </div>
 
         <div class="p-6 border-t border-gray-200 flex gap-3">
             <button type="button" onclick="closeModal('editProjectModal')"
-                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
                 Cancel
             </button>
-            <button type="button" onclick="submitEditProject()"
-                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium">
-                <i class="fas fa-save mr-2"></i>Save Changes
+            <button type="button" onclick="submitEditProject()" id="submitEditProjectBtn"
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Delete Project</h3>
+                <button type="button" onclick="closeModal('deleteConfirmModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-800 mb-2">Are you sure?</h4>
+                <p class="text-gray-600 mb-4" id="deleteConfirmMessage">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('deleteConfirmModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmDeleteProject()"
+                class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-trash"></i>
+                Delete Project
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Confirmation Modal -->
+<div id="statusConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="statusModalTitle">Change Project Status</h3>
+                <button type="button" onclick="closeModal('statusConfirmModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="text-center">
+                <div id="statusModalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-800 mb-2" id="statusConfirmTitle"></h4>
+                <p class="text-gray-600 mb-4" id="statusConfirmMessage"></p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('statusConfirmModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmChangeStatus()"
+                class="flex-1 py-3 text-white rounded-lg transition-colors 
+                       font-medium text-sm flex items-center justify-center gap-2"
+                id="statusConfirmButton">
+                <i class="fas fa-check"></i>
+                Confirm
             </button>
         </div>
     </div>
@@ -695,16 +765,6 @@
         color: #93867E;
     }
 
-    .status-completed {
-        background: #BFDBFE;
-        color: #1E40AF;
-    }
-
-    .status-onhold {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-
     /* Project details */
     .project-avatar {
         width: 80px;
@@ -832,6 +892,82 @@
     .user-tag button:hover {
         background: rgba(255, 255, 255, 0.2);
     }
+
+    /* Toggle switch styling */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked+.toggle-slider {
+        background-color: #665C9E;
+    }
+
+    input:checked+.toggle-slider:before {
+        transform: translateX(26px);
+    }
+
+    /* Status indicator */
+    .status-indicator-active {
+        background-color: #C4E3AC;
+        color: #15803D;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-indicator-inactive {
+        background-color: #ECDCD3;
+        color: #93867E;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Add some styling for pagination */
+    #projectsPagination {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+    
+    #projectsPagination button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -844,6 +980,11 @@
         let userSearchTerm = '';
         let userRoleFilter = 'all';
         let selectedUserIds = new Set();
+
+        // ==================== PAGINATION VARIABLES ====================
+        let currentPage = 1;
+        let totalPages = <?= ceil($total_projects / 5) ?>;
+        let projectsPerPage = 5;
 
         // ==================== UTILITY FUNCTIONS ====================
         function escapeHtml(text) {
@@ -906,6 +1047,8 @@
                     $('#addProjectForm')[0]?.reset();
                 } else if (modalId === 'assignToUsersModal') {
                     resetAssignUsersModal();
+                } else if (modalId === 'editProjectModal') {
+                    $('#editProjectForm')[0]?.reset();
                 }
             }
         }
@@ -927,10 +1070,149 @@
                     if (selectedProjectId) {
                         $('#assignProjectSelect').val(selectedProjectId);
                     }
+                } else if (modalId === 'editProjectModal') {
+                    setTimeout(() => {
+                        $('#editProjectName').focus();
+                    }, 100);
                 }
             }
         }
 
+        // ==================== PAGINATION FUNCTIONS ====================
+        function initializePagination() {
+            // Calculate total pages
+            const totalProjects = <?= $total_projects ?? 0 ?>;
+            totalPages = Math.ceil(totalProjects / projectsPerPage);
+            
+            // Render first page
+            renderPagination();
+            showPage(1);
+        }
+        
+        function showPage(pageNumber) {
+            currentPage = pageNumber;
+            
+            // Hide all projects
+            $('.project-row').hide();
+            
+            // Calculate which projects to show
+            const startIndex = (pageNumber - 1) * projectsPerPage;
+            const endIndex = startIndex + projectsPerPage;
+            
+            // Show only projects for this page
+            $('.project-row').slice(startIndex, endIndex).show();
+            
+            // Update row numbers
+            updateRowNumbersForPage(pageNumber);
+            
+            // Update pagination UI
+            renderPagination();
+        }
+        
+        function updateRowNumbersForPage(pageNumber) {
+            const startNumber = (pageNumber - 1) * projectsPerPage + 1;
+            
+            $('.project-row:visible').each(function(index) {
+                $(this).find('.col-span-1').text(`${startNumber + index}.`);
+            });
+        }
+        
+        function renderPagination() {
+            // Remove existing pagination if any
+            $('#projectsPagination').remove();
+            
+            // Create pagination container
+            const paginationHtml = `
+                <div id="projectsPagination" class="mt-6 flex items-center justify-between">
+                    <div class="text-sm text-text-dark/70">
+                        Showing ${Math.min(((currentPage - 1) * projectsPerPage) + 1, <?= $total_projects ?? 0 ?>)}-${Math.min(currentPage * projectsPerPage, <?= $total_projects ?? 0 ?>)} of <?= $total_projects ?? 0 ?> projects
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}
+                            class="px-3 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="flex items-center gap-1">
+                            ${generatePageButtons()}
+                        </div>
+                        
+                        <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}
+                            class="px-3 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after projects list
+            $('.dashboard-card:has(#projectsList)').append(paginationHtml);
+        }
+        
+        function generatePageButtons() {
+            let buttons = '';
+            const maxVisiblePages = 5;
+            
+            // Calculate start and end page numbers
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're at the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // Previous pages ellipsis
+            if (startPage > 1) {
+                buttons += `
+                    <button onclick="goToPage(1)" class="px-3 py-2 rounded-lg bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50">
+                        1
+                    </button>
+                    <span class="px-2 text-text-dark/50">...</span>
+                `;
+            }
+            
+            // Page buttons
+            for (let i = startPage; i <= endPage; i++) {
+                buttons += `
+                    <button onclick="goToPage(${i})" class="px-3 py-2 rounded-lg ${i === currentPage ? 'bg-secondary text-white' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Next pages ellipsis
+            if (endPage < totalPages) {
+                buttons += `
+                    <span class="px-2 text-text-dark/50">...</span>
+                    <button onclick="goToPage(${totalPages})" class="px-3 py-2 rounded-lg bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50">
+                        ${totalPages}
+                    </button>
+                `;
+            }
+            
+            return buttons;
+        }
+        
+        // ==================== PAGINATION GLOBAL FUNCTIONS ====================
+        window.previousPage = function() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
+        }
+        
+        window.nextPage = function() {
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        }
+        
+        window.goToPage = function(pageNumber) {
+            if (pageNumber >= 1 && pageNumber <= totalPages) {
+                showPage(pageNumber);
+            }
+        }
+        
         // ==================== PROJECT MANAGEMENT ====================
         // Project selection
         function selectProject(projectId) {
@@ -948,7 +1230,6 @@
         function loadProjectDetails(projectId) {
             if (!projectId) return;
 
-            // Kirim request AJAX untuk mendapatkan detail project
             const formData = new FormData();
             formData.append('action', 'get_project_details');
             formData.append('project_id', projectId);
@@ -962,7 +1243,6 @@
                 contentType: false,
                 dataType: 'json',
                 beforeSend: function() {
-                    // Tampilkan loading state di project details
                     $('#projectDetails').html(`
                 <div class="flex flex-col items-center justify-center py-8 text-center">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mb-4"></div>
@@ -972,19 +1252,18 @@
                 },
                 success: function(data) {
                     if (data.success) {
-                        // Update project details card
+                        currentProjectData = data.project;
                         updateProjectDetailsCard(data.project);
-
-                        // Update project actions buttons
                         updateProjectActionsButtons(data.project);
                     } else {
                         showToast(data.message || 'Failed to load project details', 'error');
+                        // Fallback view
                         $('#projectDetails').html(`
-                    <div class="flex flex-col items-center justify-center py-8 text-center">
-                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-folder-open text-gray-400 text-xl"></i>
                         </div>
-                        <p class="text-text-dark/60 text-sm">Failed to load project details</p>
+                        <p class="text-text-dark/60 text-sm">Select a project to view details</p>
                     </div>
                 `);
                     }
@@ -993,8 +1272,8 @@
                     console.error('Error loading project details:', error);
                     showToast('Failed to load project details', 'error');
                     $('#projectDetails').html(`
-                <div class="flex flex-col items-center justify-center py-8 text-center">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 mx-auto">
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     <p class="text-text-dark/60 text-sm">Failed to load project details</p>
@@ -1017,41 +1296,40 @@
             });
 
             // Determine status text and class
-            const status = project.is_active ? 'active' : 'inactive';
-            const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
-            const statusText = status === 'active' ? 'Active' : 'Inactive';
+           const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
+            const statusClass = isActive ? 'status-active' : 'status-inactive';
+            const statusText = isActive ? 'Active' : 'Inactive';
+
+            const totalTickets = project.total_tickets || 0;
 
             // HTML untuk project details
             const html = `
-        <div>
-            <div class="project-avatar">${project.project_code ? project.project_code.substring(0, 2) : 'PR'}</div>
-            <div class="text-center mb-6">
-                <h3 class="text-lg font-semibold text-text-dark">${escapeHtml(project.project_name || '')}</h3>
-                <p class="text-text-dark/60 text-sm">${escapeHtml(project.project_code || '')}</p>
-                <span class="inline-block mt-2 ${statusClass} status-badge">
-                    ${statusText}
-                </span>
+    <div>
+        <div class="project-avatar">${project.project_code ? project.project_code.substring(0, 2) : 'PR'}</div>
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-semibold text-text-dark">${escapeHtml(project.project_name || '')}</h3>
+            <p class="text-text-dark/60 text-sm">${escapeHtml(project.project_code || '')}</p>
+            <span class="inline-block mt-2 ${statusClass} status-badge">
+                ${statusText}
+            </span>
+        </div>
+        
+        <div class="space-y-2">
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Description:</span>
+                <span class="text-text-dark font-medium text-right text-xs">${escapeHtml(project.description || 'No description')}</span>
             </div>
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Total Tickets:</span>
+                <span class="text-text-dark font-medium">${totalTickets}</span>
+            </div>  
             
-            <div class="space-y-2">
-                <div class="project-info-item">
-                    <span class="text-text-dark/70 text-sm">Description:</span>
-                    <span class="text-text-dark font-medium text-right text-xs">${escapeHtml(project.description || 'No description')}</span>
-                </div>
-                <div class="project-info-item">
-                    <span class="text-text-dark/70 text-sm">Total Tickets:</span>
-                    <span class="text-text-dark font-medium">${project.total_tickets ?? 0}</span>
-                </div>  
-                <div class="project-info-item">
-                    <span class="text-text-dark/70 text-sm">Status:</span>
-                    <span class="${statusClass} status-badge text-xs">${statusText}</span>
-                </div>
-                <div class="project-info-item">
-                    <span class="text-text-dark/70 text-sm">Created:</span>
-                    <span class="text-text-dark font-medium">${formattedDate}</span>
-                </div>
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Created:</span>
+                <span class="text-text-dark font-medium">${formattedDate}</span>
             </div>
-        </div>`;
+        </div>
+    </div>`;
 
             $('#projectDetails').html(html);
         }
@@ -1060,38 +1338,53 @@
         function updateProjectActionsButtons(project) {
             if (!project) return;
 
+            const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
+
             const html = `
-        <div class="space-y-2">
-            <button onclick="editProject(${project.project_id})"
-                class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-                <i class="fas fa-edit"></i>
-                Edit Project
-            </button>
-            
-            <button onclick="deleteProject(${project.project_id})"
-                class="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2">
-                <i class="fas fa-trash"></i>
-                Delete Project
-            </button>
-            
-            <button onclick="changeStatus(${project.project_id}, ${!project.is_active})"
-                class="w-full py-3 ${project.is_active ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${project.is_active ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2">
-                <i class="fas fa-power-off"></i>
-                ${project.is_active ? 'Deactivate Project' : 'Activate Project'}
-            </button>
-        </div>`;
+    <div class="space-y-2">
+        <button onclick="editProject(${project.project_id})"
+            class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-edit"></i>
+            Edit Project
+        </button>
+        
+        <button onclick="deleteProject(${project.project_id})"
+            class="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-trash"></i>
+            Delete Project
+        </button>
+        
+        <button onclick="changeStatus(${project.project_id}, ${!project.is_active})"
+            class="w-full py-3 ${project.is_active ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${project.is_active ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-power-off"></i>
+            ${project.is_active ? 'Deactivate Project' : 'Activate Project'}
+        </button>
+    </div>`;
 
             $('#projectActions').html(html);
         }
 
-        // Edit Project
-        function editProject(projectId) {
-            if (!projectId) return;
+        // ==================== EDIT PROJECT FUNCTIONS ====================
+        window.editProject = function(projectId) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
+                return;
+            }
 
+            // Show loading state
+            $('#editProjectName').val('Loading...');
+            $('#editProjectCode').val('Loading...');
+            $('#editProjectDescription').val('Loading...');
+            $('#editProjectActive').prop('checked', false);
+            $('#submitEditProjectBtn').prop('disabled', true);
+
+            openModal('editProjectModal');
+
+            // Fetch project details
             const formData = new FormData();
-            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
             formData.append('action', 'get_project_details');
             formData.append('project_id', projectId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
             $.ajax({
                 url: '<?= base_url('admin/projects/ajax-manage') ?>',
@@ -1100,109 +1393,339 @@
                 processData: false,
                 contentType: false,
                 dataType: 'json',
-                success: function(data) {
-                    if (data.success) {
-                        $('#editProjectId').val(projectId);
-                        $('#editProjectName').val(data.project.project_name || '');
-                        $('#editProjectCode').val(data.project.project_code || '');
-                        $('#editProjectDescription').val(data.project.description || '');
-                        $('#editProjectStatus').val(data.project.is_active ? '1' : '0');
+                success: function(response) {
+                    if (response.success) {
+                        const project = response.project;
 
-                        openModal('editProjectModal');
+                        // Populate form fields
+                        $('#editProjectId').val(project.project_id);
+                        $('#editProjectName').val(project.project_name || '');
+                        $('#editProjectCode').val(project.project_code || '');
+                        $('#editProjectDescription').val(project.description || '');
+                        $('#editProjectActive').prop('checked', project.is_active || false);
+
+                        $('#submitEditProjectBtn').prop('disabled', false);
+                    } else {
+                        showToast(response.message || 'Failed to load project details', 'error');
+                        closeModal('editProjectModal');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    showToast('Failed to load project data', 'error');
+                    console.error('Error loading project:', error);
+                    showToast('Failed to load project details', 'error');
+                    closeModal('editProjectModal');
                 }
             });
         }
 
-        function submitEditProject() {
-            const $form = $('#editProjectForm');
-            const formData = new FormData($form[0]);
+        window.submitEditProject = function() {
+            const projectId = $('#editProjectId').val();
+            const projectName = $('#editProjectName').val().trim();
+            const projectCode = $('#editProjectCode').val().trim();
+
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
+
+            if (!projectName || !projectCode) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            const formData = new FormData();
             formData.append('action', 'update_project');
+            formData.append('project_id', projectId);
+            formData.append('project_name', projectName);
+            formData.append('project_code', projectCode.toUpperCase());
+            formData.append('description', $('#editProjectDescription').val() || '');
+            formData.append('is_active', $('#editProjectActive').is(':checked') ? '1' : '0');
             formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
+            // Show loading state
+            const $submitBtn = $('#submitEditProjectBtn');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            $submitBtn.prop('disabled', true);
+
             $.ajax({
-                url: '<?= base_url('admin/projects') ?>',
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function() {
-                    location.reload();
+                dataType: 'json',
+                success: function(response) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+
+                    if (response.success) {
+                        showToast('Project updated successfully!', 'success');
+                        closeModal('editProjectModal');
+
+                        // Refresh project details
+                        loadProjectDetails(projectId);
+
+                        // Update project row in table
+                        updateProjectRow(projectId, {
+                            project_name: projectName,
+                            project_code: projectCode,
+                            is_active: $('#editProjectActive').is(':checked')
+                        });
+                    } else {
+                        showToast(response.message || 'Failed to update project', 'error');
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    showToast('Failed to update project', 'error');
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+                    console.error('Error updating project:', error);
+                    showToast('Network error. Please try again.', 'error');
                 }
             });
         }
 
-        // Delete Project
-        function deleteProject(projectId) {
-            if (!projectId) return;
+        // Update project row in table
+        function updateProjectRow(projectId, projectData) {
+            const $row = $(`.project-row[data-project-id="${projectId}"]`);
+            if ($row.length) {
+                // Update project name
+                $row.find('.col-span-4 .font-medium').text(projectData.project_name);
 
-            // Get project name for confirmation
-            const projectName = currentProjectData?.project_name || 'this project';
-            $('#deleteProjectMessage').text(`You are about to delete the project "${projectName}". This action cannot be undone.`);
+                // Update project code
+                $row.find('.col-span-2 .font-medium').text(projectData.project_code);
 
-            // Store project ID in modal
-            $('#deleteProjectModal').data('projectId', projectId);
+                // Update status
+                const status = projectData.is_active ? 'active' : 'inactive';
+                const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = status === 'active' ? 'Active' : 'Inactive';
 
-            openModal('deleteProjectModal');
+                $row.find('.status-badge')
+                    .removeClass('status-active status-inactive')
+                    .addClass(`${statusClass} status-badge`)
+                    .text(statusText)
+                    .attr('data-status', status);
+            }
         }
 
-        function confirmDeleteProject() {
-            const projectId = $('#deleteProjectModal').data('projectId');
-            if (!projectId) return;
+        // ==================== DELETE PROJECT FUNCTIONS ====================
+        window.deleteProject = function(projectId) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
+                return;
+            }
+
+            // Get project name for confirmation message
+            const $projectRow = $(`.project-row[data-project-id="${projectId}"]`);
+            const projectName = $projectRow.find('.col-span-4 .font-medium').text().trim();
+            const projectCode = $projectRow.find('.col-span-2 .font-medium').text().trim();
+
+            // Set confirmation message
+            $('#deleteConfirmMessage').html(`
+                You are about to delete project <strong>${escapeHtml(projectCode)} - ${escapeHtml(projectName)}</strong>.
+                <br><br>
+                <span class="text-red-600 font-medium">Warning:</span> This action cannot be undone. All associated data will be removed.
+            `);
+
+            // Store project ID in modal
+            $('#deleteConfirmModal').data('projectId', projectId);
+
+            openModal('deleteConfirmModal');
+        }
+
+        window.confirmDeleteProject = function() {
+            const projectId = $('#deleteConfirmModal').data('projectId');
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
 
             const formData = new FormData();
             formData.append('action', 'delete_project');
             formData.append('project_id', projectId);
             formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
+            // Show loading state
+            const $confirmBtn = $('#deleteConfirmModal button:last-child');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
+            $confirmBtn.prop('disabled', true);
+
             $.ajax({
-                url: '<?= base_url('admin/projects') ?>',
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function() {
-                    location.reload();
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Project deleted successfully!', 'success');
+                        closeModal('deleteConfirmModal');
+
+                        // Remove the project row from the table
+                        $(`.project-row[data-project-id="${projectId}"]`).remove();
+
+                        // Update project count
+                        const remainingCount = $('.project-row').length;
+                        updateProjectCount(remainingCount);
+                        updatePaginationAfterFilter(remainingCount);
+
+                        // If no projects left, show empty state
+                        if (remainingCount === 0) {
+                            $('#projectDetails').html(`
+                                <div class="flex flex-col items-center justify-center py-8 text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fas fa-project-diagram text-gray-400 text-xl"></i>
+                                    </div>
+                                    <p class="text-text-dark/60 text-sm">No projects available</p>
+                                </div>
+                            `);
+
+                            $('#projectActions').html(`
+                                <div class="space-y-2">
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-edit mr-2"></i>
+                                        Edit Project
+                                    </button>
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-trash mr-2"></i>
+                                        Delete Project
+                                    </button>
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-power-off mr-2"></i>
+                                        Change Status
+                                    </button>
+                                </div>
+                            `);
+                        }
+                    } else {
+                        showToast(response.message || 'Failed to delete project', 'error');
+                        $confirmBtn.html(originalText);
+                        $confirmBtn.prop('disabled', false);
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    showToast('Failed to delete project', 'error');
+                    console.error('Error deleting project:', error);
+                    showToast('Network error. Please try again.', 'error');
+                    $confirmBtn.html(originalText);
+                    $confirmBtn.prop('disabled', false);
                 }
             });
         }
 
-        // Change Status
-        function changeStatus(projectId, newStatus) {
-            if (!projectId) return;
+        // ==================== CHANGE PROJECT STATUS FUNCTIONS ====================
+        window.changeStatus = function(projectId, newStatus) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
+                return;
+            }
+
+            // Get project details for confirmation
+            const $projectRow = $(`.project-row[data-project-id="${projectId}"]`);
+            const projectName = $projectRow.find('.col-span-4 .font-medium').text().trim();
+            const projectCode = $projectRow.find('.col-span-2 .font-medium').text().trim();
+            const currentStatus = $projectRow.find('.status-badge').text().trim();
+            const isActivating = newStatus === true;
+
+            // Set modal content based on action
+            $('#statusModalTitle').text(isActivating ? 'Activate Project' : 'Deactivate Project');
+            $('#statusConfirmTitle').text(isActivating ? 'Activate Project?' : 'Deactivate Project?');
+
+            const iconClass = isActivating ? 'fa-power-off text-green-600' : 'fa-ban text-red-600';
+            const iconBgClass = isActivating ? 'bg-green-100' : 'bg-red-100';
+            const btnClass = isActivating ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
+
+            $('#statusModalIcon').removeClass().addClass(`w-16 h-16 ${iconBgClass} rounded-full flex items-center justify-center mx-auto mb-4`);
+            $('#statusModalIcon i').removeClass().addClass(`fas ${iconClass} text-2xl`);
+
+            $('#statusConfirmMessage').html(`
+                You are about to ${isActivating ? 'activate' : 'deactivate'} project 
+                <strong>${escapeHtml(projectCode)} - ${escapeHtml(projectName)}</strong>.
+                <br><br>
+                Current status: <span class="font-medium">${escapeHtml(currentStatus)}</span>
+                <br>
+                New status: <span class="font-medium">${isActivating ? 'Active' : 'Inactive'}</span>
+            `);
+
+            $('#statusConfirmButton').removeClass().addClass(`flex-1 py-3 ${btnClass} text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2`);
+            $('#statusConfirmButton i').removeClass().addClass('fas fa-check');
+            $('#statusConfirmButton').text(isActivating ? ' Activate Project' : ' Deactivate Project');
+
+            // Store data in modal
+            $('#statusConfirmModal').data({
+                projectId: projectId,
+                newStatus: newStatus
+            });
+
+            openModal('statusConfirmModal');
+        }
+
+        window.confirmChangeStatus = function() {
+            const modalData = $('#statusConfirmModal').data();
+            const projectId = modalData.projectId;
+            const newStatus = modalData.newStatus;
+
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
 
             const formData = new FormData();
             formData.append('action', 'change_project_status');
             formData.append('project_id', projectId);
-            formData.append('status', newStatus ? 'active' : 'inactive');
+            formData.append('is_active', newStatus ? '1' : '0');
             formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
+            // Show loading state
+            const $confirmBtn = $('#statusConfirmModal button:last-child');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+            $confirmBtn.prop('disabled', true);
+
             $.ajax({
-                url: '<?= base_url('admin/projects') ?>',
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function() {
-                    location.reload();
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const action = newStatus ? 'activated' : 'deactivated';
+                        showToast(`Project ${action} successfully!`, 'success');
+                        closeModal('statusConfirmModal');
+
+                        // Update project status in table
+                        updateProjectStatus(projectId, newStatus);
+
+                        // Refresh project details
+                        loadProjectDetails(projectId);
+                    } else {
+                        showToast(response.message || 'Failed to change project status', 'error');
+                        $confirmBtn.html(originalText);
+                        $confirmBtn.prop('disabled', false);
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    showToast('Failed to change project status', 'error');
+                    console.error('Error changing status:', error);
+                    showToast('Network error. Please try again.', 'error');
+                    $confirmBtn.html(originalText);
+                    $confirmBtn.prop('disabled', false);
                 }
             });
+        }
+
+        // Update project status in table
+        function updateProjectStatus(projectId, isActive) {
+            const $row = $(`.project-row[data-project-id="${projectId}"]`);
+            if ($row.length) {
+                const status = isActive ? 'active' : 'inactive';
+                const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = status === 'active' ? 'Active' : 'Inactive';
+
+                $row.find('.status-badge').removeClass().addClass(`${statusClass} status-badge`).text(statusText);
+            }
         }
 
         // ==================== NEW PROJECT MODAL ====================
@@ -1215,13 +1738,22 @@
                 return;
             }
 
+            // Get checkbox value - ensure correct boolean
+            const isActive = $('#newProjectActive').is(':checked') ? true : false;
+
             const formData = new FormData();
             formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
             formData.append('action', 'create_project');
             formData.append('project_name', projectName);
             formData.append('project_code', projectCode.toUpperCase());
             formData.append('description', $('#newProjectDescription').val() || '');
-            formData.append('is_active', $('#newProjectActive').is(':checked') ? '1' : '0');
+            formData.append('is_active', isActive ? '1' : '0'); // Send as string '1' or '0'
+
+            // Show loading state
+            const $submitBtn = $('#submitAddProjectBtn');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+            $submitBtn.prop('disabled', true);
 
             $.ajax({
                 url: '<?= base_url('admin/projects/ajax-manage') ?>',
@@ -1231,10 +1763,19 @@
                 contentType: false,
                 dataType: 'json',
                 success: function(data) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+
                     if (data.success) {
                         showToast('Project created successfully!', 'success');
                         closeModal('addProjectModal');
                         $('#addProjectForm')[0].reset();
+
+                        // Reset checkbox to default checked
+                        $('#newProjectActive').prop('checked', true);
+                        updateStatusIndicator(true);
+
+                        // Refresh page after 1.5 seconds
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showToast(data.message || 'Failed to create project', 'error');
@@ -1243,8 +1784,36 @@
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
                     showToast('Network error. Please try again.', 'error');
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
                 }
             });
+        }
+
+        // Function to update status indicator
+        function updateStatusIndicator(isActive) {
+            const $indicator = $('#statusIndicator');
+            if (!$indicator.length) return; // Skip if element doesn't exist
+
+            if (isActive) {
+                $indicator.removeClass('bg-gray-100 text-gray-800')
+                    .addClass('bg-green-100 text-green-800')
+                    .text('Active');
+            } else {
+                $indicator.removeClass('bg-green-100 text-green-800')
+                    .addClass('bg-gray-100 text-gray-800')
+                    .text('Inactive');
+            }
+        }
+
+        // Function to reset modal when opened
+        function resetAddProjectModal() {
+            // Reset form
+            $('#addProjectForm')[0]?.reset();
+
+            // Set default: checkbox checked
+            $('#newProjectActive').prop('checked', true);
+            updateStatusIndicator(true);
         }
 
         // ==================== USER MANAGEMENT FUNCTIONS ====================
@@ -1491,7 +2060,7 @@
         }
 
         // Remove user from selection
-        function removeUserFromSelection(userId) {
+        window.removeUserFromSelection = function(userId) {
             selectedUserIds.delete(userId);
             $(`.user-checkbox[value="${userId}"]`).prop('checked', false);
             updateSelectedUsersCount();
@@ -1649,6 +2218,14 @@
             });
         }
 
+        // ==================== INTEGRATION WITH SEARCH/FILTER ====================
+        function updatePaginationAfterFilter(filteredCount) {
+            totalPages = Math.ceil(filteredCount / projectsPerPage);
+            currentPage = Math.min(currentPage, totalPages) || 1;
+            renderPagination();
+            showPage(currentPage);
+        }
+
         // ==================== SEARCH AND FILTER ====================
         function initializeSearchAndFilter() {
             // Event listener untuk Reset Filters
@@ -1661,21 +2238,16 @@
                 $('#sortFilter').val('default');
 
                 // Tampilkan semua project kembali
-                resetProjectDisplay();
+                $('.project-row').show();
+                $('.no-results-message').remove();
 
-                // Reset tampilan count
-                const initialCount = $('.project-row').length;
-                updateProjectCount(initialCount);
+                // Reset pagination
+                const totalProjects = <?= $total_projects ?? 0 ?>;
+                updateProjectCount(totalProjects);
+                updatePaginationAfterFilter(totalProjects);
 
-                // Reset row numbers
-                updateRowNumbers();
-
-                // Pilih project pertama jika ada
-                const $firstProject = $('.project-row').first();
-                if ($firstProject.length) {
-                    const projectId = $firstProject.data('project-id');
-                    selectProject(projectId);
-                }
+                // Reset row order
+                resetProjectOrder();
             });
 
             // Search input dengan debounce
@@ -1703,13 +2275,6 @@
             });
         }
 
-        // Fungsi untuk reset tampilan project
-        function resetProjectDisplay() {
-            $('.project-row').show();
-            $('.no-results-message').remove();
-            resetProjectOrder();
-        }
-
         // Fungsi untuk reset urutan project ke default
         function resetProjectOrder() {
             const $container = $('#projectsList');
@@ -1731,75 +2296,46 @@
             updateRowNumbers();
         }
 
-        // Fungsi filter projects
+        // Fungsi filter projects dengan integrasi pagination
         function filterProjects() {
             const search = $('#projectSearch').val().toLowerCase();
             const status = $('#statusFilter').val();
-            const $projectsList = $('#projectsList');
             const $rows = $('.project-row');
-
+            
             let visibleCount = 0;
-            let hasVisibleRows = false;
-
-            // Hapus pesan "no results" sebelumnya jika ada
-            $('.no-results-message').remove();
-
-            // Filter rows
+            
             $rows.each(function() {
                 const $row = $(this);
-                const $projectNameElement = $row.find('.col-span-4 .font-medium');
-                const $projectCodeElement = $row.find('.col-span-2 .font-medium');
-                const $statusBadgeElement = $row.find('.status-badge');
-
-                if (!$projectNameElement.length || !$projectCodeElement.length || !$statusBadgeElement.length) {
-                    $row.hide();
-                    return;
-                }
-
-                const projectName = $projectNameElement.text().toLowerCase();
-                const projectCode = $projectCodeElement.text().toLowerCase();
-                const statusText = $statusBadgeElement.text().toLowerCase();
-
-                // Normalize status text
-                const normalizedStatus = normalizeStatusText(statusText);
-
-                // Check filters
+                const projectName = $row.find('.col-span-4 .font-medium').text().toLowerCase();
+                const projectCode = $row.find('.col-span-2 .font-medium').text().toLowerCase();
+                const statusText = $row.find('.status-badge').attr('data-status');
+                
                 const matchesSearch = !search || projectName.includes(search) || projectCode.includes(search);
-                const matchesStatus = !status || (status === 'active' && normalizedStatus === 'active') ||
-                    (status === 'inactive' && normalizedStatus === 'inactive') ||
-                    (status === 'completed' && normalizedStatus === 'completed') ||
-                    (status === 'on-hold' && normalizedStatus === 'on hold');
-
+                const matchesStatus = !status || statusText === status;
+                
                 if (matchesSearch && matchesStatus) {
                     $row.show();
                     visibleCount++;
-                    hasVisibleRows = true;
                 } else {
                     $row.hide();
                 }
             });
-
-            // Tampilkan pesan jika tidak ada hasil
-            if (!hasVisibleRows) {
-                const noResultsHtml = `
-            <div class="no-results-message py-12 text-center col-span-12">
-                <i class="fas fa-search text-gray-300 text-4xl mb-4"></i>
-                <p class="text-gray-500">No projects found</p>
-                <p class="text-gray-400 text-sm mt-2">
-                    ${search ? `No projects match "${search}"` : 'No projects match your filter criteria'}
-                </p>
-            </div>`;
-
-                $projectsList.append(noResultsHtml);
-            }
-
+            
             // Update project count
             updateProjectCount(visibleCount);
-
-            // Apply sorting jika ada
-            const sortValue = $('#sortFilter').val() || 'default';
-            if (sortValue !== 'default' && hasVisibleRows) {
-                sortProjects(sortValue);
+            
+            // Update pagination based on filtered results
+            updatePaginationAfterFilter(visibleCount);
+            
+            // Show/hide no results message
+            $('.no-results-message').remove();
+            if (visibleCount === 0) {
+                const noResultsHtml = `
+                    <div class="no-results-message py-12 text-center col-span-12">
+                        <i class="fas fa-search text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No projects found</p>
+                    </div>`;
+                $('#projectsList').append(noResultsHtml);
             }
         }
 
@@ -1808,10 +2344,6 @@
             const statusMap = {
                 'active': 'active',
                 'inactive': 'inactive',
-                'completed': 'completed',
-                'on hold': 'on-hold',
-                'on-hold': 'on-hold',
-                'onhold': 'on-hold'
             };
 
             const normalized = statusText.trim().toLowerCase();
@@ -1895,6 +2427,7 @@
         // ==================== EVENT LISTENERS ====================
         // Modal buttons
         $('#addProjectBtn').on('click', function() {
+            resetAddProjectModal();
             openModal('addProjectModal');
         });
 
@@ -1916,6 +2449,11 @@
             submitAddProject();
         });
 
+        $('#editProjectForm').on('submit', function(e) {
+            e.preventDefault();
+            submitEditProject();
+        });
+
         // Enter key pada modal
         $('#addProjectModal').on('keydown', function(e) {
             if (e.key === 'Enter' && !$(e.target).is('textarea')) {
@@ -1924,11 +2462,27 @@
             }
         });
 
+        $('#editProjectModal').on('keydown', function(e) {
+            if (e.key === 'Enter' && !$(e.target).is('textarea')) {
+                e.preventDefault();
+                submitEditProject();
+            }
+        });
+
         $('#assignToUsersModal').on('keydown', function(e) {
             if (e.key === 'Enter' && !$(e.target).is('textarea') && $(e.target).attr('id') !== 'searchUsers') {
                 e.preventDefault();
                 submitAssignUsers();
             }
+        });
+
+        // Cancel buttons
+        $('#deleteConfirmModal button:first-child').on('click', function() {
+            closeModal('deleteConfirmModal');
+        });
+
+        $('#statusConfirmModal button:first-child').on('click', function() {
+            closeModal('statusConfirmModal');
         });
 
         $(document).on('click', function(e) {
@@ -1956,6 +2510,9 @@
         });
 
         // ==================== INITIALIZE ON PAGE LOAD ====================
+        // Initialize pagination on page load
+        initializePagination();
+        
         // Initialize search and filter
         initializeSearchAndFilter();
 
@@ -1974,23 +2531,24 @@
                 selectProject(projectId);
             }
         });
-    });
 
-    //     // ==================== GLOBAL FUNCTIONS (accessible from onclick) ====================
-    //     // These need to be global for onclick handlers in HTML
-    //     window.removeUserFromSelection = function(userId) {
-    //         // This function is called from the user tag remove button
-    //         const event = new Event('removeUser');
-    //         event.userId = userId;
-    //         document.dispatchEvent(event);
-    //     };
-                        
-    //     // Add event listener for removeUser event
-    //     document.addEventListener('removeUser', function(e) {
-    //         // Implementation is in the main jQuery document ready function
-    //         // The actual function is defined inside $(document).ready()
-    //         // This is just a bridge
-    //         console.log('Remove user event triggered:', e.userId);
-    //     });
+        // Initialize status indicator jika element ada
+        if ($('#statusIndicator').length) {
+            updateStatusIndicator(true);
+
+            // Toggle status indicator ketika checkbox berubah
+            $('#newProjectActive').on('change', function() {
+                updateStatusIndicator($(this).is(':checked'));
+            });
+        }
+
+        // Add event listener to modal open untuk proper initialization
+        $(document).on('modalOpened', '#addProjectModal', function() {
+            resetAddProjectModal();
+            setTimeout(() => {
+                $('#newProjectName').focus();
+            }, 100);
+        });
+    });
 </script>
 <?= $this::endSection() ?>

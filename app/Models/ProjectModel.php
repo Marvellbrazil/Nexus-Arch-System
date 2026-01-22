@@ -118,20 +118,31 @@ class ProjectModel extends Model
     }
 
     /**
-     * Get project with user details
-     */
-    public function getProjectWithUser(int $projectId): ?array
-    {
-        $db = db_connect();
+ * Get project with user details and consistent ticket counts
+ */
+public function getProjectWithUser(int $projectId): ?array
+{
+    $db = db_connect();
 
-        $result = $db->table('projects p')
-            ->select('p.*')
-            ->where('p.project_id', $projectId)
-            ->get()
-            ->getRowArray();
+    $result = $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id = 3), 0) as resolved_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id = 4), 0) as closed_tickets')
+        ->where('p.project_id', $projectId)
+        ->get()
+        ->getRowArray();
 
-        return $result ?: null;
+    if ($result) {
+        // Calculate completion rate
+        $total = $result['total_tickets'];
+        $completed = $result['resolved_tickets'] + $result['closed_tickets'];
+        $result['completion_rate'] = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
     }
+
+    return $result ?: null;
+}
 
     /**
  * Get projects with ticket counts (UPDATED WITH CONSISTENT ORDERING)

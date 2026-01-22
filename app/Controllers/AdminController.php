@@ -2336,7 +2336,77 @@ private function getAvatarInitials(string $fullName): string
         $data['assigned_users'] = $assignedUsers;
 
         return view('Admin/project_details', $data);
-    }       
+    }
+    
+    /**
+ * Get project statistics (total tickets, open tickets, etc.)
+ */
+private function getProjectStatistics(int $projectId): array
+{
+    $db = db_connect();
+    
+    // Total tickets
+    $totalTickets = $db->table('tickets')
+        ->where('project_id', $projectId)
+        ->countAllResults();
+    
+    // Open tickets (status_id 1 = Open, 2 = In Progress)
+    $openTickets = $db->table('tickets')
+        ->where('project_id', $projectId)
+        ->whereIn('status_id', [1, 2])
+        ->countAllResults();
+    
+    // Resolved tickets
+    $resolvedTickets = $db->table('tickets')
+        ->where('project_id', $projectId)
+        ->where('status_id', 3)
+        ->countAllResults();
+    
+    // Closed tickets
+    $closedTickets = $db->table('tickets')
+        ->where('project_id', $projectId)
+        ->where('status_id', 4)
+        ->countAllResults();
+    
+    return [
+        'total_tickets' => $totalTickets,
+        'open_tickets' => $openTickets,
+        'resolved_tickets' => $resolvedTickets,
+        'closed_tickets' => $closedTickets,
+        'completion_rate' => $totalTickets > 0 ? 
+            round((($resolvedTickets + $closedTickets) / $totalTickets) * 100, 1) : 0
+    ];
+}
+
+/**
+ * Change project status (non-AJAX)
+ */
+public function changeProjectStatus()
+{
+    if ($this->request->getMethod() !== 'post') {
+        return redirect()->to('/admin/projects');
+    }
+
+    try {
+        $projectId = $this->request->getPost('project_id');
+        $isActive = $this->request->getPost('is_active') == '1' ? true : false;
+
+        if (!$projectId) {
+            return redirect()->back()->with('error', 'Project ID is required');
+        }
+
+        if ($this->projectModel->update($projectId, ['is_active' => $isActive])) {
+            $action = $isActive ? 'activated' : 'deactivated';
+            return redirect()->to('/admin/projects')
+                ->with('success', "Project {$action} successfully");
+        }
+
+        return redirect()->back()->with('error', 'Failed to change project status');
+    } catch (\Exception $e) {
+        log_message('error', 'Change project status error: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Server error: ' . $e->getMessage());
+    }
+}
     
     // ==================== AJAX METHODS PROJECTS ====================
     /**
@@ -2372,6 +2442,8 @@ private function getAvatarInitials(string $fullName): string
                 return $this->ajaxAssignUsersToProject();
             case 'delete_project':
                 return $this->ajaxDeleteProject();
+            case 'change_project_status':
+                return $this->ajaxChangeProjectStatus();
             default:
                 return $this->response->setJSON([
                     'success' => false,
@@ -2568,124 +2640,131 @@ private function getAvatarInitials(string $fullName): string
     }
 
     /**
-     * AJAX: Update project
-     */
-    private function ajaxUpdateProject()
-    {
-        try {
-            $projectId = $this->request->getPost('project_id');
+ * AJAX: Update project - FIXED VERSION
+ */
+private function ajaxUpdateProject()
+{
+    try {
+        $projectId = $this->request->getPost('project_id');
 
-            if (!$projectId) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Project ID is required'
-                ]);
-            }
-
-            // Validate input
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'project_name' => 'required|min_length[3]|max_length[100]',
-                'project_code' => 'required|min_length[2]|max_length[20]',
-                'description' => 'permit_empty|max_length[500]',
-                'is_active' => 'permit_empty|in_list[true,false,1,0]'
-            ]);
-
-            if (!$validation->withRequest($this->request)->run()) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validation->getErrors()
-                ]);
-            }
-
-            // Get data
-            $projectData = [
-                'project_name' => trim($this->request->getPost('project_name')),
-                'project_code' => strtoupper(trim($this->request->getPost('project_code'))),
-                'description' => trim($this->request->getPost('description') ?? ''),
-                'is_active' => $this->request->getPost('is_active') ? true : false
-            ];
-
-            // Check if project code exists (excluding current)
-            if ($this->projectModel->projectCodeExists($projectData['project_code'], $projectId)) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Project code already exists'
-                ]);
-            }
-
-            // Update project
-            $result = $this->projectModel->updateProject($projectId, $projectData);
-
-            if ($result['success']) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Project updated successfully'
-                ]);
-            }
-
+        if (!$projectId) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => $result['message'] ?? 'Failed to update project'
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Update project error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * AJAX: Get project details
-     */
-    public function ajaxGetProjectDetails()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Invalid request method'
+                'message' => 'Project ID is required'
             ]);
         }
 
-        try {
-            $projectId = $this->request->getPost('project_id');
+        // Validate input
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'project_name' => 'required|min_length[3]|max_length[100]',
+            'project_code' => 'required|min_length[2]|max_length[20]|regex_match[/^[A-Z0-9]+$/]',
+            'description' => 'permit_empty|max_length[500]',
+            'is_active' => 'required|in_list[0,1]' // Pastikan required dan valid
+        ]);
 
-            if (!$projectId) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Project ID is required'
-                ]);
-            }
+        if (!$validation->withRequest($this->request)->run()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validation->getErrors()
+            ]);
+        }
 
-            // Get project with user details
-            $project = $this->projectModel->getProjectWithUser($projectId);
+        // Get data
+        $projectData = [
+            'project_name' => trim($this->request->getPost('project_name')),
+            'project_code' => strtoupper(trim($this->request->getPost('project_code'))),
+            'description' => trim($this->request->getPost('description') ?? ''),
+            'is_active' => $this->request->getPost('is_active') === '1' ? true : false,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
-            if (!$project) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Project not found'    
-                ]);
-            }
+        // Check if project code exists (excluding current)
+        if ($this->projectModel->projectCodeExists($projectData['project_code'], $projectId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Project code already exists'
+            ]);
+        }
 
-            // Get assigned users
-            $assignedUsers = $this->projectAssignmentModel->getAssignedUsersForProject($projectId);
-
+        // Update project menggunakan metode save
+        if ($this->projectModel->save(['project_id' => $projectId] + $projectData)) {
             return $this->response->setJSON([
                 'success' => true,
-                'project' => $project,
-                'assigned_users' => $assignedUsers
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX get project details error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
+                'message' => 'Project updated successfully'
             ]);
         }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to update project'
+        ]);
+    } catch (\Exception $e) {
+        log_message('error', 'Update project error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
     }
+}
+
+    /**
+ * AJAX: Get project details with consistent ticket counts
+ */
+public function ajaxGetProjectDetails()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
+
+    try {
+        $projectId = $this->request->getPost('project_id');
+
+        if (!$projectId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Project ID is required'
+            ]);
+        }
+
+        // Get project with user details
+        $project = $this->projectModel->getProjectWithUser($projectId);
+
+        if (!$project) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Project not found'    
+            ]);
+        }
+
+        // Get consistent project statistics
+        $projectStats = $this->getProjectStatistics($projectId);
+        
+        // Merge statistics with project data
+        $project = array_merge($project, $projectStats);
+
+        // Get assigned users
+        $assignedUsers = $this->projectAssignmentModel->getAssignedUsersForProject($projectId);
+
+        $project['is_active'] = (bool)$project['is_active'];
+
+        return $this->response->setJSON([
+            'success' => true,
+            'project' => $project,
+            'assigned_users' => $assignedUsers
+        ]);
+    } catch (\Exception $e) {
+        log_message('error', 'AJAX get project details error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
 
     /**
      * AJAX: Get all users for bulk assignment
@@ -2812,58 +2891,10 @@ private function getAvatarInitials(string $fullName): string
         }
     }
 
-    /**
-     * AJAX: Delete project
-     */
-    private function ajaxDeleteProject()
-    {
-        try {
-            $projectId = $this->request->getPost('project_id');
-            $forceDelete = $this->request->getPost('force_delete') === '1';
-
-            if (!$projectId) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Project ID is required'
-                ]);
-            }
-
-            // Check if project has tickets
-            $ticketCount = $this->ticketModel->where('project_id', $projectId)->countAllResults();
-
-            if ($ticketCount > 0 && !$forceDelete) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => "Cannot delete project with {$ticketCount} ticket(s). Use force delete if you want to delete all associated data.",
-                    'ticket_count' => $ticketCount
-                ]);
-            }
-
-            // Delete project assignments first
-            $this->projectAssignmentModel->where('project_id', $projectId)->delete();
-
-            // Delete project
-            if ($this->projectModel->delete($projectId)) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Project deleted successfully'
-                ]);
-            }
-
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Failed to delete project'
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Delete project error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-public function ajaxGetProjectsPaginated()
+/**
+ * AJAX: Change project status
+ */
+public function ajaxChangeProjectStatus()
 {
     if (!$this->request->isAJAX()) {
         return $this->response->setJSON([
@@ -2873,58 +2904,94 @@ public function ajaxGetProjectsPaginated()
     }
 
     try {
-        $page = $this->request->getPost('page') ?: 1;
-        $limit = 5; // 5 project per halaman
-        $offset = ($page - 1) * $limit;
-        
-        // Get search and filter parameters
-        $search = $this->request->getPost('search') ?? '';
-        $status = $this->request->getPost('status') ?? '';
-        
-        $db = db_connect();
-        $builder = $db->table('projects p')
-            ->select('p.*, 
-                COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
-                COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets')
-            ->orderBy('p.project_id', 'ASC');
-        
-        // Apply search filter
-        if (!empty($search)) {
-            $builder->groupStart()
-                ->like('p.project_name', $search)
-                ->orLike('p.project_code', $search)
-                ->groupEnd();
+        $projectId = $this->request->getPost('project_id');
+        $isActive = $this->request->getPost('is_active') == '1' ? true : false;
+
+        if (!$projectId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Project ID is required'
+            ]);
         }
-        
-        // Apply status filter
-        if (!empty($status)) {
-            if ($status === 'active') {
-                $builder->where('p.is_active', true);
-            } elseif ($status === 'inactive') {
-                $builder->where('p.is_active', false);
-            }
-        }
-        
-        // Count total results for pagination
-        $totalBuilder = clone $builder;
-        $totalProjects = $totalBuilder->countAllResults();
-        
-        // Get paginated results
-        $projects = $builder->limit($limit, $offset)->get()->getResultArray();
-        
-        return $this->response->setJSON([
-            'success' => true,
-            'projects' => $projects,
-            'pagination' => [
-                'page' => (int)$page,
-                'limit' => $limit,
-                'total' => $totalProjects,
-                'total_pages' => ceil($totalProjects / $limit)
-            ]
+
+        // Update project status
+        $updated = $this->projectModel->update($projectId, [
+            'is_active' => $isActive,
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
-        
+
+        if ($updated) {
+            $action = $isActive ? 'activated' : 'deactivated';
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Project {$action} successfully"
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to update project status'
+        ]);
     } catch (\Exception $e) {
-        log_message('error', 'Get projects paginated error: ' . $e->getMessage());
+        log_message('error', 'Change project status error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * AJAX: Delete project
+ */
+public function ajaxDeleteProject()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid request method'
+        ]);
+    }
+
+    try {
+        $projectId = $this->request->getPost('project_id');
+
+        if (!$projectId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Project ID is required'
+            ]);
+        }
+
+        // Check if project has tickets
+        $ticketCount = $this->ticketModel->where('project_id', $projectId)->countAllResults();
+        
+        if ($ticketCount > 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => "Cannot delete project with {$ticketCount} ticket(s). Please reassign or delete the tickets first."
+            ]);
+        }
+
+        // Delete project assignments first
+        $this->projectAssignmentModel->where('project_id', $projectId)->delete();
+
+        // Delete project
+        $deleted = $this->projectModel->delete($projectId);
+
+        if ($deleted) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Project deleted successfully'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to delete project'
+        ]);
+    } catch (\Exception $e) {
+        log_message('error', 'Delete project error: ' . $e->getMessage());
         return $this->response->setJSON([
             'success' => false,
             'message' => 'Server error: ' . $e->getMessage()
