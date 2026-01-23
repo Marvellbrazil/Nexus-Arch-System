@@ -66,20 +66,20 @@ $routes->group('admin', function ($routes) {
         $routes->get('dropdown', [AdminController::class, 'getDepartmentDropdown']);
     });
 
-    // ==================== TICKET MANAGEMENT ====================
-    $routes->group('tickets', function ($routes) {
-        $routes->get('/', [AdminController::class, 'viewTickets']);
-        $routes->get('details/(:num)', 'AdminController::getTicketDetails/$1');
-        $routes->get('statistics', [AdminController::class, 'getTicketStatistics']);
-        $routes->get('export', [AdminController::class, 'exportTickets']);
-    });
-
     // ==================== PROJECT MANAGEMENT ====================
     $routes->group('projects', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageProjects']);
         $routes->get('details/(:num)', 'AdminController::getProjectDetails/$1');
         $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
         $routes->post('ajax-get-users-for-assignment', [AdminController::class, 'ajaxGetUsersForAssignment']);
+    });
+
+    // ==================== TICKET MANAGEMENT ====================
+    $routes->group('tickets', function ($routes) {
+        $routes->get('/', [AdminController::class, 'viewTickets']);
+        $routes->get('details/(:num)', 'AdminController::getTicketDetails/$1');
+        $routes->get('statistics', [AdminController::class, 'getTicketStatistics']);
+        $routes->get('export', [AdminController::class, 'exportTickets']);
     });
 
     $routes->get('settings', [AdminController::class, 'systemSettings']);

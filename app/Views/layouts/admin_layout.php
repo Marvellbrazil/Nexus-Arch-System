@@ -861,18 +861,17 @@ $notifications = [
                 <span class="text-sm">Manage Departments</span>
             </a>
 
-            <a href="<?= base_url('admin/tickets') ?>"
-                class="mobile-menu-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
-                <i class="fas fa-ticket-alt text-sm"></i>
-                <span class="text-sm">View Tickets</span>
-            </a>
-            <a href="<?= base_url('admin/projects') ?>"
+             <a href="<?= base_url('admin/projects') ?>"
                 class="sidebar-nav-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
                 <i class="fas fa-project-diagram text-sm"></i>
                 <span class="text-sm">Manage Projects</span>
             </a>
 
-
+            <a href="<?= base_url('admin/tickets') ?>"
+                class="mobile-menu-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
+                <i class="fas fa-ticket-alt text-sm"></i>
+                <span class="text-sm">View Tickets</span>
+            </a>
         </div>
 
         <!-- Bottom Section -->
@@ -939,11 +938,6 @@ $notifications = [
                 <span class="text-sm">Manage Departments</span>
             </a>
 
-            <a href="<?= base_url('admin/tickets') ?>"
-                class="sidebar-nav-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
-                <i class="fas fa-ticket-alt text-sm"></i>
-                <span class="text-sm">View Tickets</span>
-            </a>
             <a href="<?= base_url('admin/projects') ?>"
                 class="mobile-menu-item <?= strpos(current_url(), 'projects') !== false ? 'active' : '' ?>">
                 <i class="fas fa-project-diagram text-sm"></i>
@@ -951,6 +945,11 @@ $notifications = [
             </a>
 
 
+            <a href="<?= base_url('admin/tickets') ?>"
+                class="sidebar-nav-item <?= strpos(current_url(), 'tickets') !== false ? 'active' : '' ?>">
+                <i class="fas fa-ticket-alt text-sm"></i>
+                <span class="text-sm">View Tickets</span>
+            </a>
         </div>
 
         <!-- Bottom Section -->
