@@ -65,20 +65,27 @@ $routes->group('admin', function ($routes) {
         $routes->get('permissions', [AdminController::class, 'getRolePermissions']);
     });
 
+// AJAX Department Management - Put this BEFORE main routes
+    $routes->post('departments/ajax', [AdminController::class, 'ajaxDepartments']);
+    $routes->post('departments/get-categories', [AdminController::class, 'ajaxDepartments']);
+
     // ==================== DEPARTMENT MANAGEMENT ====================
     $routes->group('departments', function ($routes) {
-        $routes->get('/', [AdminController::class, 'manageDepartments']);
-        $routes->post('add', [AdminController::class, 'addDepartment']);
-        $routes->post('edit', [AdminController::class, 'editDepartment']);
-        $routes->post('delete', [AdminController::class, 'deleteDepartment']);
-        $routes->post('bulk-assign', [AdminController::class, 'bulkAssignUsersToDepartment']);
-        $routes->post('remove-users', [AdminController::class, 'removeUsersFromDepartment']);
-        $routes->get('details/(:num)', 'AdminController::getDepartmentDetails/$1');
-        $routes->get('details', [AdminController::class, 'getDepartmentDetails']);
-        $routes->get('statistics', [AdminController::class, 'getDepartmentStatistics']);
-        $routes->get('users/(:num)', 'AdminController::getDepartmentUsers/$1');
-        $routes->get('export', [AdminController::class, 'exportDepartments']);
-        $routes->get('dropdown', [AdminController::class, 'getDepartmentDropdown']);
+        $routes->add('/', [AdminController::class, 'manageDepartments']);
+        $routes->add('add', [AdminController::class, 'addDepartment']);
+        $routes->add('edit', [AdminController::class, 'editDepartment']);
+        $routes->add('delete', [AdminController::class, 'deleteDepartment']);
+        $routes->add('bulk-assign', [AdminController::class, 'bulkAssignUsersToDepartment']);
+        $routes->add('remove-users', [AdminController::class, 'removeUsersFromDepartment']);
+        $routes->add('details/(:num)', 'AdminController::getDepartmentDetails/$1');
+        $routes->add('details', [AdminController::class, 'getDepartmentDetails']);
+        $routes->add('statistics', [AdminController::class, 'getDepartmentStatistics']);
+        $routes->add('users/(:num)', 'AdminController::getDepartmentUsers/$1');
+        $routes->add('export', [AdminController::class, 'exportDepartments']);
+        $routes->add('dropdown', [AdminController::class, 'getDepartmentDropdown']);
+        $routes->add('form', [AdminController::class, 'form']);
+        $routes->add('form/(:any)', [AdminController::class, 'form/$1']);
+        $routes->add('table', [AdminController::class, 'datatable']);
     });
 
     // ==================== TICKET MANAGEMENT ====================

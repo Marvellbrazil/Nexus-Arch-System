@@ -37,3 +37,7 @@ function decode($base64)
 {
     return base64_decode(base64_decode($base64));
 }
+
+function getURL($path) {
+    return base_url($path);
+}

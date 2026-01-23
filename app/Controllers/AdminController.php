@@ -2,12 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Helpers\Datatables\Datatables;
+use App\Models\CategoryModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\DepartmentModel;
 use App\Models\ProjectAssignmentModel;
 use App\Models\ProjectModel;
+use App\Models\CategoryDepartmentMappingModel;
 
 class AdminController extends BaseController
 {
@@ -17,6 +20,8 @@ class AdminController extends BaseController
     protected $projectModel;
     protected $departmentModel;
     protected $projectAssignmentModel;
+    protected $categoryModel;
+    protected $cdm;
 
     public function __construct()
     {
@@ -27,6 +32,8 @@ class AdminController extends BaseController
         $this->projectModel = new ProjectModel();
         $this->departmentModel = new DepartmentModel();
         $this->projectAssignmentModel = new ProjectAssignmentModel();
+        $this->categoryModel = new CategoryModel();
+        $this->cdm = new CategoryDepartmentMappingModel();
     }
 
     /**
@@ -1176,58 +1183,75 @@ class AdminController extends BaseController
         }
     }
 
+    public function datatable()
+    {
+        $status = $this->request->getPost('status');
+        $table = Datatables::method([DepartmentModel::class, 'queryDatatable'], 'searchable')
+        ->setParams($status)
+        ->make();
+
+        $table->updateRow(function ($db, $no){
+            $btn_edit = "<button type='button' class='btn btn-sm bg-yellow-200 margin-r-2' onclick=\"modalForm('Update Department - " . $db->department_name . "', 'modal-lg', '" . getURL('admin/departments/edit/' . ($db->department_id)) . "', {'identifier': this})\"><i class='fas fa-edit'></i></i></button>";
+            $btn_hapus = "<button type='button' class='btn btn-sm bg-red-200' onclick=\"modalDelete('Delete Department - " . $db->department_name . "', {'link':'" . getURL('admin/departments/delete') . "', 'id':'" . ($db->department_id) . "', {'pagetype':'table'})\"><i class='fas fa-trash'></i></button>";
+            return [
+                    $no,
+                    $db->department_name,
+                    $db->description,
+                    $db->department_head,
+                    implode(' ', [$btn_edit, $btn_hapus])
+            ];
+        });
+
+        $table->toJson();
+    }
+
     /**
      * Add department (non-AJAX)
      */
     public function addDepartment()
     {
-        if ($this->request->getMethod() !== 'post') {
-            return redirect()->to('/admin/departments');
-        }
+        $name = $this->request->getPost('department_name');
+        $desc = $this->request->getPost('department_description');
+        $status = $this->request->getPost('department_status');
+        $head = $this->request->getPost('department_head');
+        $cat = $this->request->getPost('arr_categories');
+
+        $this->db->transBegin();
 
         try {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'department_name' => 'required|min_length[2]|max_length[100]|is_unique[departments.department_name]',
-                'description' => 'permit_empty|max_length[500]'
+
+            if (empty($name))
+                throw new \Exception('Department name is required');
+            if (empty($status))
+                throw new \Exception('Department status is required');
+            if (empty($cat) && count($cat) <= 0)
+                throw new \Exception('Department categories are required');
+
+            $this->departmentModel->store([
+                'department_name' => $name,
+                'description' => $desc,
+                'department_head' => $head,
+                'status' => $status,
             ]);
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('errors', $validation->getErrors());
+            // var_dump(db_connect()->error());die;
+            $departId = db_connect()->insertID();
+            $arr_cat = [];
+            foreach($cat as $c) {
+                $arr_cat[] = [
+                    'department_id' => $departId,
+                    'category_id' => $c,
+                ];
             }
 
-            $departmentData = [
-                'department_name' => $this->request->getPost('department_name'),
-                'description' => $this->request->getPost('description'),
-                'created_at' => date('Y-m-d H:i:s')
-            ];
+            $this->cdm->storeBatch($arr_cat);
 
-            // Get category mappings if provided
-            $categories = $this->request->getPost('categories') ?: [];
+            $this->db->transCommit();
+            return $this->formatResponse(1, 'Department is added successfully');
 
-            if ($this->departmentModel->insert($departmentData)) {
-                $departmentId = $this->departmentModel->getInsertID();
-
-                // Save category mappings if any
-                if (!empty($categories)) {
-                    $this->saveCategoryMappings($departmentId, $categories);
-                }
-
-                return redirect()->to('/admin/departments')
-                    ->with('success', 'Department added successfully')
-                    ->with('department_id', $departmentId);
-            }
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Failed to add department');
         } catch (\Exception $e) {
-            log_message('error', 'Add department error: ' . $e->getMessage());
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Server error: ' . $e->getMessage());
+            $this->db->transRollback();
+            return $this->formatResponse(0, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -2825,6 +2849,459 @@ class AdminController extends BaseController
             'count' => count($projects),
             'filename' => 'projects_' . date('Y-m-d_H-i-s') . '.csv'
         ]);
+    }
+
+// ==================== AJAX METHODS DEPARTMENTS ====================
+    /**
+     * Handle AJAX requests for department management
+     */
+    public function ajaxDepartments()
+    {
+        // Get raw JSON input
+        $jsonInput = file_get_contents('php://input');
+        $jsonData = json_decode($jsonInput, true) ?: [];
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request'
+            ]);
+        }
+
+        // Try to get action from both POST and JSON
+        $action = $this->request->getPost('action') ?: ($jsonData['action'] ?? null);
+
+        switch ($action) {
+            case 'get_departments_data':
+                return $this->ajaxGetDepartmentsData();
+            case 'get_department_statistics':
+                return $this->ajaxGetDepartmentStatistics();
+            case 'get_department_details':
+                return $this->ajaxGetDepartmentDetails();
+            case 'create_department':
+                return $this->ajaxCreateDepartment();
+            case 'update_department':
+                return $this->ajaxUpdateDepartment();
+            case 'delete_department':
+                return $this->ajaxDeleteDepartment();
+            case 'toggle_department_status':
+                return $this->ajaxToggleDepartmentStatus();
+            case 'get_categories':
+                return $this->ajaxGetCategories();
+            default:
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ]);
+        }
+    }
+
+    /**
+     * AJAX: Get departments data with pagination and filtering
+     */
+    private function ajaxGetDepartmentsData()
+    {
+        try {
+            $search = $this->request->getPost('search') ?? '';
+            $status = $this->request->getPost('status') ?? '';
+            $page = (int)($this->request->getPost('page') ?? 1);
+            $limit = (int)($this->request->getPost('limit') ?? 10);
+
+            $offset = ($page - 1) * $limit;
+
+            // Build query
+            $db = db_connect();
+            $builder = $db->table('departments d')
+                ->select('d.*, 
+                    COUNT(DISTINCT u.user_id) as members,
+                    COUNT(DISTINCT t.ticket_id) as tickets,
+                    d.description as detailed_description')
+                ->join('users u', 'u.department_id = d.department_id', 'left')
+                ->join('tickets t', 't.department_id = d.department_id', 'left')
+                ->groupBy('d.department_id');
+
+            // Apply search filter
+            if (!empty($search)) {
+                $builder->groupStart()
+                    ->like('d.department_name', $search)
+                    ->orLike('d.description', $search)
+                    ->groupEnd();
+            }
+
+            // Apply status filter
+            if (!empty($status) && $status !== 'all') {
+                if ($status === 'active') {
+                    $builder->having('COUNT(DISTINCT u.user_id) >', 0);
+                } elseif ($status === 'inactive') {
+                    $builder->having('COUNT(DISTINCT u.user_id)', 0);
+                }
+            }
+
+            // Get total count
+            $totalBuilder = clone $builder;
+            $total = $totalBuilder->countAllResults();
+
+            // Get paginated results
+            $departments = $builder
+                ->orderBy('d.department_name', 'ASC')
+                ->limit($limit, $offset)
+                ->get()
+                ->getResultArray();
+
+            // Format departments for frontend
+            $formattedDepartments = array_map(function ($dept) {
+                return [
+                    'id' => $dept['department_id'],
+                    'name' => $dept['department_name'],
+                    'description' => $dept['description'] ?? '',
+                    'detailed_description' => $dept['detailed_description'] ?? '',
+                    'members' => (int)$dept['members'],
+                    'tickets' => (int)$dept['tickets'],
+                    'status' => ((int)$dept['members'] > 0) ? 'active' : 'inactive',
+                    'created_at' => date('M d, Y', strtotime($dept['created_at']))
+                ];
+            }, $departments);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'departments' => $formattedDepartments,
+                'pagination' => [
+                    'total' => $total,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total_pages' => ceil($total / $limit)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get departments data error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load departments data'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get department statistics
+     */
+    private function ajaxGetDepartmentStatistics()
+    {
+        try {
+            $stats = $this->departmentModel->getDepartmentDashboardStats();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'statistics' => $stats
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get department statistics error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load statistics'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get department details
+     */
+    private function ajaxGetDepartmentDetails()
+    {
+        try {
+            // Get department_id from both POST and JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            $department = $this->departmentModel->getDepartmentDetailsForAdmin($departmentId);
+
+            if (!$department) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department not found'
+                ]);
+            }
+
+            // Format department for frontend
+            $formattedDepartment = [
+                'id' => $department['department_id'],
+                'name' => $department['department_name'],
+                'description' => $department['description'] ?? '',
+                'member_count' => (int)$department['member_count'],
+                'active_tickets' => (int)($department['active_tickets'] ?? 0),
+                'resolved_tickets' => (int)($department['resolved_tickets'] ?? 0),
+                'categories' => $department['categories'] ?? [],
+                'status' => ((int)$department['member_count'] > 0) ? 'active' : 'inactive',
+                'created_at' => date('M d, Y', strtotime($department['created_at'])),
+                'icon' => $this->getDepartmentIcon($department['department_name']),
+                'recent_members' => array_map(function ($member) {
+                    return [
+                        'name' => $member['full_name'],
+                        'role' => $member['role_name'],
+                        'avatar_initials' => $this->getAvatarInitials($member['full_name'])
+                    ];
+                }, $department['recent_members'] ?? [])
+            ];
+
+            return $this->response->setJSON([
+                'success' => true,
+                'department' => $formattedDepartment
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get department details error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load department details'
+            ]);
+        }
+    }
+
+    public function form($id = null)
+    {
+        $formType = 'add';
+        $btnSubmit = 'Save';
+        $row = null;
+        if (!empty($id)) {
+            $formType = 'edit';
+            $btnSubmit = 'Update';
+            $row = $this->departmentModel->find($id);
+        }
+        $categories = $this->categoryModel->findAll();
+        echo json_encode([
+            'view' => view('Admin/Modals/form_department', ['row' => $row, 'categories' => $categories, 'formType' => $formType]),
+            'btnSubmit' => $btnSubmit,
+        ]);
+    }
+
+    /**
+     * AJAX: Create new department
+     */
+    private function ajaxCreateDepartment()
+    {
+        try {
+            // Get JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'department_name' => 'required|min_length[2]|max_length[100]|is_unique[departments.department_name]',
+                'description' => 'permit_empty|max_length[500]',
+                'status' => 'permit_empty|in_list[active,inactive]',
+                'head' => 'permit_empty|max_length[100]'
+            ]);
+
+            // Manually validate JSON data
+            $departmentName = $jsonData['department_name'] ?? '';
+            $description = $jsonData['description'] ?? '';
+            
+            if (empty($departmentName) || strlen($departmentName) < 2 || strlen($departmentName) > 100) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department name is required and must be between 2-100 characters'
+                ]);
+            }
+
+            $departmentData = [
+                'department_name' => $departmentName,
+                'description' => $description
+            ];
+
+            $result = $this->departmentModel->addDepartment($departmentData);
+
+            if ($result['success']) {
+                // Handle category mappings if provided
+                $categories = $jsonData['categories'] ?? [];
+                if (!empty($categories) && is_array($categories)) {
+                    $this->saveCategoryMappings($result['department_id'], $categories);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Department created successfully',
+                    'department_id' => $result['department_id']
+                ]);
+            } else {
+                return $this->response->setJSON($result);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Create department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to create department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Update department
+     */
+    private function ajaxUpdateDepartment()
+    {
+        try {
+            // Get JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'department_name' => "required|min_length[2]|max_length[100]|is_unique[departments.department_name,department_id,{$departmentId}]",
+                'description' => 'permit_empty|max_length[500]',
+                'status' => 'permit_empty|in_list[active,inactive]',
+                'head' => 'permit_empty|max_length[100]'
+            ]);
+
+            // Manually validate JSON data
+            $departmentName = $jsonData['department_name'] ?? '';
+            $description = $jsonData['description'] ?? '';
+            
+            if (empty($departmentName) || strlen($departmentName) < 2 || strlen($departmentName) > 100) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department name is required and must be between 2-100 characters'
+                ]);
+            }
+
+            $departmentData = [
+                'department_name' => $departmentName,
+                'description' => $description
+            ];
+
+            $result = $this->departmentModel->updateDepartment($departmentId, $departmentData);
+
+            if ($result['success']) {
+                // Update category mappings if provided
+                $categories = $jsonData['categories'] ?? [];
+                if (is_array($categories)) {
+                    $this->updateCategoryMappings($departmentId, $categories);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Department updated successfully'
+                ]);
+            } else {
+                return $this->response->setJSON($result);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Update department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Toggle department status
+     */
+    private function ajaxToggleDepartmentStatus()
+    {
+        try {
+            $departmentId = $this->request->getPost('department_id');
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            // Get current member count
+            $memberCount = $this->departmentModel->getDepartmentActiveUsersCount($departmentId);
+
+            if ($memberCount > 0) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Cannot deactivate department with active members. Please reassign members first.'
+                ]);
+            }
+
+            // For departments, status is based on member count, so we don't actually toggle
+            // We just return the current status
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Department status updated successfully',
+                'status' => 'inactive'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Toggle department status error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to toggle department status'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Delete department
+     */
+    private function ajaxDeleteDepartment()
+    {
+        try {
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            $result = $this->departmentModel->deleteDepartment($departmentId);
+
+            return $this->response->setJSON($result);
+        } catch (\Exception $e) {
+            log_message('error', 'Delete department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to delete department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get categories for department mapping
+     */
+    private function ajaxGetCategories()
+    {
+        try {
+            $db = db_connect();
+            $categories = $db->table('categories')
+                ->select('category_id, category_name')
+                ->orderBy('category_name', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'categories' => $categories
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get categories error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load categories'
+            ]);
+        }
     }
 
     // ==================== SYSTEM SETTINGS ====================

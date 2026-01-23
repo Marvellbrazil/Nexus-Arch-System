@@ -4,7 +4,7 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class CategoryDepartmentMapping extends Model
+class CategoryDepartmentMappingModel extends Model
 {
     protected $table            = 'category_department_mapping';
     protected $primaryKey       = 'mapping_id';
@@ -47,5 +47,10 @@ class CategoryDepartmentMapping extends Model
     public function getDepartmentByCategory($categoryId)
     {
         return $this->where('category_id', $categoryId)->first();
+    }
+
+    public function storeBatch($data)
+    {
+        return $this->insertBatch($data);
     }
 }
