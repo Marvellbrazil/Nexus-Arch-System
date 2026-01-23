@@ -775,4 +775,55 @@ class UserModel extends Model
             return $priorityA <=> $priorityB;
         });
     }
+
+    // Tambahkan di UserModel.php
+
+    /**
+     * Update user dengan handling PostgreSQL boolean
+     */
+    public function updateUserWithPostgres(int $id, array $data): bool
+    {
+        $db = db_connect();
+
+        // Handle boolean untuk PostgreSQL
+        if (isset($data['is_active'])) {
+            $data['is_active'] = $data['is_active'] ? 't' : 'f';
+        }
+
+        // Handle nullable fields
+        $fieldsToNull = ['department_id', 'phone_number'];
+        foreach ($fieldsToNull as $field) {
+            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
+                $data[$field] = null;
+            }
+        }
+
+        $builder = $db->table($this->table);
+        $builder->where($this->primaryKey, $id);
+
+        return $builder->update($data);
+    }
+
+    /**
+     * Get user dengan role dan department
+     */
+    public function getUserWithDetails(int $userId): ?array
+    {
+        $db = db_connect();
+
+        $user = $db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+
+        if ($user) {
+            // Konversi boolean dari PostgreSQL
+            $user['is_active'] = ($user['is_active'] === 't' || $user['is_active'] === true);
+        }
+
+        return $user;
+    }
 }

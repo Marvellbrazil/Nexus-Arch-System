@@ -40,19 +40,15 @@ $routes->group('admin', function ($routes) {
     // ==================== USER MANAGEMENT ====================
     $routes->group('users', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageUsers']);
-        $routes->post('ajax', 'AdminController::ajaxManageUsers');
-        $routes->post('ajax-add', [AdminController::class, 'ajaxAddUser']);
-        $routes->post('add', [AdminController::class, 'addUser']);
         $routes->get('ajax-list', 'AdminController::ajaxGetUsers');
         $routes->get('ajax-details/(:num)', 'AdminController::ajaxGetUserDetails/$1');
-        $routes->post('edit/(:num)', 'AdminController::editUser/$1');
-        $routes->post('delete/(:num)', 'AdminController::deleteUser/$1');
-        $routes->post('change-status/(:num)', 'AdminController::changeStatus/$1');
-        $routes->post('reset-password/(:num)', 'AdminController::resetPassword/$1');
         $routes->get('details/(:num)', 'AdminController::getUserDetails/$1');
-        $routes->get('details', [AdminController::class, 'getUserDetails']);
-        $routes->get('export', [AdminController::class, 'exportUsers']);
+        $routes->post('ajax-add', [AdminController::class, 'ajaxAddUser']);
         $routes->post('update', [AdminController::class, 'updateUser']);
+        $routes->post('change-status/(:num)', 'AdminController::changeStatus/$1');
+        $routes->post('ajax-reset-password/(:num)', 'AdminController::ajaxResetPassword/$1');
+        $routes->post('ajax-delete/(:num)', 'AdminController::ajaxDeleteUser/$1');
+        $routes->post('ajax-change-status/(:num)', 'AdminController::ajaxChangeStatus/$1');
     });
 
     // ==================== ROLE MANAGEMENT ====================
@@ -65,9 +61,7 @@ $routes->group('admin', function ($routes) {
         $routes->post('reset', [AdminController::class, 'resetRole']);
         $routes->post('copy-permissions', [AdminController::class, 'copyPermissions']);
         $routes->get('details/(:num)', 'AdminController::getRoleDetails/$1');
-        $routes->get('details', [AdminController::class, 'getRoleDetails']);
         $routes->get('permissions/(:num)', 'AdminController::getRolePermissions/$1');
-        $routes->get('permissions', [AdminController::class, 'getRolePermissions']);
     });
 
     // ==================== DEPARTMENT MANAGEMENT ====================
@@ -79,7 +73,6 @@ $routes->group('admin', function ($routes) {
         $routes->post('bulk-assign', [AdminController::class, 'bulkAssignUsersToDepartment']);
         $routes->post('remove-users', [AdminController::class, 'removeUsersFromDepartment']);
         $routes->get('details/(:num)', 'AdminController::getDepartmentDetails/$1');
-        $routes->get('details', [AdminController::class, 'getDepartmentDetails']);
         $routes->get('statistics', [AdminController::class, 'getDepartmentStatistics']);
         $routes->get('users/(:num)', 'AdminController::getDepartmentUsers/$1');
         $routes->get('export', [AdminController::class, 'exportDepartments']);
@@ -90,31 +83,16 @@ $routes->group('admin', function ($routes) {
     $routes->group('tickets', function ($routes) {
         $routes->get('/', [AdminController::class, 'viewTickets']);
         $routes->get('details/(:num)', 'AdminController::getTicketDetails/$1');
-        $routes->get('details', [AdminController::class, 'getTicketDetails']);
         $routes->get('statistics', [AdminController::class, 'getTicketStatistics']);
         $routes->get('export', [AdminController::class, 'exportTickets']);
     });
 
     // ==================== PROJECT MANAGEMENT ====================
     $routes->group('projects', function ($routes) {
-        // Main pages - GET
         $routes->get('/', [AdminController::class, 'manageProjects']);
         $routes->get('details/(:num)', 'AdminController::getProjectDetails/$1');
-        $routes->get('details', [AdminController::class, 'getProjectDetails']);
         $routes->post('ajax-manage', [AdminController::class, 'ajaxManageProjects']);
         $routes->post('ajax-get-users-for-assignment', [AdminController::class, 'ajaxGetUsersForAssignment']);
-
-        // ==================== STANDARD FORM SUBMISSIONS ====================
-        $routes->post('add', [AdminController::class, 'addProject']);
-        $routes->post('edit', [AdminController::class, 'editProject']);
-        $routes->post('delete', [AdminController::class, 'deleteProject']);
-        $routes->post('change-status', [AdminController::class, 'changeProjectStatus']);
-        $routes->post('import', [AdminController::class, 'importProjects']); // Process import
-    });
-
-    $routes->group('assignments', function ($routes) {
-        $routes->get('/', [AdminController::class, 'viewAssignments']);
-        $routes->get('export', [AdminController::class, 'exportAssignments']);
     });
 
     $routes->get('settings', [AdminController::class, 'systemSettings']);

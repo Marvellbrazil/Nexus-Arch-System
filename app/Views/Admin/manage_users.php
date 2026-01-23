@@ -236,10 +236,6 @@
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Created At
                                     </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Actions
-                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
@@ -321,6 +317,11 @@
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                             <i class="fas fa-key mr-2"></i>
                             Reset Password
+                        </button>
+
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete User
                         </button>
 
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
@@ -532,6 +533,162 @@
             justify-content: center;
         }
     }
+
+    .delete-warning {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+    }
+
+    /* Loading animation */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Button states */
+    .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+    }
+
+    /* Modal transitions */
+    .modal-enter {
+        animation: modalEnter 0.3s ease-out;
+    }
+
+    @keyframes modalEnter {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .status-modal-icon {
+        animation: bounceIn 0.6s ease-out;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        60% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Status badges with animation */
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+
+    .status-active {
+        background: linear-gradient(135deg, #C4E3AC, #A8D08D);
+        color: #15803D;
+        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.1);
+    }
+
+    .status-inactive {
+        background: linear-gradient(135deg, #ECDCD3, #E0C9BC);
+        color: #93867E;
+        box-shadow: 0 2px 4px rgba(147, 134, 126, 0.1);
+    }
+
+    /* Button animations */
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(234, 179, 8, 0);
+        }
+    }
+
+    .btn-pulse-green {
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+        }
+    }
+
+    /* Smooth transitions */
+    .modal-transition {
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Loading spinner */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -648,133 +805,112 @@
         showEditUserModal(user) {
             // Create modal HTML
             const modalHTML = `
-                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="editUserModal">
-                    <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
-                        <div class="p-6 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
-                                <button class="close-modal text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="p-6">
-                            <form id="editUserForm">
-                                <input type="hidden" name="user_id" value="${user.user_id}">
-                                
-                                <div class="space-y-6">
-                                    <!-- Basic Information Section -->
-                                    <div>
-                                        <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Username *</label>
-                                                <input type="text" name="username" value="${user.username}" required
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="johndoe">
-                                                <p class="text-xs text-gray-500 mt-1">Must be unique</p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
-                                                <input type="text" name="full_name" value="${user.full_name}" required
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="John Doe">
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Email *</label>
-                                                <input type="email" name="email" value="${user.email}" required
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="john@example.com">
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
-                                                <input type="text" name="phone_number" value="${user.phone_number || ''}"
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="+1234567890">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Password Section -->
-                                    <div>
-                                        <h4 class="text-lg font-medium text-text-dark mb-4">Password (Leave blank to keep current)</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">New Password</label>
-                                                <input type="password" name="password" minlength="6"
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="••••••••">
-                                                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
-                                                <input type="password" name="confirm_password"
-                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-                                                       placeholder="••••••••">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Role & Department Section -->
-                                    <div>
-                                        <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Role *</label>
-                                                <select name="role_id" required
-                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                                    <option value="">Select Role</option>
-                                                    <?php foreach ($roles as $role): ?>
-                                                        <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-gray-600 text-sm mb-2">Department</label>
-                                                <select name="department_id"
-                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
-                                                    <option value="">No Department</option>
-                                                    <?php foreach ($departments as $department): ?>
-                                                        <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Account Status -->
-                                    <div>
-                                        <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
-                                        <div class="flex items-center space-x-3">
-                                            <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
-                                                   class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
-                                            <label for="is_active_edit" class="text-gray-700 text-sm">
-                                                Account is active (user can login)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <div class="p-6 border-t border-gray-200 flex gap-3">
-                            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                                Cancel
-                            </button>
-                            <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
-                                <i class="fas fa-save mr-2"></i>
-                                Update User
-                            </button>
-                        </div>
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="editUserModal">
+            <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
+                        <button class="close-modal text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
-            `;
+                
+                <div class="p-6">
+                    <form id="editUserForm">
+                        <input type="hidden" name="user_id" value="${user.user_id}">
+                        
+                        <div class="space-y-6">
+                            <!-- Basic Information Section -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                        <input type="text" name="username" value="${user.username}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="johndoe">
+                                        <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                        <input type="text" name="full_name" value="${user.full_name}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="John Doe">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                        <input type="email" name="email" value="${user.email}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="john@example.com">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                        <input type="text" name="phone_number" value="${user.phone_number || ''}"
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="+1234567890">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Role & Department Section -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                        <select name="role_id" required
+                                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                            <option value="">Select Role</option>
+                                            <?php foreach ($roles as $role): ?>
+                                                <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                        <select name="department_id"
+                                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                            <option value="">No Department</option>
+                                            <?php foreach ($departments as $department): ?>
+                                                <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Account Status -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
+                                           class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                    <label for="is_active_edit" class="text-gray-700 text-sm">
+                                        Account is active (user can login)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="p-6 border-t border-gray-200 flex gap-3">
+                    <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                        <i class="fas fa-save mr-2"></i>
+                        Update User
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 
             $('body').append(modalHTML);
             const $modal = $('#editUserModal');
@@ -807,58 +943,61 @@
         async updateUser($modal, userId) {
             try {
                 const $form = $modal.find('#editUserForm');
-                const formData = $form.serializeArray();
 
-                // Convert to object for validation
-                const formDataObj = {};
-                formData.forEach(item => {
-                    formDataObj[item.name] = item.value;
+                // Validasi client-side sederhana
+                const requiredFields = ['username', 'full_name', 'email', 'role_id'];
+                let isValid = true;
+
+                requiredFields.forEach(field => {
+                    const $field = $form.find(`[name="${field}"]`);
+                    const value = $field.val();
+
+                    if (!value || value.trim() === '') {
+                        $field.addClass('border-red-500 bg-red-50');
+                        isValid = false;
+                    } else {
+                        $field.removeClass('border-red-500 bg-red-50');
+                    }
                 });
 
-                // Validasi password jika diisi
-                const password = formDataObj.password;
-                const confirmPassword = formDataObj.confirm_password;
-
-                if (password && password.length < 6) {
-                    this.showToast('Password must be at least 6 characters', 'error');
+                if (!isValid) {
+                    this.showToast('Please fill all required fields', 'error');
                     return;
                 }
 
-                if (password && password !== confirmPassword) {
-                    this.showToast('Passwords do not match', 'error');
-                    return;
-                }
+                // Siapkan form data
+                const formData = $form.serialize();
 
-                // Validasi required fields
-                const requiredFields = ['username', 'full_name', 'email', 'role_id'];
-                for (const field of requiredFields) {
-                    const value = formDataObj[field];
-                    if (!value || value.trim() === '') {
-                        this.showToast(`${field.replace('_', ' ')} is required`, 'error');
-                        return;
-                    }
-                }
+                // Debug
+                console.log('Form data:', formData);
 
-                // Show loading state
-                const $updateBtn = $modal.find('#updateUserBtn');
-                const originalText = $updateBtn.html();
-                $updateBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Updating...');
-                $updateBtn.prop('disabled', true);
-
-                // Send request
+                // Send request dengan error handling yang lebih baik
                 const response = await $.ajax({
                     url: '<?= base_url("admin/users/update") ?>',
                     method: 'POST',
-                    data: $form.serialize(),
+                    data: formData,
                     dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Error:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.statusText) {
+                        errorMessage = jqXHR.statusText;
+                    }
+
+                    throw new Error(errorMessage);
                 });
 
-                // Restore button state
-                $updateBtn.html(originalText);
-                $updateBtn.prop('disabled', false);
+                console.log('Response:', response);
 
                 if (response.success) {
                     this.showToast(response.message, 'success');
@@ -867,11 +1006,11 @@
                     $modal.remove();
 
                     // Refresh user list
-                    this.loadUsers();
+                    await this.loadUsers();
 
                     // Reload user details if this user is selected
                     if (this.selectedUserId === userId) {
-                        this.loadUserDetails(userId);
+                        await this.loadUserDetails(userId);
                     }
 
                 } else {
@@ -879,14 +1018,10 @@
 
                     // Show validation errors if available
                     if (response.errors) {
-                        const errors = Object.values(response.errors).join(', ');
-                        errorMessage = errors;
-                    }
+                        const errors = Object.values(response.errors);
+                        errorMessage = errors.join(', ');
 
-                    this.showToast(errorMessage, 'error');
-
-                    // Highlight error fields
-                    if (response.errors) {
+                        // Highlight error fields
                         Object.keys(response.errors).forEach(fieldName => {
                             const $input = $modal.find(`[name="${fieldName}"]`);
                             if ($input.length) {
@@ -897,17 +1032,259 @@
                             }
                         });
                     }
+
+                    this.showToast(errorMessage, 'error');
                 }
 
             } catch (error) {
                 console.error('Error updating user:', error);
-                this.showToast('Error: ' + error.responseJSON?.message || error.statusText || 'Update failed', 'error');
+                this.showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async resetPassword(userId) {
+            try {
+                // Show reset password modal
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="resetPasswordModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-800">Reset Password</h3>
+                            <button type="button" class="close-modal text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Enter new password for user</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <form id="resetPasswordForm" novalidate>
+                            <input type="hidden" name="user_id" value="${userId}">
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">
+                                        New Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="password" 
+                                        name="new_password" 
+                                        required 
+                                        minlength="6"
+                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                                        placeholder="••••••••"
+                                        autocomplete="new-password">
+                                    <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                    <div class="error-message" id="new_password_error"></div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">
+                                        Confirm Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="password" 
+                                        name="confirm_password" 
+                                        required
+                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                                        placeholder="••••••••"
+                                        autocomplete="new-password">
+                                    <div class="error-message" id="confirm_password_error"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="p-6 border-t border-gray-200 flex gap-3">
+                        <button type="button" class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="button" id="savePasswordBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                            <i class="fas fa-key mr-2"></i>
+                            Reset Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('body').append(modalHTML);
+                const $modal = $('#resetPasswordModal');
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.resetPassword');
+                });
+
+                $modal.find('#savePasswordBtn').on('click', async () => {
+                    await this.processResetPassword($modal, userId);
+                });
+
+                // Submit form dengan Enter key
+                $modal.find('input').on('keypress', (e) => {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        $modal.find('#savePasswordBtn').click();
+                    }
+                });
+
+                // Close on ESC key
+                $(document).on('keydown.resetPassword', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.resetPassword');
+                    }
+                });
+
+                // Clear errors on input
+                $modal.find('input').on('input', function() {
+                    $(this).removeClass('border-red-500 bg-red-50');
+                    const fieldName = $(this).attr('name');
+                    $(`#${fieldName}_error`).text('');
+                });
+
+            } catch (error) {
+                console.error('Error in resetPassword:', error);
+                this.showToast('Failed to open reset password form', 'error');
+            }
+        }
+
+        async processResetPassword($modal, userId) {
+            try {
+                const $form = $modal.find('#resetPasswordForm');
+
+                // Clear previous errors
+                $form.find('input').removeClass('border-red-500 bg-red-50');
+                $form.find('.error-message').text('');
+
+                // Get form data
+                const formDataArray = $form.serializeArray();
+                const formDataObj = {};
+                formDataArray.forEach(item => {
+                    formDataObj[item.name] = item.value;
+                });
+
+                // Client-side validation
+                let isValid = true;
+
+                if (!formDataObj.new_password || formDataObj.new_password.length < 6) {
+                    $modal.find('[name="new_password"]').addClass('border-red-500 bg-red-50');
+                    $('#new_password_error').text('Password must be at least 6 characters');
+                    isValid = false;
+                }
+
+                if (!formDataObj.confirm_password) {
+                    $modal.find('[name="confirm_password"]').addClass('border-red-500 bg-red-50');
+                    $('#confirm_password_error').text('Please confirm your password');
+                    isValid = false;
+                }
+
+                if (formDataObj.new_password && formDataObj.confirm_password &&
+                    formDataObj.new_password !== formDataObj.confirm_password) {
+                    $modal.find('[name="confirm_password"]').addClass('border-red-500 bg-red-50');
+                    $('#confirm_password_error').text('Passwords do not match');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    return;
+                }
+
+                // Show loading state
+                const $saveBtn = $modal.find('#savePasswordBtn');
+                const originalText = $saveBtn.html();
+                $saveBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Processing...');
+                $saveBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-reset-password") ?>/${userId}`,
+                    method: 'POST',
+                    data: {
+                        new_password: formDataObj.new_password,
+                        confirm_password: formDataObj.confirm_password
+                    },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
+                });
 
                 // Restore button state
-                const $updateBtn = $modal.find('#updateUserBtn');
-                if ($updateBtn.length) {
-                    $updateBtn.html('<i class="fas fa-save mr-2"></i>Update User');
-                    $updateBtn.prop('disabled', false);
+                $saveBtn.html(originalText);
+                $saveBtn.prop('disabled', false);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+                    $modal.remove();
+
+                    // Optionally, log the user out from all devices (if needed)
+                    // this.forceLogoutUser(userId);
+
+                } else {
+                    // Handle server-side validation errors
+                    let errorMessage = response.message || 'Failed to reset password';
+
+                    if (response.errors) {
+                        // Show field-specific errors
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $(`#${fieldName}_error`).text(response.errors[fieldName]);
+                            }
+                        });
+
+                        // Show general error message
+                        const errors = Object.values(response.errors);
+                        errorMessage = errors.join(', ');
+                    }
+
+                    this.showToast(errorMessage, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error resetting password:', error);
+
+                // Restore button state
+                const $saveBtn = $modal.find('#savePasswordBtn');
+                $saveBtn.html('<i class="fas fa-key mr-2"></i> Reset Password');
+                $saveBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to reset password';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error, show more details
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
                 }
             }
         }
@@ -941,8 +1318,6 @@
                 this.showError('Failed to load users. Please try again.');
             }
         }
-
-        // Update bagian renderUsers() pada class UserManager di manage_users.php
 
         renderUsers(data) {
             if (!data.users || data.users.length === 0) {
@@ -999,28 +1374,6 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 ${new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
-                        data-user-id="${user.user_id}"
-                        title="View Details">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
-                        data-user-id="${user.user_id}"
-                        title="Edit User">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
-                        data-user-id="${user.user_id}"
-                        title="Reset Password">
-                    <i class="fas fa-key"></i>
-                </button>
-                <button class="btn-delete-user text-red-600 hover:text-red-800" 
-                        data-user-id="${user.user_id}"
-                        title="Delete User">
-                    <i class="fas fa-trash"></i>
-                </button>
             </td>
         </tr>
         `;
@@ -1106,11 +1459,11 @@
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Department:</span>
-                        <span class="text-text-dark font-medium">${user.department_name || 'N/A'}</span>
+                        <span class="text-text-dark font-medium">${user.department_name || '-'}</span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Phone:</span>
-                        <span class="text-text-dark font-medium">${user.phone_number || 'N/A'}</span>
+                        <span class="text-text-dark font-medium">${user.phone_number || '-'}</span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Joined:</span>
@@ -1136,34 +1489,39 @@
 
         updateUserActions(user) {
             const isActive = user.is_active;
+            const userId = user.user_id;
 
             const html = `
-            <div class="space-y-2 animate-fadeIn">
-                <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" 
-                        data-user-id="${user.user_id}">
-                    <i class="fas fa-edit"></i>
-                    Edit User
-                </button>
-                
-                <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" 
-                        data-user-id="${user.user_id}">
-                    <i class="fas fa-key"></i>
-                    Reset Password
-                </button>
-                
-                <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" 
-                        data-user-id="${user.user_id}">
-                    <i class="fas fa-power-off"></i>
-                    ${isActive ? 'Deactivate Account' : 'Activate Account'}
-                </button>
-                
-                <button class="delete-user-btn w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium flex items-center justify-center gap-2" 
-                        data-user-id="${user.user_id}">
-                    <i class="fas fa-trash"></i>
-                    Delete User
-                </button>
-            </div>
-            `;
+    <div class="space-y-2 animate-fadeIn">
+        <!-- 1. Edit User Button -->
+        <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-edit"></i>
+            Edit User
+        </button>
+        
+        <!-- 2. Reset Password Button -->
+        <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-key"></i>
+            Reset Password
+        </button>
+        
+        <!-- 3. Delete User Button -->
+        <button class="delete-user-btn w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-trash"></i>
+            Delete User
+        </button>
+        
+        <!-- 4. Toggle Status Button -->
+        <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-yellow-50 text-yellow-600 border border-yellow-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-yellow-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-power-off"></i>
+            ${isActive ? 'Deactivate Account' : 'Activate Account'}
+        </button>
+    </div>
+    `;
 
             this.$userActions.html(html);
             this.bindActionButtons();
@@ -1232,7 +1590,7 @@
 
             // Update showing info
             if (data.total > 0) {
-                this.$showingInfo.text(`Showing ${start}-${end} of ${data.total} users`);
+                this.$showingInfo.text(`${data.total} users`);
             } else {
                 this.$showingInfo.text(`Total: 0 users`);
             }
@@ -1367,19 +1725,6 @@
 
             const userId = parseInt($row.data('user-id'));
 
-            // Check if click was on an action button
-            const $actionBtn = $(event.target).closest('.btn-view-user, .btn-edit-user, .btn-reset-password, .btn-delete-user');
-            if ($actionBtn.length) {
-                event.stopPropagation();
-
-                const action = $actionBtn.hasClass('btn-view-user') ? 'view' :
-                    $actionBtn.hasClass('btn-edit-user') ? 'edit' :
-                    $actionBtn.hasClass('btn-reset-password') ? 'reset' : 'delete';
-
-                this.handleAction(action, userId);
-                return;
-            }
-
             // Otherwise, load user details
             this.loadUserDetails(userId);
         }
@@ -1435,14 +1780,14 @@
                     this.resetPassword(userId);
                 });
 
-                this.$userActions.find('.toggle-status-btn').off('click').on('click', async (e) => {
-                    const userId = parseInt($(e.currentTarget).data('user-id'));
-                    await this.toggleUserStatus(userId);
-                });
-
                 this.$userActions.find('.delete-user-btn').off('click').on('click', (e) => {
                     const userId = parseInt($(e.currentTarget).data('user-id'));
                     this.deleteUser(userId);
+                });
+
+                this.$userActions.find('.toggle-status-btn').off('click').on('click', async (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    await this.toggleUserStatus(userId);
                 });
             }
         }
@@ -1637,13 +1982,7 @@
                     return;
                 }
 
-                // Show loading state
-                const $saveBtn = $modal.find('#saveUserBtn');
-                const originalText = $saveBtn.html();
-                $saveBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Saving...');
-                $saveBtn.prop('disabled', true);
-
-                // Send request ke endpoint ADD langsung
+                // Send request ke endpoint ADD langsung (TANPA loading state)
                 const response = await $.ajax({
                     url: '<?= base_url("admin/users/ajax-add") ?>',
                     method: 'POST',
@@ -1655,10 +1994,6 @@
                 });
 
                 console.log('Parsed response:', response);
-
-                // Restore button state
-                $saveBtn.html(originalText);
-                $saveBtn.prop('disabled', false);
 
                 if (response.success) {
                     this.showToast(response.message, 'success');
@@ -1699,72 +2034,182 @@
             } catch (error) {
                 console.error('Error saving user:', error);
                 this.showToast('Error: ' + (error.responseJSON?.message || error.statusText || 'Save failed'), 'error');
-
-                // Restore button state
-                const $saveBtn = $modal.find('#saveUserBtn');
-                if ($saveBtn.length) {
-                    $saveBtn.html('<i class="fas fa-plus mr-2"></i>Add User');
-                    $saveBtn.prop('disabled', false);
-                }
             }
         }
 
         async toggleUserStatus(userId) {
-            console.log('=== DEBUG toggleUserStatus START ===');
-            console.log('User ID:', userId);
-
             try {
-                if (!confirm('Are you sure you want to change this user\'s account status?')) {
-                    console.log('User cancelled');
-                    return;
-                }
-
-                // Show loading
-                const $toggleBtn = this.$userActions.find('.toggle-status-btn');
-                const originalHtml = $toggleBtn.html();
-                $toggleBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Updating...');
-                $toggleBtn.prop('disabled', true);
-
-                // Gunakan endpoint yang sesuai
-                const endpoint = `<?= base_url("admin/users/change-status") ?>/${userId}`;
-                console.log('Endpoint:', endpoint);
-
-                const response = await $.ajax({
-                    url: endpoint,
-                    method: 'POST',
-                    data: {
-                        status: 'toggle',
-                        user_id: userId
-                    },
+                // Get user details first for confirmation message
+                const userResponse = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
                     dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
-                console.log('Response data:', response);
+                if (!userResponse.success || !userResponse.user) {
+                    this.showToast('Failed to load user details', 'error');
+                    return;
+                }
+
+                const user = userResponse.user;
+                const isCurrentlyActive = user.is_active;
+                const action = isCurrentlyActive ? 'deactivate' : 'activate';
+                const userName = user.full_name;
+
+                // Show confirmation modal with better UI
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="toggleStatusModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 ${isCurrentlyActive ? 'bg-yellow-100' : 'bg-green-100'} rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas ${isCurrentlyActive ? 'fa-user-slash text-yellow-600' : 'fa-user-check text-green-600'} text-2xl"></i>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">
+                            ${isCurrentlyActive ? 'Deactivate Account' : 'Activate Account'}
+                        </h3>
+                        
+                        <p class="text-gray-600 mb-6">
+                            Are you sure you want to <span class="font-semibold">${action}</span> 
+                            <span class="font-semibold text-${isCurrentlyActive ? 'yellow' : 'green'}-600">${userName}</span>'s account?
+                        </p>
+                        
+                        <div class="${isCurrentlyActive ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'} border rounded-lg p-4 mb-6 text-left">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle ${isCurrentlyActive ? 'text-yellow-500' : 'text-green-500'} mt-1 mr-2"></i>
+                                <div>
+                                    <p class="text-sm ${isCurrentlyActive ? 'text-yellow-800' : 'text-green-800'} font-medium">
+                                        ${isCurrentlyActive ? 'Deactivation Effects:' : 'Activation Effects:'}
+                                    </p>
+                                    <ul class="text-sm ${isCurrentlyActive ? 'text-yellow-700' : 'text-green-700'} mt-1 list-disc list-inside space-y-1">
+                                        ${isCurrentlyActive ? 
+                                            `<li>User will not be able to login</li>
+                                             <li>Account will appear as inactive</li>
+                                             <li>Can be reactivated anytime</li>
+                                             <li>Existing data is preserved</li>` :
+                                            `<li>User will be able to login again</li>
+                                             <li>Account will appear as active</li>
+                                             <li>All permissions restored</li>
+                                             <li>User can resume activities</li>`
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" 
+                                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <button type="button" 
+                                    id="confirmToggleBtn" 
+                                    class="flex-1 py-3 ${isCurrentlyActive ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2">
+                                <i class="fas ${isCurrentlyActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                                ${isCurrentlyActive ? 'Deactivate Account' : 'Activate Account'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('body').append(modalHTML);
+                const $modal = $('#toggleStatusModal');
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.toggleStatus');
+                });
+
+                $confirmBtn.on('click', async () => {
+                    await this.processToggleStatus($modal, userId, isCurrentlyActive);
+                });
+
+                // Close on ESC key
+                $(document).on('keydown.toggleStatus', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.toggleStatus');
+                    }
+                });
+
+                // Submit with Enter key
+                $(document).on('keydown.toggleStatusEnter', (e) => {
+                    if (e.key === 'Enter' && !$confirmBtn.is(':disabled')) {
+                        e.preventDefault();
+                        $confirmBtn.click();
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error in toggleUserStatus:', error);
+                this.showToast('Failed to open status change confirmation', 'error');
+            }
+        }
+
+        async processToggleStatus($modal, userId, isCurrentlyActive) {
+            try {
+                // Show loading state
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+                const originalText = $confirmBtn.html();
+                const action = isCurrentlyActive ? 'Deactivating...' : 'Activating...';
+                $confirmBtn.html(`<i class="fas fa-spinner fa-spin mr-2"></i> ${action}`);
+                $confirmBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-change-status") ?>/${userId}`,
+                    method: 'POST',
+                    data: {
+                        user_id: userId
+                    },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Toggle Status Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
+                });
 
                 // Restore button state
-                $toggleBtn.html(originalHtml);
-                $toggleBtn.prop('disabled', false);
+                $confirmBtn.html(originalText);
+                $confirmBtn.prop('disabled', false);
 
                 if (response.success) {
-                    console.log('Success! Message:', response.message);
-                    console.log('New status from server:', response.new_status);
-                    console.log('Status text:', response.status_text);
+                    const newStatus = response.new_status;
+                    const statusText = response.status_text;
+                    const action = response.action;
 
                     this.showToast(response.message, 'success');
+                    $modal.remove();
 
-                    // Update button text based on new status from server
-                    const newStatus = response.new_status;
-                    const statusText = newStatus ? 'Deactivate Account' : 'Activate Account';
-                    const btnClass = newStatus ?
-                        'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' :
-                        'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
-
-                    // Update button appearance
-                    $toggleBtn.html(`<i class="fas fa-power-off"></i> ${statusText}`);
-                    $toggleBtn.removeClass().addClass(`toggle-status-btn w-full py-3 ${btnClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`);
+                    // Update UI immediately
+                    this.updateStatusUI(userId, newStatus, statusText, action);
 
                     // Refresh user list
                     await this.loadUsers();
@@ -1774,97 +2219,318 @@
                         await this.loadUserDetails(userId);
                     }
 
-                    // Update status badge di table jika user sedang ditampilkan
-                    const $userRow = this.$usersTableBody.find(`tr[data-user-id="${userId}"]`);
-                    if ($userRow.length) {
-                        const $statusCell = $userRow.find('.status-badge');
-                        if ($statusCell.length) {
-                            $statusCell.text(newStatus ? 'Active' : 'Inactive');
-                            $statusCell.removeClass().addClass(newStatus ? 'status-active status-badge' : 'status-inactive status-badge');
-                        }
+                } else {
+                    let errorMessage = response.message || 'Failed to update user status';
+
+                    // Show specific error messages
+                    if (response.message.includes('cannot change your own')) {
+                        errorMessage = 'You cannot change your own account status';
+                        $modal.remove(); // Close modal for self-status change
+                    } else if (response.message.includes('User not found')) {
+                        errorMessage = 'User not found';
+                        $modal.remove();
                     }
 
-                } else {
-                    console.error('API error:', response.message);
-                    this.showToast(response.message, 'error');
-
-                    // Kembalikan ke state semula jika error
-                    $toggleBtn.html(originalHtml);
-                    $toggleBtn.prop('disabled', false);
+                    this.showToast(errorMessage, 'error');
                 }
 
             } catch (error) {
-                console.error('Error in toggleUserStatus:', error);
-                this.showToast('Failed to update user status: ' + (error.responseJSON?.message || error.statusText), 'error');
+                console.error('Error toggling user status:', error);
 
                 // Restore button state
-                const $toggleBtn = this.$userActions.find('.toggle-status-btn');
-                if ($toggleBtn.length) {
-                    $toggleBtn.html(originalHtml);
-                    $toggleBtn.prop('disabled', false);
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+                $confirmBtn.html(originalText);
+                $confirmBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to update user status';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
+                }
+            }
+        }
+
+        // Method to update UI after status change
+        updateStatusUI(userId, newStatus, statusText, action) {
+            // Update status badge in table if user is visible
+            const $userRow = this.$usersTableBody.find(`tr[data-user-id="${userId}"]`);
+            if ($userRow.length) {
+                const $statusCell = $userRow.find('.status-badge');
+                if ($statusCell.length) {
+                    $statusCell.text(statusText);
+                    $statusCell.removeClass().addClass(newStatus ? 'status-active status-badge' : 'status-inactive status-badge');
                 }
             }
 
-            console.log('=== DEBUG toggleUserStatus END ===');
+            // Update button in actions panel
+            const newButtonText = newStatus ? 'Deactivate Account' : 'Activate Account';
+            const newButtonClass = newStatus ?
+                'bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100' :
+                'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
+
+            const $toggleBtn = this.$userActions.find('.toggle-status-btn');
+            if ($toggleBtn.length) {
+                $toggleBtn.html(`<i class="fas fa-power-off"></i> ${newButtonText}`);
+                $toggleBtn.removeClass().addClass(`toggle-status-btn w-full py-3 ${newButtonClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`);
+            }
+
+            // Show success message with details
+            setTimeout(() => {
+                this.showToast(`User account ${action} successfully`, 'success');
+            }, 300);
         }
 
         async deleteUser(userId) {
             try {
-                if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                    return;
-                }
+                // Get user details first for confirmation message
+                const userResponse = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail(() => {
+                    // If can't get user details, still proceed with generic message
+                    return null;
+                });
 
+                const userName = userResponse?.success ? userResponse.user.full_name : 'this user';
+
+                // Show confirmation modal with better UI
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="deleteUserModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Delete User</h3>
+                        <p class="text-gray-600 mb-4">
+                            Are you sure you want to delete <span class="font-semibold">${userName}</span>?
+                            This action cannot be undone.
+                        </p>
+                        
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-left">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-red-500 mt-1 mr-2"></i>
+                                <div>
+                                    <p class="text-sm text-red-800 font-medium">Warning:</p>
+                                    <ul class="text-sm text-red-700 mt-1 list-disc list-inside space-y-1">
+                                        <li>All user data will be permanently deleted</li>
+                                        <li>Associated tickets will need reassignment</li>
+                                        <li>Project assignments will be removed</li>
+                                        <li>This action cannot be reversed</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" 
+                                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <button type="button" 
+                                    id="confirmDeleteBtn" 
+                                    class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-trash"></i>
+                                Delete User
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="flex items-center text-sm text-gray-600">
+                                <input type="checkbox" 
+                                       id="confirmCheckbox" 
+                                       class="mr-2 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                I understand this action is permanent
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('body').append(modalHTML);
+                const $modal = $('#deleteUserModal');
+                const $confirmCheckbox = $modal.find('#confirmCheckbox');
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+
+                // Disable delete button initially
+                $deleteBtn.prop('disabled', true);
+                $deleteBtn.addClass('opacity-50 cursor-not-allowed');
+
+                // Enable/disable delete button based on checkbox
+                $confirmCheckbox.on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $deleteBtn.prop('disabled', false);
+                        $deleteBtn.removeClass('opacity-50 cursor-not-allowed');
+                    } else {
+                        $deleteBtn.prop('disabled', true);
+                        $deleteBtn.addClass('opacity-50 cursor-not-allowed');
+                    }
+                });
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.deleteUser');
+                });
+
+                $deleteBtn.on('click', async () => {
+                    await this.processDeleteUser($modal, userId);
+                });
+
+                // Close on ESC key
+                $(document).on('keydown.deleteUser', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.deleteUser');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error in deleteUser:', error);
+                this.showToast('Failed to open delete confirmation', 'error');
+            }
+        }
+
+        async processDeleteUser($modal, userId) {
+            try {
+                // Show loading state
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+                const originalText = $deleteBtn.html();
+                $deleteBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...');
+                $deleteBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
                 const response = await $.ajax({
-                    url: `<?= base_url("admin/users/delete") ?>/${userId}`,
+                    url: `<?= base_url("admin/users/ajax-delete") ?>/${userId}`,
                     method: 'POST',
                     dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Delete Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
                 });
+
+                // Restore button state
+                $deleteBtn.html(originalText);
+                $deleteBtn.prop('disabled', false);
 
                 if (response.success) {
                     this.showToast(response.message, 'success');
-                    this.loadUsers();
+                    $modal.remove();
+
+                    // Refresh user list
+                    await this.loadUsers();
 
                     // Clear details if deleted user was selected
                     if (this.selectedUserId === userId) {
                         this.selectedUserId = null;
                         this.$userDetails.html(`
-                            <div class="flex flex-col items-center justify-center py-8 text-center">
-                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                    <i class="fas fa-user text-gray-400 text-xl"></i>
-                                </div>
-                                <p class="text-text-dark/60 text-sm">Select a user to view details</p>
-                            </div>
-                        `);
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-user text-gray-400 text-xl"></i>
+                        </div>
+                        <p class="text-text-dark/60 text-sm">Select a user to view details</p>
+                    </div>
+                `);
 
                         this.$userActions.html(`
-                            <div class="space-y-2">
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-edit mr-2"></i>
-                                    Edit User
-                                </button>
-                                
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-key mr-2"></i>
-                                    Reset Password
-                                </button>
-                                
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-power-off mr-2"></i>
-                                    Deactivate Account
-                                </button>
-                            </div>
-                        `);
+                    <div class="space-y-2">
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit User
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-key mr-2"></i>
+                            Reset Password
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete User
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-power-off mr-2"></i>
+                            Deactivate Account
+                        </button>
+                    </div>
+                `);
                     }
+
                 } else {
-                    this.showToast(response.message, 'error');
+                    let errorMessage = response.message || 'Failed to delete user';
+
+                    // Show specific error messages
+                    if (response.message.includes('Cannot delete your own account')) {
+                        errorMessage = 'You cannot delete your own account';
+                    } else if (response.message.includes('associated tickets')) {
+                        errorMessage = 'Cannot delete user with associated tickets. Please reassign tickets first.';
+                    } else if (response.message.includes('User not found')) {
+                        errorMessage = 'User not found. It may have been already deleted.';
+                    }
+
+                    this.showToast(errorMessage, 'error');
+
+                    // Close modal on certain errors
+                    if (response.message.includes('User not found')) {
+                        $modal.remove();
+                    }
                 }
 
             } catch (error) {
                 console.error('Error deleting user:', error);
-                this.showToast('Failed to delete user: ' + (error.responseJSON?.message || error.statusText), 'error');
+
+                // Restore button state
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+                $deleteBtn.html('<i class="fas fa-trash mr-2"></i> Delete User');
+                $deleteBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to delete user';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
+                }
             }
         }
 

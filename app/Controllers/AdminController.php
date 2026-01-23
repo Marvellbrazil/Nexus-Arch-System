@@ -1091,22 +1091,6 @@ class AdminController extends BaseController
         }
     }
 
-    /**
-     * Get avatar initials from full name
-     */
-    private function getAvatarInitials(string $fullName): string
-    {
-        $names = explode(' ', $fullName);
-        $initials = '';
-
-        foreach ($names as $name) {
-            if (strlen($initials) >= 2) break;
-            $initials .= strtoupper(substr($name, 0, 1));
-        }
-
-        return $initials;
-    }
-
     public function ajaxAddUser()
     {
         if (!$this->request->isAJAX()) {
@@ -1171,6 +1155,434 @@ class AdminController extends BaseController
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Database error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Reset password
+     */
+    public function ajaxResetPassword($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            // Validasi input
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'new_password' => 'required|min_length[6]',
+                'confirm_password' => 'required|matches[new_password]'
+            ]);
+
+            if (!$validation->withRequest($this->request)->run()) {
+                $errors = $validation->getErrors();
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $errors
+                ]);
+            }
+
+            $newPassword = $this->request->getPost('new_password');
+
+            // Hash password
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+
+            // Update password di database
+            $db = db_connect();
+            $updated = $db->table('users')
+                ->where('user_id', $id)
+                ->update([
+                    'password' => $hashedPassword,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
+            if ($updated) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Password reset successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to reset password in database'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Reset password error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Delete user
+     */
+    public function ajaxDeleteUser($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            // Get user ID from parameter or POST data
+            $userId = $id ?: $this->request->getPost('user_id');
+
+            if (!$userId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User ID is required'
+                ]);
+            }
+
+            // Prevent deleting yourself
+            if ($userId == session()->get('user_id')) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Cannot delete your own account'
+                ]);
+            }
+
+            // Check if user exists
+            $db = db_connect();
+            $userExists = $db->table('users')
+                ->where('user_id', $userId)
+                ->countAllResults();
+
+            if (!$userExists) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+            }
+
+            // Check if user has related data (tickets, assignments, etc.)
+            $hasTickets = $db->table('tickets')
+                ->where('customer_id', $userId)
+                ->orWhere('assigned_to', $userId)
+                ->countAllResults();
+
+            if ($hasTickets > 0) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Cannot delete user with associated tickets. Please reassign or delete the tickets first.'
+                ]);
+            }
+
+            // Check project assignments
+            $hasProjectAssignments = $db->table('project_assignments')
+                ->where('user_id', $userId)
+                ->countAllResults();
+
+            if ($hasProjectAssignments > 0) {
+                // Remove project assignments first
+                $db->table('project_assignments')
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+
+            // Delete user
+            $deleted = $db->table('users')
+                ->where('user_id', $userId)
+                ->delete();
+
+            if ($deleted) {
+                log_message('info', 'User deleted successfully. ID: ' . $userId);
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User deleted successfully',
+                    'user_id' => $userId
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to delete user from database'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Delete user error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Change user status (activate/deactivate)
+     */
+    public function ajaxChangeStatus($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            // Get user ID from parameter or POST data
+            $userId = $id ?: $this->request->getPost('user_id');
+
+            log_message('debug', '=== AJAX CHANGE STATUS CALLED ===');
+            log_message('debug', 'User ID: ' . $userId);
+            log_message('debug', 'POST Data: ' . print_r($this->request->getPost(), true));
+
+            if (!$userId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User ID is required'
+                ]);
+            }
+
+            // Get current user status first
+            $db = db_connect();
+            $user = $db->table('users')
+                ->select('user_id, username, full_name, is_active')
+                ->where('user_id', $userId)
+                ->get()
+                ->getRowArray();
+
+            if (!$user) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+            }
+
+            // Prevent deactivating yourself
+            if ($userId == session()->get('user_id')) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'You cannot change your own account status'
+                ]);
+            }
+
+            // Toggle status: if active, deactivate; if inactive, activate
+            $currentStatus = ($user['is_active'] === 't' || $user['is_active'] === true);
+            $newStatus = !$currentStatus;
+
+            log_message('debug', 'Current status: ' . ($currentStatus ? 'Active' : 'Inactive'));
+            log_message('debug', 'New status: ' . ($newStatus ? 'Active' : 'Inactive'));
+
+            // Update user status
+            $updated = $db->table('users')
+                ->where('user_id', $userId)
+                ->update([
+                    'is_active' => $newStatus ? 't' : 'f', // PostgreSQL boolean
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
+            if ($updated) {
+                $action = $newStatus ? 'activated' : 'deactivated';
+                $statusText = $newStatus ? 'Active' : 'Inactive';
+
+                log_message('info', "User {$action} successfully. ID: {$userId}");
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => "User account {$action} successfully",
+                    'user_id' => $userId,
+                    'new_status' => $newStatus,
+                    'status_text' => $statusText,
+                    'action' => $action
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update user status in database'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Change status error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get avatar initials from full name
+     */
+    private function getAvatarInitials(string $fullName): string
+    {
+        $names = explode(' ', $fullName);
+        $initials = '';
+
+        foreach ($names as $name) {
+            if (strlen($initials) >= 2) break;
+            $initials .= strtoupper(substr($name, 0, 1));
+        }
+
+        return $initials;
+    }
+
+    public function updateUser()
+    {
+        // Debug: log request
+        log_message('debug', '=== UPDATE USER METHOD CALLED ===');
+        log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+        log_message('debug', 'POST Data: ' . print_r($this->request->getPost(), true));
+
+        if (!$this->request->isAJAX()) {
+            log_message('debug', 'Not an AJAX request');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
+        try {
+            $userId = $this->request->getPost('user_id');
+
+            log_message('debug', 'User ID to update: ' . $userId);
+
+            if (!$userId) {
+                log_message('debug', 'User ID is missing');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'User ID is required'
+                ]);
+            }
+
+            // Validasi
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'username' => "required|min_length[3]|max_length[50]|is_unique[users.username,user_id,{$userId}]",
+                'full_name' => 'required|min_length[3]|max_length[100]',
+                'email' => "required|valid_email|is_unique[users.email,user_id,{$userId}]",
+                'role_id' => 'required|integer'
+            ]);
+
+            if (!$validation->withRequest($this->request)->run()) {
+                $errors = $validation->getErrors();
+                log_message('debug', 'Validation errors: ' . print_r($errors, true));
+
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $errors
+                ]);
+            }
+
+            log_message('debug', 'Validation passed');
+
+            // Siapkan data - PERBAIKAN: Handle boolean untuk PostgreSQL
+            $isActive = $this->request->getPost('is_active') ? true : false;
+
+            $userData = [
+                'username' => trim($this->request->getPost('username')),
+                'full_name' => trim($this->request->getPost('full_name')),
+                'email' => trim($this->request->getPost('email')),
+                'role_id' => (int)$this->request->getPost('role_id'),
+                'is_active' => $isActive, // Sudah dikonversi ke boolean
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            log_message('debug', 'User data to update: ' . print_r($userData, true));
+
+            // Tambahkan optional fields dengan handling null
+            $departmentId = $this->request->getPost('department_id');
+            if ($departmentId !== null && $departmentId !== '' && $departmentId !== 'null') {
+                $userData['department_id'] = (int)$departmentId;
+            } else {
+                $userData['department_id'] = null;
+            }
+
+            $phoneNumber = $this->request->getPost('phone_number');
+            if ($phoneNumber !== null && $phoneNumber !== '' && $phoneNumber !== 'null') {
+                $userData['phone_number'] = trim($phoneNumber);
+            } else {
+                $userData['phone_number'] = null;
+            }
+
+            $userData['is_active'] = $isActive ? 't' : 'f';
+
+            // Update user menggunakan query builder langsung untuk PostgreSQL compatibility
+            $db = db_connect();
+
+            // Build update data untuk PostgreSQL
+            $updateData = [
+                'username' => $userData['username'],
+                'full_name' => $userData['full_name'],
+                'email' => $userData['email'],
+                'role_id' => $userData['role_id'],
+                'is_active' => $userData['is_active'], // PostgreSQL boolean literal
+                'updated_at' => $userData['updated_at']
+            ];
+
+            // Handle nullable fields
+            if ($userData['department_id'] !== null) {
+                $updateData['department_id'] = $userData['department_id'];
+            } else {
+                $updateData['department_id'] = null;
+            }
+
+            if ($userData['phone_number'] !== null) {
+                $updateData['phone_number'] = $userData['phone_number'];
+            } else {
+                $updateData['phone_number'] = null;
+            }
+
+            log_message('debug', 'Update data for PostgreSQL: ' . print_r($updateData, true));
+
+            // Update using query builder
+            $builder = $db->table('users');
+            $builder->where('user_id', $userId);
+            $updated = $builder->update($updateData);
+
+            if ($updated) {
+                log_message('debug', 'User updated successfully');
+
+                // Get updated user data untuk response
+                $updatedUser = $db->table('users u')
+                    ->select('u.*, r.role_name, d.department_name')
+                    ->join('roles r', 'r.role_id = u.role_id', 'left')
+                    ->join('departments d', 'd.department_id = u.department_id', 'left')
+                    ->where('u.user_id', $userId)
+                    ->get()
+                    ->getRowArray();
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User updated successfully',
+                    'user_id' => $userId,
+                    'user' => $updatedUser
+                ]);
+            } else {
+                log_message('error', 'Database update failed');
+                $error = $db->error();
+                log_message('error', 'Database error: ' . print_r($error, true));
+
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update user in database',
+                    'error' => $error['message'] ?? 'Unknown database error'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Update user error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
             ]);
         }
     }
