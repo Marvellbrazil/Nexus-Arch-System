@@ -91,76 +91,101 @@
                 <div class="p-4 space-y-4">
                     <!-- Search Bar -->
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-muted">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
                             <i class="fas fa-search"></i>
                         </div>
-                        <input type="text" placeholder="Search users by name, email, role..." id="userSearch"
-                            class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
+                        <input
+                            type="text"
+                            placeholder="Search users by name, email, role..."
+                            id="userSearch"
+                            class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 placeholder:text-gray-400">
+                        <!-- Clear button -->
+                        <button
+                            id="clearSearch"
+                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                            title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
 
                     <!-- Filter Options -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Role Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Role</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Role</label>
                             <select id="roleFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Roles</option>
                                 <?php foreach ($roles as $role): ?>
-                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?>
-                                    </option>
+                                    <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
 
                         <!-- Department Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Department</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Department</label>
                             <select id="departmentFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Departments</option>
                                 <?php foreach ($departments as $department): ?>
                                     <option value="<?= $department['department_id'] ?>">
-                                        <?= htmlspecialchars($department['department_name']) ?></option>
+                                        <?= htmlspecialchars($department['department_name']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
 
                         <!-- Status Filter -->
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Status</label>
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Status</label>
                             <select id="statusFilter"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                                class="w-full h-12 pl-4 pr-10 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 appearance-none cursor-pointer">
                                 <option value="">All Status</option>
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>
+                            <div class="absolute right-3 top-9 transform -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Date Range Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Date From</label>
-                            <input type="date" id="dateFrom"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Date From</label>
+                            <div class="relative">
+                                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
+                                    <i class="fas fa-calendar-alt text-sm"></i>
+                                </div>
+                                <input type="date" id="dateFrom"
+                                    class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 cursor-pointer">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-text-dark/70 text-sm mb-2">Date To</label>
-                            <input type="date" id="dateTo"
-                                class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
+                        <div class="relative">
+                            <label class="block text-text-dark/70 text-sm mb-2 font-medium">Date To</label>
+                            <div class="relative">
+                                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#665C9E]">
+                                    <i class="fas fa-calendar-alt text-sm"></i>
+                                </div>
+                                <input type="date" id="dateTo"
+                                    class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all duration-300 cursor-pointer">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3">
+                    <!-- Action Button -->
+                    <div class="pt-2">
                         <button id="resetFilters"
-                            class="flex-1 h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
+                            class="w-full h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
                             Reset Filters
-                        </button>
-                        <button id="exportUsers"
-                            class="flex-1 h-12 bg-white text-secondary border border-secondary rounded-xl hover:bg-secondary/5 transition-colors font-medium">
-                            Export Users
                         </button>
                     </div>
                 </div>
@@ -177,13 +202,19 @@
 
                 <!-- Table Container -->
                 <div class="p-4">
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden text-center py-8">
+                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No users found</p>
+                    </div>
+
                     <div class="overflow-x-auto rounded-lg border border-gray-200">
                         <table id="usersTable" class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-[#E3DAEE]">
                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        No
+                                        No.
                                     </th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
@@ -201,112 +232,33 @@
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <!-- <th
-                                        class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Created At
-                                    </th> -->
                                     <th
                                         class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Last Login
+                                        Created At
                                     </th>
-                                    <!-- <th
-                                        class="px-6 py-3 text-left text-xs font-semibold text-text-dark/80 uppercase tracking-wider">
-                                        Actions
-                                    </th> -->
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
-                                <?php 
-                                // Load initial users data
-                                $users = isset($initialUsers) ? $initialUsers : [];
-                                if (!empty($users)): 
-                                    $counter = 1;
-                                    foreach ($users as $user): 
-                                ?>
-                                <tr data-user-id="<?= $user['user_id'] ?>">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= $counter++ ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
-                                                <?= substr($user['full_name'], 0, 1) ?>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($user['full_name']) ?></div>
-                                                <div class="text-sm text-gray-500"><?= htmlspecialchars($user['username']) ?></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= htmlspecialchars($user['email']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="role-badge <?= $this->userModel->getRoleClass($user['role_name'] ?? 'Customer') ?>">
-                                            <?= htmlspecialchars($user['role_name'] ?? 'Customer') ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="status-badge <?= $user['is_active'] ? 'status-active' : 'status-inactive' ?>">
-                                            <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= date('M d, Y', strtotime($user['created_at'])) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="btn-view-user text-secondary hover:text-[#665C9E] mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn-edit-user text-blue-600 hover:text-blue-800 mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn-reset-password text-yellow-600 hover:text-yellow-800 mr-3" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-key"></i>
-                                        </button>
-                                        <button class="btn-delete-user text-red-600 hover:text-red-800" 
-                                                data-user-id="<?= $user['user_id'] ?>">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <?php else: ?>
-                                <tr>
-                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
-                                        <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
-                                        <p class="text-gray-500">No users found</p>
-                                    </td>
-                                </tr>
-                                <?php endif; ?>
+                                <!-- Data akan di-load via AJAX -->
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Pagination -->
                     <div class="border-t border-gray-200 mt-4 pt-4">
-                        <div class="flex justify-between items-center">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <div class="text-text-dark/70 text-sm">
                                 <span id="paginationInfo">Page 1 of 1</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button id="prevPage"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fas fa-chevron-left text-sm"></i>
-                                </button>
+
+                            <div class="flex items-center gap-1">
+
+
                                 <div id="pageNumbers" class="flex items-center gap-1">
                                     <!-- Page numbers will be populated here -->
                                 </div>
-                                <button id="nextPage"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fas fa-chevron-right text-sm"></i>
-                                </button>
+
+
                             </div>
                         </div>
                     </div>
@@ -368,6 +320,11 @@
                         </button>
 
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete User
+                        </button>
+
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                             <i class="fas fa-power-off mr-2"></i>
                             Deactivate Account
                         </button>
@@ -377,10 +334,6 @@
         </div>
     </div>
 </div>
-
-<!-- Modals -->
-<?= $this->include('Admin/modals/user_modal') ?>
-<?= $this->include('Admin/modals/reset_password_modal') ?>
 
 <!-- Styles -->
 <style>
@@ -427,11 +380,6 @@
         color: #3730A3;
     }
 
-    .role-developer {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-
     /* Table styling */
     #usersTable {
         border-collapse: separate;
@@ -468,7 +416,140 @@
         background: linear-gradient(135deg, #665C9E, #8A84C6);
     }
 
-    /* Loading animations */
+    /* User info items */
+    .user-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .user-info-item:last-child {
+        border-bottom: none;
+    }
+
+    .animate-slideInUp {
+        animation: slideInUp 0.3s ease-out;
+    }
+
+    /* Fade in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Toast notification */
+    .custom-toast {
+        animation: slideInUp 0.3s ease-out, fadeIn 0.3s ease-out;
+        transition: all 0.3s ease;
+    }
+
+    /* Error state for form fields */
+    .border-red-500 {
+        border-color: #EF4444 !important;
+    }
+
+    .bg-red-50 {
+        background-color: #FEF2F2 !important;
+    }
+
+    /* Tambahkan di bagian <style> */
+    .pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .page-btn {
+        min-width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .page-btn.active {
+        box-shadow: 0 2px 4px rgba(102, 92, 158, 0.2);
+    }
+
+    .pagination-ellipsis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        color: #9ca3af;
+    }
+
+    /* Responsive pagination */
+    @media (max-width: 768px) {
+        .pagination-container {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .pagination-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        .pagination-buttons {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .delete-warning {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+    }
+
+    /* Loading animation */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+
     @keyframes spin {
         0% {
             transform: rotate(0deg);
@@ -479,40 +560,141 @@
         }
     }
 
-    .animate-spin {
-        animation: spin 1s linear infinite;
+    /* Button states */
+    .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
     }
 
-    /* Modal animations */
-    @keyframes slideInUp {
+    /* Modal transitions */
+    .modal-enter {
+        animation: modalEnter 0.3s ease-out;
+    }
+
+    @keyframes modalEnter {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: scale(0.95) translateY(-10px);
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: scale(1) translateY(0);
         }
     }
 
-    .animate-slideInUp {
-        animation: slideInUp 0.3s ease-out;
+    .status-modal-icon {
+        animation: bounceIn 0.6s ease-out;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        60% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Status badges with animation */
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+
+    .status-active {
+        background: linear-gradient(135deg, #C4E3AC, #A8D08D);
+        color: #15803D;
+        box-shadow: 0 2px 4px rgba(21, 128, 61, 0.1);
+    }
+
+    .status-inactive {
+        background: linear-gradient(135deg, #ECDCD3, #E0C9BC);
+        color: #93867E;
+        box-shadow: 0 2px 4px rgba(147, 134, 126, 0.1);
+    }
+
+    /* Button animations */
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(234, 179, 8, 0);
+        }
+    }
+
+    .btn-pulse-green {
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+        }
+    }
+
+    /* Smooth transitions */
+    .modal-transition {
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Loading spinner */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 </style>
 
-<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     class UserManager {
         constructor() {
             this.currentPage = 1;
-            this.pageSize = 10;
+            this.pageSize = 5; // Ubah menjadi 5 user per halaman
             this.totalPages = 1;
             this.selectedUserId = null;
             this.filters = {};
-
-            this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            this.csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content');
 
             this.init();
         }
@@ -525,101 +707,606 @@
 
         cacheElements() {
             // Table elements
-            this.usersTable = document.getElementById('usersTable');
-            this.usersTableBody = document.getElementById('usersTableBody');
-            this.loadingState = document.getElementById('loadingState');
-            this.emptyState = document.getElementById('emptyState');
-            this.showingInfo = document.getElementById('showingInfo');
-            this.paginationInfo = document.getElementById('paginationInfo');
-            this.pageNumbers = document.getElementById('pageNumbers');
-            this.prevPage = document.getElementById('prevPage');
-            this.nextPage = document.getElementById('nextPage');
+            this.$usersTable = $('#usersTable');
+            this.$usersTableBody = $('#usersTableBody');
+            this.$emptyState = $('#emptyState');
+            this.$showingInfo = $('#showingInfo');
+            this.$paginationInfo = $('#paginationInfo');
+            this.$pageNumbers = $('#pageNumbers');
+            this.$prevPage = $('#prevPage');
+            this.$nextPage = $('#nextPage');
 
             // Filter elements
-            this.userSearch = document.getElementById('userSearch');
-            this.roleFilter = document.getElementById('roleFilter');
-            this.departmentFilter = document.getElementById('departmentFilter');
-            this.statusFilter = document.getElementById('statusFilter');
-            this.dateFrom = document.getElementById('dateFrom');
-            this.dateTo = document.getElementById('dateTo');
-            this.resetFilters = document.getElementById('resetFilters');
-            this.exportUsers = document.getElementById('exportUsers');
+            this.$userSearch = $('#userSearch');
+            this.$clearSearch = $('#clearSearch');
+            this.$roleFilter = $('#roleFilter');
+            this.$departmentFilter = $('#departmentFilter');
+            this.$statusFilter = $('#statusFilter');
+            this.$dateFrom = $('#dateFrom');
+            this.$dateTo = $('#dateTo');
+            this.$resetFilters = $('#resetFilters');
 
             // Action elements
-            this.addUserBtn = document.getElementById('addUserBtn');
-            this.bulkActionsBtn = document.getElementById('bulkActionsBtn');
-            this.importUsersBtn = document.getElementById('importUsersBtn');
-            this.userDetails = document.getElementById('userDetails');
-            this.userActions = document.getElementById('userActions');
+            this.$addUserBtn = $('#addUserBtn');
+            this.$userDetails = $('#userDetails');
+            this.$userActions = $('#userActions');
         }
 
         bindEvents() {
             // Search and filter events
-            this.userSearch.addEventListener('input', this.debounce(() => this.handleFilterChange(), 300));
-            this.roleFilter.addEventListener('change', () => this.handleFilterChange());
-            this.departmentFilter.addEventListener('change', () => this.handleFilterChange());
-            this.statusFilter.addEventListener('change', () => this.handleFilterChange());
-            this.dateFrom.addEventListener('change', () => this.handleFilterChange());
-            this.dateTo.addEventListener('change', () => this.handleFilterChange());
-            this.resetFilters.addEventListener('click', () => this.resetAllFilters());
-            this.exportUsers.addEventListener('click', () => this.exportUsersData());
+            this.$userSearch.on('input', this.debounce(() => this.handleFilterChange(), 300));
+            this.$roleFilter.on('change', () => this.handleFilterChange());
+            this.$departmentFilter.on('change', () => this.handleFilterChange());
+            this.$statusFilter.on('change', () => this.handleFilterChange());
+            this.$dateFrom.on('change', () => this.handleFilterChange());
+            this.$dateTo.on('change', () => this.handleFilterChange());
+            this.$resetFilters.on('click', () => this.resetAllFilters());
 
             // Pagination events
-            this.prevPage.addEventListener('click', () => this.changePage(this.currentPage - 1));
-            this.nextPage.addEventListener('click', () => this.changePage(this.currentPage + 1));
+            this.$prevPage.on('click', () => this.changePage(this.currentPage - 1));
+            this.$nextPage.on('click', () => this.changePage(this.currentPage + 1));
 
             // Action events
-            this.addUserBtn.addEventListener('click', () => this.showAddUserModal());
-            this.bulkActionsBtn.addEventListener('click', () => this.showBulkActionsModal());
-            this.importUsersBtn.addEventListener('click', () => this.showImportUsersModal());
+            this.$addUserBtn.on('click', () => this.showAddUserModal());
 
             // Table row click events (delegated)
-            this.usersTableBody.addEventListener('click', (e) => this.handleTableClick(e));
+            this.$usersTableBody.on('click', (e) => this.handleTableClick(e));
+        }
+
+        // Tambah method untuk handle search input dan clear
+        handleSearchInput() {
+            const searchValue = this.$userSearch.val();
+
+            // Show/hide clear button
+            if (searchValue.length > 0) {
+                this.$clearSearch.removeClass('hidden');
+            } else {
+                this.$clearSearch.addClass('hidden');
+            }
+
+            // Trigger filter change
+            this.handleFilterChange();
+        }
+
+        clearSearch() {
+            this.$userSearch.val('');
+            this.$clearSearch.addClass('hidden');
+            this.handleFilterChange();
+            this.showToast('Search cleared', 'info');
+        }
+
+        async editUser(userId) {
+            try {
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.success && response.user) {
+                    this.showEditUserModal(response.user);
+                } else {
+                    this.showToast('Failed to load user data for editing', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading user for edit:', error);
+                this.showToast('Failed to load user data', 'error');
+            }
+        }
+
+        showEditUserModal(user) {
+            // Create modal HTML
+            const modalHTML = `
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="editUserModal">
+            <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-800">Edit User: ${user.full_name}</h3>
+                        <button class="close-modal text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <form id="editUserForm">
+                        <input type="hidden" name="user_id" value="${user.user_id}">
+                        
+                        <div class="space-y-6">
+                            <!-- Basic Information Section -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                        <input type="text" name="username" value="${user.username}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="johndoe">
+                                        <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                        <input type="text" name="full_name" value="${user.full_name}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="John Doe">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                        <input type="email" name="email" value="${user.email}" required
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="john@example.com">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                        <input type="text" name="phone_number" value="${user.phone_number || ''}"
+                                               class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                               placeholder="+1234567890">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Role & Department Section -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                        <select name="role_id" required
+                                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                            <option value="">Select Role</option>
+                                            <?php foreach ($roles as $role): ?>
+                                                <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                        <select name="department_id"
+                                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                            <option value="">No Department</option>
+                                            <?php foreach ($departments as $department): ?>
+                                                <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Account Status -->
+                            <div>
+                                <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="is_active_edit" name="is_active" value="1" ${user.is_active ? 'checked' : ''}
+                                           class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                    <label for="is_active_edit" class="text-gray-700 text-sm">
+                                        Account is active (user can login)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="p-6 border-t border-gray-200 flex gap-3">
+                    <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="updateUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                        <i class="fas fa-save mr-2"></i>
+                        Update User
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+            $('body').append(modalHTML);
+            const $modal = $('#editUserModal');
+
+            // Set select values
+            $modal.find('select[name="role_id"]').val(user.role_id);
+            $modal.find('select[name="department_id"]').val(user.department_id || '');
+
+            // Add event listeners
+            $modal.find('.close-modal').on('click', () => $modal.remove());
+
+            $modal.find('#updateUserBtn').on('click', async () => {
+                await this.updateUser($modal, user.user_id);
+            });
+
+            // Close on ESC key
+            $(document).on('keydown.editUser', (e) => {
+                if (e.key === 'Escape') {
+                    $modal.remove();
+                    $(document).off('keydown.editUser');
+                }
+            });
+
+            // Prevent modal close when clicking inside modal
+            $modal.find('.bg-white').on('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        async updateUser($modal, userId) {
+            try {
+                const $form = $modal.find('#editUserForm');
+
+                // Validasi client-side sederhana
+                const requiredFields = ['username', 'full_name', 'email', 'role_id'];
+                let isValid = true;
+
+                requiredFields.forEach(field => {
+                    const $field = $form.find(`[name="${field}"]`);
+                    const value = $field.val();
+
+                    if (!value || value.trim() === '') {
+                        $field.addClass('border-red-500 bg-red-50');
+                        isValid = false;
+                    } else {
+                        $field.removeClass('border-red-500 bg-red-50');
+                    }
+                });
+
+                if (!isValid) {
+                    this.showToast('Please fill all required fields', 'error');
+                    return;
+                }
+
+                // Siapkan form data
+                const formData = $form.serialize();
+
+                // Debug
+                console.log('Form data:', formData);
+
+                // Send request dengan error handling yang lebih baik
+                const response = await $.ajax({
+                    url: '<?= base_url("admin/users/update") ?>',
+                    method: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Error:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.statusText) {
+                        errorMessage = jqXHR.statusText;
+                    }
+
+                    throw new Error(errorMessage);
+                });
+
+                console.log('Response:', response);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+
+                    // Close modal
+                    $modal.remove();
+
+                    // Refresh user list
+                    await this.loadUsers();
+
+                    // Reload user details if this user is selected
+                    if (this.selectedUserId === userId) {
+                        await this.loadUserDetails(userId);
+                    }
+
+                } else {
+                    let errorMessage = response.message || 'Failed to update user';
+
+                    // Show validation errors if available
+                    if (response.errors) {
+                        const errors = Object.values(response.errors);
+                        errorMessage = errors.join(', ');
+
+                        // Highlight error fields
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $input.one('input', function() {
+                                    $(this).removeClass('border-red-500 bg-red-50');
+                                });
+                            }
+                        });
+                    }
+
+                    this.showToast(errorMessage, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error updating user:', error);
+                this.showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async resetPassword(userId) {
+            try {
+                // Show reset password modal
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="resetPasswordModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-800">Reset Password</h3>
+                            <button type="button" class="close-modal text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Enter new password for user</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <form id="resetPasswordForm" novalidate>
+                            <input type="hidden" name="user_id" value="${userId}">
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">
+                                        New Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="password" 
+                                        name="new_password" 
+                                        required 
+                                        minlength="6"
+                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                                        placeholder="••••••••"
+                                        autocomplete="new-password">
+                                    <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                    <div class="error-message" id="new_password_error"></div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-600 text-sm mb-2">
+                                        Confirm Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="password" 
+                                        name="confirm_password" 
+                                        required
+                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                                        placeholder="••••••••"
+                                        autocomplete="new-password">
+                                    <div class="error-message" id="confirm_password_error"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="p-6 border-t border-gray-200 flex gap-3">
+                        <button type="button" class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="button" id="savePasswordBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                            <i class="fas fa-key mr-2"></i>
+                            Reset Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('body').append(modalHTML);
+                const $modal = $('#resetPasswordModal');
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.resetPassword');
+                });
+
+                $modal.find('#savePasswordBtn').on('click', async () => {
+                    await this.processResetPassword($modal, userId);
+                });
+
+                // Submit form dengan Enter key
+                $modal.find('input').on('keypress', (e) => {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        $modal.find('#savePasswordBtn').click();
+                    }
+                });
+
+                // Close on ESC key
+                $(document).on('keydown.resetPassword', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.resetPassword');
+                    }
+                });
+
+                // Clear errors on input
+                $modal.find('input').on('input', function() {
+                    $(this).removeClass('border-red-500 bg-red-50');
+                    const fieldName = $(this).attr('name');
+                    $(`#${fieldName}_error`).text('');
+                });
+
+            } catch (error) {
+                console.error('Error in resetPassword:', error);
+                this.showToast('Failed to open reset password form', 'error');
+            }
+        }
+
+        async processResetPassword($modal, userId) {
+            try {
+                const $form = $modal.find('#resetPasswordForm');
+
+                // Clear previous errors
+                $form.find('input').removeClass('border-red-500 bg-red-50');
+                $form.find('.error-message').text('');
+
+                // Get form data
+                const formDataArray = $form.serializeArray();
+                const formDataObj = {};
+                formDataArray.forEach(item => {
+                    formDataObj[item.name] = item.value;
+                });
+
+                // Client-side validation
+                let isValid = true;
+
+                if (!formDataObj.new_password || formDataObj.new_password.length < 6) {
+                    $modal.find('[name="new_password"]').addClass('border-red-500 bg-red-50');
+                    $('#new_password_error').text('Password must be at least 6 characters');
+                    isValid = false;
+                }
+
+                if (!formDataObj.confirm_password) {
+                    $modal.find('[name="confirm_password"]').addClass('border-red-500 bg-red-50');
+                    $('#confirm_password_error').text('Please confirm your password');
+                    isValid = false;
+                }
+
+                if (formDataObj.new_password && formDataObj.confirm_password &&
+                    formDataObj.new_password !== formDataObj.confirm_password) {
+                    $modal.find('[name="confirm_password"]').addClass('border-red-500 bg-red-50');
+                    $('#confirm_password_error').text('Passwords do not match');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    return;
+                }
+
+                // Show loading state
+                const $saveBtn = $modal.find('#savePasswordBtn');
+                const originalText = $saveBtn.html();
+                $saveBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Processing...');
+                $saveBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-reset-password") ?>/${userId}`,
+                    method: 'POST',
+                    data: {
+                        new_password: formDataObj.new_password,
+                        confirm_password: formDataObj.confirm_password
+                    },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
+                });
+
+                // Restore button state
+                $saveBtn.html(originalText);
+                $saveBtn.prop('disabled', false);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+                    $modal.remove();
+
+                    // Optionally, log the user out from all devices (if needed)
+                    // this.forceLogoutUser(userId);
+
+                } else {
+                    // Handle server-side validation errors
+                    let errorMessage = response.message || 'Failed to reset password';
+
+                    if (response.errors) {
+                        // Show field-specific errors
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $(`#${fieldName}_error`).text(response.errors[fieldName]);
+                            }
+                        });
+
+                        // Show general error message
+                        const errors = Object.values(response.errors);
+                        errorMessage = errors.join(', ');
+                    }
+
+                    this.showToast(errorMessage, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error resetting password:', error);
+
+                // Restore button state
+                const $saveBtn = $modal.find('#savePasswordBtn');
+                $saveBtn.html('<i class="fas fa-key mr-2"></i> Reset Password');
+                $saveBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to reset password';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error, show more details
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
+                }
+            }
         }
 
         async loadUsers() {
             try {
-                this.showLoading();
+                // Create query parameters
+                const params = {
+                    page: this.currentPage,
+                    limit: this.pageSize,
+                    ...this.filters
+                };
 
-                const formData = new FormData();
-                formData.append('draw', 1);
-                formData.append('start', (this.currentPage - 1) * this.pageSize);
-                formData.append('length', this.pageSize);
-                formData.append('search[value]', this.filters.search || '');
-                formData.append('role_id', this.filters.role_id || '');
-                formData.append('department_id', this.filters.department_id || '');
-                formData.append('is_active', this.filters.is_active || '');
-                formData.append('date_from', this.filters.date_from || '');
-                formData.append('date_to', this.filters.date_to || '');
-                formData.append('order[0][column]', 5); // Created at column
-                formData.append('order[0][dir]', 'desc');
+                // Remove undefined values
+                Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
 
-                // Add CSRF token for CI4
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch('<?= base_url("admin/users") ?>', {
-                    method: 'POST',
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-list") ?>`,
+                    method: 'GET',
+                    data: params,
+                    dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                    }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                this.renderUsers(data.data);
-                this.updatePaginationInfo(data);
-                this.hideLoading();
+                this.renderUsers(response);
 
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -627,115 +1314,132 @@
             }
         }
 
-        renderUsers(users) {
-            if (users.length === 0) {
-                this.usersTableBody.innerHTML = '';
-                this.emptyState.classList.remove('hidden');
-                this.usersTable.classList.add('hidden');
+        renderUsers(data) {
+            if (!data.users || data.users.length === 0) {
+                this.$usersTableBody.empty();
+                this.$emptyState.removeClass('hidden');
+                this.$usersTable.addClass('hidden');
+                this.$showingInfo.text(`Total: 0 users`);
                 return;
             }
 
-            this.emptyState.classList.add('hidden');
-            this.usersTable.classList.remove('hidden');
+            this.$emptyState.addClass('hidden');
+            this.$usersTable.removeClass('hidden');
 
             let html = '';
 
-            users.forEach(user => {
+            // Gunakan row_number dari server untuk nomor urut yang konsisten
+            data.users.forEach(user => {
                 const statusClass = user.is_active ? 'status-active' : 'status-inactive';
                 const statusText = user.is_active ? 'Active' : 'Inactive';
+                const avatarInitials = this.getInitials(user.full_name);
+                const roleClass = this.getRoleClass(user.role_name);
+
+                // === ID MENJADI NOMOR URUT DARI SERVER ===
+                const rowNumber = user.row_number || user.user_id;
 
                 html += `
-                <tr class="${this.selectedUserId === user.user_id ? 'selected' : ''}" data-user-id="${user.user_id}">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        #${user.user_id}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
-                                ${this.getInitials(user.full_name)}
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">${user.full_name}</div>
-                                <div class="text-sm text-gray-500">${user.username}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${user.email}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="${this.getRoleClass(user.role_name)} role-badge">
-                            ${user.role_name}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="${statusClass} status-badge">
-                            ${statusText}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${user.created_at}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        ${user.actions}
-                    </td>
-                </tr>
-                `;
+        <tr class="${this.selectedUserId === user.user_id ? 'selected' : ''}" data-user-id="${user.user_id}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${rowNumber}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-secondary to-[#8A84C6] rounded-full flex items-center justify-center text-white font-bold">
+                        ${avatarInitials}
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${user.full_name}</div>
+                        <div class="text-sm text-gray-500">@${user.username}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${user.email}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="${roleClass} role-badge">
+                    ${user.role_name}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="${statusClass} status-badge">
+                    ${statusText}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </td>
+        </tr>
+        `;
             });
 
-            this.usersTableBody.innerHTML = html;
+            this.$usersTableBody.html(html);
+            this.$showingInfo.text(`Total: ${data.total} users`);
+            this.updatePaginationInfo(data);
 
             // Re-bind action buttons
             this.bindActionButtons();
         }
 
         async loadUserDetails(userId) {
+            console.log('=== loadUserDetails START ===');
+            console.log('User ID to load:', userId);
+
             try {
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                // Add CSRF token for CI4
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                    }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                console.log('Response data:', response);
 
-                const data = await response.json();
-
-                if (data.success) {
-                    this.renderUserDetails(data.user);
+                if (response.success && response.user) {
+                    console.log('User data received:', response.user);
+                    this.renderUserDetails(response.user);
                     this.selectedUserId = userId;
                     this.updateSelectedRow();
                 } else {
-                    this.showToast(data.message, 'error');
+                    console.error('API returned error:', response.message);
+                    this.showToast(response.message || 'Failed to load user details', 'error');
                 }
 
             } catch (error) {
-                console.error('Error loading user details:', error);
-                this.showToast('Failed to load user details', 'error');
+                console.error('Error in loadUserDetails:', error);
+                console.error('Error response:', error.responseText);
+                this.showToast('Failed to load user details: ' + (error.responseJSON?.message || error.statusText), 'error');
             }
+
+            console.log('=== loadUserDetails END ===');
         }
 
         renderUserDetails(user) {
+            const avatarInitials = this.getInitials(user.full_name);
+            const statusClass = user.is_active ? 'status-active' : 'status-inactive';
+            const statusText = user.is_active ? 'Active' : 'Inactive';
+
+            const lastLogin = user.last_login ?
+                new Date(user.last_login).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) :
+                'Never';
+
             const html = `
             <div class="animate-fadeIn">
-                <div class="user-avatar">${user.avatar_initials}</div>
+                <div class="user-avatar">${avatarInitials}</div>
                 <div class="text-center mb-6">
                     <h3 class="text-lg font-semibold text-text-dark">${user.full_name}</h3>
                     <p class="text-text-dark/60 text-sm">${user.email}</p>
-                    <span class="inline-block mt-2 ${user.is_active ? 'status-active' : 'status-inactive'} status-badge">
-                        ${user.is_active ? 'Active' : 'Inactive'}
+                    <span class="inline-block mt-2 ${statusClass} status-badge">
+                        ${statusText}
                     </span>
                 </div>
                 
@@ -750,81 +1454,82 @@
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Department:</span>
-                        <span class="text-text-dark font-medium">${user.department_name || 'N/A'}</span>
+                        <span class="text-text-dark font-medium">${user.department_name || '-'}</span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Phone:</span>
-                        <span class="text-text-dark font-medium">${user.phone_number || 'N/A'}</span>
+                        <span class="text-text-dark font-medium">${user.phone_number || '-'}</span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Joined:</span>
-                        <span class="text-text-dark font-medium">${user.created_at}</span>
+                        <span class="text-text-dark font-medium">
+                            ${new Date(user.created_at).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                            })}
+                        </span>
                     </div>
                     <div class="user-info-item">
                         <span class="text-text-dark/70 text-sm">Last Login:</span>
-                        <span class="text-text-dark font-medium">${user.last_login}</span>
+                        <span class="text-text-dark font-medium">${lastLogin}</span>
                     </div>
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Total Tickets:</span>
-                        <span class="text-text-dark font-medium">${user.total_tickets}</span>
-                    </div>
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Assigned Projects:</span>
-                        <span class="text-text-dark font-medium">${user.total_projects}</span>
-                    </div>
-                    ${user.projects.length > 0 ? `
-                    <div class="user-info-item">
-                        <span class="text-text-dark/70 text-sm">Projects:</span>
-                        <span class="text-text-dark font-medium text-xs">${user.projects.join(', ')}</span>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
             `;
 
-            this.userDetails.innerHTML = html;
+            this.$userDetails.html(html);
             this.updateUserActions(user);
         }
 
         updateUserActions(user) {
             const isActive = user.is_active;
+            const userId = user.user_id;
 
             const html = `
-            <div class="space-y-2 animate-fadeIn">
-                <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
-                    <i class="fas fa-edit"></i>
-                    Edit User
-                </button>
-                
-                <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
-                    <i class="fas fa-key"></i>
-                    Reset Password
-                </button>
-                
-                <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
-                    <i class="fas fa-power-off"></i>
-                    ${isActive ? 'Deactivate Account' : 'Activate Account'}
-                </button>
-                
-                <button class="delete-user-btn w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium flex items-center justify-center gap-2" data-user-id="${user.user_id}">
-                    <i class="fas fa-trash"></i>
-                    Delete User
-                </button>
-            </div>
-            `;
+    <div class="space-y-2 animate-fadeIn">
+        <!-- 1. Edit User Button -->
+        <button class="edit-user-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-edit"></i>
+            Edit User
+        </button>
+        
+        <!-- 2. Reset Password Button -->
+        <button class="reset-password-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-key"></i>
+            Reset Password
+        </button>
+        
+        <!-- 3. Delete User Button -->
+        <button class="delete-user-btn w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-trash"></i>
+            Delete User
+        </button>
+        
+        <!-- 4. Toggle Status Button -->
+        <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-yellow-50 text-yellow-600 border border-yellow-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-yellow-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2" 
+                data-user-id="${userId}">
+            <i class="fas fa-power-off"></i>
+            ${isActive ? 'Deactivate Account' : 'Activate Account'}
+        </button>
+    </div>
+    `;
 
-            this.userActions.innerHTML = html;
+            this.$userActions.html(html);
             this.bindActionButtons();
         }
 
         handleFilterChange() {
             this.filters = {
-                search: this.userSearch.value,
-                role_id: this.roleFilter.value,
-                department_id: this.departmentFilter.value,
-                is_active: this.statusFilter.value,
-                date_from: this.dateFrom.value,
-                date_to: this.dateTo.value
+                search: this.$userSearch.val(),
+                role_id: this.$roleFilter.val(),
+                department_id: this.$departmentFilter.val(),
+                is_active: this.$statusFilter.val(),
+                date_from: this.$dateFrom.val(),
+                date_to: this.$dateTo.val()
             };
 
             this.currentPage = 1;
@@ -832,12 +1537,12 @@
         }
 
         resetAllFilters() {
-            this.userSearch.value = '';
-            this.roleFilter.value = '';
-            this.departmentFilter.value = '';
-            this.statusFilter.value = '';
-            this.dateFrom.value = '';
-            this.dateTo.value = '';
+            this.$userSearch.val('');
+            this.$roleFilter.val('');
+            this.$departmentFilter.val('');
+            this.$statusFilter.val('');
+            this.$dateFrom.val('');
+            this.$dateTo.val('');
 
             this.filters = {};
             this.currentPage = 1;
@@ -852,117 +1557,168 @@
             this.currentPage = page;
             this.loadUsers();
 
-            // Scroll to top of table
-            this.usersTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Scroll to top of table dengan animasi smooth
+            $('html, body').animate({
+                scrollTop: this.$usersTable.offset().top - 100
+            }, 300);
+
+            // Update URL tanpa reload (optional)
+            this.updateURL();
+        }
+
+        updateURL() {
+            const url = new URL(window.location);
+            const params = new URLSearchParams(url.search);
+
+            // Update atau tambah parameter page
+            params.set('page', this.currentPage);
+
+            // Update URL tanpa reload page
+            const newUrl = `${url.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
         }
 
         updatePaginationInfo(data) {
-            const start = (this.currentPage - 1) * this.pageSize + 1;
-            const end = Math.min(start + this.pageSize - 1, data.recordsFiltered);
+            const start = Math.max(1, (this.currentPage - 1) * this.pageSize + 1);
+            const end = Math.min(start + data.users.length - 1, data.total);
+            const totalPages = Math.ceil(data.total / this.pageSize);
 
-            this.showingInfo.textContent = `Showing ${start}-${end} of ${data.recordsFiltered} users`;
+            // Update showing info
+            if (data.total > 0) {
+                this.$showingInfo.text(`${data.total} users`);
+            } else {
+                this.$showingInfo.text(`Total: 0 users`);
+            }
 
-            this.totalPages = Math.ceil(data.recordsFiltered / this.pageSize);
-            this.paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+            this.$paginationInfo.text(`Page ${this.currentPage} of ${totalPages}`);
+
+            this.totalPages = totalPages;
 
             // Update page numbers
             this.renderPageNumbers();
 
-            // Update prev/next buttons
-            this.prevPage.disabled = this.currentPage === 1;
-            this.nextPage.disabled = this.currentPage === this.totalPages;
+            // Update prev/next buttons (simple)
+            this.$prevPage.prop('disabled', this.currentPage === 1);
+            this.$nextPage.prop('disabled', this.currentPage === this.totalPages || this.totalPages === 0);
+
+            // Update extended buttons di renderPageNumbers sudah handle
         }
 
         renderPageNumbers() {
             let html = '';
+            const totalPages = this.totalPages;
+            const currentPage = this.currentPage;
 
-            // Always show first page
-            html += this.createPageButton(1);
+            // Jumlah maksimum tombol yang ditampilkan
+            const maxVisibleButtons = 2;
 
-            // Show ellipsis if needed
-            if (this.currentPage > 3) {
-                html += '<span class="px-2 text-gray-400">...</span>';
+            // Hitung range tombol yang akan ditampilkan
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+
+            // Sesuaikan startPage jika endPage mencapai totalPages
+            if (endPage - startPage + 1 < maxVisibleButtons) {
+                startPage = Math.max(1, endPage - maxVisibleButtons + 1);
             }
 
-            // Show pages around current page
-            const startPage = Math.max(2, this.currentPage - 1);
-            const endPage = Math.min(this.totalPages - 1, this.currentPage + 1);
+            // Tombol Previous (khusus untuk mobile/desktop berbeda)
+            html += `
+        <button class="prev-btn-extended w-10 h-8 flex items-center justify-center rounded-lg bg-white/20 text-text-dark hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${currentPage === 1 ? 'disabled' : ''}
+                data-page="${currentPage - 1}"
+                title="Previous Page">
+            <i class="fas fa-chevron-left text-xs"></i>
+        </button>
+    `;
 
+            // Tombol halaman pertama
+            if (startPage > 1) {
+                html += this.createPageButton(1);
+                if (startPage > 2) {
+                    html += '<span class="px-2 text-gray-400">...</span>';
+                }
+            }
+
+            // Tombol halaman tengah
             for (let i = startPage; i <= endPage; i++) {
                 html += this.createPageButton(i);
             }
 
-            // Show ellipsis if needed
-            if (this.currentPage < this.totalPages - 2) {
-                html += '<span class="px-2 text-gray-400">...</span>';
+            // Tombol halaman terakhir
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += '<span class="px-2 text-gray-400">...</span>';
+                }
+                if (totalPages > 1) {
+                    html += this.createPageButton(totalPages);
+                }
             }
 
-            // Always show last page if not first
-            if (this.totalPages > 1) {
-                html += this.createPageButton(this.totalPages);
-            }
+            // Tombol Next
+            html += `
+        <button class="next-btn-extended w-10 h-8 flex items-center justify-center rounded-lg bg-white/20 text-text-dark hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${currentPage === totalPages ? 'disabled' : ''}
+                data-page="${currentPage + 1}"
+                title="Next Page">
+            <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+    `;
 
-            this.pageNumbers.innerHTML = html;
+            this.$pageNumbers.html(html);
 
             // Add event listeners to page buttons
-            this.pageNumbers.querySelectorAll('.page-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const page = parseInt(btn.dataset.page);
+            this.$pageNumbers.find('.page-btn').off('click').on('click', (e) => {
+                e.preventDefault();
+                const page = parseInt($(e.currentTarget).data('page'));
+                if (page >= 1 && page <= this.totalPages) {
                     this.changePage(page);
-                });
+                }
+            });
+
+            // Add event listeners untuk extended buttons
+            this.$pageNumbers.find('.prev-btn-extended').off('click').on('click', (e) => {
+                e.preventDefault();
+                if (this.currentPage > 1) {
+                    this.changePage(this.currentPage - 1);
+                }
+            });
+
+            this.$pageNumbers.find('.next-btn-extended').off('click').on('click', (e) => {
+                e.preventDefault();
+                if (this.currentPage < this.totalPages) {
+                    this.changePage(this.currentPage + 1);
+                }
             });
         }
 
         createPageButton(page) {
             const isActive = page === this.currentPage;
             return `
-            <button class="page-btn w-8 h-8 flex items-center justify-center rounded-lg font-medium ${isActive ? 'bg-secondary text-white' : 'bg-white/20 text-text-dark hover:bg-secondary/20'}" data-page="${page}">
-                ${page}
-            </button>
-            `;
-        }
-
-        showLoading() {
-            this.loadingState.classList.remove('hidden');
-            this.usersTable.classList.add('hidden');
-            this.emptyState.classList.add('hidden');
-        }
-
-        hideLoading() {
-            this.loadingState.classList.add('hidden');
+    <button class="page-btn min-w-8 h-8 px-3 flex items-center justify-center rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-secondary text-white shadow-sm' : 'bg-white/20 text-text-dark hover:bg-secondary/20 hover:text-secondary'}" 
+            data-page="${page}"
+            title="Page ${page}">
+        ${page}
+    </button>
+    `;
         }
 
         showError(message) {
-            this.emptyState.innerHTML = `
+            this.$emptyState.html(`
                 <i class="fas fa-exclamation-triangle text-red-300 text-4xl mb-4"></i>
                 <p class="text-red-500">${message}</p>
                 <button class="mt-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors" onclick="userManager.loadUsers()">
                     Retry
                 </button>
-            `;
-            this.emptyState.classList.remove('hidden');
-            this.usersTable.classList.add('hidden');
-            this.loadingState.classList.add('hidden');
+            `);
+            this.$emptyState.removeClass('hidden');
+            this.$usersTable.addClass('hidden');
         }
 
         handleTableClick(event) {
-            const row = event.target.closest('tr[data-user-id]');
-            if (!row) return;
+            const $row = $(event.target).closest('tr[data-user-id]');
+            if (!$row.length) return;
 
-            const userId = parseInt(row.dataset.userId);
-
-            // Check if click was on an action button
-            const actionBtn = event.target.closest('.btn-view-user, .btn-edit-user, .btn-reset-password, .btn-delete-user');
-            if (actionBtn) {
-                event.stopPropagation();
-
-                const action = actionBtn.classList.contains('btn-view-user') ? 'view' :
-                    actionBtn.classList.contains('btn-edit-user') ? 'edit' :
-                        actionBtn.classList.contains('btn-reset-password') ? 'reset' : 'delete';
-
-                this.handleAction(action, userId);
-                return;
-            }
+            const userId = parseInt($row.data('user-id'));
 
             // Otherwise, load user details
             this.loadUserDetails(userId);
@@ -987,461 +1743,800 @@
 
         bindActionButtons() {
             // Bind table action buttons
-            this.usersTableBody.querySelectorAll('.btn-view-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.loadUserDetails(userId);
-                });
+            this.$usersTableBody.find('.btn-view-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.loadUserDetails(userId);
             });
 
-            this.usersTableBody.querySelectorAll('.btn-edit-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.editUser(userId);
-                });
+            this.$usersTableBody.find('.btn-edit-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.editUser(userId);
             });
 
-            this.usersTableBody.querySelectorAll('.btn-reset-password').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.resetPassword(userId);
-                });
+            this.$usersTableBody.find('.btn-reset-password').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.resetPassword(userId);
             });
 
-            this.usersTableBody.querySelectorAll('.btn-delete-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    this.deleteUser(userId);
-                });
+            this.$usersTableBody.find('.btn-delete-user').off('click').on('click', (e) => {
+                const userId = parseInt($(e.currentTarget).data('user-id'));
+                this.deleteUser(userId);
             });
 
             // Bind detail action buttons
-            this.userActions.querySelectorAll('.edit-user-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
+            if (this.$userActions.length) {
+                this.$userActions.find('.edit-user-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
                     this.editUser(userId);
                 });
-            });
 
-            this.userActions.querySelectorAll('.reset-password-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
+                this.$userActions.find('.reset-password-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
                     this.resetPassword(userId);
                 });
-            });
 
-            this.userActions.querySelectorAll('.toggle-status-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
-                    await this.toggleUserStatus(userId);
-                });
-            });
-
-            this.userActions.querySelectorAll('.delete-user-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = parseInt(e.target.closest('button').dataset.userId);
+                this.$userActions.find('.delete-user-btn').off('click').on('click', (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
                     this.deleteUser(userId);
                 });
-            });
-        }
 
-        showAddUserModal() {
-            // Implementation for add user modal
-            this.showToast('Add user feature coming soon!', 'info');
-        }
-
-        showBulkActionsModal() {
-            this.showToast('Bulk actions feature coming soon!', 'info');
-        }
-
-        showImportUsersModal() {
-            this.showToast('Import users feature coming soon!', 'info');
-        }
-
-        async editUser(userId) {
-            try {
-                // Load user data for editing
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                this.$userActions.find('.toggle-status-btn').off('click').on('click', async (e) => {
+                    const userId = parseInt($(e.currentTarget).data('user-id'));
+                    await this.toggleUserStatus(userId);
                 });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Show edit modal with user data
-                    this.showEditModal(data.user);
-                } else {
-                    this.showToast(data.message, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error loading user for edit:', error);
-                this.showToast('Failed to load user data', 'error');
             }
         }
 
-        showEditModal(user) {
-            // Create and show edit modal
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-                    <div class="p-6 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-800">Edit User</h3>
-                            <button class="close-modal text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times"></i>
+        showAddUserModal() {
+            // Create modal HTML
+            const modalHTML = `
+                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="addUserModal">
+                    <div class="bg-white rounded-2xl w-full max-w-2xl animate-slideInUp max-h-[90vh] overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-semibold text-gray-800">Add New User</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            <form id="addUserForm">
+                                <!-- CSRF token will be added via fetch headers -->
+                                
+                                <div class="space-y-6">
+                                    <!-- Basic Information Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Basic Information</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Username *</label>
+                                                <input type="text" name="username" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="johndoe">
+                                                <p class="text-xs text-gray-500 mt-1">Must be unique</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Full Name *</label>
+                                                <input type="text" name="full_name" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="John Doe">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Email *</label>
+                                                <input type="email" name="email" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="john@example.com">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Phone Number</label>
+                                                <input type="text" name="phone_number"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="+1234567890">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Password Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Password</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Password *</label>
+                                                <input type="password" name="password" required minlength="6"
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Confirm Password *</label>
+                                                <input type="password" name="confirm_password" required
+                                                       class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                                                       placeholder="••••••••">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Role & Department Section -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Role & Department</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Role *</label>
+                                                <select name="role_id" required
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">Select Role</option>
+                                                    <?php foreach ($roles as $role): ?>
+                                                        <option value="<?= $role['role_id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-gray-600 text-sm mb-2">Department</label>
+                                                <select name="department_id"
+                                                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+                                                    <option value="">No Department</option>
+                                                    <?php foreach ($departments as $department): ?>
+                                                        <option value="<?= $department['department_id'] ?>"><?= htmlspecialchars($department['department_name']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Account Status -->
+                                    <div>
+                                        <h4 class="text-lg font-medium text-text-dark mb-4">Account Status</h4>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" id="is_active" name="is_active" value="1" checked
+                                                   class="w-4 h-4 text-secondary border-gray-300 rounded focus:ring-secondary">
+                                            <label for="is_active" class="text-gray-700 text-sm">
+                                                Account is active (user can login)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="p-6 border-t border-gray-200 flex gap-3">
+                            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button id="saveUserBtn" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors font-medium">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add User
                             </button>
                         </div>
-                    </div>
-                    
-                    <div class="p-6">
-                        <form id="editUserForm">
-                            <input type="hidden" name="user_id" value="${user.user_id}">
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Full Name</label>
-                                    <input type="text" name="full_name" value="${user.full_name}" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Email</label>
-                                    <input type="email" name="email" value="${user.email}" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Status</label>
-                                    <select name="is_active" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                                        <option value="1" ${user.is_active ? 'selected' : ''}>Active</option>
-                                        <option value="0" ${!user.is_active ? 'selected' : ''}>Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 flex gap-3">
-                        <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                            Cancel
-                        </button>
-                        <button id="saveEdit" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                            Save Changes
-                        </button>
                     </div>
                 </div>
             `;
 
-            document.body.appendChild(modal);
+            $('body').append(modalHTML);
+            const $modal = $('#addUserModal');
 
             // Add event listeners
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => modal.remove());
+            $modal.find('.close-modal').on('click', () => $modal.remove());
+
+            $modal.find('#saveUserBtn').on('click', async () => {
+                await this.saveNewUser($modal);
             });
 
-            modal.querySelector('#saveEdit').addEventListener('click', async () => {
-                await this.saveEditUser(user.user_id, modal);
+            // Close on ESC key
+            $(document).on('keydown.addUser', (e) => {
+                if (e.key === 'Escape') {
+                    $modal.remove();
+                    $(document).off('keydown.addUser');
+                }
+            });
+
+            // Prevent modal close when clicking inside modal
+            $modal.find('.bg-white').on('click', (e) => {
+                e.stopPropagation();
             });
         }
 
-        async saveEditUser(userId, modal) {
+        async saveNewUser($modal) {
             try {
-                const formData = new FormData(modal.querySelector('#editUserForm'));
+                const $form = $modal.find('#addUserForm');
+                const formData = $form.serializeArray();
 
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/edit") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                // Convert to object for validation
+                const formDataObj = {};
+                formData.forEach(item => {
+                    formDataObj[item.name] = item.value;
                 });
 
-                const data = await response.json();
+                // Handle is_active
+                const isActiveCheckbox = $modal.find('#is_active');
+                if (isActiveCheckbox.length) {
+                    formDataObj.is_active = isActiveCheckbox.prop('checked') ? '1' : '0';
+                }
 
-                if (data.success) {
-                    this.showToast(data.message, 'success');
-                    modal.remove();
-                    this.loadUsers();
-                    if (this.selectedUserId === userId) {
-                        this.loadUserDetails(userId);
+                // Debug: Tampilkan semua form data
+                console.log('=== FORM DATA DEBUG ===');
+                console.log('Full FormData object:', formDataObj);
+
+                // Validasi client-side
+                const password = formDataObj.password;
+                const confirmPassword = formDataObj.confirm_password;
+
+                if (password && password.length < 6) {
+                    this.showToast('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    this.showToast('Passwords do not match', 'error');
+                    return;
+                }
+
+                // Send request ke endpoint ADD langsung (TANPA loading state)
+                const response = await $.ajax({
+                    url: '<?= base_url("admin/users/ajax-add") ?>',
+                    method: 'POST',
+                    data: $form.serialize(),
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
+                });
+
+                console.log('Parsed response:', response);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+
+                    // Close modal
+                    $modal.remove();
+
+                    // Refresh user list
+                    this.loadUsers();
+
+                    // Show new user in the list
+                    if (response.user_id) {
+                        setTimeout(() => {
+                            this.loadUserDetails(response.user_id);
+                        }, 500);
+                    }
+
                 } else {
-                    this.showToast(data.message || 'Failed to update user', 'error');
+                    let errorMessage = response.message || 'Failed to add user';
+                    console.error('Error details:', response);
+
+                    this.showToast(errorMessage, 'error');
+
+                    // Highlight error fields
+                    if (response.errors) {
+                        Object.keys(response.errors).forEach(fieldName => {
+                            const $input = $modal.find(`[name="${fieldName}"]`);
+                            if ($input.length) {
+                                $input.addClass('border-red-500 bg-red-50');
+                                $input.one('input', function() {
+                                    $(this).removeClass('border-red-500 bg-red-50');
+                                });
+                            }
+                        });
+                    }
                 }
 
             } catch (error) {
                 console.error('Error saving user:', error);
-                this.showToast('Failed to save changes', 'error');
-            }
-        }
-
-        async resetPassword(userId) {
-            // Show reset password modal
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-                    <div class="p-6 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-semibold text-gray-800">Reset Password</h3>
-                            <button class="close-modal text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="p-6">
-                        <form id="resetPasswordForm">
-                            <input type="hidden" name="user_id" value="${userId}">
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">New Password</label>
-                                    <input type="password" name="new_password" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-gray-600 text-sm mb-2">Confirm Password</label>
-                                    <input type="password" name="confirm_password" 
-                                           class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary" required>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 flex gap-3">
-                        <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                            Cancel
-                        </button>
-                        <button id="confirmReset" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                            Reset Password
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            // Add event listeners
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => modal.remove());
-            });
-
-            modal.querySelector('#confirmReset').addEventListener('click', async () => {
-                await this.confirmResetPassword(userId, modal);
-            });
-        }
-
-        async confirmResetPassword(userId, modal) {
-            try {
-                const formData = new FormData(modal.querySelector('#resetPasswordForm'));
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/reset-password") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    this.showToast(data.message, 'success');
-                    modal.remove();
-                } else {
-                    this.showToast(data.message || 'Failed to reset password', 'error');
-                }
-
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                this.showToast('Failed to reset password', 'error');
+                this.showToast('Error: ' + (error.responseJSON?.message || error.statusText || 'Save failed'), 'error');
             }
         }
 
         async toggleUserStatus(userId) {
             try {
-                // Get current user details first
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const detailsResponse = await fetch(`<?= base_url("admin/users/details") ?>`, {
-                    method: 'POST',
+                // Get user details first for confirmation message
+                const userResponse = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                    }
                 });
 
-                const detailsData = await detailsResponse.json();
-
-                if (!detailsData.success) {
-                    throw new Error('Failed to get user details');
-                }
-
-                const currentStatus = detailsData.user.is_active;
-                const newStatus = !currentStatus;
-                const action = newStatus ? 'activate' : 'deactivate';
-
-                if (!confirm(`Are you sure you want to ${action} this user?`)) {
+                if (!userResponse.success || !userResponse.user) {
+                    this.showToast('Failed to load user details', 'error');
                     return;
                 }
 
-                // Prepare status update form
-                const updateFormData = new FormData();
-                updateFormData.append('status', newStatus ? 'active' : 'inactive');
+                const user = userResponse.user;
+                const isCurrentlyActive = user.is_active;
+                const action = isCurrentlyActive ? 'deactivate' : 'activate';
+                const userName = user.full_name;
 
-                if (this.csrfToken) {
-                    updateFormData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
+                // Show confirmation modal with better UI
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="toggleStatusModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 ${isCurrentlyActive ? 'bg-yellow-100' : 'bg-green-100'} rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas ${isCurrentlyActive ? 'fa-user-slash text-yellow-600' : 'fa-user-check text-green-600'} text-2xl"></i>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">
+                            ${isCurrentlyActive ? 'Deactivate Account' : 'Activate Account'}
+                        </h3>
+                        
+                        <p class="text-gray-600 mb-6">
+                            Are you sure you want to <span class="font-semibold">${action}</span> 
+                            <span class="font-semibold text-${isCurrentlyActive ? 'yellow' : 'green'}-600">${userName}</span>'s account?
+                        </p>
+                        
+                        <div class="${isCurrentlyActive ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'} border rounded-lg p-4 mb-6 text-left">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle ${isCurrentlyActive ? 'text-yellow-500' : 'text-green-500'} mt-1 mr-2"></i>
+                                <div>
+                                    <p class="text-sm ${isCurrentlyActive ? 'text-yellow-800' : 'text-green-800'} font-medium">
+                                        ${isCurrentlyActive ? 'Deactivation Effects:' : 'Activation Effects:'}
+                                    </p>
+                                    <ul class="text-sm ${isCurrentlyActive ? 'text-yellow-700' : 'text-green-700'} mt-1 list-disc list-inside space-y-1">
+                                        ${isCurrentlyActive ? 
+                                            `<li>User will not be able to login</li>
+                                             <li>Account will appear as inactive</li>
+                                             <li>Can be reactivated anytime</li>
+                                             <li>Existing data is preserved</li>` :
+                                            `<li>User will be able to login again</li>
+                                             <li>Account will appear as active</li>
+                                             <li>All permissions restored</li>
+                                             <li>User can resume activities</li>`
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" 
+                                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <button type="button" 
+                                    id="confirmToggleBtn" 
+                                    class="flex-1 py-3 ${isCurrentlyActive ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2">
+                                <i class="fas ${isCurrentlyActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                                ${isCurrentlyActive ? 'Deactivate Account' : 'Activate Account'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
 
-                const updateResponse = await fetch(`<?= base_url("admin/users/change-status") ?>/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: updateFormData
+                $('body').append(modalHTML);
+                const $modal = $('#toggleStatusModal');
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.toggleStatus');
                 });
 
-                const updateData = await updateResponse.json();
+                $confirmBtn.on('click', async () => {
+                    await this.processToggleStatus($modal, userId, isCurrentlyActive);
+                });
 
-                if (updateData.success) {
-                    this.showToast(`User ${action}d successfully`, 'success');
-                    this.loadUsers();
-
-                    // Reload details if this user is selected
-                    if (this.selectedUserId === userId) {
-                        this.loadUserDetails(userId);
+                // Close on ESC key
+                $(document).on('keydown.toggleStatus', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.toggleStatus');
                     }
+                });
+
+                // Submit with Enter key
+                $(document).on('keydown.toggleStatusEnter', (e) => {
+                    if (e.key === 'Enter' && !$confirmBtn.is(':disabled')) {
+                        e.preventDefault();
+                        $confirmBtn.click();
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error in toggleUserStatus:', error);
+                this.showToast('Failed to open status change confirmation', 'error');
+            }
+        }
+
+        async processToggleStatus($modal, userId, isCurrentlyActive) {
+            try {
+                // Show loading state
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+                const originalText = $confirmBtn.html();
+                const action = isCurrentlyActive ? 'Deactivating...' : 'Activating...';
+                $confirmBtn.html(`<i class="fas fa-spinner fa-spin mr-2"></i> ${action}`);
+                $confirmBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-change-status") ?>/${userId}`,
+                    method: 'POST',
+                    data: {
+                        user_id: userId
+                    },
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Toggle Status Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
+                });
+
+                // Restore button state
+                $confirmBtn.html(originalText);
+                $confirmBtn.prop('disabled', false);
+
+                if (response.success) {
+                    const newStatus = response.new_status;
+                    const statusText = response.status_text;
+                    const action = response.action;
+
+                    this.showToast(response.message, 'success');
+                    $modal.remove();
+
+                    // Update UI immediately
+                    this.updateStatusUI(userId, newStatus, statusText, action);
+
+                    // Refresh user list
+                    await this.loadUsers();
+
+                    // Reload user details if this user is selected
+                    if (this.selectedUserId === userId) {
+                        await this.loadUserDetails(userId);
+                    }
+
                 } else {
-                    this.showToast(updateData.message, 'error');
+                    let errorMessage = response.message || 'Failed to update user status';
+
+                    // Show specific error messages
+                    if (response.message.includes('cannot change your own')) {
+                        errorMessage = 'You cannot change your own account status';
+                        $modal.remove(); // Close modal for self-status change
+                    } else if (response.message.includes('User not found')) {
+                        errorMessage = 'User not found';
+                        $modal.remove();
+                    }
+
+                    this.showToast(errorMessage, 'error');
                 }
 
             } catch (error) {
                 console.error('Error toggling user status:', error);
-                this.showToast('Failed to update user status', 'error');
+
+                // Restore button state
+                const $confirmBtn = $modal.find('#confirmToggleBtn');
+                $confirmBtn.html(originalText);
+                $confirmBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to update user status';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
+                }
             }
         }
 
-        async deleteUser(userId) {
-            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                return;
+        // Method to update UI after status change
+        updateStatusUI(userId, newStatus, statusText, action) {
+            // Update status badge in table if user is visible
+            const $userRow = this.$usersTableBody.find(`tr[data-user-id="${userId}"]`);
+            if ($userRow.length) {
+                const $statusCell = $userRow.find('.status-badge');
+                if ($statusCell.length) {
+                    $statusCell.text(statusText);
+                    $statusCell.removeClass().addClass(newStatus ? 'status-active status-badge' : 'status-inactive status-badge');
+                }
             }
 
+            // Update button in actions panel
+            const newButtonText = newStatus ? 'Deactivate Account' : 'Activate Account';
+            const newButtonClass = newStatus ?
+                'bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100' :
+                'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100';
+
+            const $toggleBtn = this.$userActions.find('.toggle-status-btn');
+            if ($toggleBtn.length) {
+                $toggleBtn.html(`<i class="fas fa-power-off"></i> ${newButtonText}`);
+                $toggleBtn.removeClass().addClass(`toggle-status-btn w-full py-3 ${newButtonClass} rounded-xl transition-colors font-medium flex items-center justify-center gap-2`);
+            }
+
+            // Show success message with details
+            setTimeout(() => {
+                this.showToast(`User account ${action} successfully`, 'success');
+            }, 300);
+        }
+
+        async deleteUser(userId) {
             try {
-                const formData = new FormData();
-                formData.append('user_id', userId);
-
-                if (this.csrfToken) {
-                    formData.append(this.csrfHeader || 'X-CSRF-TOKEN', this.csrfToken);
-                }
-
-                const response = await fetch(`<?= base_url("admin/users/delete") ?>/${userId}`, {
-                    method: 'POST',
+                // Get user details first for confirmation message
+                const userResponse = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-details") ?>/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                    }
+                }).fail(() => {
+                    // If can't get user details, still proceed with generic message
+                    return null;
                 });
 
-                const data = await response.json();
+                const userName = userResponse?.success ? userResponse.user.full_name : 'this user';
 
-                if (data.success) {
-                    this.showToast('User deleted successfully', 'success');
-                    this.loadUsers();
+                // Show confirmation modal with better UI
+                const modalHTML = `
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" id="deleteUserModal">
+                <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Delete User</h3>
+                        <p class="text-gray-600 mb-4">
+                            Are you sure you want to delete <span class="font-semibold">${userName}</span>?
+                            This action cannot be undone.
+                        </p>
+                        
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-left">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-red-500 mt-1 mr-2"></i>
+                                <div>
+                                    <p class="text-sm text-red-800 font-medium">Warning:</p>
+                                    <ul class="text-sm text-red-700 mt-1 list-disc list-inside space-y-1">
+                                        <li>All user data will be permanently deleted</li>
+                                        <li>Associated tickets will need reassignment</li>
+                                        <li>Project assignments will be removed</li>
+                                        <li>This action cannot be reversed</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" 
+                                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <button type="button" 
+                                    id="confirmDeleteBtn" 
+                                    class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-trash"></i>
+                                Delete User
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="flex items-center text-sm text-gray-600">
+                                <input type="checkbox" 
+                                       id="confirmCheckbox" 
+                                       class="mr-2 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                I understand this action is permanent
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $('body').append(modalHTML);
+                const $modal = $('#deleteUserModal');
+                const $confirmCheckbox = $modal.find('#confirmCheckbox');
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+
+                // Disable delete button initially
+                $deleteBtn.prop('disabled', true);
+                $deleteBtn.addClass('opacity-50 cursor-not-allowed');
+
+                // Enable/disable delete button based on checkbox
+                $confirmCheckbox.on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $deleteBtn.prop('disabled', false);
+                        $deleteBtn.removeClass('opacity-50 cursor-not-allowed');
+                    } else {
+                        $deleteBtn.prop('disabled', true);
+                        $deleteBtn.addClass('opacity-50 cursor-not-allowed');
+                    }
+                });
+
+                // Add event listeners
+                $modal.find('.close-modal').on('click', () => {
+                    $modal.remove();
+                    $(document).off('keydown.deleteUser');
+                });
+
+                $deleteBtn.on('click', async () => {
+                    await this.processDeleteUser($modal, userId);
+                });
+
+                // Close on ESC key
+                $(document).on('keydown.deleteUser', (e) => {
+                    if (e.key === 'Escape') {
+                        $modal.remove();
+                        $(document).off('keydown.deleteUser');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error in deleteUser:', error);
+                this.showToast('Failed to open delete confirmation', 'error');
+            }
+        }
+
+        async processDeleteUser($modal, userId) {
+            try {
+                // Show loading state
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+                const originalText = $deleteBtn.html();
+                $deleteBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...');
+                $deleteBtn.prop('disabled', true);
+
+                // Send AJAX request ke endpoint AJAX yang baru
+                const response = await $.ajax({
+                    url: `<?= base_url("admin/users/ajax-delete") ?>/${userId}`,
+                    method: 'POST',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error('AJAX Delete Error Details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        responseJSON: jqXHR.responseJSON
+                    });
+
+                    let errorMessage = 'Request failed';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    } else if (jqXHR.responseText) {
+                        try {
+                            const parsedError = JSON.parse(jqXHR.responseText);
+                            errorMessage = parsedError.message || errorMessage;
+                        } catch (e) {
+                            errorMessage = jqXHR.responseText || errorMessage;
+                        }
+                    }
+
+                    throw new Error(errorMessage);
+                });
+
+                // Restore button state
+                $deleteBtn.html(originalText);
+                $deleteBtn.prop('disabled', false);
+
+                if (response.success) {
+                    this.showToast(response.message, 'success');
+                    $modal.remove();
+
+                    // Refresh user list
+                    await this.loadUsers();
 
                     // Clear details if deleted user was selected
                     if (this.selectedUserId === userId) {
                         this.selectedUserId = null;
-                        this.userDetails.innerHTML = `
-                            <div class="flex flex-col items-center justify-center py-8 text-center">
-                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                    <i class="fas fa-user text-gray-400 text-xl"></i>
-                                </div>
-                                <p class="text-text-dark/60 text-sm">Select a user to view details</p>
-                            </div>
-                        `;
+                        this.$userDetails.html(`
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-user text-gray-400 text-xl"></i>
+                        </div>
+                        <p class="text-text-dark/60 text-sm">Select a user to view details</p>
+                    </div>
+                `);
 
-                        this.userActions.innerHTML = `
-                            <div class="space-y-2">
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-edit mr-2"></i>
-                                    Edit User
-                                </button>
-                                
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-key mr-2"></i>
-                                    Reset Password
-                                </button>
-                                
-                                <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                                    <i class="fas fa-power-off mr-2"></i>
-                                    Deactivate Account
-                                </button>
-                            </div>
-                        `;
+                        this.$userActions.html(`
+                    <div class="space-y-2">
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit User
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-key mr-2"></i>
+                            Reset Password
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete User
+                        </button>
+                        
+                        <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                            <i class="fas fa-power-off mr-2"></i>
+                            Deactivate Account
+                        </button>
+                    </div>
+                `);
                     }
+
                 } else {
-                    this.showToast(data.message, 'error');
+                    let errorMessage = response.message || 'Failed to delete user';
+
+                    // Show specific error messages
+                    if (response.message.includes('Cannot delete your own account')) {
+                        errorMessage = 'You cannot delete your own account';
+                    } else if (response.message.includes('associated tickets')) {
+                        errorMessage = 'Cannot delete user with associated tickets. Please reassign tickets first.';
+                    } else if (response.message.includes('User not found')) {
+                        errorMessage = 'User not found. It may have been already deleted.';
+                    }
+
+                    this.showToast(errorMessage, 'error');
+
+                    // Close modal on certain errors
+                    if (response.message.includes('User not found')) {
+                        $modal.remove();
+                    }
                 }
 
             } catch (error) {
                 console.error('Error deleting user:', error);
-                this.showToast('Failed to delete user', 'error');
+
+                // Restore button state
+                const $deleteBtn = $modal.find('#confirmDeleteBtn');
+                $deleteBtn.html('<i class="fas fa-trash mr-2"></i> Delete User');
+                $deleteBtn.prop('disabled', false);
+
+                // Show user-friendly error message
+                let errorMessage = 'Failed to delete user';
+                if (error.message && error.message !== 'OK') {
+                    errorMessage = error.message;
+                }
+
+                this.showToast(errorMessage, 'error');
+
+                // If it's a network error
+                if (error.status === 0) {
+                    this.showToast('Network error. Please check your connection.', 'error');
+                }
             }
-        }
-
-        exportUsersData() {
-            // Build export URL with current filters
-            const params = new URLSearchParams();
-
-            if (this.filters.search) params.append('search', this.filters.search);
-            if (this.filters.role_id) params.append('role_id', this.filters.role_id);
-            if (this.filters.department_id) params.append('department_id', this.filters.department_id);
-            if (this.filters.is_active !== undefined) params.append('is_active', this.filters.is_active);
-            if (this.filters.date_from) params.append('date_from', this.filters.date_from);
-            if (this.filters.date_to) params.append('date_to', this.filters.date_to);
-
-            const url = `<?= base_url("admin/users/export") ?>?${params.toString()}`;
-            window.location.href = url;
         }
 
         updateSelectedRow() {
             // Remove selected class from all rows
-            this.usersTableBody.querySelectorAll('tr').forEach(row => {
-                row.classList.remove('selected');
-            });
+            this.$usersTableBody.find('tr').removeClass('selected');
 
             // Add selected class to current row
-            const selectedRow = this.usersTableBody.querySelector(`tr[data-user-id="${this.selectedUserId}"]`);
-            if (selectedRow) {
-                selectedRow.classList.add('selected');
+            const $selectedRow = this.$usersTableBody.find(`tr[data-user-id="${this.selectedUserId}"]`);
+            if ($selectedRow.length) {
+                $selectedRow.addClass('selected');
             }
         }
 
@@ -1472,27 +2567,30 @@
 
         showToast(message, type = 'info') {
             // Remove existing toasts
-            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+            $('.custom-toast').remove();
 
-            const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
-                }`;
-            toast.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'success' ? 'fa-check-circle' :
-                        'fa-info-circle'
-                }"></i>
-                    <span class="text-sm">${message}</span>
+            const toast = $(`
+                <div class="custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
+                        type === 'success' ? 'bg-green-500 text-white' :
+                            'bg-blue-500 text-white'
+                    }">
+                    <div class="flex items-center gap-2">
+                        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
+                        type === 'success' ? 'fa-check-circle' :
+                            'fa-info-circle'
+                    }"></i>
+                        <span class="text-sm">${message}</span>
+                    </div>
                 </div>
-            `;
-            document.body.appendChild(toast);
+            `);
+
+            $('body').append(toast);
 
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.css({
+                    'opacity': '0',
+                    'transform': 'translateY(-10px)'
+                });
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
@@ -1511,7 +2609,7 @@
     }
 
     // Initialize UserManager when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
+    $(document).ready(() => {
         window.userManager = new UserManager();
     });
 </script>

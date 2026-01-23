@@ -20,6 +20,8 @@ $notifications = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= csrf_token() ?>">
+    <meta name="csrf-header" content="<?= csrf_header() ?>">
     <title><?= esc($title ?? 'Admin Dashboard - NEXUS') ?></title>
 
     <!-- Tailwind CSS CDN -->
@@ -415,15 +417,14 @@ $notifications = [
         margin-top: 8px;
     }
 
-    /* Mobile Logo */
-    .mobile-logo {
-        padding: 30px 24px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: rgba(255, 255, 255, 0.05);
-    }
+        /* Mobile Logo */
+        .mobile-logo {
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
     .mobile-logo-icon {
         width: 32px;
@@ -867,12 +868,6 @@ $notifications = [
                 <span class="text-sm">Manage Users</span>
             </a>
 
-            <a href="<?= base_url('admin/roles') ?>"
-                class="mobile-menu-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
-                <i class="fas fa-user-tag text-sm"></i>
-                <span class="text-sm">Manage Roles</span>
-            </a>
-
             <a href="<?= base_url('admin/departments') ?>"
                 class="mobile-menu-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
                 <i class="fas fa-sitemap text-sm"></i>
@@ -949,12 +944,6 @@ $notifications = [
                 class="sidebar-nav-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
                 <i class="fas fa-users text-sm"></i>
                 <span class="text-sm">Manage Users</span>
-            </a>
-
-            <a href="<?= base_url('admin/roles') ?>"
-                class="sidebar-nav-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
-                <i class="fas fa-user-tag text-sm"></i>
-                <span class="text-sm">Manage Roles</span>
             </a>
 
             <a href="<?= base_url('admin/departments') ?>"

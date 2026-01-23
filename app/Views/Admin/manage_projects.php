@@ -1,21 +1,15 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
-<?= $this->section('title') ?>Manage Projects - NEXUS Admin<?= $this->endSection() ?>
+<?= $this::section('title') ?>Manage Projects - NEXUS Admin<?= $this::endSection() ?>
 
-<?= $this->section('background_effects') ?>
+<?= $this::section('background_effects') ?>
 <!-- Background Effects -->
-<div
-    class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0">
-</div>
-<div
-    class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0">
-</div>
-<div
-    class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0">
-</div>
-<?= $this->endSection() ?>
+<div class="fixed w-[40vw] h-[40vw] -right-[10%] -bottom-[10%] rotate-[149deg] bg-gradient-to-r from-[rgba(56.96,44.47,127.72,0.15)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-80 z-0"></div>
+<div class="fixed w-[35vw] h-[25vw] -left-[5%] top-[10%] rotate-[8deg] bg-gradient-to-r from-[rgba(65.04,45.10,137.14,0.20)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-70 z-0"></div>
+<div class="fixed w-[15vw] h-[20vw] right-[5%] -top-[5%] rotate-[8deg] bg-gradient-to-r from-[rgba(16.56,8.41,46.05,0.12)] via-[#D6D3EE] to-[#817CB2] blur-[100px] opacity-60 z-0"></div>
+<?= $this::endSection() ?>
 
-<?= $this->section('content') ?>
+<?= $this::section('content') ?>
 <div class="relative z-10">
     <!-- Page Header -->
     <div class="mb-8">
@@ -39,7 +33,7 @@
                         <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-muted">
                             <i class="fas fa-search"></i>
                         </div>
-                        <input type="text" placeholder="Search projects..." id="projectSearch"
+                        <input type="text" placeholder="Search projects by name or code..." id="projectSearch"
                             class="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all">
                     </div>
 
@@ -53,8 +47,6 @@
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
-                                <option value="completed">Completed</option>
-                                <option value="on-hold">On Hold</option>
                             </select>
                         </div>
 
@@ -63,25 +55,18 @@
                             <label class="block text-text-dark/70 text-sm mb-2">Sort By</label>
                             <select id="sortFilter"
                                 class="w-full h-12 pl-4 pr-4 bg-white rounded-xl border border-[#D1D1E9] text-text-dark text-sm focus:outline-none focus:border-secondary">
-                                <option value="name_asc">Name (A-Z)</option>
-                                <option value="name_desc">Name (Z-A)</option>
-                                <option value="date_desc">Newest First</option>
-                                <option value="date_asc">Oldest First</option>
-                                <option value="tickets_desc">Most Tickets</option>
-                                <option value="tickets_asc">Fewest Tickets</option>
+                                <option value="default">Default</option>
+                                <option value="newest">Newest Project</option>
+                                <option value="oldest">Oldest Project</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3">
+                    <!-- Action Button -->
+                    <div>
                         <button id="resetFilters"
-                            class="flex-1 h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
+                            class="w-full h-12 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium">
                             Reset Filters
-                        </button>
-                        <button id="exportProjects"
-                            class="flex-1 h-12 bg-white text-secondary border border-secondary rounded-xl hover:bg-secondary/5 transition-colors font-medium">
-                            Export Projects
                         </button>
                     </div>
                 </div>
@@ -92,54 +77,68 @@
                 <div class="dashboard-card-header flex justify-between items-center">
                     <div class="text-text-dark/85 text-base font-medium">Project Management</div>
                     <div class="text-sm text-secondary font-medium">
-                        <span id="showingCount">Showing 1-5</span> of <span id="totalCount">15</span> projects
+                        <span id="showingCount"><span id="totalCount"><?= $total_projects ?? 0 ?></span> projects</span>
                     </div>
                 </div>
 
                 <!-- Table Container -->
                 <div class="overflow-x-auto">
                     <!-- Table Header -->
-                    <div
-                        class="grid grid-cols-12 gap-4 py-4 px-6 bg-[#E3DAEE] rounded-lg text-sm font-semibold text-text-dark/80">
-                        <div class="col-span-2 flex items-center gap-2 cursor-pointer sortable" data-sort="id">
-                            <span>Project ID</span>
-                            <i class="fas fa-sort text-xs opacity-50"></i>
+                    <div class="grid grid-cols-12 gap-4 py-4 px-6 bg-[#E3DAEE] rounded-lg text-sm font-semibold text-text-dark/80">
+                        <div class="col-span-1 flex items-center gap-2">
+                            <span>No.</span>
                         </div>
-                        <div class="col-span-3 cursor-pointer sortable" data-sort="name">
-                            <span>Project Name</span>
-                            <i class="fas fa-sort text-xs opacity-50 ml-1"></i>
-                        </div>
+                        <div class="col-span-4">Project Name</div>
                         <div class="col-span-2">Project Code</div>
                         <div class="col-span-2">Total Tickets</div>
-                        <div class="col-span-2">Status</div>
-                        <div class="col-span-1"></div>
+                        <div class="col-span-3">Status</div>
                     </div>
 
                     <!-- Projects List -->
                     <div id="projectsList" class="divide-y divide-white/30">
-                        <!-- Project rows will be populated here -->
-                    </div>
-                </div>
+                        <?php if (!empty($projects)): ?>
+                            <?php $rowNumber = 1; ?>
+                            <?php foreach ($projects as $project): ?>
+                                <div class="project-row cursor-pointer hover:bg-[#F8F7FC]"
+                                    data-project-id="<?= $project['project_id'] ?>"
+                                    data-created-at="<?= $project['created_at'] ?>"
+                                    onclick="selectProject(<?= $project['project_id'] ?>)">
+                                    <!-- No. -->
+                                    <div class="col-span-1 text-text-dark/60 font-medium text-center py-4">
+                                        <?= $rowNumber++ ?>.
+                                    </div>
 
-                <!-- Pagination -->
-                <div class="border-t border-white/30 mt-4 pt-4">
-                    <div class="flex justify-between items-center px-6">
-                        <div class="text-text-dark/70 text-sm">
-                            <span id="paginationInfo">Page 1 of 3</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button id="prevPage"
-                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <i class="fas fa-chevron-left text-sm"></i>
-                            </button>
-                            <div id="pageNumbers" class="flex items-center gap-1">
-                                <!-- Page numbers will be populated here -->
-                            </div>
-                            <button id="nextPage"
-                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-secondary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <i class="fas fa-chevron-right text-sm"></i>
-                            </button>
-                        </div>
+                                    <!-- Project Name -->
+                                    <div class="col-span-4 py-4">
+                                        <div class="font-medium text-text-dark"><?= esc($project['project_name']) ?></div>
+                                    </div>
+
+                                    <!-- Project Code -->
+                                    <div class="col-span-2 py-4">
+                                        <div class="font-medium text-secondary"><?= $project['project_code'] ?></div>
+                                    </div>
+
+                                    <!-- Total Tickets -->
+                                    <div class="col-span-2 py-4">
+                                        <div class="font-medium text-text-dark"><?= $project['total_tickets'] ?? 0 ?></div>
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-span-3 py-4">
+                                        <?php
+                                        // FIX: Gunakan nilai is_active langsung dari database
+                                        $isActive = (bool)($project['is_active'] ?? false);
+                                        $status = $isActive ? 'active' : 'inactive';
+                                        $statusClass = $status === 'active' ? 'status-active' : 'status-inactive';
+                                        $statusText = $status === 'active' ? 'Active' : 'Inactive';
+                                        ?>
+                                        <span class="<?= $statusClass ?> status-badge" data-status="<?= $status ?>">
+                                            <?= $statusText ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -147,7 +146,7 @@
 
         <!-- Right Column: Project Details & Actions -->
         <div class="space-y-6">
-            <!-- Add Project Card -->
+            <!-- Quick Actions Card -->
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <div class="text-text-dark/85 text-base font-medium">Quick Actions</div>
@@ -160,20 +159,15 @@
                         Add New Project
                     </button>
 
-                    <button id="bulkAssignBtn"
+                    <button id="assignToUsersBtn"
                         class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
                         <i class="fas fa-user-plus"></i>
-                        Bulk Assign Users
-                    </button>
-
-                    <button id="importProjectsBtn"
-                        class="w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-file-import"></i>
-                        Import Projects
+                        Assign to Users
                     </button>
                 </div>
             </div>
 
+            <!-- Project Detail Card -->
             <!-- Project Detail Card -->
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
@@ -181,15 +175,20 @@
                 </div>
 
                 <div id="projectDetails" class="p-4">
-                    <!-- Default state when no project is selected -->
-                    <div class="flex flex-col items-center justify-center py-8 text-center">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-project-diagram text-gray-400 text-xl"></i>
+                    <!-- SELALU TAMPILKAN DEFAULT VIEW AWAL -->
+                    <div id="defaultProjectView">
+                        <div class="text-center mb-6">
+                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fas fa-folder-open text-gray-400 text-xl"></i>
+                                </div>
+                                <p class="text-text-dark/60 text-sm">Select a project to view details</p>
+                            </div>
                         </div>
-                        <p class="text-text-dark/60 text-sm">Select a project to view details</p>
                     </div>
 
-                    <!-- Project details will be loaded here -->
+                    <!-- Dynamic content akan diisi di sini ketika project dipilih -->
+                    <div id="dynamicProjectView" class="hidden"></div>
                 </div>
             </div>
 
@@ -200,18 +199,16 @@
                 </div>
 
                 <div id="projectActions" class="p-4 space-y-3">
-                    <!-- Default state when no project is selected -->
+                    <!-- SELALU TAMPILKAN TOMBOL DISABLED PADA AWAL -->
                     <div class="space-y-2">
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                             <i class="fas fa-edit mr-2"></i>
                             Edit Project
                         </button>
-
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                            <i class="fas fa-users mr-2"></i>
-                            Manage Users
+                            <i class="fas fa-trash mr-2"></i>
+                            Delete Project
                         </button>
-
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                             <i class="fas fa-power-off mr-2"></i>
                             Change Status
@@ -223,274 +220,530 @@
     </div>
 </div>
 
-<!-- Project Actions Menu Template -->
-<template id="projectActionsMenuTemplate">
-    <div class="project-actions-menu absolute bg-white rounded-xl shadow-xl border border-gray-200 z-50 w-48">
-        <div class="py-2">
-            <button class="menu-item view-details">
-                <i class="fas fa-eye text-gray-600"></i>
-                View Details
+<!-- ==================== MODAL DIALOGS ==================== -->
+<!-- Add New Project Modal -->
+<div id="addProjectModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Add New Project</h3>
+            </div>
+            <p class="text-gray-500 text-sm mt-1">Create a new project for ticket management</p>
+        </div>
+
+        <div class="p-6">
+            <form id="addProjectForm" class="space-y-4">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="create_project">
+
+                <!-- Project Name -->
+                <div>
+                    <label for="newProjectName" class="block text-gray-700 text-sm font-medium mb-2">
+                        Project Name
+                    </label>
+                    <input type="text" id="newProjectName" name="project_name" required
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all placeholder-gray-400"
+                        maxlength="100">
+                    <p class="text-xs text-gray-500 mt-1">Maximum 100 characters</p>
+                </div>
+
+                <!-- Project Code -->
+                <div>
+                    <label for="newProjectCode" class="block text-gray-700 text-sm font-medium mb-2">
+                        Project Code
+                    </label>
+                    <input type="text" id="newProjectCode" name="project_code" required
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all placeholder-gray-400 uppercase"
+                        maxlength="20">
+                    <p class="text-xs text-gray-500 mt-1">Uppercase letters and numbers only</p>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="newProjectDescription" class="block text-gray-700 text-sm font-medium mb-2">
+                        Description
+                    </label>
+                    <textarea id="newProjectDescription" name="description" rows="3"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all placeholder-gray-400 resize-none"
+                        maxlength="500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
+                </div>
+
+                <!-- Status Toggle - Diperbaiki -->
+                <div class="pt-2">
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center">
+                            <div class="relative">
+                                <input type="checkbox" id="newProjectActive" name="is_active"
+                                    class="sr-only peer" value="1" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                                         peer-focus:ring-secondary/20 rounded-full peer 
+                                         peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                         after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                         after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                         after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary">
+                                </div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Set as active project</span>
+                        </div>
+                        <span id="statusIndicator"
+                            class="text-sm font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                            Active
+                        </span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('addProjectModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
             </button>
-            <button class="menu-item edit-project">
-                <i class="fas fa-edit text-secondary"></i>
-                Edit Project
-            </button>
-            <button class="menu-item manage-users">
-                <i class="fas fa-users text-blue-600"></i>
-                Manage Users
-            </button>
-            <div class="border-t border-gray-200 my-1"></div>
-            <button class="menu-item archive-project text-red-600">
-                <i class="fas fa-archive"></i>
-                Archive
+            <button type="button" onclick="submitAddProject()" id="submitAddProjectBtn"
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i>
+                Create Project
             </button>
         </div>
     </div>
-</template>
+</div>
 
-<!-- Add Project Modal Template -->
-<template id="addProjectModalTemplate">
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-semibold text-gray-800">Add New Project</h3>
-                    <button class="close-modal text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
+<!-- Assign to Users Modal -->
+<div id="assignToUsersModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div class="p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800">Assign Project to Users</h3>
+                    <p class="text-gray-500 text-sm mt-1">Select users to assign to the project</p>
                 </div>
-            </div>
-
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Project Name <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" id="projectName"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Project Code <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" id="projectCode"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
-                            placeholder="e.g., PROJ001">
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Description</label>
-                        <textarea id="projectDescription"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
-                            rows="3"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Status</label>
-                        <select id="projectStatus"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="completed">Completed</option>
-                            <option value="on-hold">On Hold</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button
-                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancel
-                </button>
-                <button id="confirmAddProject"
-                    class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                    Create Project
-                </button>
             </div>
         </div>
-    </div>
-</template>
 
-<!-- Edit Project Modal Template -->
-<template id="editProjectModalTemplate">
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-semibold text-gray-800">Edit Project</h3>
-                    <button class="close-modal text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Project Name <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" id="editProjectName"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Project Code <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" id="editProjectCode"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Description</label>
-                        <textarea id="editProjectDescription"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
-                            rows="3"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Status</label>
-                        <select id="editProjectStatus"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="completed">Completed</option>
-                            <option value="on-hold">On Hold</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 text-sm mb-2">Created Date</label>
-                        <input type="text" id="editProjectCreated"
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary"
-                            disabled>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button
-                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancel
-                </button>
-                <button id="confirmEditProject"
-                    class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                    Save Changes
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
-
-<!-- Manage Users Modal Template -->
-<template id="manageUsersModalTemplate">
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg animate-slideInUp">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-semibold text-gray-800">Manage Project Users</h3>
-                    <button class="close-modal text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="p-6">
-                <div class="mb-4">
-                    <h4 class="text-gray-700 font-medium mb-2">Project: <span id="modalProjectName"></span></h4>
-                    <p class="text-gray-500 text-sm">Assign users to this project</p>
+        <div class="p-6 overflow-y-auto flex-1">
+            <div class="space-y-6">
+                <!-- Project Selection -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-medium mb-3">
+                        Select Project
+                    </label>
+                    <select id="assignProjectSelect"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all">
+                        <option value="">Choose a project</option>
+                        <?php if (!empty($projects)): ?>
+                            <?php foreach ($projects as $project): ?>
+                                <?php if ($project['is_active']): ?>
+                                    <option value="<?= $project['project_id'] ?>">
+                                        [<?= $project['project_code'] ?>] <?= esc($project['project_name']) ?>
+                                    </option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
 
-                <!-- Search Users -->
-                <div class="mb-4">
-                    <div class="relative">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <!-- Users Selection -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-4">
+                            <label class="block text-gray-700 text-sm font-medium">
+                                Select Users
+                            </label>
+                            <!-- Role Filter -->
+                            <select id="userRoleFilter"
+                                class="text-xs px-3 py-1 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-1 focus:ring-secondary">
+                                <option value="all">All Roles</option>
+                                <option value="Support">Support</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Customer">Customer</option>
+                                <option value="Department">Department</option>
+                            </select>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span id="selectedUsersCount">0</span> users selected |
+                            <span id="totalUsersCount">0</span> total users
+                        </div>
+                    </div>
+
+                    <!-- Search Users -->
+                    <div class="relative mb-4">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                             <i class="fas fa-search"></i>
                         </div>
-                        <input type="text" placeholder="Search users..." id="searchUsersInput"
-                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
+                        <input type="text" id="searchUsers" placeholder="Search users by name, email, or role..."
+                            class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg 
+                                   text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-secondary 
+                                   focus:border-transparent transition-all">
                     </div>
-                </div>
 
-                <!-- Users List -->
-                <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                    <div id="usersListContainer" class="divide-y divide-gray-100">
-                        <!-- Users will be populated here -->
+                    <!-- Users List -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">
+                                        <input type="checkbox" id="selectAllUsers"
+                                            class="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary">
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        User
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Role
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Email
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersListBody" class="divide-y divide-gray-100">
+                                <!-- Dynamic content will be loaded here -->
+                                <tr id="noUsersRow">
+                                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-users text-3xl mb-2 opacity-20"></i>
+                                            <p>No users available</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
 
-                <!-- Selected Users -->
-                <div class="mt-4">
-                    <h5 class="text-gray-700 font-medium mb-2">Assigned Users (<span id="selectedCount">0</span>)</h5>
-                    <div id="selectedUsers" class="flex flex-wrap gap-2">
-                        <!-- Selected users will be shown here -->
+                    <!-- Pagination Controls -->
+                    <div id="usersPagination" class="mt-4 flex items-center justify-between text-sm hidden">
+                        <div class="text-gray-500">
+                            Showing <span id="usersStart">0</span>-<span id="usersEnd">0</span> of <span id="usersTotal">0</span> users
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="prevPageBtn"
+                                class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </button>
+                            <span id="currentPage" class="px-2">1</span>
+                            <button id="nextPageBtn"
+                                class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Users Preview -->
+                    <div id="selectedUsersPreview" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm font-medium text-gray-700">Selected Users:</div>
+                            <button type="button" onclick="clearSelection()"
+                                class="text-xs text-red-600 hover:text-red-700">
+                                Clear All
+                            </button>
+                        </div>
+                        <div id="selectedUsersTags" class="flex flex-wrap gap-2">
+                            <!-- Selected users will appear here as tags -->
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="p-6 border-t border-gray-200 flex gap-3">
-                <button
-                    class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancel
+        <div class="p-6 border-t border-gray-200 flex gap-3 flex-shrink-0">
+            <button type="button" onclick="closeModal('assignToUsersModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="submitAssignUsers()" id="submitAssignUsersBtn"
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2 
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+                <i class="fas fa-user-plus"></i>
+                Assign Selected Users
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Edit Project</h3>
+                <button type="button" onclick="closeModal('editProjectModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
                 </button>
-                <button id="confirmManageUsers"
-                    class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                    Save Assignments
+            </div>
+            <p class="text-gray-500 text-sm mt-1">Edit project details</p>
+        </div>
+
+        <div class="p-6">
+            <form id="editProjectForm" class="space-y-4">
+                <?= csrf_field() ?>
+                <input type="hidden" id="editProjectId" name="project_id">
+
+                <!-- Project Name -->
+                <div>
+                    <label for="editProjectName" class="block text-gray-700 text-sm font-medium mb-2">
+                        Project Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="editProjectName" name="project_name" required
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all"
+                        maxlength="100">
+                </div>
+
+                <!-- Project Code -->
+                <div>
+                    <label for="editProjectCode" class="block text-gray-700 text-sm font-medium mb-2">
+                        Project Code <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="editProjectCode" name="project_code" required
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all uppercase"
+                        maxlength="20">
+                    <p class="text-xs text-gray-500 mt-1">Uppercase letters and numbers only</p>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="editProjectDescription" class="block text-gray-700 text-sm font-medium mb-2">
+                        Description
+                    </label>
+                    <textarea id="editProjectDescription" name="description" rows="3"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-sm 
+                               focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent 
+                               transition-all resize-none"
+                        maxlength="500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="editProjectActive" name="is_active" value="1"
+                            class="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2">
+                        <span class="text-gray-700 text-sm font-medium">Set as active project</span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('editProjectModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="submitEditProject()" id="submitEditProjectBtn"
+                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Delete Project</h3>
+                <button type="button" onclick="closeModal('deleteConfirmModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
+
+        <div class="p-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-800 mb-2">Are you sure?</h4>
+                <p class="text-gray-600 mb-4" id="deleteConfirmMessage">
+                    This action cannot be undone.
+                </p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('deleteConfirmModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmDeleteProject()"
+                class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 
+                       transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-trash"></i>
+                Delete Project
+            </button>
+        </div>
     </div>
-</template>
+</div>
+
+<!-- Status Change Confirmation Modal -->
+<div id="statusConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="statusModalTitle">Change Project Status</h3>
+                <button type="button" onclick="closeModal('statusConfirmModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="text-center">
+                <div id="statusModalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-800 mb-2" id="statusConfirmTitle"></h4>
+                <p class="text-gray-600 mb-4" id="statusConfirmMessage"></p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('statusConfirmModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                       transition-colors font-medium text-sm">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmChangeStatus()"
+                class="flex-1 py-3 text-white rounded-lg transition-colors 
+                       font-medium text-sm flex items-center justify-center gap-2"
+                id="statusConfirmButton">
+                <i class="fas fa-check"></i>
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Project Modal -->
+<div id="deleteProjectModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Delete Project</h3>
+                <button type="button" onclick="closeModal('deleteProjectModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-800 mb-2">Are you sure?</h4>
+                <p class="text-gray-600 mb-4" id="deleteProjectMessage">
+                    You are about to delete the project.
+                </p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex gap-3">
+            <button type="button" onclick="closeModal('deleteProjectModal')"
+                class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmDeleteProject()"
+                class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                <i class="fas fa-trash mr-2"></i>Delete Project
+            </button>
+        </div>
+    </div>
+</div>
 
 <style>
-    /* Custom animations */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animate-fadeIn {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    .animate-slideInUp {
-        animation: slideInUp 0.3s ease-out;
-    }
-
     /* Project row styling */
     .project-row {
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: 1rem;
         padding: 1rem 1.5rem;
-        transition: all 0.2s ease;
         align-items: center;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
     }
 
+    /* Hover state untuk semua rows */
     .project-row:hover {
-        background: rgba(117, 110, 164, 0.05);
+        background: rgba(102, 92, 158, 0.02);
+    }
+
+    /* Selected state - styling utama */
+    .project-row.selected {
+        background: rgba(102, 92, 158, 0.05) !important;
+        border-left-color: #665C9E !important;
+    }
+
+    /* Selected state dengan lebih detail */
+    .project-row.selected::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        background: #665C9E;
+        border-radius: 0 3px 3px 0;
+    }
+
+    /* Selected row text styling */
+    .project-row.selected .col-span-1 {
+        color: #665C9E !important;
+        font-weight: 600;
+    }
+
+    .project-row.selected .font-medium {
+        color: #665C9E !important;
+    }
+
+    .project-row.selected .text-secondary {
+        color: #817CB2 !important;
+    }
+
+    /* Animation untuk selection */
+    @keyframes highlightSelection {
+        0% {
+            background: rgba(102, 92, 158, 0);
+        }
+
+        50% {
+            background: rgba(102, 92, 158, 0.1);
+        }
+
+        100% {
+            background: rgba(102, 92, 158, 0.05);
+        }
     }
 
     .project-row.selected {
-        background: rgba(102, 92, 158, 0.1);
-        border-left: 3px solid #665C9E;
+        animation: highlightSelection 0.3s ease;
     }
 
     /* Status badges */
@@ -512,75 +765,7 @@
         color: #93867E;
     }
 
-    .status-completed {
-        background: #BFDBFE;
-        color: #1E40AF;
-    }
-
-    .status-onhold {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-
-    /* Action menu */
-    .project-actions-menu {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .menu-item {
-        width: 100%;
-        padding: 12px 16px;
-        text-align: left;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .menu-item:hover {
-        background: #F9FAFB;
-    }
-
-    /* Pagination */
-    .page-btn {
-        min-width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-    }
-
-    .page-btn.active {
-        background: #665C9E;
-        color: white;
-    }
-
-    .page-btn:not(.active):hover {
-        background: rgba(102, 92, 158, 0.1);
-    }
-
-    /* Sort indicators */
-    .sortable {
-        user-select: none;
-    }
-
-    .sortable:hover {
-        color: #665C9E;
-    }
-
-    .sortable.active .fa-sort {
-        opacity: 1 !important;
-        color: #665C9E;
-    }
-
-    /* Project details styling */
+    /* Project details */
     .project-avatar {
         width: 80px;
         height: 80px;
@@ -599,123 +784,22 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(209, 209, 233, 0.5);
     }
 
     .project-info-item:last-child {
         border-bottom: none;
     }
 
-    /* Stats grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-top: 16px;
-    }
-
-    .stat-item {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 20px;
-        font-weight: 600;
-        color: #665C9E;
-        display: block;
-    }
-
-    .stat-label {
-        font-size: 11px;
-        color: #6B7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* User item in modal */
-    .user-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .user-item:hover {
-        background: #F9FAFB;
-    }
-
-    .user-item.selected {
-        background: rgba(102, 92, 158, 0.1);
-    }
-
-    .user-avatar-small {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #665C9E;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 500;
-        font-size: 14px;
-        margin-right: 12px;
-    }
-
-    /* Selected user tags */
-    .selected-user-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #665C9E;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-    }
-
-    .remove-user-btn {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        font-size: 10px;
-        padding: 0;
-    }
-
-    /* Loading state */
-    .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-        border-radius: 4px;
-    }
-
-    @keyframes loading {
-        0% {
-            background-position: 200% 0;
-        }
-
-        100% {
-            background-position: -200% 0;
-        }
-    }
-
-    /* Responsive adjustments */
+    /* Responsive */
     @media (max-width: 1024px) {
         .project-row {
             grid-template-columns: repeat(8, minmax(0, 1fr));
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
         }
 
         .project-row>div:nth-child(1) {
-            grid-column: span 2;
+            grid-column: span 1;
         }
 
         .project-row>div:nth-child(2) {
@@ -727,1620 +811,1744 @@
         }
 
         .project-row>div:nth-child(4) {
-            grid-column: span 2;
+            grid-column: span 1;
         }
 
         .project-row>div:nth-child(5) {
             grid-column: span 1;
         }
-
-        .project-row>div:nth-child(6) {
-            grid-column: span 1;
-        }
     }
 
     @media (max-width: 768px) {
-        .dashboard-card-header {
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: flex-start;
-        }
-
         .project-row {
             grid-template-columns: 1fr;
             gap: 0.5rem;
+            padding: 1rem;
         }
 
         .project-row>div {
             grid-column: span 1 !important;
+            text-align: left !important;
+            padding: 4px 0;
         }
 
-        .stats-grid {
-            grid-template-columns: 1fr;
+        .project-row.selected::before {
+            width: 100%;
+            height: 3px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: auto;
+            border-radius: 3px 3px 0 0;
         }
+    }
+
+    /* Custom scrollbar for modal */
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
+
+    /* Selected user tag style */
+    .user-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #665C9E;
+        color: white;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .user-tag button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .user-tag button:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Toggle switch styling */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked+.toggle-slider {
+        background-color: #665C9E;
+    }
+
+    input:checked+.toggle-slider:before {
+        transform: translateX(26px);
+    }
+
+    /* Status indicator */
+    .status-indicator-active {
+        background-color: #C4E3AC;
+        color: #15803D;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-indicator-inactive {
+        background-color: #ECDCD3;
+        color: #93867E;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Add some styling for pagination */
+    #projectsPagination {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+
+    #projectsPagination button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
     }
 </style>
 
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // CSRF Token untuk AJAX requests
-        const csrfToken = '<?= csrf_hash() ?>';
-        const csrfName = '<?= csrf_token() ?>';
-        const baseUrl = '<?= base_url() ?>';
-
-        // State management
-        let currentPage = 1;
-        let itemsPerPage = 10;
+    $(document).ready(function() {
+        // ==================== GLOBAL VARIABLES ====================
         let selectedProjectId = null;
-        let isLoading = false;
-        let allUsers = <?= json_encode($all_users ?? []) ?>;
+        let currentProjectData = null;
+        let currentUserPage = 1;
+        let userSearchTerm = '';
+        let userRoleFilter = 'all';
+        let selectedUserIds = new Set();
 
-        // DOM Elements
-        const elements = {
-            projectSearch: document.getElementById('projectSearch'),
-            statusFilter: document.getElementById('statusFilter'),
-            sortFilter: document.getElementById('sortFilter'),
-            resetFilters: document.getElementById('resetFilters'),
-            exportProjects: document.getElementById('exportProjects'),
-            projectsList: document.getElementById('projectsList'),
-            projectDetails: document.getElementById('projectDetails'),
-            projectActions: document.getElementById('projectActions'),
-            showingCount: document.getElementById('showingCount'),
-            totalCount: document.getElementById('totalCount'),
-            paginationInfo: document.getElementById('paginationInfo'),
-            pageNumbers: document.getElementById('pageNumbers'),
-            prevPage: document.getElementById('prevPage'),
-            nextPage: document.getElementById('nextPage'),
-            addProjectBtn: document.getElementById('addProjectBtn'),
-            bulkAssignBtn: document.getElementById('bulkAssignBtn'),
-            importProjectsBtn: document.getElementById('importProjectsBtn')
-        };
+        // ==================== PAGINATION VARIABLES ====================
+        let currentPage = 1;
+        let totalPages = <?= ceil($total_projects / 5) ?>;
+        let projectsPerPage = 5;
 
-        // Modal templates sebagai string
-        const bulkAssignModalHTML = `
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slideInUp">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-gray-800">Bulk Assign Users to Projects</h3>
-                <button class="close-modal text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="p-6 overflow-y-auto max-h-[60vh]">
-            <!-- Step 1: Select Projects -->
-            <div class="mb-6">
-                <h4 class="text-gray-700 font-medium mb-4">Step 1: Select Projects</h4>
-                <div class="mb-4">
-                    <div class="relative">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <input type="text" placeholder="Search projects..." id="bulkSearchProjects"
-                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                    </div>
-                </div>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
-                    <div id="bulkProjectsList" class="divide-y divide-gray-100">
-                        <!-- Projects will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2: Select Users -->
-            <div>
-                <h4 class="text-gray-700 font-medium mb-4">Step 2: Select Users</h4>
-                <div class="mb-4">
-                    <div class="relative">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <input type="text" placeholder="Search users..." id="bulkSearchUsers"
-                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-secondary">
-                    </div>
-                </div>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
-                    <div id="bulkUsersList" class="divide-y divide-gray-100">
-                        <!-- Users will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Summary -->
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="text-gray-600">Selected Projects:</span>
-                        <span id="bulkSelectedProjectsCount" class="ml-2 font-semibold">0</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Selected Users:</span>
-                        <span id="bulkSelectedUsersCount" class="ml-2 font-semibold">0</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Total Assignments:</span>
-                        <span id="bulkTotalAssignments" class="ml-2 font-semibold">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-6 border-t border-gray-200 flex gap-3">
-            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                Cancel
-            </button>
-            <button id="confirmBulkAssign" disabled
-                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Assign Users
-            </button>
-        </div>
-    </div>
-</div>
-`;
-
-        const importProjectsModalHTML = `
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-md animate-slideInUp">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-gray-800">Import Projects</h3>
-                <button class="close-modal text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="p-6">
-            <!-- File Upload -->
-            <div class="mb-6">
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-secondary transition-colors">
-                    <div class="mb-4">
-                        <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl"></i>
-                    </div>
-                    <h4 class="text-gray-700 font-medium mb-2">Drop file here or click to browse</h4>
-                    <p class="text-gray-500 text-sm mb-4">Supports CSV, XLSX, XLS (Max 10MB)</p>
-                    <input type="file" id="importFile" accept=".csv,.xlsx,.xls" class="hidden">
-                    <button id="browseFileBtn" class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                        Browse Files
-                    </button>
-                </div>
-                <div id="selectedFileInfo" class="mt-3 text-sm text-gray-600 hidden">
-                    <i class="fas fa-file text-gray-400 mr-2"></i>
-                    <span id="fileName"></span>
-                    <button id="removeFileBtn" class="ml-2 text-red-500 hover:text-red-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Template Download -->
-            <div class="mb-6">
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <div class="flex items-start">
-                        <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
-                        <div>
-                            <h5 class="text-blue-800 font-medium mb-1">Need a template?</h5>
-                            <p class="text-blue-600 text-sm mb-3">Download our CSV template to ensure proper formatting.</p>
-                            <button id="downloadTemplateBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
-                                <i class="fas fa-download mr-2"></i>Download CSV Template
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Required Columns -->
-            <div>
-                <h5 class="text-gray-700 font-medium mb-2">Required Columns:</h5>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div class="bg-gray-50 p-2 rounded">
-                        <span class="font-medium">project_name</span>
-                        <span class="text-red-500 ml-1">*</span>
-                    </div>
-                    <div class="bg-gray-50 p-2 rounded">
-                        <span class="font-medium">project_code</span>
-                        <span class="text-red-500 ml-1">*</span>
-                    </div>
-                    <div class="bg-gray-50 p-2 rounded">
-                        <span class="font-medium">description</span>
-                        <span class="text-gray-500 ml-1">(optional)</span>
-                    </div>
-                    <div class="bg-gray-50 p-2 rounded">
-                        <span class="font-medium">is_active</span>
-                        <span class="text-gray-500 ml-1">(true/false)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-6 border-t border-gray-200 flex gap-3">
-            <button class="close-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                Cancel
-            </button>
-            <button id="confirmImport" disabled
-                class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Import Projects
-            </button>
-        </div>
-    </div>
-</div>
-`;
-
-        // Initialize
-        init();
-
-        function init() {
-            loadProjectsData();
-            setupEventListeners();
-
-            // Auto-select first project if available from initial data
-            const initialProjects = <?= json_encode($projects ?? []) ?>;
-            if (initialProjects && initialProjects.length > 0) {
-                setTimeout(() => {
-                    selectProject(initialProjects[0].project_id);
-                }, 500);
-            }
+        // ==================== UTILITY FUNCTIONS ====================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        function setupEventListeners() {
-            // Search input
-            if (elements.projectSearch) {
-                elements.projectSearch.addEventListener('input', debounce(() => {
-                    currentPage = 1;
-                    loadProjectsData();
-                }, 300));
-            }
-
-            // Filter changes
-            if (elements.statusFilter) {
-                elements.statusFilter.addEventListener('change', () => {
-                    currentPage = 1;
-                    loadProjectsData();
-                });
-            }
-
-            if (elements.sortFilter) {
-                elements.sortFilter.addEventListener('change', () => {
-                    currentPage = 1;
-                    loadProjectsData();
-                });
-            }
-
-            // Reset filters
-            if (elements.resetFilters) {
-                elements.resetFilters.addEventListener('click', resetAllFilters);
-            }
-
-            // Export projects
-            if (elements.exportProjects) {
-                elements.exportProjects.addEventListener('click', exportProjectsData);
-            }
-
-            // Pagination
-            if (elements.prevPage) {
-                elements.prevPage.addEventListener('click', () => changePage(currentPage - 1));
-            }
-
-            if (elements.nextPage) {
-                elements.nextPage.addEventListener('click', () => changePage(currentPage + 1));
-            }
-
-            // Sort headers
-            document.querySelectorAll('.sortable').forEach(header => {
-                header.addEventListener('click', () => {
-                    const field = header.dataset.sort;
-                    const currentDirection = header.classList.contains('sorted-desc') ? 'asc' : 'desc';
-                    loadProjectsData(field, currentDirection);
-                });
-            });
-
-            // Action buttons
-            if (elements.addProjectBtn) {
-                elements.addProjectBtn.addEventListener('click', showAddProjectModal);
-            }
-
-            if (elements.bulkAssignBtn) {
-                elements.bulkAssignBtn.addEventListener('click', showBulkAssignModal);
-            }
-
-            if (elements.importProjectsBtn) {
-                elements.importProjectsBtn.addEventListener('click', showImportProjectsModal);
-            }
-        }
-
-        async function loadProjectsData(sortBy = 'created_at', sortOrder = 'desc') {
-            if (isLoading) return;
-
-            isLoading = true;
-            showLoading();
-
-            try {
-                const response = await fetch(`${baseUrl}/admin/manageProjects`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: new URLSearchParams({
-                        [csrfName]: csrfToken,
-                        action: 'get_projects_table',
-                        draw: 1,
-                        start: (currentPage - 1) * itemsPerPage,
-                        length: itemsPerPage,
-                        'search[value]': elements.projectSearch?.value || '',
-                        status: elements.statusFilter?.value || 'all',
-                        sort_by: sortBy,
-                        sort_order: sortOrder
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.data) {
-                    renderProjects(data.data);
-                    updatePagination(data.recordsTotal, data.recordsFiltered);
-                    updateShowingCount(data.recordsFiltered);
-
-                    // Select first project if none selected
-                    if (!selectedProjectId && data.data.length > 0) {
-                        selectProject(data.data[0].id);
-                    }
-                } else {
-                    showToast('Failed to load projects', 'error');
-                    // Fallback to initial data
-                    fallbackToInitialData();
-                }
-            } catch (error) {
-                console.error('Error loading projects:', error);
-                showToast('Network error occurred', 'error');
-                // Fallback to initial data
-                fallbackToInitialData();
-            } finally {
-                isLoading = false;
-                hideLoading();
-            }
-        }
-
-        function fallbackToInitialData() {
-            // Use initial data from server if available
-            const initialProjects = <?= json_encode($projects ?? []) ?>;
-
-            if (initialProjects && initialProjects.length > 0) {
-                const formattedProjects = initialProjects.map(project => ({
-                    id: project.project_id,
-                    project_code: project.project_code,
-                    name: project.project_name,
-                    description: project.description,
-                    status: project.is_active ? 'active' : 'inactive',
-                    created_at: project.created_at ? new Date(project.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                    }) : 'Unknown',
-                    total_tickets: project.total_tickets || 0,
-                    open_tickets: project.open_tickets || 0,
-                    assigned_users: project.assigned_users || 0,
-                    is_active: project.is_active
-                }));
-
-                renderProjects(formattedProjects);
-                updatePagination(formattedProjects.length, formattedProjects.length);
-                updateShowingCount(formattedProjects.length);
-
-                if (!selectedProjectId && formattedProjects.length > 0) {
-                    selectProject(formattedProjects[0].id);
-                }
-            } else {
-                showEmptyState();
-            }
-        }
-
-        function showEmptyState() {
-            if (elements.projectsList) {
-                elements.projectsList.innerHTML = `
-                    <div class="py-12 text-center">
-                        <i class="fas fa-project-diagram text-gray-300 text-4xl mb-4"></i>
-                        <p class="text-gray-500">No projects found</p>
-                        <p class="text-gray-400 text-sm mt-2">Try adjusting your filters or add a new project</p>
-                    </div>
-                `;
-            }
-        }
-
-        function renderProjects(projects) {
-            if (!elements.projectsList) return;
-
-            if (!projects || projects.length === 0) {
-                showEmptyState();
-                return;
-            }
-
-            let html = '';
-
-            projects.forEach(project => {
-                html += `
-                    <div class="project-row ${selectedProjectId === project.id ? 'selected' : ''}" 
-                        data-project-id="${project.id}">
-                        <div class="col-span-2 text-text-dark/60 font-medium">#${project.id}</div>
-                        <div class="col-span-3">
-                            <div class="font-medium text-text-dark">${project.name}</div>
-                            <div class="text-xs text-text-dark/50">${project.project_code}</div>
-                        </div>
-                        <div class="col-span-2">
-                            <div class="font-medium text-text-dark">${project.project_code}</div>
-                        </div>
-                        <div class="col-span-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-text-dark">${project.total_tickets}</span>
-                                <span class="text-xs text-text-dark/50">(${project.open_tickets} open)</span>
-                            </div>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="${getStatusClass(project.status)} status-badge">
-                                ${getStatusName(project.status)}
-                            </span>
-                        </div>
-                        <div class="col-span-1 text-right">
-                            <button class="project-action-btn text-text-dark/60 hover:text-secondary transition-colors">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            elements.projectsList.innerHTML = html;
-
-            // Add event listeners
-            document.querySelectorAll('.project-row').forEach(row => {
-                const projectId = parseInt(row.dataset.projectId);
-
-                // Click event for selecting project
-                row.addEventListener('click', (e) => {
-                    if (!e.target.closest('.project-action-btn')) {
-                        selectProject(projectId);
-                    }
-                });
-
-                // Action menu event
-                const actionBtn = row.querySelector('.project-action-btn');
-                if (actionBtn) {
-                    actionBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const project = projects.find(p => p.id === projectId);
-                        if (project) {
-                            showProjectActionsMenu(actionBtn, project);
-                        }
-                    });
-                }
-            });
-        }
-
-        async function selectProject(projectId) {
-            selectedProjectId = projectId;
-
-            // Update selected row styling
-            document.querySelectorAll('.project-row').forEach(row => {
-                row.classList.remove('selected');
-                if (parseInt(row.dataset.projectId) === projectId) {
-                    row.classList.add('selected');
-                }
-            });
-
-            // Load project details
-            await loadProjectDetails(projectId);
-
-            // Update project actions
-            updateProjectActions(projectId);
-        }
-
-        // Ganti fungsi loadProjectDetails() dengan:
-        async function loadProjectDetails(projectId) {
-            if (!projectId) return;
-
-            showLoading('projectDetails');
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'get_project_details');
-                formData.append('project_id', projectId);
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    renderProjectDetails(data.project, data.assigned_users || []);
-                } else {
-                    showProjectDetailsError(data.message || 'Failed to load project details');
-                }
-            } catch (error) {
-                console.error('Error loading project details:', error);
-                showProjectDetailsError('Network error occurred');
-            } finally {
-                hideLoading('projectDetails');
-            }
-        }
-
-        // Tambahkan fungsi untuk Toast warning:
+        // ==================== TOAST NOTIFICATION ====================
         function showToast(message, type = 'info') {
             // Remove existing toasts
-            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+            $('.custom-toast').remove();
 
-            const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-        type === 'success' ? 'bg-green-500 text-white' :
-        type === 'warning' ? 'bg-yellow-500 text-white' :
-        'bg-blue-500 text-white'
-    }`;
-            toast.innerHTML = `
-        <div class="flex items-center gap-2">
-            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                type === 'success' ? 'fa-check-circle' :
-                type === 'warning' ? 'fa-exclamation-triangle' :
-                'fa-info-circle'
-            }"></i>
-            <span class="text-sm">${message}</span>
-        </div>
-    `;
-            document.body.appendChild(toast);
+            const icons = {
+                'error': 'fa-exclamation-circle',
+                'success': 'fa-check-circle',
+                'warning': 'fa-exclamation-triangle',
+                'info': 'fa-info-circle'
+            };
 
+            const colors = {
+                'error': 'bg-red-500',
+                'success': 'bg-green-500',
+                'warning': 'bg-yellow-500',
+                'info': 'bg-blue-500'
+            };
+
+            const toast = $(`
+            <div class="custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[2000] max-w-sm ${colors[type]} text-white transform transition-all duration-300 translate-x-0 opacity-0">
+                <div class="flex items-center gap-3">
+                    <i class="fas ${icons[type]}"></i>
+                    <span class="text-sm">${escapeHtml(message)}</span>
+                </div>
+            </div>
+        `);
+
+            $('body').append(toast);
+
+            // Animate in
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.removeClass('opacity-0').addClass('opacity-100');
+            }, 10);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.addClass('opacity-0');
                 setTimeout(() => toast.remove(), 300);
-            }, type === 'error' || type === 'warning' ? 5000 : 3000);
+            }, 3000);
         }
 
-        function renderProjectDetails(project, assignedUsers = []) {
-            if (!elements.projectDetails) return;
+        // ==================== MODAL MANAGEMENT ====================
+        function closeModal(modalId) {
+            const $modal = $('#' + modalId);
+            if ($modal.length) {
+                $modal.addClass('hidden');
+                $('body').removeClass('overflow-hidden');
 
-            const initials = project.project_code ? project.project_code.substring(0, 2) : '??';
-            const createdAt = project.created_at || 'Unknown';
-            const updatedAt = project.updated_at || null;
+                // Reset forms if needed
+                if (modalId === 'addProjectModal') {
+                    $('#addProjectForm')[0]?.reset();
+                } else if (modalId === 'assignToUsersModal') {
+                    resetAssignUsersModal();
+                } else if (modalId === 'editProjectModal') {
+                    $('#editProjectForm')[0]?.reset();
+                }
+            }
+        }
 
-            const detailsHtml = `
-                <div class="animate-fadeIn">
-                    <div class="project-avatar">${initials}</div>
-                    <div class="text-center mb-6">
-                        <h3 class="text-lg font-semibold text-text-dark">${project.project_name}</h3>
-                        <p class="text-text-dark/60 text-sm">${project.project_code}</p>
-                        <span class="inline-block mt-2 ${getStatusClass(project.is_active ? 'active' : 'inactive')} status-badge">
-                            ${getStatusName(project.is_active ? 'active' : 'inactive')}
-                        </span>
+        function openModal(modalId) {
+            const $modal = $('#' + modalId);
+            if ($modal.length) {
+                $modal.removeClass('hidden');
+                $('body').addClass('overflow-hidden');
+
+                // Focus on first input
+                if (modalId === 'addProjectModal') {
+                    setTimeout(() => {
+                        $('#newProjectName').focus();
+                    }, 100);
+                } else if (modalId === 'assignToUsersModal') {
+                    initializeAssignUsersModal();
+                    // Set selected project jika ada
+                    if (selectedProjectId) {
+                        $('#assignProjectSelect').val(selectedProjectId);
+                    }
+                } else if (modalId === 'editProjectModal') {
+                    setTimeout(() => {
+                        $('#editProjectName').focus();
+                    }, 100);
+                }
+            }
+        }
+
+        // ==================== PAGINATION FUNCTIONS ====================
+        function initializePagination() {
+            // Calculate total pages
+            const totalProjects = <?= $total_projects ?? 0 ?>;
+            totalPages = Math.ceil(totalProjects / projectsPerPage);
+
+            // Render first page
+            renderPagination();
+            showPage(1);
+        }
+
+        function showPage(pageNumber) {
+            currentPage = pageNumber;
+
+            // Hide all projects
+            $('.project-row').hide();
+
+            // Calculate which projects to show
+            const startIndex = (pageNumber - 1) * projectsPerPage;
+            const endIndex = startIndex + projectsPerPage;
+
+            // Show only projects for this page
+            $('.project-row').slice(startIndex, endIndex).show();
+
+            // Update row numbers
+            updateRowNumbersForPage(pageNumber);
+
+            // Update pagination UI
+            renderPagination();
+        }
+
+        function updateRowNumbersForPage(pageNumber) {
+            const startNumber = (pageNumber - 1) * projectsPerPage + 1;
+
+            $('.project-row:visible').each(function(index) {
+                $(this).find('.col-span-1').text(`${startNumber + index}.`);
+            });
+        }
+
+        function renderPagination() {
+            // Remove existing pagination if any
+            $('#projectsPagination').remove();
+
+            // Create pagination container
+            const paginationHtml = `
+                <div id="projectsPagination" class="mt-6 flex items-center justify-between">
+                    <div class="text-sm text-text-dark/70">
+                        Showing ${Math.min(((currentPage - 1) * projectsPerPage) + 1, <?= $total_projects ?? 0 ?>)}-${Math.min(currentPage * projectsPerPage, <?= $total_projects ?? 0 ?>)} of <?= $total_projects ?? 0 ?> projects
                     </div>
-                    
-                    <div class="space-y-2">
-                        <div class="project-info-item">
-                            <span class="text-text-dark/70 text-sm">Description:</span>
-                            <span class="text-text-dark font-medium text-right text-xs">${project.description || 'No description'}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}
+                            class="px-3 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="flex items-center gap-1">
+                            ${generatePageButtons()}
                         </div>
-                        <div class="project-info-item">
-                            <span class="text-text-dark/70 text-sm">Created:</span>
-                            <span class="text-text-dark font-medium">${createdAt}</span>
-                        </div>
-                        ${updatedAt ? `
-                        <div class="project-info-item">
-                            <span class="text-text-dark/70 text-sm">Last Updated:</span>
-                            <span class="text-text-dark font-medium">${updatedAt}</span>
-                        </div>
-                        ` : ''}
-                        <div class="project-info-item">
-                            <span class="text-text-dark/70 text-sm">Assigned Users:</span>
-                            <span class="text-text-dark font-medium">${assignedUsers.length} users</span>
-                        </div>
-                        ${project.user ? `
-                        <div class="project-info-item">
-                            <span class="text-text-dark/70 text-sm">Project Manager:</span>
-                            <span class="text-text-dark font-medium">${project.user.full_name || project.user.username}</span>
-                        </div>
-                        ` : ''}
+                        
+                        <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}
+                            class="px-3 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value">${project.total_tickets || 0}</span>
-                            <span class="stat-label">Total Tickets</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${project.open_tickets || 0}</span>
-                            <span class="stat-label">Open Tickets</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${project.closed_tickets || 0}</span>
-                            <span class="stat-label">Closed Tickets</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${assignedUsers.length}</span>
-                            <span class="stat-label">Assigned Users</span>
-                        </div>
-                    </div>
-                    
-                    ${assignedUsers.length > 0 ? `
-                    <div class="mt-4 pt-4 border-t border-white/30">
-                        <h4 class="text-text-dark/80 text-sm font-medium mb-2">Assigned Users</h4>
-                        <div class="space-y-2">
-                            ${assignedUsers.map(user => `
-                                <div class="flex items-center gap-2 p-2 bg-white/30 rounded">
-                                    <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center text-xs">
-                                        ${getUserInitials(user.full_name || user.username)}
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="text-text-dark text-sm">${user.full_name || user.username}</div>
-                                        <div class="text-text-dark/50 text-xs">${user.email || ''} ${user.role_name ? `• ${user.role_name}` : ''}</div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
             `;
 
-            elements.projectDetails.innerHTML = detailsHtml;
+            // Insert after projects list
+            $('.dashboard-card:has(#projectsList)').append(paginationHtml);
         }
 
-        function showProjectDetailsError(message) {
-            if (elements.projectDetails) {
-                elements.projectDetails.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-8 text-center">
-                        <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-exclamation-circle text-red-400 text-xl"></i>
-                        </div>
-                        <p class="text-text-dark/70 text-sm">${message}</p>
-                        <button onclick="loadProjectDetails(${selectedProjectId})" class="mt-4 text-secondary text-sm hover:underline">
-                            Try Again
-                        </button>
-                    </div>
+        function generatePageButtons() {
+            let buttons = '';
+            const maxVisiblePages = 5;
+
+            // Calculate start and end page numbers
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            // Adjust start page if we're at the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // Previous pages ellipsis
+            if (startPage > 1) {
+                buttons += `
+                    <button onclick="goToPage(1)" class="px-3 py-2 rounded-lg bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50">
+                        1
+                    </button>
+                    <span class="px-2 text-text-dark/50">...</span>
                 `;
             }
+
+            // Page buttons
+            for (let i = startPage; i <= endPage; i++) {
+                buttons += `
+                    <button onclick="goToPage(${i})" class="px-3 py-2 rounded-lg ${i === currentPage ? 'bg-secondary text-white' : 'bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50'}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Next pages ellipsis
+            if (endPage < totalPages) {
+                buttons += `
+                    <span class="px-2 text-text-dark/50">...</span>
+                    <button onclick="goToPage(${totalPages})" class="px-3 py-2 rounded-lg bg-white text-text-dark border border-[#D1D1E9] hover:bg-gray-50">
+                        ${totalPages}
+                    </button>
+                `;
+            }
+
+            return buttons;
         }
 
-        function updateProjectActions(projectId) {
-            if (!elements.projectActions) return;
-
-            // Show loading state
-            elements.projectActions.innerHTML = `
-                <div class="space-y-2">
-                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
-                        <i class="fas fa-spinner fa-spin mr-2"></i>
-                        Loading...
-                    </button>
-                </div>
-            `;
-
-            // Get project status from row
-            const projectRow = document.querySelector(`[data-project-id="${projectId}"]`);
-            const statusBadge = projectRow?.querySelector('.status-badge');
-            const statusText = statusBadge?.textContent?.toLowerCase().trim() || 'active';
-            const isActive = statusText === 'active';
-
-            const actionsHtml = `
-                <div class="space-y-2 animate-fadeIn">
-                    <button class="edit-project-btn w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-edit"></i>
-                        Edit Project
-                    </button>
-                    
-                    <button class="manage-users-btn w-full py-3 bg-white text-text-dark border border-text-dark/20 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-users"></i>
-                        Manage Users
-                    </button>
-                    
-                    <button class="toggle-status-btn w-full py-3 ${isActive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${isActive ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2">
-                        <i class="fas fa-power-off"></i>
-                        ${isActive ? 'Deactivate Project' : 'Activate Project'}
-                    </button>
-                    
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <button class="delete-project-btn w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium flex items-center justify-center gap-2">
-                            <i class="fas fa-trash-alt"></i>
-                            Delete Project
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            elements.projectActions.innerHTML = actionsHtml;
-
-            // Add event listeners
-            setTimeout(() => {
-                const editBtn = elements.projectActions.querySelector('.edit-project-btn');
-                const manageBtn = elements.projectActions.querySelector('.manage-users-btn');
-                const toggleBtn = elements.projectActions.querySelector('.toggle-status-btn');
-                const deleteBtn = elements.projectActions.querySelector('.delete-project-btn');
-
-                if (editBtn) {
-                    editBtn.addEventListener('click', () => editProject(projectId));
-                }
-
-                if (manageBtn) {
-                    manageBtn.addEventListener('click', () => manageProjectUsers(projectId));
-                }
-
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', () => toggleProjectStatus(projectId, !isActive));
-                }
-
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', () => deleteProject(projectId));
-                }
-            }, 100);
+        // ==================== PAGINATION GLOBAL FUNCTIONS ====================
+        window.previousPage = function() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
         }
 
-        // Function untuk menampilkan modal Bulk Assign
-        async function showBulkAssignModal() {
-            // Remove existing modal
-            const existingModal = document.querySelector('.bulk-assign-modal');
-            if (existingModal) existingModal.remove();
+        window.nextPage = function() {
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        }
 
-            // Create and append modal
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'bulk-assign-modal';
-            modalContainer.innerHTML = bulkAssignModalHTML;
-            document.body.appendChild(modalContainer);
+        window.goToPage = function(pageNumber) {
+            if (pageNumber >= 1 && pageNumber <= totalPages) {
+                showPage(pageNumber);
+            }
+        }
 
-            // Setup event listeners
-            setupBulkAssignModalEvents();
+        // ==================== PROJECT MANAGEMENT ====================
+        // Project selection
+        function selectProject(projectId) {
+            selectedProjectId = projectId;
 
-            // Load initial data
-            await loadBulkProjects();
-            await loadBulkUsers();
+            // Update UI
+            $('.project-row').removeClass('selected');
+            $(`.project-row[data-project-id="${projectId}"]`).addClass('selected');
 
-            // Update fetch URL untuk controller
-            const response = await fetch(`${baseUrl}/admin/manageProjects`, {
+            // Load project details
+            loadProjectDetails(projectId);
+        }
+
+        // Load project details
+        function loadProjectDetails(projectId) {
+            if (!projectId) return;
+
+            const formData = new FormData();
+            formData.append('action', 'get_project_details');
+            formData.append('project_id', projectId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                beforeSend: function() {
+                    $('#projectDetails').html(`
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mb-4"></div>
+                    <p class="text-text-dark/60 text-sm">Loading project details...</p>
+                </div>
+            `);
                 },
-                body: new URLSearchParams({
-                    [csrfName]: csrfToken,
-                    action: 'get_projects_for_bulk_assign',
-                    search: searchTerm
-                })
-            });
-        }
-
-        function setupBulkAssignModalEvents() {
-            const modal = document.querySelector('.bulk-assign-modal');
-
-            // Close modal
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    modal.style.opacity = '0';
-                    modal.style.transform = 'translateY(10px)';
-                    setTimeout(() => modal.remove(), 300);
-                });
-            });
-
-            // Search projects
-            const searchProjectsInput = modal.querySelector('#bulkSearchProjects');
-            if (searchProjectsInput) {
-                searchProjectsInput.addEventListener('input', debounce(async () => {
-                    await loadBulkProjects(searchProjectsInput.value);
-                }, 300));
-            }
-
-            // Search users
-            const searchUsersInput = modal.querySelector('#bulkSearchUsers');
-            if (searchUsersInput) {
-                searchUsersInput.addEventListener('input', debounce(async () => {
-                    await loadBulkUsers(searchUsersInput.value);
-                }, 300));
-            }
-
-            // Confirm button
-            const confirmBtn = modal.querySelector('#confirmBulkAssign');
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', processBulkAssign);
-            }
-        }
-
-        // Function untuk menampilkan modal Import Projects
-        function showImportProjectsModal() {
-            // Remove existing modal
-            const existingModal = document.querySelector('.import-projects-modal');
-            if (existingModal) existingModal.remove();
-
-            // Create and append modal
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'import-projects-modal';
-            modalContainer.innerHTML = importProjectsModalHTML;
-            document.body.appendChild(modalContainer);
-
-            // Setup event listeners
-            setupImportModalEvents();
-        }
-
-        function setupImportModalEvents() {
-            const modal = document.querySelector('.import-projects-modal');
-
-            // Close modal
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    modal.style.opacity = '0';
-                    modal.style.transform = 'translateY(10px)';
-                    setTimeout(() => modal.remove(), 300);
-                });
-            });
-
-            // File upload
-            const fileInput = modal.querySelector('#importFile');
-            const browseBtn = modal.querySelector('#browseFileBtn');
-            const removeFileBtn = modal.querySelector('#removeFileBtn');
-            const confirmBtn = modal.querySelector('#confirmImport');
-
-            if (browseBtn) {
-                browseBtn.addEventListener('click', () => fileInput.click());
-            }
-
-            if (fileInput) {
-                fileInput.addEventListener('change', function() {
-                    if (this.files.length > 0) {
-                        const file = this.files[0];
-                        const fileName = modal.querySelector('#fileName');
-                        const fileInfo = modal.querySelector('#selectedFileInfo');
-
-                        if (fileName) fileName.textContent = file.name;
-                        if (fileInfo) fileInfo.classList.remove('hidden');
-                        if (confirmBtn) confirmBtn.disabled = false;
+                success: function(data) {
+                    if (data.success) {
+                        currentProjectData = data.project;
+                        updateProjectDetailsCard(data.project);
+                        updateProjectActionsButtons(data.project);
+                    } else {
+                        showToast(data.message || 'Failed to load project details', 'error');
+                        // Fallback view
+                        $('#projectDetails').html(`
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-folder-open text-gray-400 text-xl"></i>
+                        </div>
+                        <p class="text-text-dark/60 text-sm">Select a project to view details</p>
+                    </div>
+                `);
                     }
-                });
-            }
-
-            if (removeFileBtn) {
-                removeFileBtn.addEventListener('click', () => {
-                    fileInput.value = '';
-                    modal.querySelector('#selectedFileInfo').classList.add('hidden');
-                    if (confirmBtn) confirmBtn.disabled = true;
-                });
-            }
-
-            // Download template
-            const downloadBtn = modal.querySelector('#downloadTemplateBtn');
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', downloadCSVTemplate);
-            }
-
-            // Confirm import
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', processImport);
-            }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading project details:', error);
+                    showToast('Failed to load project details', 'error');
+                    $('#projectDetails').html(`
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <p class="text-text-dark/60 text-sm">Failed to load project details</p>
+                </div>
+            `);
+                }
+            });
         }
 
-        // Ganti fungsi processBulkAssign() dengan:
-        async function processBulkAssign() {
-            const modal = document.querySelector('.bulk-assign-modal');
-            if (!modal) return;
+        // Update project details UI
+        function updateProjectDetailsCard(project) {
+            if (!project) return;
 
-            const selectedProjects = Array.from(modal.querySelectorAll('.project-checkbox:checked'))
-                .map(cb => parseInt(cb.value));
+            // Format created date
+            const createdDate = new Date(project.created_at);
+            const formattedDate = createdDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
 
-            const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked'))
-                .map(cb => parseInt(cb.value));
+            // Determine status text and class
+            const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
+            const statusClass = isActive ? 'status-active' : 'status-inactive';
+            const statusText = isActive ? 'Active' : 'Inactive';
 
-            if (selectedProjects.length === 0) {
-                showToast('Please select at least one project', 'error');
+            const totalTickets = project.total_tickets || 0;
+
+            // HTML untuk project details
+            const html = `
+    <div>
+        <div class="project-avatar">${project.project_code ? project.project_code.substring(0, 2) : 'PR'}</div>
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-semibold text-text-dark">${escapeHtml(project.project_name || '')}</h3>
+            <p class="text-text-dark/60 text-sm">${escapeHtml(project.project_code || '')}</p>
+            <span class="inline-block mt-2 ${statusClass} status-badge">
+                ${statusText}
+            </span>
+        </div>
+        
+        <div class="space-y-2">
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Description:</span>
+                <span class="text-text-dark font-medium text-right text-xs">${escapeHtml(project.description || 'No description')}</span>
+            </div>
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Total Tickets:</span>
+                <span class="text-text-dark font-medium">${totalTickets}</span>
+            </div>  
+            
+            <div class="project-info-item">
+                <span class="text-text-dark/70 text-sm">Created:</span>
+                <span class="text-text-dark font-medium">${formattedDate}</span>
+            </div>
+        </div>
+    </div>`;
+
+            $('#projectDetails').html(html);
+        }
+
+        // Update project actions UI
+        function updateProjectActionsButtons(project) {
+            if (!project) return;
+
+            const isActive = project.is_active === true || project.is_active === 'true' || project.is_active === 1;
+
+            const html = `
+    <div class="space-y-2">
+        <button onclick="editProject(${project.project_id})"
+            class="w-full py-3 bg-secondary text-white rounded-xl hover:bg-[#665C9E] transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-edit"></i>
+            Edit Project
+        </button>
+        
+        <button onclick="deleteProject(${project.project_id})"
+            class="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-trash"></i>
+            Delete Project
+        </button>
+        
+        <button onclick="changeStatus(${project.project_id}, ${!project.is_active})"
+            class="w-full py-3 ${project.is_active ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'} rounded-xl hover:${project.is_active ? 'bg-red-100' : 'bg-green-100'} transition-colors font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-power-off"></i>
+            ${project.is_active ? 'Deactivate Project' : 'Activate Project'}
+        </button>
+    </div>`;
+
+            $('#projectActions').html(html);
+        }
+
+        // ==================== EDIT PROJECT FUNCTIONS ====================
+        window.editProject = function(projectId) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
                 return;
             }
 
-            if (selectedUsers.length === 0) {
+            // Show loading state
+            $('#editProjectName').val('Loading...');
+            $('#editProjectCode').val('Loading...');
+            $('#editProjectDescription').val('Loading...');
+            $('#editProjectActive').prop('checked', false);
+            $('#submitEditProjectBtn').prop('disabled', true);
+
+            openModal('editProjectModal');
+
+            // Fetch project details
+            const formData = new FormData();
+            formData.append('action', 'get_project_details');
+            formData.append('project_id', projectId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const project = response.project;
+
+                        // Populate form fields
+                        $('#editProjectId').val(project.project_id);
+                        $('#editProjectName').val(project.project_name || '');
+                        $('#editProjectCode').val(project.project_code || '');
+                        $('#editProjectDescription').val(project.description || '');
+                        $('#editProjectActive').prop('checked', project.is_active || false);
+
+                        $('#submitEditProjectBtn').prop('disabled', false);
+                    } else {
+                        showToast(response.message || 'Failed to load project details', 'error');
+                        closeModal('editProjectModal');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading project:', error);
+                    showToast('Failed to load project details', 'error');
+                    closeModal('editProjectModal');
+                }
+            });
+        }
+
+        window.submitEditProject = function() {
+            const projectId = $('#editProjectId').val();
+            const projectName = $('#editProjectName').val().trim();
+            const projectCode = $('#editProjectCode').val().trim();
+
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
+
+            if (!projectName || !projectCode) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'update_project');
+            formData.append('project_id', projectId);
+            formData.append('project_name', projectName);
+            formData.append('project_code', projectCode.toUpperCase());
+            formData.append('description', $('#editProjectDescription').val() || '');
+            formData.append('is_active', $('#editProjectActive').is(':checked') ? '1' : '0');
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            // Show loading state
+            const $submitBtn = $('#submitEditProjectBtn');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            $submitBtn.prop('disabled', true);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+
+                    if (response.success) {
+                        showToast('Project updated successfully!', 'success');
+                        closeModal('editProjectModal');
+
+                        // Refresh project details
+                        loadProjectDetails(projectId);
+
+                        // Update project row in table
+                        updateProjectRow(projectId, {
+                            project_name: projectName,
+                            project_code: projectCode,
+                            is_active: $('#editProjectActive').is(':checked')
+                        });
+                    } else {
+                        showToast(response.message || 'Failed to update project', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+                    console.error('Error updating project:', error);
+                    showToast('Network error. Please try again.', 'error');
+                }
+            });
+        }
+
+        // Update project row in table
+        function updateProjectRow(projectId, projectData) {
+            const $row = $(`.project-row[data-project-id="${projectId}"]`);
+            if ($row.length) {
+                // Update project name
+                $row.find('.col-span-4 .font-medium').text(projectData.project_name);
+
+                // Update project code
+                $row.find('.col-span-2 .font-medium').text(projectData.project_code);
+
+                // Update status
+                const status = projectData.is_active ? 'active' : 'inactive';
+                const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = status === 'active' ? 'Active' : 'Inactive';
+
+                $row.find('.status-badge')
+                    .removeClass('status-active status-inactive')
+                    .addClass(`${statusClass} status-badge`)
+                    .text(statusText)
+                    .attr('data-status', status);
+            }
+        }
+
+        // ==================== DELETE PROJECT FUNCTIONS ====================
+        window.deleteProject = function(projectId) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
+                return;
+            }
+
+            // Get project name for confirmation message
+            const $projectRow = $(`.project-row[data-project-id="${projectId}"]`);
+            const projectName = $projectRow.find('.col-span-4 .font-medium').text().trim();
+            const projectCode = $projectRow.find('.col-span-2 .font-medium').text().trim();
+
+            // Set confirmation message
+            $('#deleteConfirmMessage').html(`
+                You are about to delete project <strong>${escapeHtml(projectCode)} - ${escapeHtml(projectName)}</strong>.
+                <br><br>
+                <span class="text-red-600 font-medium">Warning:</span> This action cannot be undone. All associated data will be removed.
+            `);
+
+            // Store project ID in modal
+            $('#deleteConfirmModal').data('projectId', projectId);
+
+            openModal('deleteConfirmModal');
+        }
+
+        window.confirmDeleteProject = function() {
+            const projectId = $('#deleteConfirmModal').data('projectId');
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'delete_project');
+            formData.append('project_id', projectId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            // Show loading state
+            const $confirmBtn = $('#deleteConfirmModal button:last-child');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="fas fa-spinner fa-spin"></i> Deleting...');
+            $confirmBtn.prop('disabled', true);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Project deleted successfully!', 'success');
+                        closeModal('deleteConfirmModal');
+
+                        // Remove the project row from the table
+                        $(`.project-row[data-project-id="${projectId}"]`).remove();
+
+                        // Update project count
+                        const remainingCount = $('.project-row').length;
+                        updateProjectCount(remainingCount);
+                        updatePaginationAfterFilter(remainingCount);
+
+                        // If no projects left, show empty state
+                        if (remainingCount === 0) {
+                            $('#projectDetails').html(`
+                                <div class="flex flex-col items-center justify-center py-8 text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fas fa-project-diagram text-gray-400 text-xl"></i>
+                                    </div>
+                                    <p class="text-text-dark/60 text-sm">No projects available</p>
+                                </div>
+                            `);
+
+                            $('#projectActions').html(`
+                                <div class="space-y-2">
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-edit mr-2"></i>
+                                        Edit Project
+                                    </button>
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-trash mr-2"></i>
+                                        Delete Project
+                                    </button>
+                                    <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
+                                        <i class="fas fa-power-off mr-2"></i>
+                                        Change Status
+                                    </button>
+                                </div>
+                            `);
+                        }
+                    } else {
+                        showToast(response.message || 'Failed to delete project', 'error');
+                        $confirmBtn.html(originalText);
+                        $confirmBtn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error deleting project:', error);
+                    showToast('Network error. Please try again.', 'error');
+                    $confirmBtn.html(originalText);
+                    $confirmBtn.prop('disabled', false);
+                }
+            });
+        }
+
+        // ==================== CHANGE PROJECT STATUS FUNCTIONS ====================
+        window.changeStatus = function(projectId, newStatus) {
+            if (!projectId) {
+                showToast('Invalid project selected', 'error');
+                return;
+            }
+
+            // Get project details for confirmation
+            const $projectRow = $(`.project-row[data-project-id="${projectId}"]`);
+            const projectName = $projectRow.find('.col-span-4 .font-medium').text().trim();
+            const projectCode = $projectRow.find('.col-span-2 .font-medium').text().trim();
+            const currentStatus = $projectRow.find('.status-badge').text().trim();
+            const isActivating = newStatus === true;
+
+            // Set modal content based on action
+            $('#statusModalTitle').text(isActivating ? 'Activate Project' : 'Deactivate Project');
+            $('#statusConfirmTitle').text(isActivating ? 'Activate Project?' : 'Deactivate Project?');
+
+            const iconClass = isActivating ? 'fa-power-off text-green-600' : 'fa-ban text-red-600';
+            const iconBgClass = isActivating ? 'bg-green-100' : 'bg-red-100';
+            const btnClass = isActivating ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
+
+            $('#statusModalIcon').removeClass().addClass(`w-16 h-16 ${iconBgClass} rounded-full flex items-center justify-center mx-auto mb-4`);
+            $('#statusModalIcon i').removeClass().addClass(`fas ${iconClass} text-2xl`);
+
+            $('#statusConfirmMessage').html(`
+                You are about to ${isActivating ? 'activate' : 'deactivate'} project 
+                <strong>${escapeHtml(projectCode)} - ${escapeHtml(projectName)}</strong>.
+                <br><br>
+                Current status: <span class="font-medium">${escapeHtml(currentStatus)}</span>
+                <br>
+                New status: <span class="font-medium">${isActivating ? 'Active' : 'Inactive'}</span>
+            `);
+
+            $('#statusConfirmButton').removeClass().addClass(`flex-1 py-3 ${btnClass} text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2`);
+            $('#statusConfirmButton i').removeClass().addClass('fas fa-check');
+            $('#statusConfirmButton').text(isActivating ? ' Activate Project' : ' Deactivate Project');
+
+            // Store data in modal
+            $('#statusConfirmModal').data({
+                projectId: projectId,
+                newStatus: newStatus
+            });
+
+            openModal('statusConfirmModal');
+        }
+
+        window.confirmChangeStatus = function() {
+            const modalData = $('#statusConfirmModal').data();
+            const projectId = modalData.projectId;
+            const newStatus = modalData.newStatus;
+
+            if (!projectId) {
+                showToast('Invalid project ID', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'change_project_status');
+            formData.append('project_id', projectId);
+            formData.append('is_active', newStatus ? '1' : '0');
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            // Show loading state
+            const $confirmBtn = $('#statusConfirmModal button:last-child');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+            $confirmBtn.prop('disabled', true);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const action = newStatus ? 'activated' : 'deactivated';
+                        showToast(`Project ${action} successfully!`, 'success');
+                        closeModal('statusConfirmModal');
+
+                        // Update project status in table
+                        updateProjectStatus(projectId, newStatus);
+
+                        // Refresh project details
+                        loadProjectDetails(projectId);
+                    } else {
+                        showToast(response.message || 'Failed to change project status', 'error');
+                        $confirmBtn.html(originalText);
+                        $confirmBtn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error changing status:', error);
+                    showToast('Network error. Please try again.', 'error');
+                    $confirmBtn.html(originalText);
+                    $confirmBtn.prop('disabled', false);
+                }
+            });
+        }
+
+        // Update project status in table
+        function updateProjectStatus(projectId, isActive) {
+            const $row = $(`.project-row[data-project-id="${projectId}"]`);
+            if ($row.length) {
+                const status = isActive ? 'active' : 'inactive';
+                const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = status === 'active' ? 'Active' : 'Inactive';
+
+                $row.find('.status-badge').removeClass().addClass(`${statusClass} status-badge`).text(statusText);
+            }
+        }
+
+        // ==================== NEW PROJECT MODAL ====================
+        function submitAddProject() {
+            const projectName = $('#newProjectName').val().trim();
+            const projectCode = $('#newProjectCode').val().trim();
+
+            if (!projectName || !projectCode) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Get checkbox value - ensure correct boolean
+            const isActive = $('#newProjectActive').is(':checked') ? true : false;
+
+            const formData = new FormData();
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            formData.append('action', 'create_project');
+            formData.append('project_name', projectName);
+            formData.append('project_code', projectCode.toUpperCase());
+            formData.append('description', $('#newProjectDescription').val() || '');
+            formData.append('is_active', isActive ? '1' : '0'); // Send as string '1' or '0'
+
+            // Show loading state
+            const $submitBtn = $('#submitAddProjectBtn');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+            $submitBtn.prop('disabled', true);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+
+                    if (data.success) {
+                        showToast('Project created successfully!', 'success');
+                        closeModal('addProjectModal');
+                        $('#addProjectForm')[0].reset();
+
+                        // Reset checkbox to default checked
+                        $('#newProjectActive').prop('checked', true);
+                        updateStatusIndicator(true);
+
+                        // Refresh page after 1.5 seconds
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast(data.message || 'Failed to create project', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    showToast('Network error. Please try again.', 'error');
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+                }
+            });
+        }
+
+        // Function to update status indicator
+        function updateStatusIndicator(isActive) {
+            const $indicator = $('#statusIndicator');
+            if (!$indicator.length) return; // Skip if element doesn't exist
+
+            if (isActive) {
+                $indicator.removeClass('bg-gray-100 text-gray-800')
+                    .addClass('bg-green-100 text-green-800')
+                    .text('Active');
+            } else {
+                $indicator.removeClass('bg-green-100 text-green-800')
+                    .addClass('bg-gray-100 text-gray-800')
+                    .text('Inactive');
+            }
+        }
+
+        // Function to reset modal when opened
+        function resetAddProjectModal() {
+            // Reset form
+            $('#addProjectForm')[0]?.reset();
+
+            // Set default: checkbox checked
+            $('#newProjectActive').prop('checked', true);
+            updateStatusIndicator(true);
+        }
+
+        // ==================== USER MANAGEMENT FUNCTIONS ====================
+        // Load users dynamically
+        function loadUsers(page = 1, search = '', role = 'all') {
+            currentUserPage = page;
+            userSearchTerm = search;
+            userRoleFilter = role;
+
+            const $usersBody = $('#usersListBody');
+            const $pagination = $('#usersPagination');
+
+            $usersBody.html(`
+                <tr id="loadingRow">
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                        <div class="flex justify-center">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-secondary"></div>
+                        </div>
+                    </td>
+                </tr>
+            `);
+
+            const formData = new FormData();
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            formData.append('search', search);
+            formData.append('role', role);
+            formData.append('page', page);
+            formData.append('limit', 10);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-get-users-for-assignment') ?>',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success && data.users.length > 0) {
+                        renderUsers(data.users);
+                        updateUserPagination(data);
+                    } else {
+                        $usersBody.html(`
+                            <tr id="noUsersRow">
+                                <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-users text-3xl mb-2 opacity-20"></i>
+                                        <p>No users found</p>
+                                        ${search || role !== 'all' ? 
+                                            '<p class="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>' : 
+                                            ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                        $pagination.addClass('hidden');
+                    }
+
+                    // Update total count
+                    $('#totalUsersCount').text(data.total || 0);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading users:', error);
+                    $usersBody.html(`
+                        <tr id="errorRow">
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-2"></i>
+                                    <p class="text-red-500">Failed to load users</p>
+                                    <p class="text-sm text-gray-400 mt-1">Please try again</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                    showToast('Failed to load users', 'error');
+                }
+            });
+        }
+
+        // Render users to table
+        function renderUsers(users) {
+            const $usersBody = $('#usersListBody');
+            $usersBody.empty();
+
+            users.forEach(user => {
+                const isChecked = selectedUserIds.has(parseInt(user.user_id));
+                const userHtml = `
+                    <tr class="user-row hover:bg-gray-50 transition-colors"
+                        data-user-id="${user.user_id}"
+                        data-user-name="${escapeHtml(user.full_name)}"
+                        data-user-role="${escapeHtml(user.role_name)}"
+                        data-user-email="${escapeHtml(user.email)}">
+                        <td class="px-4 py-3">
+                            <input type="checkbox" name="user_ids[]"
+                                value="${user.user_id}"
+                                ${isChecked ? 'checked' : ''}
+                                class="user-checkbox w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary">
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-8 w-8 bg-secondary/10 rounded-full flex items-center justify-center text-secondary font-medium text-sm">
+                                    ${user.avatar_initials || (user.full_name ? user.full_name.substring(0, 2).toUpperCase() : '??')}
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        ${escapeHtml(user.full_name || 'N/A')}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        @${escapeHtml(user.username || 'N/A')}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                ${escapeHtml(user.role_name || 'N/A')}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${escapeHtml(user.email || 'N/A')}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${user.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                $usersBody.append(userHtml);
+            });
+
+            // Re-attach event handlers
+            attachUserEventHandlers();
+        }
+
+        // Update pagination controls
+        function updateUserPagination(data) {
+            const $pagination = $('#usersPagination');
+            const $currentPage = $('#currentPage');
+            const $prevBtn = $('#prevPageBtn');
+            const $nextBtn = $('#nextPageBtn');
+            const $usersStart = $('#usersStart');
+            const $usersEnd = $('#usersEnd');
+            const $usersTotal = $('#usersTotal');
+
+            if (data.total > 0 && data.total_pages > 1) {
+                $pagination.removeClass('hidden');
+
+                const start = ((data.page - 1) * data.limit) + 1;
+                const end = Math.min(data.page * data.limit, data.total);
+
+                $usersStart.text(start);
+                $usersEnd.text(end);
+                $usersTotal.text(data.total);
+                $currentPage.text(data.page);
+
+                $prevBtn.prop('disabled', data.page <= 1);
+                $nextBtn.prop('disabled', data.page >= data.total_pages);
+            } else {
+                $pagination.addClass('hidden');
+            }
+        }
+
+        // Attach event handlers to user checkboxes
+        function attachUserEventHandlers() {
+            const $userCheckboxes = $('.user-checkbox');
+            const $selectAll = $('#selectAllUsers');
+
+            // Individual checkbox change
+            $userCheckboxes.off('change').on('change', function() {
+                const userId = parseInt($(this).val());
+                const isChecked = $(this).is(':checked');
+
+                if (isChecked) {
+                    selectedUserIds.add(userId);
+                } else {
+                    selectedUserIds.delete(userId);
+                }
+
+                updateSelectedUsersCount();
+                updateSelectedUsersPreview();
+                updateSelectAllCheckbox();
+            });
+
+            // Select all checkbox
+            $selectAll.off('change').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                const $visibleCheckboxes = $('.user-checkbox:visible');
+
+                $visibleCheckboxes.each(function() {
+                    const userId = parseInt($(this).val());
+                    $(this).prop('checked', isChecked);
+
+                    if (isChecked) {
+                        selectedUserIds.add(userId);
+                    } else {
+                        selectedUserIds.delete(userId);
+                    }
+                });
+
+                updateSelectedUsersCount();
+                updateSelectedUsersPreview();
+            });
+        }
+
+        // Update selected users count
+        function updateSelectedUsersCount() {
+            $('#selectedUsersCount').text(selectedUserIds.size);
+
+            // Enable/disable submit button
+            const projectSelected = $('#assignProjectSelect').val() !== '';
+            $('#submitAssignUsersBtn').prop('disabled', selectedUserIds.size === 0 || !projectSelected);
+        }
+
+        // Update selected users preview
+        function updateSelectedUsersPreview() {
+            const $previewContainer = $('#selectedUsersPreview');
+            const $tagsContainer = $('#selectedUsersTags');
+
+            $tagsContainer.empty();
+
+            if (selectedUserIds.size === 0) {
+                $previewContainer.addClass('hidden');
+                return;
+            }
+
+            // Get user names from the table
+            selectedUserIds.forEach(userId => {
+                const $row = $(`.user-row[data-user-id="${userId}"]`);
+                if ($row.length) {
+                    const userName = $row.data('user-name') || 'Unknown User';
+                    const tag = $(`
+                        <div class="user-tag">
+                            ${escapeHtml(userName)}
+                            <button type="button" onclick="removeUserFromSelection(${userId})">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    `);
+                    $tagsContainer.append(tag);
+                }
+            });
+
+            $previewContainer.removeClass('hidden');
+        }
+
+        // Remove user from selection
+        window.removeUserFromSelection = function(userId) {
+            selectedUserIds.delete(userId);
+            $(`.user-checkbox[value="${userId}"]`).prop('checked', false);
+            updateSelectedUsersCount();
+            updateSelectedUsersPreview();
+            updateSelectAllCheckbox();
+        }
+
+        // Clear all selections
+        function clearSelection() {
+            selectedUserIds.clear();
+            $('.user-checkbox').prop('checked', false);
+            updateSelectedUsersCount();
+            updateSelectedUsersPreview();
+            updateSelectAllCheckbox();
+        }
+
+        // Update select all checkbox state
+        function updateSelectAllCheckbox() {
+            const $selectAll = $('#selectAllUsers');
+            const $visibleCheckboxes = $('.user-checkbox:visible');
+            const $checkedCheckboxes = $('.user-checkbox:checked:visible');
+
+            if ($visibleCheckboxes.length > 0) {
+                $selectAll.prop('checked', $checkedCheckboxes.length === $visibleCheckboxes.length);
+                $selectAll.prop('indeterminate', $checkedCheckboxes.length > 0 && $checkedCheckboxes.length < $visibleCheckboxes.length);
+            }
+        }
+
+        // Initialize assign users modal
+        function initializeAssignUsersModal() {
+            // Clear previous selections
+            selectedUserIds.clear();
+
+            // Load users on modal open
+            loadUsers(1, '', 'all');
+
+            // Search with debounce
+            let searchTimeout;
+            $('#searchUsers').off('input').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = $(this).val();
+                    loadUsers(1, searchTerm, userRoleFilter);
+                }, 300);
+            });
+
+            // Role filter change
+            $('#userRoleFilter').off('change').on('change', function() {
+                const role = $(this).val();
+                loadUsers(1, userSearchTerm, role);
+            });
+
+            // Pagination buttons
+            $('#prevPageBtn').off('click').on('click', function() {
+                if (currentUserPage > 1) {
+                    loadUsers(currentUserPage - 1, userSearchTerm, userRoleFilter);
+                }
+            });
+
+            $('#nextPageBtn').off('click').on('click', function() {
+                loadUsers(currentUserPage + 1, userSearchTerm, userRoleFilter);
+            });
+
+            // Project select change handler
+            $('#assignProjectSelect').off('change').on('change', function() {
+                updateSelectedUsersCount();
+            });
+        }
+
+        // Reset assign users modal
+        function resetAssignUsersModal() {
+            // Reset form elements
+            $('#searchUsers').val('');
+            $('#userRoleFilter').val('all');
+
+            // Reset selection
+            selectedUserIds.clear();
+
+            // Reset checkboxes
+            $('#selectAllUsers').prop('checked', false).prop('indeterminate', false);
+
+            // Reset UI
+            updateSelectedUsersCount();
+            $('#selectedUsersPreview').addClass('hidden');
+
+            // Reset project select if no project selected
+            if (!selectedProjectId) {
+                $('#assignProjectSelect').val('');
+            }
+
+            // Load fresh user list
+            loadUsers(1, '', 'all');
+        }
+
+        // Submit assign users
+        function submitAssignUsers() {
+            const projectId = $('#assignProjectSelect').val();
+
+            if (!projectId) {
+                showToast('Please select a project first', 'error');
+                return;
+            }
+
+            if (selectedUserIds.size === 0) {
                 showToast('Please select at least one user', 'error');
                 return;
             }
 
-            // Show loading
-            const confirmBtn = modal.querySelector('#confirmBulkAssign');
-            const originalText = confirmBtn.innerHTML;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-            confirmBtn.disabled = true;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'bulk_assign_projects');
-                formData.append('project_ids', JSON.stringify(selectedProjects));
-                formData.append('user_ids', JSON.stringify(selectedUsers));
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    modal.querySelector('.close-modal').click();
-
-                    // Reload projects to update counts
-                    loadProjectsData();
-
-                    // Show warnings if any
-                    if (data.warning) {
-                        setTimeout(() => {
-                            showToast(data.warning, 'warning');
-                        }, 1000);
-                    }
-                } else {
-                    showToast(data.message || 'Failed to process bulk assignment', 'error');
-                }
-            } catch (error) {
-                console.error('Bulk assign error:', error);
-                showToast('Failed to process bulk assignment', 'error');
-            } finally {
-                confirmBtn.innerHTML = originalText;
-                confirmBtn.disabled = false;
-            }
-        }
-
-        // Ganti fungsi processImport() dengan:
-        async function processImport() {
-            const modal = document.querySelector('.import-projects-modal');
-            if (!modal) return;
-
-            const fileInput = modal.querySelector('#importFile');
-            if (!fileInput.files.length) {
-                showToast('Please select a file to import', 'error');
-                return;
-            }
-
-            const file = fileInput.files[0];
-
-            // Validate file size (10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('File size must be less than 10MB', 'error');
-                return;
-            }
-
-            // Show loading
-            const confirmBtn = modal.querySelector('#confirmImport');
-            const originalText = confirmBtn.innerHTML;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
-            confirmBtn.disabled = true;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'import_projects');
-                formData.append('projects_file', file);
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    modal.querySelector('.close-modal').click();
-
-                    // Clear file input
-                    fileInput.value = '';
-                    modal.querySelector('#selectedFileInfo').classList.add('hidden');
-
-                    // Reload projects
-                    loadProjectsData();
-
-                    // Show import summary if there were errors
-                    if (data.error_count > 0) {
-                        setTimeout(() => {
-                            showImportSummary(data);
-                        }, 1000);
-                    }
-                } else {
-                    showToast(data.message || 'Failed to import projects', 'error');
-                }
-            } catch (error) {
-                console.error('Import error:', error);
-                showToast('Failed to import projects', 'error');
-            } finally {
-                confirmBtn.innerHTML = originalText;
-                confirmBtn.disabled = false;
-            }
-        }
-
-        // Function untuk menampilkan summary import
-        function showImportSummary(data) {
-            const summaryHTML = `
-                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-                    <div class="bg-white rounded-2xl w-full max-w-lg animate-slideInUp">
-                        <div class="p-6 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xl font-semibold text-gray-800">Import Summary</h3>
-                                <button class="close-summary text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="p-6">
-                            <div class="mb-6">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-green-50 p-4 rounded-xl text-center">
-                                        <div class="text-green-600 text-2xl font-bold">${data.imported_count}</div>
-                                        <div class="text-green-700 text-sm">Projects Imported</div>
-                                    </div>
-                                    <div class="bg-red-50 p-4 rounded-xl text-center">
-                                        <div class="text-red-600 text-2xl font-bold">${data.error_count}</div>
-                                        <div class="text-red-700 text-sm">Errors</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            ${data.errors && data.errors.length > 0 ? `
-                            <div>
-                                <h4 class="text-gray-700 font-medium mb-3">Error Details:</h4>
-                                <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                                    <table class="w-full text-sm">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="p-3 text-left">Row</th>
-                                                <th class="p-3 text-left">Error</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${data.errors.map(error => `
-                                                <tr class="border-t border-gray-100">
-                                                    <td class="p-3">${error.row}</td>
-                                                    <td class="p-3 text-red-600">${error.error}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <div class="p-6 border-t border-gray-200">
-                            <button class="close-summary w-full py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors">
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const summaryContainer = document.createElement('div');
-            summaryContainer.innerHTML = summaryHTML;
-            document.body.appendChild(summaryContainer);
-
-            summaryContainer.querySelectorAll('.close-summary').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    summaryContainer.style.opacity = '0';
-                    summaryContainer.style.transform = 'translateY(10px)';
-                    setTimeout(() => summaryContainer.remove(), 300);
-                });
-            });
-        }
-
-        // Ganti fungsi loadBulkProjects() dengan:
-        async function loadBulkProjects(search = '') {
-            const modal = document.querySelector('.bulk-assign-modal');
-            if (!modal) return;
-
-            const projectsList = modal.querySelector('#bulkProjectsList');
-            if (!projectsList) return;
-
-            // Show loading
-            projectsList.innerHTML = `
-        <div class="p-4 text-center">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-secondary"></div>
-        </div>
-    `;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'get_projects_for_bulk');
-                formData.append('search', search);
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.projects) {
-                    renderBulkProjects(data.projects, projectsList);
-                    updateBulkSelectionCounts();
-                } else {
-                    projectsList.innerHTML = '<div class="p-4 text-center text-gray-500">No projects found</div>';
-                }
-            } catch (error) {
-                console.error('Error loading bulk projects:', error);
-                projectsList.innerHTML = '<div class="p-4 text-center text-gray-500 text-red-600">Failed to load projects</div>';
-            }
-        }
-
-        // Ganti fungsi loadBulkUsers() dengan:
-        async function loadBulkUsers(search = '') {
-            const modal = document.querySelector('.bulk-assign-modal');
-            if (!modal) return;
-
-            const usersList = modal.querySelector('#bulkUsersList');
-            if (!usersList) return;
-
-            // Show loading
-            usersList.innerHTML = `
-        <div class="p-4 text-center">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-secondary"></div>
-        </div>
-    `;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'get_all_users');
-                formData.append('search', search);
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.users) {
-                    renderBulkUsers(data.users, usersList);
-                    updateBulkSelectionCounts();
-                } else {
-                    usersList.innerHTML = '<div class="p-4 text-center text-gray-500">No users found</div>';
-                }
-            } catch (error) {
-                console.error('Error loading bulk users:', error);
-                usersList.innerHTML = '<div class="p-4 text-center text-gray-500 text-red-600">Failed to load users</div>';
-            }
-        }
-
-        // Function untuk load users untuk bulk assign
-        async function loadBulkUsers(search = '') {
-            const modal = document.querySelector('.bulk-assign-modal');
-            if (!modal) return;
-
-            const usersList = modal.querySelector('#bulkUsersList');
-            if (!usersList) return;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('search', search);
-
-                const response = await fetch(`${baseUrl}/admin/getAllUsers`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.users) {
-                    renderBulkUsers(data.users, usersList);
-                    updateBulkSelectionCounts();
-                }
-            } catch (error) {
-                console.error('Error loading bulk users:', error);
-                usersList.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load users</div>';
-            }
-        }
-
-        // Function untuk render projects di bulk assign modal
-        function renderBulkProjects(projects, container) {
-            if (!projects || projects.length === 0) {
-                container.innerHTML = '<div class="p-4 text-center text-gray-500">No projects found</div>';
-                return;
-            }
-
-            const html = projects.map(project => `
-                <div class="user-item">
-                    <label class="flex items-center w-full cursor-pointer">
-                        <input type="checkbox" class="project-checkbox mr-3" value="${project.project_id}">
-                        <div class="flex-1">
-                            <div class="font-medium text-gray-700">${project.project_name}</div>
-                            <div class="text-gray-500 text-xs">${project.project_code}</div>
-                        </div>
-                        <span class="${project.is_active ? 'status-active' : 'status-inactive'} status-badge text-xs">
-                            ${project.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </label>
-                </div>
-            `).join('');
-
-            container.innerHTML = html;
-
-            // Add event listeners to checkboxes
-            container.querySelectorAll('.project-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', updateBulkSelectionCounts);
-            });
-        }
-
-        // Function untuk render users di bulk assign modal
-        function renderBulkUsers(users, container) {
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div class="p-4 text-center text-gray-500">No users found</div>';
-                return;
-            }
-
-            const html = users.map(user => `
-                <div class="user-item">
-                    <label class="flex items-center w-full cursor-pointer">
-                        <input type="checkbox" class="user-checkbox mr-3" value="${user.user_id}">
-                        <div class="user-avatar-small">
-                            ${getUserInitials(user.full_name || user.username)}
-                        </div>
-                        <div class="flex-1">
-                            <div class="font-medium text-gray-700">${user.full_name || user.username}</div>
-                            <div class="text-gray-500 text-xs">${user.email} • ${user.role_name}</div>
-                        </div>
-                    </label>
-                </div>
-            `).join('');
-
-            container.innerHTML = html;
-
-            // Add event listeners to checkboxes
-            container.querySelectorAll('.user-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', updateBulkSelectionCounts);
-            });
-        }
-
-        // Function untuk update selection counts
-        function updateBulkSelectionCounts() {
-            const modal = document.querySelector('.bulk-assign-modal');
-            if (!modal) return;
-
-            const selectedProjects = Array.from(modal.querySelectorAll('.project-checkbox:checked')).length;
-            const selectedUsers = Array.from(modal.querySelectorAll('.user-checkbox:checked')).length;
-            const totalAssignments = selectedProjects * selectedUsers;
-
-            // Update counts
-            modal.querySelector('#bulkSelectedProjectsCount').textContent = selectedProjects;
-            modal.querySelector('#bulkSelectedUsersCount').textContent = selectedUsers;
-            modal.querySelector('#bulkTotalAssignments').textContent = totalAssignments;
-
-            // Update confirm button state
-            const confirmBtn = modal.querySelector('#confirmBulkAssign');
-            if (confirmBtn) {
-                confirmBtn.disabled = selectedProjects === 0 || selectedUsers === 0;
-            }
-        }
-
-        // Function untuk download CSV template
-        function downloadCSVTemplate() {
-            const csvContent = `project_name,project_code,description,is_active
-Website Redesign,PROJ001,Complete website overhaul,true
-Mobile App,PROJ002,New mobile application development,true
-Database Migration,PROJ003,Migrate to new database system,false
-API Integration,PROJ004,Third-party API integration,true`;
-
-            const blob = new Blob([csvContent], {
-                type: 'text/csv'
-            });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'project_import_template.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
-        // Function untuk menampilkan modal Add Project
-        function showAddProjectModal() {
-            // Get template
-            const template = document.getElementById('addProjectModalTemplate');
-            if (!template) return;
-
-            // Remove existing modal
-            const existingModal = document.querySelector('.add-project-modal');
-            if (existingModal) existingModal.remove();
-
-            // Clone and append modal
-            const modal = template.content.cloneNode(true);
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'add-project-modal';
-            modalContainer.appendChild(modal);
-            document.body.appendChild(modalContainer);
-
-            // Setup event listeners
-            setupAddProjectModalEvents();
-        }
-
-        function setupAddProjectModalEvents() {
-            const modal = document.querySelector('.add-project-modal');
-            if (!modal) return;
-
-            // Close modal
-            modal.querySelectorAll('.close-modal').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    modal.style.opacity = '0';
-                    modal.style.transform = 'translateY(10px)';
-                    setTimeout(() => modal.remove(), 300);
-                });
-            });
-
-            // Confirm add project
-            const confirmBtn = modal.querySelector('#confirmAddProject');
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', processAddProject);
-            }
-        }
-
-        // Ganti fungsi processAddProject() dengan:
-        async function processAddProject() {
-            const modal = document.querySelector('.add-project-modal');
-            if (!modal) return;
-
-            const projectName = modal.querySelector('#projectName').value.trim();
-            const projectCode = modal.querySelector('#projectCode').value.trim().toUpperCase();
-            const description = modal.querySelector('#projectDescription').value.trim();
-            const status = modal.querySelector('#projectStatus').value;
-
-            // Validation
-            if (!projectName) {
-                showToast('Project name is required', 'error');
-                modal.querySelector('#projectName').focus();
-                return;
-            }
-
-            if (!projectCode) {
-                showToast('Project code is required', 'error');
-                modal.querySelector('#projectCode').focus();
-                return;
-            }
-
-            // Show loading
-            const confirmBtn = modal.querySelector('#confirmAddProject');
-            const originalText = confirmBtn.innerHTML;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
-            confirmBtn.disabled = true;
-
-            try {
-                const formData = new FormData();
-                formData.append(csrfName, csrfToken);
-                formData.append('action', 'create_project');
-                formData.append('project_name', projectName);
-                formData.append('project_code', projectCode);
-                formData.append('description', description);
-                formData.append('is_active', status === 'active');
-
-                const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    modal.querySelector('.close-modal').click();
-
-                    // Clear form
-                    modal.querySelector('#projectName').value = '';
-                    modal.querySelector('#projectCode').value = '';
-                    modal.querySelector('#projectDescription').value = '';
-                    modal.querySelector('#projectStatus').value = 'active';
-
-                    // Reload projects
-                    loadProjectsData();
-
-                    // Select the new project
-                    if (data.project_id) {
-                        setTimeout(() => {
-                            selectProject(data.project_id);
-                        }, 1000);
-                    }
-                } else {
-                    if (data.errors) {
-                        // Show validation errors
-                        const errorMessages = Object.values(data.errors).join(', ');
-                        showToast(errorMessages, 'error');
-                    } else {
-                        showToast(data.message || 'Failed to create project', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('Add project error:', error);
-                showToast('Failed to create project', 'error');
-            } finally {
-                confirmBtn.innerHTML = originalText;
-                confirmBtn.disabled = false;
-            }
-        }
-        // Utility functions
-        function getStatusName(status) {
-            const statuses = {
-                'active': 'Active',
-                'inactive': 'Inactive',
-                'completed': 'Completed',
-                'on-hold': 'On Hold',
-                'pending': 'Pending'
-            };
-            return statuses[status?.toLowerCase()] || status || 'Active';
-        }
-
-        function getStatusClass(status) {
-            const classes = {
-                'active': 'status-active',
-                'inactive': 'status-inactive',
-                'completed': 'status-completed',
-                'on-hold': 'status-onhold',
-                'pending': 'status-onhold'
-            };
-            return classes[status?.toLowerCase()] || 'status-inactive';
-        }
-
-        function getUserInitials(name) {
-            if (!name) return '??';
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        function showLoading(elementId = null) {
-            if (elementId) {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    element.innerHTML = `
-                        <div class="flex items-center justify-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary"></div>
-                        </div>
-                    `;
-                }
-            } else {
-                // Show global loading overlay
-                let overlay = document.getElementById('loadingOverlay');
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'loadingOverlay';
-                    overlay.className = 'fixed inset-0 bg-white/80 flex items-center justify-center z-50';
-                    overlay.innerHTML = `
-                        <div class="text-center">
-                            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
-                            <p class="mt-4 text-text-dark">Loading...</p>
-                        </div>
-                    `;
-                    document.body.appendChild(overlay);
-                }
-                overlay.classList.remove('hidden');
-            }
-        }
-
-        function hideLoading(elementId = null) {
-            if (elementId) {
-                // Element-specific loading will be replaced by content
-            } else {
-                const overlay = document.getElementById('loadingOverlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                }
-            }
-        }
-
-        function showToast(message, type = 'info') {
-            // Remove existing toasts
-            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-
-            const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slideInUp ${type === 'error' ? 'bg-red-500 text-white' :
-                type === 'success' ? 'bg-green-500 text-white' :
-                    'bg-blue-500 text-white'
-                }`;
-            toast.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'success' ? 'fa-check-circle' :
-                        'fa-info-circle'
-                }"></i>
-                    <span class="text-sm">${message}</span>
-                </div>
-            `;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    });
-
-    // Ganti fungsi exportProjectsData() dengan:
-    async function exportProjectsData() {
-        try {
-            showLoading();
-
-            const filters = {
-                search: elements.projectSearch?.value || '',
-                status: elements.statusFilter?.value || '',
-                sort_by: elements.sortFilter?.value || 'name_asc'
-            };
+            const userIds = Array.from(selectedUserIds);
 
             const formData = new FormData();
-            formData.append(csrfName, csrfToken);
-            formData.append('action', 'export_projects_csv');
-            formData.append('search', filters.search);
-            formData.append('status', filters.status);
-            formData.append('sort_by', filters.sort_by);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            formData.append('action', 'bulk_assign_projects');
+            formData.append('project_id', projectId);
+            formData.append('user_ids', JSON.stringify(userIds));
 
-            const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
+            // Show loading state
+            const $submitBtn = $('#submitAssignUsersBtn');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Assigning...');
+            $submitBtn.prop('disabled', true);
+
+            $.ajax({
+                url: '<?= base_url('admin/projects/ajax-manage') ?>',
                 method: 'POST',
-                body: formData
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+
+                    if (data.success) {
+                        showToast(`Successfully assigned ${userIds.length} user(s) to project`, 'success');
+                        closeModal('assignToUsersModal');
+
+                        // Refresh project details if viewing the same project
+                        if (selectedProjectId == projectId) {
+                            loadProjectDetails(selectedProjectId);
+                        }
+
+                        // Clear selection
+                        selectedUserIds.clear();
+                    } else {
+                        showToast(data.message || 'Failed to assign users', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $submitBtn.html(originalText);
+                    $submitBtn.prop('disabled', false);
+                    console.error('Error:', error);
+                    showToast('Network error. Please try again.', 'error');
+                }
+            });
+        }
+
+        // ==================== INTEGRATION WITH SEARCH/FILTER ====================
+        function updatePaginationAfterFilter(filteredCount) {
+            totalPages = Math.ceil(filteredCount / projectsPerPage);
+            currentPage = Math.min(currentPage, totalPages) || 1;
+            renderPagination();
+            showPage(currentPage);
+        }
+
+        // ==================== SEARCH AND FILTER ====================
+        function initializeSearchAndFilter() {
+            // Event listener untuk Reset Filters
+            $('#resetFilters').off('click').on('click', function(e) {
+                e.preventDefault();
+
+                // Reset semua filter
+                $('#projectSearch').val('');
+                $('#statusFilter').val('');
+                $('#sortFilter').val('default');
+
+                // Tampilkan semua project kembali
+                $('.project-row').show();
+                $('.no-results-message').remove();
+
+                // Reset pagination
+                const totalProjects = <?= $total_projects ?? 0 ?>;
+                updateProjectCount(totalProjects);
+                updatePaginationAfterFilter(totalProjects);
+
+                // Reset row order
+                resetProjectOrder();
             });
 
-            const data = await response.json();
+            // Search input dengan debounce
+            let searchTimeout;
+            $('#projectSearch').off('input').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterProjects();
+                }, 300);
+            });
 
-            if (data.success) {
-                // Convert data to CSV and download
-                downloadCSV(data.data, data.filename || 'projects.csv');
-                showToast(`Exported ${data.count} projects successfully`, 'success');
-            } else {
-                showToast(data.message || 'Failed to export projects', 'error');
-            }
-        } catch (error) {
-            console.error('Export error:', error);
-            showToast('Failed to export projects', 'error');
-        } finally {
-            hideLoading();
+            // Status filter
+            $('#statusFilter').off('change').on('change', function() {
+                filterProjects();
+            });
+
+            // Sort filter
+            $('#sortFilter').off('change').on('change', function() {
+                const sortValue = $(this).val();
+                if (sortValue === 'default') {
+                    resetProjectOrder();
+                } else {
+                    sortProjects(sortValue);
+                }
+            });
         }
-    }
 
-    // Function untuk download CSV
-    function downloadCSV(data, filename) {
-        const csvContent = data.map(row =>
-            row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-        ).join('\n');
+        // Fungsi untuk reset urutan project ke default
+        function resetProjectOrder() {
+            const $container = $('#projectsList');
+            const $rows = $('.project-row').toArray();
 
-        const blob = new Blob([csvContent], {
-            type: 'text/csv;charset=utf-8;'
+            // Urutkan berdasarkan project_id (ascending)
+            $rows.sort((a, b) => {
+                const idA = $(a).data('project-id');
+                const idB = $(b).data('project-id');
+                return idA - idB;
+            });
+
+            // Reorder rows
+            $rows.forEach(row => {
+                $container.append(row);
+            });
+
+            // Update row numbers
+            updateRowNumbers();
+        }
+
+        // Fungsi filter projects dengan integrasi pagination
+        function filterProjects() {
+            const search = $('#projectSearch').val().toLowerCase();
+            const status = $('#statusFilter').val();
+            const $rows = $('.project-row');
+
+            let visibleCount = 0;
+
+            $rows.each(function() {
+                const $row = $(this);
+                const projectName = $row.find('.col-span-4 .font-medium').text().toLowerCase();
+                const projectCode = $row.find('.col-span-2 .font-medium').text().toLowerCase();
+                const statusText = $row.find('.status-badge').attr('data-status');
+
+                const matchesSearch = !search || projectName.includes(search) || projectCode.includes(search);
+                const matchesStatus = !status || statusText === status;
+
+                if (matchesSearch && matchesStatus) {
+                    $row.show();
+                    visibleCount++;
+                } else {
+                    $row.hide();
+                }
+            });
+
+            // Update project count
+            updateProjectCount(visibleCount);
+
+            // Update pagination based on filtered results
+            updatePaginationAfterFilter(visibleCount);
+
+            // Show/hide no results message
+            $('.no-results-message').remove();
+            if (visibleCount === 0) {
+                const noResultsHtml = `
+                    <div class="no-results-message py-12 text-center col-span-12">
+                        <i class="fas fa-search text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No projects found</p>
+                    </div>`;
+                $('#projectsList').append(noResultsHtml);
+            }
+        }
+
+        // Helper function untuk normalize status text
+        function normalizeStatusText(statusText) {
+            const statusMap = {
+                'active': 'active',
+                'inactive': 'inactive',
+            };
+
+            const normalized = statusText.trim().toLowerCase();
+            return statusMap[normalized] || normalized;
+        }
+
+        // Fungsi sort projects
+        function sortProjects(sortType) {
+            const $container = $('#projectsList');
+            const $rows = $('.project-row:visible').toArray();
+
+            if ($rows.length === 0) return;
+
+            $rows.sort((a, b) => {
+                const createdA = $(a).data('created-at');
+                const createdB = $(b).data('created-at');
+                const idA = $(a).data('project-id');
+                const idB = $(b).data('project-id');
+
+                switch (sortType) {
+                    case 'newest':
+                        // Sort by creation date descending (newest first)
+                        if (createdA && createdB) {
+                            return new Date(createdB) - new Date(createdA);
+                        }
+                        // Fallback to ID if date not available
+                        return idB - idA;
+
+                    case 'oldest':
+                        // Sort by creation date ascending (oldest first)
+                        if (createdA && createdB) {
+                            return new Date(createdA) - new Date(createdB);
+                        }
+                        // Fallback to ID if date not available
+                        return idA - idB;
+
+                    default:
+                        return 0;
+                }
+            });
+
+            // Reorder rows
+            $rows.forEach(row => {
+                $container.append(row);
+            });
+
+            // Update row numbers
+            updateRowNumbers();
+        }
+
+        // Update row numbers
+        function updateRowNumbers() {
+            $('.project-row:visible').each(function(index) {
+                $(this).find('.col-span-1').text(`${index + 1}.`);
+            });
+        }
+
+        // Update project count display
+        function updateProjectCount(count) {
+            const $showingCount = $('#showingCount');
+            if (count === 0) {
+                $showingCount.html('<span class="text-red-500 font-medium">No projects found</span>');
+            } else {
+                $showingCount.html(`
+                <span class="text-secondary font-medium">${count}</span> 
+                <span class="text-text-dark/70">project${count !== 1 ? 's' : ''}</span>
+            `);
+            }
+        }
+
+        // ==================== KEYBOARD SHORTCUTS ====================
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                $('.fixed.bg-black\\/50:not(.hidden)').each(function() {
+                    const modalId = $(this).attr('id');
+                    closeModal(modalId);
+                });
+            }
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
 
-    // Function untuk reset filter
-    function resetAllFilters() {
-        if (elements.projectSearch) elements.projectSearch.value = '';
-        if (elements.statusFilter) elements.statusFilter.value = '';
-        if (elements.sortFilter) elements.sortFilter.value = 'name_asc';
+        // ==================== EVENT LISTENERS ====================
+        // Modal buttons
+        $('#addProjectBtn').on('click', function() {
+            resetAddProjectModal();
+            openModal('addProjectModal');
+        });
 
-        currentPage = 1;
-        loadProjectsData();
-    }
+        $('#assignToUsersBtn').on('click', function() {
+            // Set selected project jika ada
+            if (selectedProjectId) {
+                $('#assignProjectSelect').val(selectedProjectId);
+            }
+            openModal('assignToUsersModal');
+        });
 
-    async function loadUsersData() {
-    const response = await fetch(`${baseUrl}/admin/ajaxManageProjects`, {
-        method: 'POST',
-        body: new FormData('get_users_table') // Tambahkan parameter action: 'get_users_table'
+        // Submit buttons
+        $('#submitAddProjectBtn').on('click', submitAddProject);
+        $('#submitAssignUsersBtn').on('click', submitAssignUsers);
+
+        // Form submit handlers
+        $('#addProjectForm').on('submit', function(e) {
+            e.preventDefault();
+            submitAddProject();
+        });
+
+        $('#editProjectForm').on('submit', function(e) {
+            e.preventDefault();
+            submitEditProject();
+        });
+
+        // Enter key pada modal
+        $('#addProjectModal').on('keydown', function(e) {
+            if (e.key === 'Enter' && !$(e.target).is('textarea')) {
+                e.preventDefault();
+                submitAddProject();
+            }
+        });
+
+        $('#editProjectModal').on('keydown', function(e) {
+            if (e.key === 'Enter' && !$(e.target).is('textarea')) {
+                e.preventDefault();
+                submitEditProject();
+            }
+        });
+
+        $('#assignToUsersModal').on('keydown', function(e) {
+            if (e.key === 'Enter' && !$(e.target).is('textarea') && $(e.target).attr('id') !== 'searchUsers') {
+                e.preventDefault();
+                submitAssignUsers();
+            }
+        });
+
+        // Cancel buttons
+        $('#deleteConfirmModal button:first-child').on('click', function() {
+            closeModal('deleteConfirmModal');
+        });
+
+        $('#statusConfirmModal button:first-child').on('click', function() {
+            closeModal('statusConfirmModal');
+        });
+
+        $(document).on('click', function(e) {
+            // Check if clicked element is a Cancel button or X button
+            const $target = $(e.target);
+
+            // Check for Cancel button (button with text "Cancel")
+            if ($target.is('button') && $target.text().trim() === 'Cancel') {
+                const $modal = $target.closest('.fixed.bg-black\\/50');
+                if ($modal.length) {
+                    const modalId = $modal.attr('id');
+                    closeModal(modalId);
+                    return;
+                }
+            }
+
+            // Check if parent is a Cancel button
+            if ($target.parent().is('button') && $target.parent().text().trim() === 'Cancel') {
+                const $modal = $target.parent().closest('.fixed.bg-black\\/50');
+                if ($modal.length) {
+                    const modalId = $modal.attr('id');
+                    closeModal(modalId);
+                }
+            }
+        });
+
+        // ==================== INITIALIZE ON PAGE LOAD ====================
+        // Initialize pagination on page load
+        initializePagination();
+
+        // Initialize search and filter
+        initializeSearchAndFilter();
+
+        // Set data attributes untuk sorting
+        $('.project-row').each(function() {
+            const $dateElement = $(this).find('[data-created-date]');
+            if ($dateElement.length) {
+                $(this).data('created-at', $dateElement.data('created-date'));
+            }
+        });
+
+        // Click handler untuk project rows (delegated)
+        $('#projectsList').on('click', '.project-row', function() {
+            const projectId = $(this).data('project-id');
+            if (projectId) {
+                selectProject(projectId);
+            }
+        });
+
+        // Initialize status indicator jika element ada
+        if ($('#statusIndicator').length) {
+            updateStatusIndicator(true);
+
+            // Toggle status indicator ketika checkbox berubah
+            $('#newProjectActive').on('change', function() {
+                updateStatusIndicator($(this).is(':checked'));
+            });
+        }
+
+        // Add event listener to modal open untuk proper initialization
+        $(document).on('modalOpened', '#addProjectModal', function() {
+            resetAddProjectModal();
+            setTimeout(() => {
+                $('#newProjectName').focus();
+            }, 100);
+        });
     });
-    const data = await response.json();
-    renderUsersTable(data.users);
-}
 </script>
-<?= $this->endSection() ?>
+<?= $this::endSection() ?>

@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/it_support_layout') ?>
 
-<?= $this->section('title') ?>Ticket Summary #<?= $ticket_id ?? '10421' ?> - IT Support<?= $this->endSection() ?>
+<?= $this->section('title') ?>Ticket Summary #<?= $ticket['ticket_number'] ?? 'Unknown' ?> - IT Support<?= $this->endSection() ?>
 
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
@@ -36,14 +36,14 @@
                 <div class="flex items-center gap-3 mb-2">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Ticket Summary</h1>
                     <div class="px-3 py-1 bg-secondary/10 text-secondary text-sm font-semibold rounded-full">
-                        #T<?= $ticket_id ?? '10421' ?>
+                        <?= esc($ticket['ticket_number'] ?? 'TKT-Unknown') ?>
                     </div>
                 </div>
-                <p class="text-gray-600">Technical summary for server maintenance ticket</p>
+                <p class="text-gray-600">Technical summary for <?= esc($ticket['subject'] ?? 'ticket') ?></p>
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <a href="<?= base_url('department/it-support/ticket_detail/' . ($ticket_id ?? '10421')) ?>"
+                <a href="<?= base_url('department/it-support/ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
                     class="px-4 py-2 bg-white text-secondary border border-secondary rounded-lg hover:bg-secondary/5 transition-all font-medium flex items-center gap-2 text-sm">
                     <i class="fas fa-external-link-alt"></i>
                     Open Full View
@@ -62,11 +62,11 @@
         <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-server text-blue-600"></i>
+                    <i class="fas fa-user text-blue-600"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm">Server</p>
-                    <p class="text-gray-800 font-bold">SRV-ALPHA-01</p>
+                    <p class="text-gray-600 text-sm">Customer</p>
+                    <p class="text-gray-800 font-bold truncate"><?= esc($ticket['customer_name'] ?? 'Unknown') ?></p>
                 </div>
             </div>
         </div>
@@ -78,31 +78,43 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-sm">Project</p>
-                    <p class="text-gray-800 font-bold">Project Alpha</p>
+                    <p class="text-gray-800 font-bold"><?= esc($ticket['project_name'] ?? 'No Project') ?></p>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-flag text-red-600"></i>
+                <div class="w-10 h-10 <?= ($ticket['priority_id'] ?? 1) >= 3 ? 'bg-red-100' : 'bg-yellow-100' ?> rounded-lg flex items-center justify-center">
+                    <i class="fas fa-flag <?= ($ticket['priority_id'] ?? 1) >= 3 ? 'text-red-600' : 'text-yellow-600' ?>"></i>
                 </div>
                 <div>
                     <p class="text-gray-600 text-sm">Priority</p>
-                    <p class="text-red-600 font-bold">High</p>
+                    <p class="<?= ($ticket['priority_id'] ?? 1) >= 3 ? 'text-red-600' : 'text-yellow-600' ?> font-bold"><?= esc($ticket['priority_name'] ?? 'Normal') ?></p>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-clock text-green-600"></i>
+                <div class="w-10 h-10 <?= 
+                    ($ticket['status_id'] ?? 1) == 3 ? 'bg-green-100' : 
+                    (($ticket['status_id'] ?? 1) == 2 ? 'bg-purple-100' : 
+                    (($ticket['status_id'] ?? 1) == 1 ? 'bg-blue-100' : 'bg-gray-100')) 
+                ?> rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock <?= 
+                        ($ticket['status_id'] ?? 1) == 3 ? 'text-green-600' : 
+                        (($ticket['status_id'] ?? 1) == 2 ? 'text-purple-600' : 
+                        (($ticket['status_id'] ?? 1) == 1 ? 'text-blue-600' : 'text-gray-600')) 
+                    ?>"></i>
                 </div>
                 <div>
                     <p class="text-gray-600 text-sm">Status</p>
-                    <p class="text-green-600 font-bold">In Progress</p>
+                    <p class="<?= 
+                        ($ticket['status_id'] ?? 1) == 3 ? 'text-green-600' : 
+                        (($ticket['status_id'] ?? 1) == 2 ? 'text-purple-600' : 
+                        (($ticket['status_id'] ?? 1) == 1 ? 'text-blue-600' : 'text-gray-600')) 
+                    ?> font-bold"><?= esc($ticket['status_name'] ?? 'Unknown') ?></p>
                 </div>
             </div>
         </div>
@@ -122,7 +134,7 @@
                         </h2>
                         <span class="text-gray-500 text-sm">
                             <i class="far fa-calendar mr-1"></i>
-                            Assigned: Today, 9:30 AM
+                            Created: <?= date('M d, Y H:i', strtotime($ticket['created_at'] ?? 'now')) ?>
                         </span>
                     </div>
                 </div>
@@ -132,7 +144,7 @@
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Issue Summary</h3>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <p class="text-gray-800 font-medium">Server memory leak causing performance degradation</p>
+                            <p class="text-gray-800 font-medium"><?= esc($ticket['subject'] ?? 'No subject') ?></p>
                         </div>
                     </div>
 
@@ -141,46 +153,83 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-3">Technical Analysis</h3>
                         <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
                             <div class="text-gray-700 leading-relaxed space-y-4">
-                                <p><strong>Issue Identified:</strong> Memory leak in application server deployment
-                                    v2.4.1</p>
-                                <p><strong>Root Cause:</strong> The memory leak appears to be related to the latest
-                                    deployment that occurred on February 18, 2026. The application server is not
-                                    properly releasing memory after processing requests, leading to gradual memory
-                                    consumption increase until system performance is critically impacted.</p>
-                                <p><strong>Affected Components:</strong></p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Web Service (Port 8080)</li>
-                                    <li>Database Connection Pool</li>
-                                    <li>API Gateway Service</li>
-                                    <li>Cache Management System</li>
-                                </ul>
-                                <p><strong>Current Impact:</strong></p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Response time increased by 300%</li>
-                                    <li>Memory usage at 95% capacity</li>
-                                    <li>Automatic scaling triggered 5 times in last 24 hours</li>
-                                    <li>Customer dashboard access intermittently unavailable</li>
-                                </ul>
-                                <p><strong>Immediate Action Taken:</strong> Rollback to previous stable version (v2.3.8)
-                                    completed successfully. Memory usage has stabilized at 45% capacity. Monitoring
-                                    ongoing for next 24 hours.</p>
+                                <p><strong>Issue Description:</strong></p>
+                                <div class="prose max-w-none">
+                                    <?= $ticket['description'] ?? 'No description provided' ?>
+                                </div>
+                                
+                                <?php if (!empty($ticket['category_name'])): ?>
+                                <p><strong>Category:</strong> <?= esc($ticket['category_name']) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['department_name'])): ?>
+                                <p><strong>Assigned Department:</strong> <?= esc($ticket['department_name']) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['assigned_to_name'])): ?>
+                                <p><strong>Assigned To:</strong> <?= esc($ticket['assigned_to_name']) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['due_date'])): ?>
+                                <p><strong>Due Date:</strong> <?= date('M d, Y H:i', strtotime($ticket['due_date'])) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['first_response_at'])): ?>
+                                <p><strong>First Response:</strong> <?= date('M d, Y H:i', strtotime($ticket['first_response_at'])) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['resolved_at'])): ?>
+                                <p><strong>Resolved:</strong> <?= date('M d, Y H:i', strtotime($ticket['resolved_at'])) ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($ticket['closed_at'])): ?>
+                                <p><strong>Closed:</strong> <?= date('M d, Y H:i', strtotime($ticket['closed_at'])) ?></p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-
+            <!-- Timeline -->
+            <?php if (!empty($timeline)): ?>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-history text-secondary"></i>
+                        Timeline
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <?php foreach ($timeline as $event): ?>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-comment text-secondary text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800"><?= esc($event['message']) ?></p>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    By <?= esc($event['sender_name']) ?> • 
+                                    <?= date('M d, H:i', strtotime($event['created_at'])) ?>
+                                </p>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Right Column - Sidebar -->
         <div class="space-y-6">
-            <!-- Server Information Card -->
+            <!-- Customer Information Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
                     <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fas fa-server text-blue-600"></i>
-                        Server Information
+                        <i class="fas fa-user text-blue-600"></i>
+                        Customer Information
                     </h2>
                 </div>
 
@@ -188,42 +237,30 @@
                     <div class="flex items-center gap-3 mb-4">
                         <div
                             class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                            S01
+                            <?= substr($ticket['customer_name'] ?? 'CU', 0, 2) ?>
                         </div>
                         <div>
-                            <h3 class="text-gray-800 font-bold">SRV-ALPHA-01</h3>
-                            <p class="text-gray-600 text-sm">Production Server</p>
+                            <h3 class="text-gray-800 font-bold"><?= esc($ticket['customer_name'] ?? 'Unknown Customer') ?></h3>
+                            <p class="text-gray-600 text-sm">Customer</p>
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div class="flex items-center gap-2">
-                            <i class="fas fa-microchip text-gray-400 w-5"></i>
-                            <span class="text-gray-700">16 vCPU, 64GB RAM</span>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-hdd text-gray-400 w-5"></i>
-                            <span class="text-gray-700">1TB SSD Storage</span>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-network-wired text-gray-400 w-5"></i>
-                            <span class="text-gray-700">Data Center A, Rack 42</span>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-shield-alt text-gray-400 w-5"></i>
-                            <span class="text-gray-700">High Availability Cluster</span>
+                            <i class="fas fa-envelope text-gray-400 w-5"></i>
+                            <span class="text-gray-700 truncate"><?= esc($ticket['customer_email'] ?? 'No email') ?></span>
                         </div>
 
                         <div class="pt-3 border-t border-gray-200">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-gray-600">Current Load</span>
-                                <span class="text-green-600 font-medium">45%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-green-500 rounded-full w-[45%]"></div>
+                            <p class="text-gray-600 text-sm mb-2">Customer Tickets</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-700">Total Tickets</span>
+                                <span class="font-medium">
+                                    <?php 
+                                    // This would come from database query in real app
+                                    echo rand(1, 10); 
+                                    ?>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -243,47 +280,118 @@
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Environment</span>
-                            <span class="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full">Production</span>
+                            <span class="px-3 py-1 bg-<?= 
+                                ($ticket['project_name'] ?? '') == 'Production' ? 'red' : 'blue' 
+                            ?>-100 text-<?= 
+                                ($ticket['project_name'] ?? '') == 'Production' ? 'red' : 'blue' 
+                            ?>-800 text-sm rounded-full">
+                                <?= ($ticket['project_name'] ?? '') == 'Production' ? 'Production' : 'Development' ?>
+                            </span>
                         </div>
 
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Status</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">In Progress</span>
+                            <span class="px-3 py-1 <?= 
+                                ($ticket['status_id'] ?? 1) == 3 ? 'bg-green-100 text-green-800' : 
+                                (($ticket['status_id'] ?? 1) == 2 ? 'bg-purple-100 text-purple-800' : 
+                                (($ticket['status_id'] ?? 1) == 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800')) 
+                            ?> text-sm rounded-full">
+                                <?= esc($ticket['status_name'] ?? 'Unknown') ?>
+                            </span>
                         </div>
 
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Priority</span>
-                            <span class="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full">High</span>
+                            <span class="px-3 py-1 <?= 
+                                ($ticket['priority_id'] ?? 1) >= 3 ? 'bg-red-100 text-red-800' : 
+                                (($ticket['priority_id'] ?? 1) == 2 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') 
+                            ?> text-sm rounded-full">
+                                <?= esc($ticket['priority_name'] ?? 'Normal') ?>
+                            </span>
                         </div>
 
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Category</span>
-                            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">Server
-                                Infrastructure</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
+                                <?= esc($ticket['category_name'] ?? 'Uncategorized') ?>
+                            </span>
                         </div>
 
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Assigned</span>
-                            <span class="font-medium">Today, 9:30 AM</span>
+                            <span class="text-gray-600">Created</span>
+                            <span class="font-medium"><?= date('M d, H:i', strtotime($ticket['created_at'] ?? 'now')) ?></span>
                         </div>
 
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Last Updated</span>
-                            <span class="font-medium">Today, 11:15 AM</span>
+                            <span class="font-medium"><?= date('M d, H:i', strtotime($ticket['updated_at'] ?? $ticket['created_at'] ?? 'now')) ?></span>
                         </div>
 
                         <div class="pt-3 border-t border-gray-200">
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-600">SLA Status</span>
-                                <span class="text-green-600 font-medium">✓ On Track</span>
+                                <span class="<?= 
+                                    !empty($ticket['due_date']) && strtotime($ticket['due_date']) > time() ? 
+                                    'text-green-600' : 'text-red-600' 
+                                ?> font-medium">
+                                    <?= 
+                                        !empty($ticket['due_date']) && strtotime($ticket['due_date']) > time() ? 
+                                        '✓ On Track' : '✗ Overdue' 
+                                    ?>
+                                </span>
                             </div>
-                            <div class="text-gray-500 text-xs mt-1">12h remaining for resolution</div>
+                            <?php if (!empty($ticket['due_date'])): ?>
+                            <div class="text-gray-500 text-xs mt-1">
+                                <?php 
+                                $dueDate = new DateTime($ticket['due_date']);
+                                $now = new DateTime();
+                                $interval = $now->diff($dueDate);
+                                
+                                if ($dueDate > $now) {
+                                    echo $interval->d . 'd ' . $interval->h . 'h remaining';
+                                } else {
+                                    echo 'Overdue by ' . $interval->d . 'd ' . $interval->h . 'h';
+                                }
+                                ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-
+            <!-- Related Tickets -->
+            <?php if (!empty($related_tickets)): ?>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-link text-secondary"></i>
+                        Related Tickets
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <?php foreach ($related_tickets as $related): ?>
+                        <a href="<?= base_url('department/it-support/ticket_summary/' . $related['ticket_id']) ?>" 
+                           class="block p-3 border rounded-lg hover:border-secondary transition-colors">
+                            <div class="flex justify-between items-start">
+                                <span class="font-medium text-gray-800"><?= esc($related['ticket_number']) ?></span>
+                                <span class="text-xs px-2 py-1 rounded-full <?= 
+                                    $related['priority_id'] >= 3 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' 
+                                ?>">
+                                    <?= esc($related['priority_name']) ?>
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1 truncate"><?= esc($related['subject']) ?></p>
+                            <div class="flex justify-between items-center mt-2 text-xs text-gray-500">
+                                <span><?= esc($related['status_name']) ?></span>
+                            </div>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -300,7 +408,7 @@
                     class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                     Back to Assigned
                 </a>
-                <a href="<?= base_url('department/it-support/ticket_detail/' . ($ticket_id ?? '10421')) ?>"
+                <a href="<?= base_url('department/it-support/ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
                     class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium flex items-center gap-2">
                     <i class="fas fa-comments"></i>
                     Open Conversation
@@ -317,7 +425,6 @@
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -336,12 +443,9 @@
 
     /* Status badge pulse */
     @keyframes pulse {
-
-        0%,
-        100% {
+        0%, 100% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.7;
         }
@@ -351,32 +455,28 @@
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
-    /* Timeline styling */
-    .relative.pl-8.border-l-2::before {
-        content: '';
-        position: absolute;
-        left: -2px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(to bottom, #10b981, #3b82f6, #8b5cf6, #f59e0b);
+    /* Prose styling for description */
+    .prose {
+        color: #374151;
     }
-
-    /* Service status dots animation */
-    @keyframes servicePulse {
-
-        0%,
-        100% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.1);
-        }
+    
+    .prose p {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
     }
-
-    .bg-red-500.rounded-full {
-        animation: servicePulse 2s ease-in-out infinite;
+    
+    .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+    
+    .prose ol {
+        list-style-type: decimal;
+        padding-left: 1.5em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
     }
 </style>
 
@@ -396,59 +496,12 @@
                 hour12: true
             });
 
-            const currentTimeElements = document.querySelectorAll('.text-gray-500.text-xs:contains("Current")');
-            currentTimeElements.forEach(el => {
-                if (el.textContent.includes('Current')) {
-                    el.textContent = `Today, ${timeString} • Current`;
-                }
-            });
+            // You can add current time display if needed
         }
 
         // Update every minute
         updateCurrentTime();
         setInterval(updateCurrentTime, 60000);
-
-        // Service status updates
-        const serviceStatuses = document.querySelectorAll('.w-3.h-3.rounded-full');
-        serviceStatuses.forEach(status => {
-            status.addEventListener('click', function () {
-                const serviceName = this.closest('.flex.items-center.justify-between').querySelector('.text-gray-700').textContent;
-                const currentColor = this.classList[1];
-                let newColor, statusText;
-
-                if (currentColor === 'bg-red-500') {
-                    newColor = 'bg-yellow-500';
-                    statusText = 'Degraded';
-                } else if (currentColor === 'bg-yellow-500') {
-                    newColor = 'bg-green-500';
-                    statusText = 'Healthy';
-                } else {
-                    newColor = 'bg-red-500';
-                    statusText = 'Critical';
-                }
-
-                this.className = `w-3 h-3 ${newColor} rounded-full`;
-
-                // Update service health percentage
-                const healthBar = document.querySelector('.h-full.bg-green-500.rounded-full');
-                const healthText = document.querySelector('.text-gray-700.text-sm.font-medium');
-
-                if (healthBar && healthText) {
-                    let currentHealth = parseInt(healthText.textContent);
-                    if (statusText === 'Healthy' && currentColor === 'bg-red-500') {
-                        currentHealth += 20;
-                    } else if (statusText === 'Critical' && currentColor === 'bg-green-500') {
-                        currentHealth -= 20;
-                    }
-
-                    currentHealth = Math.max(0, Math.min(100, currentHealth));
-                    healthBar.style.width = `${currentHealth}%`;
-                    healthText.textContent = `${currentHealth}%`;
-                }
-
-                showToast(`${serviceName} status updated to ${statusText}`, 'info');
-            });
-        });
 
         // Print button functionality
         const printBtn = document.querySelector('button:contains("Print")');
@@ -465,70 +518,11 @@
             });
         }
 
-        // Team contact click handlers
-        document.querySelectorAll('.bg-white\\/10.rounded-lg').forEach(contact => {
-            contact.addEventListener('click', function () {
-                const personName = this.querySelector('.font-medium').textContent;
-                const role = this.querySelector('.text-white\\/80').textContent;
-
-                showToast(`Contact: ${personName} (${role})`, 'info');
-
-                // Simulate opening contact details
-                if (personName.includes('Michael Chen')) {
-                    const modal = document.createElement('div');
-                    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4';
-                    modal.innerHTML = `
-                    <div class="bg-white rounded-2xl w-full max-w-md animate-fadeInUp">
-                        <div class="p-6 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xl font-semibold text-gray-800">Contact Details</h3>
-                                <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="p-6">
-                            <div class="flex items-center gap-4 mb-4">
-                                <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                                    MC
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-800">Michael Chen</h4>
-                                    <p class="text-gray-600">Senior IT Engineer</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fas fa-envelope text-gray-400"></i>
-                                    <span class="text-gray-700">michael.chen@company.com</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fas fa-phone text-gray-400"></i>
-                                    <span class="text-gray-700">+1 (555) 123-4567</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fas fa-slack text-gray-400"></i>
-                                    <span class="text-gray-700">@mchen-it</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="p-6 border-t border-gray-200 flex gap-3">
-                            <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                                Close
-                            </button>
-                            <button onclick="window.location.href='mailto:michael.chen@company.com'" class="flex-1 py-3 bg-secondary text-white rounded-lg hover:bg-[#817CB2]">
-                                Send Email
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                    document.body.appendChild(modal);
-                    document.body.style.overflow = 'hidden';
-                }
+        // Related tickets click tracking
+        document.querySelectorAll('a.block.p-3.border.rounded-lg').forEach(link => {
+            link.addEventListener('click', function (e) {
+                const ticketNumber = this.querySelector('.font-medium').textContent;
+                showToast(`Opening related ticket: ${ticketNumber}`, 'info');
             });
         });
     });

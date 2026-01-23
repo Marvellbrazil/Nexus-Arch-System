@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/it_support_layout') ?>
+<?= $this->extend('layouts/uiux_support_layout') ?>
 
 <?= $this->section('title') ?>UI UX Support Dashboard - NEXUS<?= $this->endSection() ?>
 
@@ -20,7 +20,7 @@
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
-            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">IT Support Dashboard</h1>
+            <h1 class="text-2xl md:text-[35px] font-semibold mb-1 md:mb-[5px] text-text-dark">UI UX Support Dashboard</h1>
             <p class="text-sm md:text-[15px] font-light text-[#666]">Assigned tickets & progress overview</p>
         </div>
 

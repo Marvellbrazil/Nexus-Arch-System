@@ -26,7 +26,7 @@ class ProjectModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -49,58 +49,58 @@ class ProjectModel extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    /**
-     * Get recent projects with ticket counts
-     */
-    public function getRecentProjects(int $limit = 5): array
-    {
-        $db = db_connect();
+    // /**
+    //  * Get recent projects with ticket counts
+    //  */
+    // public function getRecentProjects(int $limit = 5): array
+    // {
+    //     $db = db_connect();
 
-        $recentProjects = $db->table('projects')
-            ->select('projects.*')
-            ->where('is_active', true)
-            ->orderBy('created_at', 'DESC')
-            ->limit($limit)
-            ->get()
-            ->getResultArray();
+    //     $recentProjects = $db->table('projects')
+    //         ->select('projects.*')
+    //         ->where('is_active', true)
+    //         ->orderBy('created_at', 'DESC')
+    //         ->limit($limit)
+    //         ->get()
+    //         ->getResultArray();
 
-        // Add ticket counts to recent projects
-        foreach ($recentProjects as &$project) {
-            $project['total_tickets'] = $db->table('tickets')
-                ->where('project_id', $project['project_id'])
-                ->countAllResults();
+    //     // Add ticket counts to recent projects
+    //     foreach ($recentProjects as &$project) {
+    //         $project['total_tickets'] = $db->table('tickets')
+    //             ->where('project_id', $project['project_id'])
+    //             ->countAllResults();
 
-            $project['open_tickets'] = $db->table('tickets')
-                ->where('project_id', $project['project_id'])
-                ->groupStart()
-                ->where('status_id', 1)
-                ->orWhere('status_id', 2)
-                ->groupEnd()
-                ->countAllResults();
-        }
+    //         $project['open_tickets'] = $db->table('tickets')
+    //             ->where('project_id', $project['project_id'])
+    //             ->groupStart()
+    //             ->where('status_id', 1)
+    //             ->orWhere('status_id', 2)
+    //             ->groupEnd()
+    //             ->countAllResults();
+    //     }
 
-        return $recentProjects;
-    }
+    //     return $recentProjects;
+    // }
 
-    /**
-     * Get project overview with ticket counts
-     */
-    public function getProjectOverview(int $limit = 5): array
-    {
-        $db = db_connect();
+    // /**
+    //  * Get project overview with ticket counts
+    //  */
+    // public function getProjectOverview(int $limit = 5): array
+    // {
+    //     $db = db_connect();
 
-        $projects = $db->table('projects p')
-            ->select('p.*, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
-            ->where('p.is_active', 1)
-            ->orderBy('p.created_at', 'DESC')
-            ->limit($limit)
-            ->get()
-            ->getResultArray();
+    //     $projects = $db->table('projects p')
+    //         ->select('p.*, 
+    //             (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
+    //             (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
+    //         ->where('p.is_active', 1)
+    //         ->orderBy('p.created_at', 'DESC')
+    //         ->limit($limit)
+    //         ->get()
+    //         ->getResultArray();
 
-        return $projects;
-    }
+    //     return $projects;
+    // }
 
     /**
      * Check if project code exists
@@ -118,37 +118,48 @@ class ProjectModel extends Model
     }
 
     /**
-     * Get project with user details
-     */
-    public function getProjectWithUser(int $projectId): ?array
-    {
-        $db = db_connect();
+ * Get project with user details and consistent ticket counts
+ */
+public function getProjectWithUser(int $projectId): ?array
+{
+    $db = db_connect();
 
-        $result = $db->table('projects p')
-            ->select('p.*, u.full_name as user_full_name, u.email as user_email')
-            ->join('users u', 'u.user_id = p.user_id', 'left')
-            ->where('p.project_id', $projectId)
-            ->get()
-            ->getRowArray();
+    $result = $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id = 3), 0) as resolved_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id = 4), 0) as closed_tickets')
+        ->where('p.project_id', $projectId)
+        ->get()
+        ->getRowArray();
 
-        return $result ?: null;
+    if ($result) {
+        // Calculate completion rate
+        $total = $result['total_tickets'];
+        $completed = $result['resolved_tickets'] + $result['closed_tickets'];
+        $result['completion_rate'] = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
     }
+
+    return $result ?: null;
+}
 
     /**
-     * Get projects with ticket counts
-     */
-    public function getProjectsWithTicketCounts(): array
-    {
-        $db = db_connect();
+ * Get projects with ticket counts (UPDATED WITH CONSISTENT ORDERING)
+ */
+public function getProjectsWithTicketCounts(): array
+{
+    $db = db_connect();
 
-        return $db->table('projects p')
-            ->select('p.*, 
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id) as total_tickets,
-                (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)) as open_tickets')
-            ->orderBy('p.created_at', 'DESC')
-            ->get()
-            ->getResultArray();
-    }
+    return $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.project_id), 0) as assigned_users')
+        ->orderBy('p.project_id', 'ASC') // Default order by project_id ASC untuk konsistensi
+        ->get()
+        ->getResultArray();
+}
 
     /**
      * Change project status
@@ -485,112 +496,112 @@ class ProjectModel extends Model
         return $stats;
     }
 
-    /**
-     * Import projects from CSV
-     */
-    public function importProjectsFromCSV($file, $userId): array
-    {
-        $importedCount = 0;
-        $errorCount = 0;
-        $errors = [];
+    // /**
+    //  * Import projects from CSV
+    //  */
+    // public function importProjectsFromCSV($file, $userId): array
+    // {
+    //     $importedCount = 0;
+    //     $errorCount = 0;
+    //     $errors = [];
 
-        // Move file to writable directory
-        $filePath = WRITEPATH . 'uploads/' . $file->getName();
-        $file->move(WRITEPATH . 'uploads/', $file->getName());
+    //     // Move file to writable directory
+    //     $filePath = WRITEPATH . 'uploads/' . $file->getName();
+    //     $file->move(WRITEPATH . 'uploads/', $file->getName());
 
-        // Read CSV file
-        $handle = fopen($filePath, 'r');
-        $headers = fgetcsv($handle); // Read headers
+    //     // Read CSV file
+    //     $handle = fopen($filePath, 'r');
+    //     $headers = fgetcsv($handle); // Read headers
 
-        // Required columns
-        $requiredColumns = ['project_name', 'project_code'];
+    //     // Required columns
+    //     $requiredColumns = ['project_name', 'project_code'];
 
-        // Validate headers
-        foreach ($requiredColumns as $column) {
-            if (!in_array($column, $headers)) {
-                return [
-                    'success' => false,
-                    'message' => "Missing required column: {$column}"
-                ];
-            }
-        }
+    //     // Validate headers
+    //     foreach ($requiredColumns as $column) {
+    //         if (!in_array($column, $headers)) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "Missing required column: {$column}"
+    //             ];
+    //         }
+    //     }
 
-        $rowNumber = 1;
-        while (($row = fgetcsv($handle)) !== false) {
-            $rowNumber++;
+    //     $rowNumber = 1;
+    //     while (($row = fgetcsv($handle)) !== false) {
+    //         $rowNumber++;
 
-            // Map row data to associative array
-            $data = array_combine($headers, $row);
+    //         // Map row data to associative array
+    //         $data = array_combine($headers, $row);
 
-            // Validate required fields
-            if (empty($data['project_name']) || empty($data['project_code'])) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => 'Project name and code are required'
-                ];
-                continue;
-            }
+    //         // Validate required fields
+    //         if (empty($data['project_name']) || empty($data['project_code'])) {
+    //             $errorCount++;
+    //             $errors[] = [
+    //                 'row' => $rowNumber,
+    //                 'error' => 'Project name and code are required'
+    //             ];
+    //             continue;
+    //         }
 
-            // Prepare project data
-            $projectData = [
-                'project_name' => trim($data['project_name']),
-                'project_code' => strtoupper(trim($data['project_code'])),
-                'description' => $data['description'] ?? null,
-                'is_active' => isset($data['is_active']) ?
-                    (strtolower($data['is_active']) === 'true' || $data['is_active'] === '1') : true,
-                'user_id' => $userId,
-                'created_at' => date('Y-m-d H:i:s')
-            ];
+    //         // Prepare project data
+    //         $projectData = [
+    //             'project_name' => trim($data['project_name']),
+    //             'project_code' => strtoupper(trim($data['project_code'])),
+    //             'description' => $data['description'] ?? null,
+    //             'is_active' => isset($data['is_active']) ?
+    //                 (strtolower($data['is_active']) === 'true' || $data['is_active'] === '1') : true,
+    //             'user_id' => $userId,
+    //             'created_at' => date('Y-m-d H:i:s')
+    //         ];
 
-            // Check if project code already exists
-            if ($this->projectCodeExists($projectData['project_code'])) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => 'Project code already exists'
-                ];
-                continue;
-            }
+    //         // // Check if project code already exists
+    //         // if ($this->projectCodeExists($projectData['project_code'])) {
+    //         //     $errorCount++;
+    //         //     $errors[] = [
+    //         //         'row' => $rowNumber,
+    //         //         'error' => 'Project code already exists'
+    //         //     ];
+    //         //     continue;
+    //         // }
 
-            // Save project
-            try {
-                if ($this->insert($projectData)) {
-                    $importedCount++;
-                } else {
-                    $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => 'Failed to save project'
-                    ];
-                }
-            } catch (\Exception $e) {
-                $errorCount++;
-                $errors[] = [
-                    'row' => $rowNumber,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         // Save project
+    //         try {
+    //             if ($this->insert($projectData)) {
+    //                 $importedCount++;
+    //             } else {
+    //                 $errorCount++;
+    //                 $errors[] = [
+    //                     'row' => $rowNumber,
+    //                     'error' => 'Failed to save project'
+    //                 ];
+    //             }
+    //         } catch (\Exception $e) {
+    //             $errorCount++;
+    //             $errors[] = [
+    //                 'row' => $rowNumber,
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
 
-        fclose($handle);
+    //     fclose($handle);
 
-        // Clean up - delete temporary file
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
+    //     // Clean up - delete temporary file
+    //     if (file_exists($filePath)) {
+    //         unlink($filePath);
+    //     }
 
-        return [
-            'success' => true,
-            'message' => "Imported {$importedCount} projects successfully" .
-                ($errorCount > 0 ? " with {$errorCount} errors" : ""),
-            'imported_count' => $importedCount,
-            'error_count' => $errorCount,
-            'errors' => $errors
-        ];
-    }
+    //     return [
+    //         'success' => true,
+    //         'message' => "Imported {$importedCount} projects successfully" .
+    //             ($errorCount > 0 ? " with {$errorCount} errors" : ""),
+    //         'imported_count' => $importedCount,
+    //         'error_count' => $errorCount,
+    //         'errors' => $errors
+    //     ];
+    // }
 
-    // Tambahkan di bagian akhir class ProjectModel sebelum tutup }
+    // // Tambahkan di bagian akhir class ProjectModel sebelum tutup }
 
     /**
      * Bulk import projects from array data
@@ -622,10 +633,10 @@ class ProjectModel extends Model
                 $projectCode = strtoupper(trim($projectData['project_code']));
                 if ($this->projectCodeExists($projectCode)) {
                     $errorCount++;
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => "Project code '{$projectCode}' already exists"
-                    ];
+                    // $errors[] = [
+                    //     'row' => $rowNumber,
+                    //     'error' => "Project code '{$projectCode}' already exists"
+                    // ];
                     continue;
                 }
 
@@ -687,7 +698,6 @@ class ProjectModel extends Model
     public function createProject(array $data, int $userId): array
     {
         try {
-            $data['user_id'] = $userId;
             $data['created_at'] = date('Y-m-d H:i:s');
             $data['updated_at'] = date('Y-m-d H:i:s');
 
@@ -698,10 +708,10 @@ class ProjectModel extends Model
 
             // Check if project code exists
             if (isset($data['project_code']) && $this->projectCodeExists($data['project_code'])) {
-                return [
-                    'success' => false,
-                    'message' => 'Project code already exists'
-                ];
+                // return [
+                //     'success' => false,
+                //     'message' => 'Project code already exists'
+                // ];
             }
 
             if ($this->insert($data)) {
@@ -735,13 +745,13 @@ class ProjectModel extends Model
             if (isset($data['project_code'])) {
                 $data['project_code'] = strtoupper(trim($data['project_code']));
 
-                // Check if project code exists (excluding current project)
-                if ($this->projectCodeExists($data['project_code'], $projectId)) {
-                    return [
-                        'success' => false,
-                        'message' => 'Project code already exists'
-                    ];
-                }
+                // // Check if project code exists (excluding current project)
+                // if ($this->projectCodeExists($data['project_code'], $projectId)) {
+                //     return [
+                //         'success' => false,
+                //         'message' => 'Project code already exists'
+                //     ];
+                // }
             }
 
             $data['updated_at'] = date('Y-m-d H:i:s');
@@ -789,4 +799,99 @@ class ProjectModel extends Model
 
         return $query->get()->getResultArray();
     }
+
+    /**
+ * Search projects with filters for AJAX table (UPDATED FOR POSTGRESQL)
+ */
+public function searchProjectsForTable(array $filters = [], int $start = 0, int $length = 10): array
+{
+    $db = db_connect();
+
+    $builder = $db->table('projects p')
+        ->select('p.*, 
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id), 0) as total_tickets,
+            COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.project_id AND t.status_id IN (1,2)), 0) as open_tickets,
+            COALESCE((SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.project_id), 0) as assigned_users');
+
+    // Apply search dengan ILIKE untuk PostgreSQL
+    if (!empty($filters['search'])) {
+        $builder->groupStart()
+            ->like('p.project_name', $filters['search'], 'both', null, true)  // Parameter ke-5 = true untuk ILIKE
+            ->orLike('p.project_code', $filters['search'], 'both', null, true)
+            ->orLike('p.description', $filters['search'], 'both', null, true)
+            ->groupEnd();
+    }
+
+    // Apply status filter
+    if (!empty($filters['status'])) {
+        if ($filters['status'] === 'active') {
+            $builder->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $builder->where('p.is_active', false);
+        }
+        // Add other status filters if needed
+    }
+
+    // Apply sorting
+    if (!empty($filters['sort_by'])) {
+        switch ($filters['sort_by']) {
+            case 'name':
+                $builder->orderBy('p.project_name', $filters['sort_order'] ?? 'asc');
+                break;
+            case 'id':
+                $builder->orderBy('p.project_id', $filters['sort_order'] ?? 'asc');
+                break;
+            case 'tickets':
+                $builder->orderBy('total_tickets', $filters['sort_order'] ?? 'desc');
+                break;
+            default:
+                $builder->orderBy('p.created_at', 'DESC');
+        }
+    } else {
+        $builder->orderBy('p.created_at', 'DESC');
+    }
+
+    // Apply pagination
+    $builder->limit($length, $start);
+
+    return $builder->get()->getResultArray();
+}
+
+/**
+ * Count filtered projects for pagination
+ */
+public function countFilteredProjects(array $filters = []): int
+{
+    $db = db_connect();
+
+    $builder = $db->table('projects p');
+
+    // Apply search
+    if (!empty($filters['search'])) {
+        $builder->groupStart()
+            ->like('p.project_name', $filters['search'])
+            ->orLike('p.project_code', $filters['search'])
+            ->orLike('p.description', $filters['search'])
+            ->groupEnd();
+    }
+
+    // Apply status filter
+    if (!empty($filters['status'])) {
+        if ($filters['status'] === 'active') {
+            $builder->where('p.is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $builder->where('p.is_active', false);
+        }
+    }
+
+    return $builder->countAllResults();
+}
+
+/**
+ * Count all projects
+ */
+public function countAll(): int
+{
+    return $this->builder()->countAllResults();
+}
 }

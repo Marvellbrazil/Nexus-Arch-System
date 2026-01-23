@@ -770,4 +770,41 @@ class TicketModel extends Model
 
         return $builder->get()->getResultArray();
     }
+
+    // Di TicketModel.php - Tambahkan method ini
+
+/**
+ * Update ticket status
+ */
+public function updateTicketStatus($ticketId, $statusId, $resolvedBy = null)
+{
+    $data = [
+        'status_id' => $statusId,
+        'updated_at' => date('Y-m-d H:i:s')
+    ];
+    
+    if ($statusId == 3 || $statusId == 4) { // Resolved atau Closed
+        $data['resolved_at'] = date('Y-m-d H:i:s');
+        if ($resolvedBy) {
+            $data['resolved_by'] = $resolvedBy;
+        }
+    }
+    
+    return $this->update($ticketId, $data);
+}
+
+/**
+ * Get status ID by name
+ */
+public function getStatusIdByName($statusName)
+{
+    $db = db_connect();
+    $status = $db->table('statuses')
+        ->select('status_id')
+        ->where('status_name', $statusName)
+        ->get()
+        ->getRowArray();
+    
+    return $status ? $status['status_id'] : null;
+}
 }

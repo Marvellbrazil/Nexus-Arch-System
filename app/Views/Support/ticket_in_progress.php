@@ -305,19 +305,20 @@
 
                             <!-- Right Section -->
                             <div class="flex flex-col sm:flex-row gap-2">
-                                <?php if (!empty($ticket['department_id'])): ?>
-                                    <a href="<?= base_url('support/department_conversation/' . ($ticket['ticket_id'] ?? '')) ?>"
-                                        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
-                                        <i class="fas fa-comments"></i>
-                                        <span>Department Chat</span>
-                                    </a>
-                                <?php else: ?>
-                                    <button onclick="assignDepartment(<?= $ticket['ticket_id'] ?? 0 ?>)"
-                                        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
-                                        <i class="fas fa-share-alt"></i>
-                                        <span>Assign Department</span>
-                                    </button>
-                                <?php endif; ?>
+<!-- Di file ticket_in_progress.php, update tombol Department Chat: -->
+<?php if (!empty($ticket['department_id'])): ?>
+    <a href="<?= base_url('support/department_ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
+        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
+        <i class="fas fa-comments"></i>
+        <span>Department Chat</span>
+    </a>
+<?php else: ?>
+    <button onclick="assignDepartment(<?= $ticket['ticket_id'] ?? 0 ?>)"
+        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
+        <i class="fas fa-share-alt"></i>
+        <span>Assign Department</span>
+    </button>
+<?php endif; ?>
 
                                 <a href="<?= base_url('support/ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
                                     class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[120px]">

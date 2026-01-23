@@ -21,7 +21,8 @@ class UserModel extends Model
         'department_id',
         'phone_number',
         'photo_profile',
-        'otp'
+        'otp',
+        'is_active'
     ];
 
     // Dates
@@ -57,13 +58,76 @@ class UserModel extends Model
     protected $beforeUpdate = ['hashPassword'];
 
     /**
-     * Get users with role and department information (PostgreSQL compatible)
+     * Get users with role and department information
      */
+    /**
+     * Create new user with validation
+     */
+    public function createUser(array $data): array
+    {
+        try {
+            // Validasi input
+            if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+                return ['success' => false, 'message' => 'Required fields are missing'];
+            }
+
+            // Cek apakah username sudah ada
+            $existingUsername = $this->where('username', $data['username'])->first();
+            if ($existingUsername) {
+                return ['success' => false, 'message' => 'Username already exists'];
+            }
+
+            // Cek apakah email sudah ada
+            $existingEmail = $this->where('email', $data['email'])->first();
+            if ($existingEmail) {
+                return ['success' => false, 'message' => 'Email already registered'];
+            }
+
+            // Persiapkan data untuk disimpan
+            $userData = [
+                'username' => trim($data['username']),
+                'full_name' => trim($data['full_name']),
+                'email' => trim($data['email']),
+                'password' => password_hash($data['password'], PASSWORD_DEFAULT),
+                'role_id' => (int)$data['role_id'],
+                'is_active' => isset($data['is_active']) && $data['is_active'] == '1' ? true : false,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Tambahkan optional fields
+            if (!empty($data['department_id'])) {
+                $userData['department_id'] = (int)$data['department_id'];
+            }
+
+            if (!empty($data['phone_number'])) {
+                $userData['phone_number'] = trim($data['phone_number']);
+            }
+
+            // Simpan ke database
+            $inserted = $this->insert($userData);
+
+            if ($inserted) {
+                $userId = $this->getInsertID();
+                return [
+                    'success' => true,
+                    'message' => 'User created successfully',
+                    'user_id' => $userId,
+                    'data' => $userData
+                ];
+            } else {
+                return ['success' => false, 'message' => 'Failed to save user to database'];
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Create user error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
     public function getUsersWithRole(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $builder = $this->db->table('users u');
 
-        // PostgreSQL specific - use proper boolean handling
         $builder->select('u.*, r.role_name, r.role_id, d.department_name, d.department_id')
             ->join('roles r', 'r.role_id = u.role_id', 'left')
             ->join('departments d', 'd.department_id = u.department_id', 'left');
@@ -83,7 +147,7 @@ class UserModel extends Model
     }
 
     /**
-     * Count users with filters (PostgreSQL compatible)
+     * Count users with filters
      */
     public function countFilteredUsers(array $filters = []): int
     {
@@ -104,11 +168,11 @@ class UserModel extends Model
 
         // Total users
         $totalUsers = $db->table('users')->countAll();
-        
+
         // Active/inactive users
         $activeUsers = $db->table('users')->where('is_active', true)->countAllResults();
         $inactiveUsers = $db->table('users')->where('is_active', false)->countAllResults();
-        
+
         // Users by role
         $usersByRole = $db->table('users u')
             ->select('r.role_name, COUNT(*) as count')
@@ -142,9 +206,9 @@ class UserModel extends Model
     public function getUserTrend(): array
     {
         $db = db_connect();
-        
+
         $lastWeek = date('Y-m-d', strtotime('-7 days'));
-        
+
         $currentWeekUsers = $db->table('users')
             ->where('created_at >=', $lastWeek)
             ->countAllResults();
@@ -180,7 +244,7 @@ class UserModel extends Model
     public function exportUsers(array $filters = []): array
     {
         $db = db_connect();
-        
+
         $query = $db->table('users u')
             ->select('u.user_id, u.username, u.full_name, u.email, 
                      r.role_name, d.department_name, 
@@ -382,20 +446,20 @@ class UserModel extends Model
     /**
      * Search active users
      */
-        public function searchActiveUsers(string $keyword): array
-        {
-            return $this->builder()
-                ->select('user_id, username, full_name, email')
-                ->where('is_active', true)
-                ->groupStart()
-                ->like('full_name', $keyword)
-                ->orLike('username', $keyword)
-                ->orLike('email', $keyword)
-                ->groupEnd()
-                ->orderBy('full_name', 'ASC')
-                ->get()
-                ->getResultArray();
-        }
+    public function searchActiveUsers(string $keyword): array
+    {
+        return $this->builder()
+            ->select('user_id, username, full_name, email')
+            ->where('is_active', true)
+            ->groupStart()
+            ->like('full_name', $keyword)
+            ->orLike('username', $keyword)
+            ->orLike('email', $keyword)
+            ->groupEnd()
+            ->orderBy('full_name', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 
     /**
      * Get user statistics for dashboard
@@ -406,11 +470,11 @@ class UserModel extends Model
 
         // Total users
         $totalUsers = $db->table('users')->countAll();
-        
+
         // Active/inactive users
         $activeUsers = $db->table('users')->where('is_active', true)->countAllResults();
         $inactiveUsers = $db->table('users')->where('is_active', false)->countAllResults();
-        
+
         // Users by role
         $usersByRole = $db->table('users u')
             ->select('r.role_name, COUNT(*) as count')
@@ -492,47 +556,47 @@ class UserModel extends Model
         return $roleClasses[$roleName] ?? 'role-default';
     }
 
-        /**
-         * Get user by email
-         */
-        public function getUserByEmail(string $email)
-        {
-            return $this->where('email', $email)->first();
-        }
-    
-        /**
-         * Update a user record
-         */
-        public function updateUser(int $id, array $data)
-        {
-            return $this->update($id, $data);
-        }
-        
-        /**
-         * Update user password
-         */
-        public function updateUserPassword(int $id, string $password)
-        {
-            return $this->update($id, ['password' => $password]);
-        }
-    
-        /**
-         * Update user reset token
-         */
-            public function updateUserResetToken(int $id, $otp)
-            {
-                return $this->update($id, ['otp' => $otp]);
-            }
-        
-            /**
-             * Get basic user details
-             */
-            public function getBasicUserDetails(int $userId)
-            {
-                return $this->select('username, full_name, email, photo_profile')
-                            ->where('user_id', $userId)
-                            ->first();
-            }
+    /**
+     * Get user by email
+     */
+    public function getUserByEmail(string $email)
+    {
+        return $this->where('email', $email)->first();
+    }
+
+    /**
+     * Update a user record
+     */
+    public function updateUser(int $id, array $data)
+    {
+        return $this->update($id, $data);
+    }
+
+    /**
+     * Update user password
+     */
+    public function updateUserPassword(int $id, string $password)
+    {
+        return $this->update($id, ['password' => $password]);
+    }
+
+    /**
+     * Update user reset token
+     */
+    public function updateUserResetToken(int $id, $otp)
+    {
+        return $this->update($id, ['otp' => $otp]);
+    }
+
+    /**
+     * Get basic user details
+     */
+    public function getBasicUserDetails(int $userId)
+    {
+        return $this->select('username, full_name, email, photo_profile')
+            ->where('user_id', $userId)
+            ->first();
+    }
 
     public function getProjectTeamMembers(int $projectId, int $excludeUserId): array
     {
@@ -547,7 +611,7 @@ class UserModel extends Model
             ->getResultArray();
     }
 
-public function getUserDetails($userId)
+    public function getUserDetails($userId)
     {
         return $this->builder('users u')
             ->select('u.*, r.role_name, d.department_name')
@@ -566,5 +630,200 @@ public function getUserDetails($userId)
             ->where('u.user_id', $userId)
             ->get()
             ->getRowArray();
+    }
+
+    // UserModel.php - tambahkan method ini
+
+    /**
+     * Search users with filters (for AJAX)
+     */
+    public function searchUsers(array $filters = [], int $limit = 10, int $offset = 0): array
+    {
+        $builder = $this->db->table('users u');
+
+        $builder->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left');
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $searchTerm = trim($filters['search']);
+            $builder->groupStart()
+                ->like('u.username', $searchTerm)
+                ->orLike('u.full_name', $searchTerm)
+                ->orLike('u.email', $searchTerm)
+                ->orLike('r.role_name', $searchTerm)
+                ->orLike('d.department_name', $searchTerm)
+                ->groupEnd();
+        }
+
+        if (!empty($filters['role_id'])) {
+            $builder->where('u.role_id', $filters['role_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $builder->where('u.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $builder->where('u.is_active', $filters['is_active'] == '1' ? true : false);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $builder->where('DATE(u.created_at) >=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $builder->where('DATE(u.created_at) <=', $filters['date_to']);
+        }
+
+        $builder->orderBy('u.created_at', 'DESC')
+            ->limit($limit, $offset);
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Count filtered users
+     */
+    public function countFiltered(array $filters = []): int
+    {
+        $builder = $this->db->table('users u')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left');
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $searchTerm = trim($filters['search']);
+            $builder->groupStart()
+                ->like('u.username', $searchTerm)
+                ->orLike('u.full_name', $searchTerm)
+                ->orLike('u.email', $searchTerm)
+                ->orLike('r.role_name', $searchTerm)
+                ->orLike('d.department_name', $searchTerm)
+                ->groupEnd();
+        }
+
+        if (!empty($filters['role_id'])) {
+            $builder->where('u.role_id', $filters['role_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $builder->where('u.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $builder->where('u.is_active', $filters['is_active'] == '1' ? true : false);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $builder->where('DATE(u.created_at) >=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $builder->where('DATE(u.created_at) <=', $filters['date_to']);
+        }
+
+        return $builder->countAllResults();
+    }
+    
+// Tambahkan method di UserModel.php
+
+    /**
+     * Get role priority
+     */
+    public function getRolePriority(string $roleName): int
+    {
+        $priorityMap = [
+            'Admin' => 1,
+            'Department' => 2,
+            'Support' => 3,
+            'Customer' => 4
+        ];
+
+        // Untuk department custom
+        if (strpos($roleName, 'Department') !== false) {
+            return 2;
+        }
+
+        return $priorityMap[$roleName] ?? 5;
+    }
+
+    /**
+     * Sort users by role priority
+     */
+    public function sortUsersByRolePriority(array &$users): void
+    {
+        usort($users, function ($a, $b) {
+            $priorityA = $this->getRolePriority($a['role_name'] ?? '');
+            $priorityB = $this->getRolePriority($b['role_name'] ?? '');
+
+            if ($priorityA == $priorityB) {
+                // Jika sama priority, urutkan berdasarkan:
+                // 1. Department name (untuk Department role)
+                // 2. Created date (user baru di bawah)
+                $deptA = strtolower($a['department_name'] ?? '');
+                $deptB = strtolower($b['department_name'] ?? '');
+
+                if ($deptA != $deptB) {
+                    return strcmp($deptA, $deptB);
+                }
+
+                return strtotime($a['created_at'] ?? '') <=> strtotime($b['created_at'] ?? '');
+            }
+
+            return $priorityA <=> $priorityB;
+        });
+    }
+
+    // Tambahkan di UserModel.php
+
+    /**
+     * Update user dengan handling PostgreSQL boolean
+     */
+    public function updateUserWithPostgres(int $id, array $data): bool
+    {
+        $db = db_connect();
+
+        // Handle boolean untuk PostgreSQL
+        if (isset($data['is_active'])) {
+            $data['is_active'] = $data['is_active'] ? 't' : 'f';
+        }
+
+        // Handle nullable fields
+        $fieldsToNull = ['department_id', 'phone_number'];
+        foreach ($fieldsToNull as $field) {
+            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
+                $data[$field] = null;
+            }
+        }
+
+        $builder = $db->table($this->table);
+        $builder->where($this->primaryKey, $id);
+
+        return $builder->update($data);
+    }
+
+    /**
+     * Get user dengan role dan department
+     */
+    public function getUserWithDetails(int $userId): ?array
+    {
+        $db = db_connect();
+
+        $user = $db->table('users u')
+            ->select('u.*, r.role_name, d.department_name')
+            ->join('roles r', 'r.role_id = u.role_id', 'left')
+            ->join('departments d', 'd.department_id = u.department_id', 'left')
+            ->where('u.user_id', $userId)
+            ->get()
+            ->getRowArray();
+
+        if ($user) {
+            // Konversi boolean dari PostgreSQL
+            $user['is_active'] = ($user['is_active'] === 't' || $user['is_active'] === true);
+        }
+
+        return $user;
     }
 }
