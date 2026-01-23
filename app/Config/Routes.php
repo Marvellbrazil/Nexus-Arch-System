@@ -51,19 +51,6 @@ $routes->group('admin', function ($routes) {
         $routes->post('ajax-change-status/(:num)', 'AdminController::ajaxChangeStatus/$1');
     });
 
-    // ==================== ROLE MANAGEMENT ====================
-    $routes->group('roles', function ($routes) {
-        $routes->get('/', [AdminController::class, 'manageRoles']);
-        $routes->post('get-role-details', [AdminController::class, 'ajaxGetRoleDetails']);
-        $routes->post('get-role-permissions', [AdminController::class, 'ajaxGetRolePermissions']);
-        $routes->post('save', [AdminController::class, 'ajaxSaveRole']);
-        $routes->post('update-permissions', [AdminController::class, 'ajaxUpdateRolePermissions']);
-        $routes->post('delete', [AdminController::class, 'ajaxDeleteRole']);
-        $routes->post('duplicate', [AdminController::class, 'ajaxDuplicateRole']);
-        $routes->post('reset', [AdminController::class, 'ajaxResetRole']);
-        $routes->post('copy-permissions', [AdminController::class, 'ajaxCopyPermissions']);
-    });
-
     // ==================== DEPARTMENT MANAGEMENT ====================
     $routes->group('departments', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageDepartments']);

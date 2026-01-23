@@ -423,7 +423,6 @@ $notifications = [
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
         }
 
         .mobile-logo-icon {
@@ -856,12 +855,6 @@ $notifications = [
                 <span class="text-sm">Manage Users</span>
             </a>
 
-            <a href="<?= base_url('admin/roles') ?>"
-                class="mobile-menu-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
-                <i class="fas fa-user-tag text-sm"></i>
-                <span class="text-sm">Manage Roles</span>
-            </a>
-
             <a href="<?= base_url('admin/departments') ?>"
                 class="mobile-menu-item <?= strpos(current_url(), 'departments') !== false ? 'active' : '' ?>">
                 <i class="fas fa-sitemap text-sm"></i>
@@ -938,12 +931,6 @@ $notifications = [
                 class="sidebar-nav-item <?= strpos(current_url(), 'users') !== false ? 'active' : '' ?>">
                 <i class="fas fa-users text-sm"></i>
                 <span class="text-sm">Manage Users</span>
-            </a>
-
-            <a href="<?= base_url('admin/roles') ?>"
-                class="sidebar-nav-item <?= strpos(current_url(), 'roles') !== false ? 'active' : '' ?>">
-                <i class="fas fa-user-tag text-sm"></i>
-                <span class="text-sm">Manage Roles</span>
             </a>
 
             <a href="<?= base_url('admin/departments') ?>"
@@ -1100,7 +1087,7 @@ $notifications = [
 
     <!-- JavaScript -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Auto-hide alerts
             const alerts = document.querySelectorAll('.fixed.top-32');
             alerts.forEach(alert => {
@@ -1118,7 +1105,7 @@ $notifications = [
             const sidebarOverlay = document.getElementById('sidebarOverlay');
 
             if (mobileMenuButton && hamburgerLines) {
-                mobileMenuButton.addEventListener('click', function (e) {
+                mobileMenuButton.addEventListener('click', function(e) {
                     e.stopPropagation();
 
                     if (mobileSidebarMenu.classList.contains('open')) {
@@ -1139,7 +1126,7 @@ $notifications = [
                 });
 
                 // Close mobile menu when clicking overlay
-                sidebarOverlay.addEventListener('click', function () {
+                sidebarOverlay.addEventListener('click', function() {
                     mobileSidebarMenu.classList.remove('open');
                     if (hamburgerLines) {
                         hamburgerLines[0].style.transform = 'none';
@@ -1152,7 +1139,7 @@ $notifications = [
                 // Close mobile menu when clicking a link
                 if (mobileSidebarMenu) {
                     mobileSidebarMenu.querySelectorAll('a').forEach(link => {
-                        link.addEventListener('click', function () {
+                        link.addEventListener('click', function() {
                             mobileSidebarMenu.classList.remove('open');
                             if (hamburgerLines) {
                                 hamburgerLines[0].style.transform = 'none';
@@ -1178,7 +1165,7 @@ $notifications = [
                     sidebarNotificationDropdown.style.left = (buttonRect.right + 10) + 'px';
                 }
 
-                sidebarNotificationButton.addEventListener('click', function (e) {
+                sidebarNotificationButton.addEventListener('click', function(e) {
                     e.stopPropagation();
 
                     if (desktopNotificationVisible) {
@@ -1203,7 +1190,7 @@ $notifications = [
                 });
 
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function (e) {
+                document.addEventListener('click', function(e) {
                     if (desktopNotificationVisible &&
                         !sidebarNotificationButton.contains(e.target) &&
                         !sidebarNotificationDropdown.contains(e.target)) {
@@ -1226,7 +1213,7 @@ $notifications = [
             let mobileNotificationVisible = false;
 
             if (mobileNotificationButton && mobileNotificationDropdown) {
-                mobileNotificationButton.addEventListener('click', function (e) {
+                mobileNotificationButton.addEventListener('click', function(e) {
                     e.stopPropagation();
 
                     if (mobileNotificationVisible) {
@@ -1250,7 +1237,7 @@ $notifications = [
                 });
 
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function (e) {
+                document.addEventListener('click', function(e) {
                     if (mobileNotificationVisible &&
                         !mobileNotificationButton.contains(e.target) &&
                         !mobileNotificationDropdown.contains(e.target)) {
@@ -1298,9 +1285,6 @@ $notifications = [
                 } else if (currentPath.includes('/admin/users')) {
                     document.querySelector('a[href*="users"].sidebar-nav-item')?.classList.add('active');
                     document.querySelector('a[href*="users"].mobile-menu-item')?.classList.add('active');
-                } else if (currentPath.includes('/admin/roles')) {
-                    document.querySelector('a[href*="roles"].sidebar-nav-item')?.classList.add('active');
-                    document.querySelector('a[href*="roles"].mobile-menu-item')?.classList.add('active');
                 } else if (currentPath.includes('/admin/departments')) {
                     document.querySelector('a[href*="departments"].sidebar-nav-item')?.classList.add('active');
                     document.querySelector('a[href*="departments"].mobile-menu-item')?.classList.add('active');
