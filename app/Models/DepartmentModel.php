@@ -408,6 +408,27 @@ class DepartmentModel extends Model
         ];
     }
 
+    public function searchable()
+    {
+        return [
+            null,
+            'department_name',
+            'description',
+            'department_head',
+            null
+        ];
+    }
+
+    public function queryDatatable($status = 'active')
+    {
+        $query = db_connect()->table('departments');
+        return $query->where('status', $status);
+    }
+
+    public function store($data) {
+        return $this->insert($data);
+    }
+
     /**
      * Update department
      */

@@ -2,12 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Helpers\Datatables\Datatables;
+use App\Models\CategoryModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\DepartmentModel;
 use App\Models\ProjectAssignmentModel;
 use App\Models\ProjectModel;
+use App\Models\CategoryDepartmentMappingModel;
 
 class AdminController extends BaseController
 {
@@ -17,6 +20,8 @@ class AdminController extends BaseController
     protected $projectModel;
     protected $departmentModel;
     protected $projectAssignmentModel;
+    protected $categoryModel;
+    protected $cdm;
 
     public function __construct()
     {
@@ -27,6 +32,8 @@ class AdminController extends BaseController
         $this->projectModel = new ProjectModel();
         $this->departmentModel = new DepartmentModel();
         $this->projectAssignmentModel = new ProjectAssignmentModel();
+        $this->categoryModel = new CategoryModel();
+        $this->cdm = new CategoryDepartmentMappingModel();
     }
 
     /**
@@ -1622,58 +1629,75 @@ class AdminController extends BaseController
         }
     }
 
+    public function datatable()
+    {
+        $status = $this->request->getPost('status');
+        $table = Datatables::method([DepartmentModel::class, 'queryDatatable'], 'searchable')
+        ->setParams($status)
+        ->make();
+
+        $table->updateRow(function ($db, $no){
+            $btn_edit = "<button type='button' class='btn btn-sm bg-yellow-200 margin-r-2' onclick=\"modalForm('Update Department - " . $db->department_name . "', 'modal-lg', '" . getURL('admin/departments/edit/' . ($db->department_id)) . "', {'identifier': this})\"><i class='fas fa-edit'></i></i></button>";
+            $btn_hapus = "<button type='button' class='btn btn-sm bg-red-200' onclick=\"modalDelete('Delete Department - " . $db->department_name . "', {'link':'" . getURL('admin/departments/delete') . "', 'id':'" . ($db->department_id) . "', {'pagetype':'table'})\"><i class='fas fa-trash'></i></button>";
+            return [
+                    $no,
+                    $db->department_name,
+                    $db->description,
+                    $db->department_head,
+                    implode(' ', [$btn_edit, $btn_hapus])
+            ];
+        });
+
+        $table->toJson();
+    }
+
     /**
      * Add department (non-AJAX)
      */
     public function addDepartment()
     {
-        if ($this->request->getMethod() !== 'post') {
-            return redirect()->to('/admin/departments');
-        }
+        $name = $this->request->getPost('department_name');
+        $desc = $this->request->getPost('department_description');
+        $status = $this->request->getPost('department_status');
+        $head = $this->request->getPost('department_head');
+        $cat = $this->request->getPost('arr_categories');
+
+        $this->db->transBegin();
 
         try {
-            $validation = \Config\Services::validation();
-            $validation->setRules([
-                'department_name' => 'required|min_length[2]|max_length[100]|is_unique[departments.department_name]',
-                'description' => 'permit_empty|max_length[500]'
+
+            if (empty($name))
+                throw new \Exception('Department name is required');
+            if (empty($status))
+                throw new \Exception('Department status is required');
+            if (empty($cat) && count($cat) <= 0)
+                throw new \Exception('Department categories are required');
+
+            $this->departmentModel->store([
+                'department_name' => $name,
+                'description' => $desc,
+                'department_head' => $head,
+                'status' => $status,
             ]);
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('errors', $validation->getErrors());
+            // var_dump(db_connect()->error());die;
+            $departId = db_connect()->insertID();
+            $arr_cat = [];
+            foreach($cat as $c) {
+                $arr_cat[] = [
+                    'department_id' => $departId,
+                    'category_id' => $c,
+                ];
             }
 
-            $departmentData = [
-                'department_name' => $this->request->getPost('department_name'),
-                'description' => $this->request->getPost('description'),
-                'created_at' => date('Y-m-d H:i:s')
-            ];
+            $this->cdm->storeBatch($arr_cat);
 
-            // Get category mappings if provided
-            $categories = $this->request->getPost('categories') ?: [];
+            $this->db->transCommit();
+            return $this->formatResponse(1, 'Department is added successfully');
 
-            if ($this->departmentModel->insert($departmentData)) {
-                $departmentId = $this->departmentModel->getInsertID();
-
-                // Save category mappings if any
-                if (!empty($categories)) {
-                    $this->saveCategoryMappings($departmentId, $categories);
-                }
-
-                return redirect()->to('/admin/departments')
-                    ->with('success', 'Department added successfully')
-                    ->with('department_id', $departmentId);
-            }
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Failed to add department');
         } catch (\Exception $e) {
-            log_message('error', 'Add department error: ' . $e->getMessage());
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Server error: ' . $e->getMessage());
+            $this->db->transRollback();
+            return $this->formatResponse(0, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -2691,848 +2715,457 @@ class AdminController extends BaseController
         }
     }
 
-// ==================== VIEW TICKETS (AJAX) ===========================
+// ==================== AJAX METHODS DEPARTMENTS ====================
     /**
-     * View Tickets - Main page (non-AJAX)
+     * Handle AJAX requests for department management
      */
-    public function viewTickets()
+    public function ajaxDepartments()
     {
-        $data = $this->loadCommonData();
-        $data['title'] = 'View Tickets - NEXUS Admin';
+        // Get raw JSON input
+        $jsonInput = file_get_contents('php://input');
+        $jsonData = json_decode($jsonInput, true) ?: [];
 
-        // Get filter options for dropdowns
-        $data['departments'] = $this->departmentModel->findAll();
-        $data['priorities'] = $this->getPriorities();
-        $data['statuses'] = $this->getStatuses();
-
-        return view('Admin/view_tickets', $data);
-    }
-
-    /**
-     * AJAX: Get tickets data with filters and pagination
-     */
-    public function ajaxGetTickets()
-    {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
+            return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Method not allowed'
+                'message' => 'Invalid request'
             ]);
         }
 
-        try {
-            // Get filters from POST/GET
-            $filters = [
-                'search' => $this->request->getGetPost('search'),
-                'priority' => $this->request->getGetPost('priority'),
-                'department' => $this->request->getGetPost('department'),
-                'status' => $this->request->getGetPost('status'),
-                'date_from' => $this->request->getGetPost('date_from'),
-                'date_to' => $this->request->getGetPost('date_to'),
-                'customer_id' => $this->request->getGetPost('customer_id')
-            ];
+        // Try to get action from both POST and JSON
+        $action = $this->request->getPost('action') ?: ($jsonData['action'] ?? null);
 
-            // Get pagination parameters
-            $page = $this->request->getGetPost('page') ?: 1;
-            $limit = $this->request->getGetPost('limit') ?: 10;
+        switch ($action) {
+            case 'get_departments_data':
+                return $this->ajaxGetDepartmentsData();
+            case 'get_department_statistics':
+                return $this->ajaxGetDepartmentStatistics();
+            case 'get_department_details':
+                return $this->ajaxGetDepartmentDetails();
+            case 'create_department':
+                return $this->ajaxCreateDepartment();
+            case 'update_department':
+                return $this->ajaxUpdateDepartment();
+            case 'delete_department':
+                return $this->ajaxDeleteDepartment();
+            case 'toggle_department_status':
+                return $this->ajaxToggleDepartmentStatus();
+            case 'get_categories':
+                return $this->ajaxGetCategories();
+            default:
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ]);
+        }
+    }
+
+    /**
+     * AJAX: Get departments data with pagination and filtering
+     */
+    private function ajaxGetDepartmentsData()
+    {
+        try {
+            $search = $this->request->getPost('search') ?? '';
+            $status = $this->request->getPost('status') ?? '';
+            $page = (int)($this->request->getPost('page') ?? 1);
+            $limit = (int)($this->request->getPost('limit') ?? 10);
+
             $offset = ($page - 1) * $limit;
 
-            // Get tickets from model
-            $tickets = $this->ticketModel->getTicketsForAdmin($filters, $limit, $offset);
-            $totalTickets = $this->ticketModel->countTicketsForAdmin($filters);
+            // Build query
+            $db = db_connect();
+            $builder = $db->table('departments d')
+                ->select('d.*, 
+                    COUNT(DISTINCT u.user_id) as members,
+                    COUNT(DISTINCT t.ticket_id) as tickets,
+                    d.description as detailed_description')
+                ->join('users u', 'u.department_id = d.department_id', 'left')
+                ->join('tickets t', 't.department_id = d.department_id', 'left')
+                ->groupBy('d.department_id');
 
-            // Format tickets for display
-            $formattedTickets = array_map(function ($ticket) {
+            // Apply search filter
+            if (!empty($search)) {
+                $builder->groupStart()
+                    ->like('d.department_name', $search)
+                    ->orLike('d.description', $search)
+                    ->groupEnd();
+            }
+
+            // Apply status filter
+            if (!empty($status) && $status !== 'all') {
+                if ($status === 'active') {
+                    $builder->having('COUNT(DISTINCT u.user_id) >', 0);
+                } elseif ($status === 'inactive') {
+                    $builder->having('COUNT(DISTINCT u.user_id)', 0);
+                }
+            }
+
+            // Get total count
+            $totalBuilder = clone $builder;
+            $total = $totalBuilder->countAllResults();
+
+            // Get paginated results
+            $departments = $builder
+                ->orderBy('d.department_name', 'ASC')
+                ->limit($limit, $offset)
+                ->get()
+                ->getResultArray();
+
+            // Format departments for frontend
+            $formattedDepartments = array_map(function ($dept) {
                 return [
-                    'id' => $ticket['ticket_number'] ?: $ticket['ticket_id'],
-                    'ticket_id' => $ticket['ticket_id'],
-                    'title' => $ticket['subject'],
-                    'description' => $ticket['description'] ?? 'No description',
-                    'priority' => $ticket['priority_name'] ?? 'Medium',
-                    'priority_value' => strtolower($ticket['priority_name'] ?? 'medium'),
-                    'department' => $ticket['department_name'] ?? 'Not assigned',
-                    'department_value' => strtolower(str_replace(' ', '-', $ticket['department_name'] ?? '')),
-                    'customer' => $ticket['customer_name'] ?? 'Unknown',
-                    'customer_email' => $ticket['customer_email'] ?? '',
-                    'status' => $ticket['status_name'] ?? 'Open',
-                    'status_value' => strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'open')),
-                    'created' => $this->formatDate($ticket['created_at']),
-                    'created_raw' => $ticket['created_at'],
-                    'updated' => $this->formatTimeAgo($ticket['updated_at']),
-                    'updated_raw' => $ticket['updated_at'],
-                    'project' => $ticket['project_name'] ?? null,
-                    'project_code' => $ticket['project_code'] ?? null,
-                    'due_date' => $ticket['due_date'] ? date('M d, Y', strtotime($ticket['due_date'])) : null,
-                    'due_date_raw' => $ticket['due_date'],
-                    'assigned_to' => $ticket['assigned_to_name'] ?? 'Unassigned'
+                    'id' => $dept['department_id'],
+                    'name' => $dept['department_name'],
+                    'description' => $dept['description'] ?? '',
+                    'detailed_description' => $dept['detailed_description'] ?? '',
+                    'members' => (int)$dept['members'],
+                    'tickets' => (int)$dept['tickets'],
+                    'status' => ((int)$dept['members'] > 0) ? 'active' : 'inactive',
+                    'created_at' => date('M d, Y', strtotime($dept['created_at']))
                 ];
-            }, $tickets);
-
-            // Get statistics for the current filter
-            $stats = $this->ticketModel->getAdminTicketStatistics();
+            }, $departments);
 
             return $this->response->setJSON([
                 'success' => true,
-                'data' => [
-                    'tickets' => $formattedTickets,
-                    'statistics' => $stats,
-                    'pagination' => [
-                        'total' => $totalTickets,
-                        'page' => (int)$page,
-                        'limit' => (int)$limit,
-                        'total_pages' => ceil($totalTickets / $limit),
-                        'offset' => $offset
-                    ]
+                'departments' => $formattedDepartments,
+                'pagination' => [
+                    'total' => $total,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total_pages' => ceil($total / $limit)
                 ]
             ]);
         } catch (\Exception $e) {
-            log_message('error', 'AJAX Get Tickets error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
+            log_message('error', 'Get departments data error: ' . $e->getMessage());
+            return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Failed to load tickets: ' . $e->getMessage(),
-                'data' => [
-                    'tickets' => [],
-                    'statistics' => [
-                        'total_tickets' => 0,
-                        'open_tickets' => 0,
-                        'resolved_tickets' => 0,
-                        'closed_tickets' => 0,
-                        'today_tickets' => 0,
-                        'high_priority_tickets' => 0
-                    ],
-                    'pagination' => [
-                        'total' => 0,
-                        'page' => 1,
-                        'limit' => 10,
-                        'total_pages' => 0
-                    ]
-                ]
+                'message' => 'Failed to load departments data'
             ]);
         }
     }
 
     /**
-     * AJAX: Get ticket details
+     * AJAX: Get department statistics
      */
-    public function ajaxGetTicketDetails()
+    private function ajaxGetDepartmentStatistics()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $ticketId = $this->request->getGetPost('ticket_id');
-
-        if (!$ticketId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID is required'
-            ]);
-        }
-
         try {
-            // Get ticket details from model
-            $ticket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
-
-            if (!$ticket) {
-                return $this->response->setStatusCode(404)->setJSON([
-                    'success' => false,
-                    'message' => 'Ticket not found'
-                ]);
-            }
-
-            // Get ticket messages/activity
-            $ticketMessageModel = new \App\Models\TicketMessageModel();
-            $messages = $ticketMessageModel->getMessagesForTicket($ticketId);
-
-            // Get attachments
-            $attachmentModel = new \App\Models\TicketAttachmentModel();
-            $attachments = $attachmentModel->getAttachmentsForTicket($ticketId);
-
-            // Format activity log
-            $activityLog = array_map(function ($activity) {
-                return [
-                    'type' => strtolower(str_replace(' ', '-', $activity['message_type'] ?? 'message')),
-                    'text' => $activity['message'],
-                    'time' => $this->formatTimeAgo($activity['created_at']),
-                    'time_raw' => $activity['created_at'],
-                    'user' => $activity['full_name'],
-                    'photo_profile' => $activity['photo_profile'] ?? null,
-                    'role_name' => $activity['role_name'] ?? 'User'
-                ];
-            }, $ticket['activity'] ?? []);
-
-            // Format messages
-            $formattedMessages = array_map(function ($message) {
-                return [
-                    'id' => $message['message_id'],
-                    'sender' => $message['full_name'] ?? 'Unknown',
-                    'role' => $message['role_name'] ?? 'User',
-                    'message' => $message['message'],
-                    'time' => $this->formatTimeAgo($message['created_at']),
-                    'time_raw' => $message['created_at'],
-                    'photo_profile' => $message['photo_profile'] ?? null
-                ];
-            }, $messages);
-
-            // Format attachments
-            $formattedAttachments = array_map(function ($attachment) {
-                $fileSize = $attachment['file_size'];
-                $sizeFormatted = '';
-
-                if ($fileSize < 1024) {
-                    $sizeFormatted = $fileSize . ' B';
-                } elseif ($fileSize < 1048576) {
-                    $sizeFormatted = round($fileSize / 1024, 2) . ' KB';
-                } else {
-                    $sizeFormatted = round($fileSize / 1048576, 2) . ' MB';
-                }
-
-                return [
-                    'id' => $attachment['attachment_id'],
-                    'name' => $attachment['file_name'],
-                    'path' => $attachment['file_path'],
-                    'type' => $attachment['file_type'],
-                    'size' => $sizeFormatted,
-                    'uploaded_by' => $attachment['full_name'] ?? 'Unknown',
-                    'uploaded_at' => $this->formatTimeAgo($attachment['created_at']),
-                    'uploaded_at_raw' => $attachment['created_at']
-                ];
-            }, $attachments);
-
-            // Get available statuses for dropdown
-            $statusModel = new \App\Models\StatusModel();
-            $statuses = $statusModel->findAll();
-
-            // Get available priorities for dropdown
-            $priorityModel = new \App\Models\PriorityModel();
-            $priorities = $priorityModel->findAll();
-
-            // Get available users for assignment
-            $userModel = new \App\Models\UserModel();
-            $agents = $userModel->where('role_id', 2)->orWhere('role_id', 3)->findAll(); // Assuming role_id 2 and 3 are agents/admins
+            $stats = $this->departmentModel->getDepartmentDashboardStats();
 
             return $this->response->setJSON([
                 'success' => true,
-                'data' => [
-                    'ticket' => $ticket,
-                    'activity' => $activityLog,
-                    'messages' => $formattedMessages,
-                    'attachments' => $formattedAttachments,
-                    'statuses' => $statuses,
-                    'priorities' => $priorities,
-                    'agents' => $agents
-                ]
+                'statistics' => $stats
             ]);
         } catch (\Exception $e) {
-            log_message('error', 'AJAX Get Ticket Details error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
+            log_message('error', 'Get department statistics error: ' . $e->getMessage());
+            return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Failed to load ticket details: ' . $e->getMessage()
+                'message' => 'Failed to load statistics'
             ]);
         }
     }
 
     /**
-     * AJAX: Update ticket status
+     * AJAX: Get department details
      */
-    public function ajaxUpdateTicketStatus()
+    private function ajaxGetDepartmentDetails()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $ticketId = $this->request->getPost('ticket_id');
-        $statusId = $this->request->getPost('status_id');
-
-        if (!$ticketId || !$statusId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID and Status ID are required'
-            ]);
-        }
-
         try {
-            // Get current user ID for resolved_by if needed
-            $userId = session()->get('user_id');
+            // Get department_id from both POST and JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
 
-            // Update ticket status
-            $result = $this->ticketModel->updateTicketStatus($ticketId, $statusId, $userId);
-
-            if ($result) {
-                // Add activity log entry
-                $ticketMessageModel = new \App\Models\TicketMessageModel();
-                $statusModel = new \App\Models\StatusModel();
-                $status = $statusModel->find($statusId);
-
-                $message = "Ticket status changed to: " . ($status['status_name'] ?? 'Unknown');
-                $ticketMessageModel->addMessage($ticketId, $userId, $message);
-
-                // Get updated ticket
-                $updatedTicket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
-
+            if (!$departmentId) {
                 return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Ticket status updated successfully',
-                    'data' => [
-                        'ticket' => $updatedTicket
-                    ]
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
                     'success' => false,
-                    'message' => 'Failed to update ticket status'
+                    'message' => 'Department ID is required'
                 ]);
             }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Update Ticket Status error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to update ticket status: ' . $e->getMessage()
-            ]);
-        }
-    }
 
-    /**
-     * AJAX: Update ticket priority
-     */
-    public function ajaxUpdateTicketPriority()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
+            $department = $this->departmentModel->getDepartmentDetailsForAdmin($departmentId);
 
-        $ticketId = $this->request->getPost('ticket_id');
-        $priorityId = $this->request->getPost('priority_id');
-
-        if (!$ticketId || !$priorityId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID and Priority ID are required'
-            ]);
-        }
-
-        try {
-            // Update ticket priority
-            $result = $this->ticketModel->update($ticketId, [
-                'priority_id' => $priorityId,
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
-
-            if ($result) {
-                // Add activity log entry
-                $ticketMessageModel = new \App\Models\TicketMessageModel();
-                $priorityModel = new \App\Models\PriorityModel();
-                $priority = $priorityModel->find($priorityId);
-                $userId = session()->get('user_id');
-
-                $message = "Ticket priority changed to: " . ($priority['priority_name'] ?? 'Unknown');
-                $ticketMessageModel->addMessage($ticketId, $userId, $message);
-
-                // Get updated ticket
-                $updatedTicket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
-
+            if (!$department) {
                 return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Ticket priority updated successfully',
-                    'data' => [
-                        'ticket' => $updatedTicket
-                    ]
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
                     'success' => false,
-                    'message' => 'Failed to update ticket priority'
+                    'message' => 'Department not found'
                 ]);
             }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Update Ticket Priority error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to update ticket priority: ' . $e->getMessage()
-            ]);
-        }
-    }
 
-    /**
-     * AJAX: Assign ticket to agent
-     */
-    public function ajaxAssignTicket()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $ticketId = $this->request->getPost('ticket_id');
-        $agentId = $this->request->getPost('agent_id');
-
-        if (!$ticketId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID is required'
-            ]);
-        }
-
-        try {
-            // Update ticket assignment
-            $result = $this->ticketModel->update($ticketId, [
-                'assigned_to' => $agentId ?: null,
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
-
-            if ($result) {
-                // Add activity log entry
-                $ticketMessageModel = new \App\Models\TicketMessageModel();
-                $userModel = new \App\Models\UserModel();
-                $userId = session()->get('user_id');
-
-                if ($agentId) {
-                    $agent = $userModel->find($agentId);
-                    $message = "Ticket assigned to: " . ($agent['full_name'] ?? 'Unknown');
-                } else {
-                    $message = "Ticket unassigned";
-                }
-
-                $ticketMessageModel->addMessage($ticketId, $userId, $message);
-
-                // Get updated ticket
-                $updatedTicket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
-
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Ticket assignment updated successfully',
-                    'data' => [
-                        'ticket' => $updatedTicket
-                    ]
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
-                    'success' => false,
-                    'message' => 'Failed to update ticket assignment'
-                ]);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Assign Ticket error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to update ticket assignment: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * AJAX: Add message to ticket
-     */
-    public function ajaxAddTicketMessage()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $ticketId = $this->request->getPost('ticket_id');
-        $message = $this->request->getPost('message');
-
-        if (!$ticketId || !$message) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID and Message are required'
-            ]);
-        }
-
-        try {
-            $userId = session()->get('user_id');
-            $ticketMessageModel = new \App\Models\TicketMessageModel();
-
-            // Add message
-            $messageId = $ticketMessageModel->addMessage($ticketId, $userId, $message);
-
-            if ($messageId) {
-                // Update ticket's updated_at timestamp
-                $this->ticketModel->update($ticketId, [
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-                // Get the newly added message with user details
-                $userModel = new \App\Models\UserModel();
-                $user = $userModel->find($userId);
-
-                $newMessage = [
-                    'id' => $messageId,
-                    'sender' => $user['full_name'] ?? 'You',
-                    'role' => $user['role_name'] ?? 'Admin',
-                    'message' => $message,
-                    'time' => 'Just now',
-                    'time_raw' => date('Y-m-d H:i:s'),
-                    'photo_profile' => $user['photo_profile'] ?? null
-                ];
-
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Message added successfully',
-                    'data' => [
-                        'message' => $newMessage
-                    ]
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
-                    'success' => false,
-                    'message' => 'Failed to add message'
-                ]);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Add Ticket Message error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to add message: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * AJAX: Get ticket statistics
-     */
-    public function ajaxGetTicketStatistics()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        try {
-            // Get filters if any
-            $filters = [
-                'date_from' => $this->request->getGetPost('date_from'),
-                'date_to' => $this->request->getGetPost('date_to'),
-                'department' => $this->request->getGetPost('department')
+            // Format department for frontend
+            $formattedDepartment = [
+                'id' => $department['department_id'],
+                'name' => $department['department_name'],
+                'description' => $department['description'] ?? '',
+                'member_count' => (int)$department['member_count'],
+                'active_tickets' => (int)($department['active_tickets'] ?? 0),
+                'resolved_tickets' => (int)($department['resolved_tickets'] ?? 0),
+                'categories' => $department['categories'] ?? [],
+                'status' => ((int)$department['member_count'] > 0) ? 'active' : 'inactive',
+                'created_at' => date('M d, Y', strtotime($department['created_at'])),
+                'icon' => $this->getDepartmentIcon($department['department_name']),
+                'recent_members' => array_map(function ($member) {
+                    return [
+                        'name' => $member['full_name'],
+                        'role' => $member['role_name'],
+                        'avatar_initials' => $this->getAvatarInitials($member['full_name'])
+                    ];
+                }, $department['recent_members'] ?? [])
             ];
 
-            // Get statistics from model
-            $stats = $this->ticketModel->getAdminTicketStatistics();
+            return $this->response->setJSON([
+                'success' => true,
+                'department' => $formattedDepartment
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Get department details error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to load department details'
+            ]);
+        }
+    }
 
-            // If filters provided, get filtered statistics
-            if (!empty($filters['date_from']) || !empty($filters['date_to']) || !empty($filters['department'])) {
-                // Implement filtered statistics logic here if needed
-                // For now, return the full statistics
+    public function form($id = null)
+    {
+        $formType = 'add';
+        $btnSubmit = 'Save';
+        $row = null;
+        if (!empty($id)) {
+            $formType = 'edit';
+            $btnSubmit = 'Update';
+            $row = $this->departmentModel->find($id);
+        }
+        $categories = $this->categoryModel->findAll();
+        echo json_encode([
+            'view' => view('Admin/Modals/form_department', ['row' => $row, 'categories' => $categories, 'formType' => $formType]),
+            'btnSubmit' => $btnSubmit,
+        ]);
+    }
+
+    /**
+     * AJAX: Create new department
+     */
+    private function ajaxCreateDepartment()
+    {
+        try {
+            // Get JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'department_name' => 'required|min_length[2]|max_length[100]|is_unique[departments.department_name]',
+                'description' => 'permit_empty|max_length[500]',
+                'status' => 'permit_empty|in_list[active,inactive]',
+                'head' => 'permit_empty|max_length[100]'
+            ]);
+
+            // Manually validate JSON data
+            $departmentName = $jsonData['department_name'] ?? '';
+            $description = $jsonData['description'] ?? '';
+            
+            if (empty($departmentName) || strlen($departmentName) < 2 || strlen($departmentName) > 100) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department name is required and must be between 2-100 characters'
+                ]);
             }
 
-            // Get ticket trend data
-            $trendData = $this->ticketModel->getTicketTrend();
+            $departmentData = [
+                'department_name' => $departmentName,
+                'description' => $description
+            ];
 
-            // Get ticket status data for charts
-            $statusData = $this->ticketModel->getTicketStatusData();
+            $result = $this->departmentModel->addDepartment($departmentData);
+
+            if ($result['success']) {
+                // Handle category mappings if provided
+                $categories = $jsonData['categories'] ?? [];
+                if (!empty($categories) && is_array($categories)) {
+                    $this->saveCategoryMappings($result['department_id'], $categories);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Department created successfully',
+                    'department_id' => $result['department_id']
+                ]);
+            } else {
+                return $this->response->setJSON($result);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Create department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to create department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Update department
+     */
+    private function ajaxUpdateDepartment()
+    {
+        try {
+            // Get JSON data
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            $validation = \Config\Services::validation();
+            $validation->setRules([
+                'department_name' => "required|min_length[2]|max_length[100]|is_unique[departments.department_name,department_id,{$departmentId}]",
+                'description' => 'permit_empty|max_length[500]',
+                'status' => 'permit_empty|in_list[active,inactive]',
+                'head' => 'permit_empty|max_length[100]'
+            ]);
+
+            // Manually validate JSON data
+            $departmentName = $jsonData['department_name'] ?? '';
+            $description = $jsonData['description'] ?? '';
+            
+            if (empty($departmentName) || strlen($departmentName) < 2 || strlen($departmentName) > 100) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department name is required and must be between 2-100 characters'
+                ]);
+            }
+
+            $departmentData = [
+                'department_name' => $departmentName,
+                'description' => $description
+            ];
+
+            $result = $this->departmentModel->updateDepartment($departmentId, $departmentData);
+
+            if ($result['success']) {
+                // Update category mappings if provided
+                $categories = $jsonData['categories'] ?? [];
+                if (is_array($categories)) {
+                    $this->updateCategoryMappings($departmentId, $categories);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Department updated successfully'
+                ]);
+            } else {
+                return $this->response->setJSON($result);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Update department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Toggle department status
+     */
+    private function ajaxToggleDepartmentStatus()
+    {
+        try {
+            $departmentId = $this->request->getPost('department_id');
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            // Get current member count
+            $memberCount = $this->departmentModel->getDepartmentActiveUsersCount($departmentId);
+
+            if ($memberCount > 0) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Cannot deactivate department with active members. Please reassign members first.'
+                ]);
+            }
+
+            // For departments, status is based on member count, so we don't actually toggle
+            // We just return the current status
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Department status updated successfully',
+                'status' => 'inactive'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Toggle department status error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to toggle department status'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Delete department
+     */
+    private function ajaxDeleteDepartment()
+    {
+        try {
+            $jsonInput = file_get_contents('php://input');
+            $jsonData = json_decode($jsonInput, true) ?: [];
+            $departmentId = $this->request->getPost('department_id') ?: ($jsonData['department_id'] ?? null);
+
+            if (!$departmentId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Department ID is required'
+                ]);
+            }
+
+            $result = $this->departmentModel->deleteDepartment($departmentId);
+
+            return $this->response->setJSON($result);
+        } catch (\Exception $e) {
+            log_message('error', 'Delete department error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to delete department'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get categories for department mapping
+     */
+    private function ajaxGetCategories()
+    {
+        try {
+            $db = db_connect();
+            $categories = $db->table('categories')
+                ->select('category_id, category_name')
+                ->orderBy('category_name', 'ASC')
+                ->get()
+                ->getResultArray();
 
             return $this->response->setJSON([
                 'success' => true,
-                'data' => [
-                    'statistics' => $stats,
-                    'trend' => $trendData,
-                    'status_data' => $statusData
-                ]
+                'categories' => $categories
             ]);
         } catch (\Exception $e) {
-            log_message('error', 'AJAX Get Ticket Statistics error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
+            log_message('error', 'Get categories error: ' . $e->getMessage());
+            return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Failed to load statistics: ' . $e->getMessage(),
-                'data' => [
-                    'statistics' => [
-                        'total_tickets' => 0,
-                        'open_tickets' => 0,
-                        'resolved_tickets' => 0,
-                        'closed_tickets' => 0,
-                        'today_tickets' => 0,
-                        'high_priority_tickets' => 0,
-                        'tickets_by_department' => []
-                    ],
-                    'trend' => [
-                        'current' => 0,
-                        'previous' => 0,
-                        'trend' => '0%'
-                    ],
-                    'status_data' => [
-                        'data' => [],
-                        'total' => 0
-                    ]
-                ]
+                'message' => 'Failed to load categories'
             ]);
         }
-    }
-
-    /**
-     * AJAX: Upload attachment to ticket
-     */
-    public function ajaxUploadAttachment()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $ticketId = $this->request->getPost('ticket_id');
-
-        if (!$ticketId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ticket ID is required'
-            ]);
-        }
-
-        $file = $this->request->getFile('attachment');
-
-        if (!$file || !$file->isValid()) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'No valid file uploaded'
-            ]);
-        }
-
-        try {
-            // Validate file
-            if ($file->getSize() > 10485760) { // 10MB limit
-                return $this->response->setStatusCode(400)->setJSON([
-                    'success' => false,
-                    'message' => 'File size exceeds 10MB limit'
-                ]);
-            }
-
-            // Allowed file types
-            $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip'];
-            $fileExt = $file->getClientExtension();
-
-            if (!in_array(strtolower($fileExt), $allowedTypes)) {
-                return $this->response->setStatusCode(400)->setJSON([
-                    'success' => false,
-                    'message' => 'File type not allowed. Allowed types: ' . implode(', ', $allowedTypes)
-                ]);
-            }
-
-            // Create upload directory if not exists
-            $uploadPath = WRITEPATH . 'uploads/tickets/' . date('Y/m');
-            if (!is_dir($uploadPath)) {
-                mkdir($uploadPath, 0777, true);
-            }
-
-            // Generate unique filename
-            $newName = $file->getRandomName();
-            $file->move($uploadPath, $newName);
-
-            // Save to database
-            $attachmentModel = new \App\Models\TicketAttachmentModel();
-            $userId = session()->get('user_id');
-
-            $attachmentData = [
-                'ticket_id' => $ticketId,
-                'uploaded_by' => $userId,
-                'file_name' => $file->getClientName(),
-                'file_path' => 'uploads/tickets/' . date('Y/m') . '/' . $newName,
-                'file_type' => $file->getClientMimeType(),
-                'file_size' => $file->getSize()
-            ];
-
-            $attachmentId = $attachmentModel->createAttachment($attachmentData);
-
-            if ($attachmentId) {
-                // Add activity log
-                $ticketMessageModel = new \App\Models\TicketMessageModel();
-                $message = "File uploaded: " . $file->getClientName();
-                $ticketMessageModel->addMessage($ticketId, $userId, $message);
-
-                // Update ticket's updated_at timestamp
-                $this->ticketModel->update($ticketId, [
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-                // Get user info for display
-                $userModel = new \App\Models\UserModel();
-                $user = $userModel->find($userId);
-
-                // Format file size
-                $fileSize = $file->getSize();
-                $sizeFormatted = '';
-
-                if ($fileSize < 1024) {
-                    $sizeFormatted = $fileSize . ' B';
-                } elseif ($fileSize < 1048576) {
-                    $sizeFormatted = round($fileSize / 1024, 2) . ' KB';
-                } else {
-                    $sizeFormatted = round($fileSize / 1048576, 2) . ' MB';
-                }
-
-                $attachmentInfo = [
-                    'id' => $attachmentId,
-                    'name' => $file->getClientName(),
-                    'path' => 'uploads/tickets/' . date('Y/m') . '/' . $newName,
-                    'type' => $file->getClientMimeType(),
-                    'size' => $sizeFormatted,
-                    'uploaded_by' => $user['full_name'] ?? 'You',
-                    'uploaded_at' => 'Just now',
-                    'uploaded_at_raw' => date('Y-m-d H:i:s')
-                ];
-
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'File uploaded successfully',
-                    'data' => [
-                        'attachment' => $attachmentInfo
-                    ]
-                ]);
-            } else {
-                // Delete uploaded file if database save failed
-                @unlink($uploadPath . '/' . $newName);
-
-                return $this->response->setStatusCode(500)->setJSON([
-                    'success' => false,
-                    'message' => 'Failed to save attachment to database'
-                ]);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Upload Attachment error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to upload file: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * AJAX: Delete attachment
-     */
-    public function ajaxDeleteAttachment()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON([
-                'success' => false,
-                'message' => 'Method not allowed'
-            ]);
-        }
-
-        $attachmentId = $this->request->getPost('attachment_id');
-
-        if (!$attachmentId) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Attachment ID is required'
-            ]);
-        }
-
-        try {
-            $attachmentModel = new \App\Models\TicketAttachmentModel();
-
-            // Get attachment info
-            $attachment = $attachmentModel->find($attachmentId);
-
-            if (!$attachment) {
-                return $this->response->setStatusCode(404)->setJSON([
-                    'success' => false,
-                    'message' => 'Attachment not found'
-                ]);
-            }
-
-            // Delete file from server
-            $filePath = WRITEPATH . $attachment['file_path'];
-            if (file_exists($filePath)) {
-                @unlink($filePath);
-            }
-
-            // Delete from database
-            $result = $attachmentModel->delete($attachmentId);
-
-            if ($result) {
-                // Add activity log
-                $ticketMessageModel = new \App\Models\TicketMessageModel();
-                $userId = session()->get('user_id');
-                $message = "File deleted: " . $attachment['file_name'];
-                $ticketMessageModel->addMessage($attachment['ticket_id'], $userId, $message);
-
-                // Update ticket's updated_at timestamp
-                $this->ticketModel->update($attachment['ticket_id'], [
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Attachment deleted successfully'
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
-                    'success' => false,
-                    'message' => 'Failed to delete attachment from database'
-                ]);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'AJAX Delete Attachment error: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Failed to delete attachment: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-// ==================== HELPER METHODS ====================
-    /**
-     * Escape CSV value
-     */
-    private function escapeCsv($value)
-    {
-        $value = str_replace('"', '""', $value);
-        $value = str_replace(["\r", "\n"], ' ', $value);
-        return $value;
-    }
-
-    /**
-     * Format date for display
-     */
-    private function formatDate($datetime): string
-    {
-        if (!$datetime) return 'N/A';
-
-        $time = strtotime($datetime);
-        $now = time();
-        $diff = $now - $time;
-
-        if ($diff < 86400) { // Less than 24 hours
-            if ($diff < 60) return 'Just now';
-            if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
-            return floor($diff / 3600) . ' hours ago';
-        }
-
-        return date('M d, Y', $time);
-    }
-
-    /**
-     * Get priorities for dropdown
-     */
-    private function getPriorities(): array
-    {
-        $priorityModel = new \App\Models\PriorityModel();
-        return $priorityModel->findAll();
-    }
-
-    /**
-     * Get statuses for dropdown
-     */
-    private function getStatuses(): array
-    {
-        $statusModel = new \App\Models\StatusModel();
-        return $statusModel->findAll();
     }
 
     // ==================== SYSTEM SETTINGS ====================

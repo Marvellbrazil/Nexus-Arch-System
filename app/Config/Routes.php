@@ -51,6 +51,10 @@ $routes->group('admin', function ($routes) {
         $routes->post('ajax-change-status/(:num)', 'AdminController::ajaxChangeStatus/$1');
     });
 
+// AJAX Department Management - Put this BEFORE main routes
+    $routes->post('departments/ajax', [AdminController::class, 'ajaxDepartments']);
+    $routes->post('departments/get-categories', [AdminController::class, 'ajaxDepartments']);
+
     // ==================== DEPARTMENT MANAGEMENT ====================
     $routes->group('departments', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageDepartments']);

@@ -11,6 +11,7 @@ class BaseController extends Controller
     protected $helpers = ['url', 'form', 'session', 'my'];
     protected $session;
     protected $userModel;
+    protected $db;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
@@ -19,6 +20,7 @@ class BaseController extends Controller
         // Load session and models
         $this->session = Services::session();
         $this->userModel = new UserModel();
+        $this->db = db_connect();
     }
 
     protected function checkRole($allowedRoles)
@@ -75,5 +77,13 @@ class BaseController extends Controller
         }
 
         return $data;
+    }
+
+    public function formatResponse($status = 1, $message = '', $detail = ''){
+        return $this->response->setJSON([
+            'success' => $status,
+            'msg' => $message,
+            'detail' => $detail
+        ]);
     }
 }
