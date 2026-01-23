@@ -54,14 +54,14 @@ $routes->group('admin', function ($routes) {
     // ==================== ROLE MANAGEMENT ====================
     $routes->group('roles', function ($routes) {
         $routes->get('/', [AdminController::class, 'manageRoles']);
-        $routes->post('save', [AdminController::class, 'saveRole']);
-        $routes->post('update-permissions', [AdminController::class, 'updateRolePermissions']);
-        $routes->post('delete', [AdminController::class, 'deleteRole']);
-        $routes->post('duplicate', [AdminController::class, 'duplicateRole']);
-        $routes->post('reset', [AdminController::class, 'resetRole']);
-        $routes->post('copy-permissions', [AdminController::class, 'copyPermissions']);
-        $routes->get('details/(:num)', 'AdminController::getRoleDetails/$1');
-        $routes->get('permissions/(:num)', 'AdminController::getRolePermissions/$1');
+        $routes->post('get-role-details', [AdminController::class, 'ajaxGetRoleDetails']);
+        $routes->post('get-role-permissions', [AdminController::class, 'ajaxGetRolePermissions']);
+        $routes->post('save', [AdminController::class, 'ajaxSaveRole']);
+        $routes->post('update-permissions', [AdminController::class, 'ajaxUpdateRolePermissions']);
+        $routes->post('delete', [AdminController::class, 'ajaxDeleteRole']);
+        $routes->post('duplicate', [AdminController::class, 'ajaxDuplicateRole']);
+        $routes->post('reset', [AdminController::class, 'ajaxResetRole']);
+        $routes->post('copy-permissions', [AdminController::class, 'ajaxCopyPermissions']);
     });
 
     // ==================== DEPARTMENT MANAGEMENT ====================

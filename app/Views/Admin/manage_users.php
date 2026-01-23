@@ -380,11 +380,6 @@
         color: #3730A3;
     }
 
-    .role-developer {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-
     /* Table styling */
     #usersTable {
         border-collapse: separate;
