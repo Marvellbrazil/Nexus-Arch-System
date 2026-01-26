@@ -610,6 +610,155 @@ console.log('Ticket ID:', <?= $ticket_id ?>);
 console.log('User ID:', '<?= session()->get('user_id') ?>');
 console.log('User Role:', '<?= session()->get('role') ?? 'Support' ?>');
 
+function fetchMessages() {
+    const ticketId = <?= $ticket_id ?>;
+    
+    // Pastikan URL ini memanggil fungsi getCustomerMessages di SupportController
+    fetch(`<?= base_url('support/ticket/customer_messages/') ?>${ticketId}`, {
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const container = document.getElementById('conversationContainer');
+            container.innerHTML = '';
+            
+            data.messages.forEach(msg => {
+                // Hanya render pesan dari ticket_messages untuk customer conversation
+                appendMessage(msg);
+            });
+            
+            // Update message count
+            const messageCount = document.getElementById('messageCount');
+            if (messageCount) {
+                messageCount.textContent = data.messages.length;
+            }
+        } else {
+            console.error('Failed to load messages:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+    });
+}
+
+// 🔥 PERBAIKAN: Function appendMessage hanya untuk customer messages
+function appendMessage(msg) {
+    const container = document.getElementById('conversationContainer');
+    if (!container) return;
+    
+    const isCustomer = msg.sender_role === 'Customer' || msg.role_name === 'Customer';
+    const isSupport = msg.sender_role === 'Support' || msg.role_name === 'Support';
+    
+    // Hanya tampilkan pesan untuk customer conversation
+    if (isCustomer || isSupport || msg.sender_role === 'Admin' || msg.sender_role === 'System') {
+        const messageDate = new Date(msg.created_at);
+        const formattedDate = messageDate.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        // Create message HTML
+        const messageHTML = `
+            <div class="flex gap-4 message-item">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 ${isCustomer ? 'bg-blue-100' : 'bg-green-100'} rounded-full flex items-center justify-center">
+                        ${isCustomer ? 
+                            '<i class="fas fa-user text-blue-600"></i>' : 
+                            '<i class="fas fa-headset text-green-600"></i>'
+                        }
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div>
+                            <span class="text-gray-800 font-semibold">${escapeHtml(msg.sender_name || 'Unknown')}</span>
+                            <span class="ml-2 px-2 py-0.5 ${isCustomer ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'} text-xs rounded">
+                                ${escapeHtml(msg.sender_role || msg.role_name || 'User')}
+                            </span>
+                        </div>
+                        <div class="text-gray-500 text-sm ml-auto">
+                            <i class="far fa-clock mr-1"></i>
+                            ${messageDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
+                    <div class="${isCustomer ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-100'} rounded-xl p-4 border">
+                        <p class="text-gray-700">${escapeHtml(msg.message || '')}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', messageHTML);
+    }
+}
+
+// 🔥 PERBAIKAN: Function untuk mengirim pesan ke customer
+function sendCustomerMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+        showToast('Please enter a message', 'warning');
+        return;
+    }
+    
+    // 🔥 PERHATIAN: Kirim dengan flag is_internal = false (untuk customer)
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('is_internal', 'false'); // 🔥 PENTING: false untuk customer
+    
+    fetch(`<?= base_url('support/ticket/send_message/') ?><?= $ticket_id ?>`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-RequestedWith': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageInput.value = '';
+            
+            // Tambahkan pesan ke UI
+            if (data.data) {
+                appendMessage(data.data);
+            }
+            
+            showToast('Message sent to customer successfully', 'success');
+        } else {
+            showToast(data.message || 'Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error. Please try again.', 'error');
+    });
+}
+
+// Helper function
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event listener untuk send button
+document.addEventListener('DOMContentLoaded', function() {
+    const sendBtn = document.getElementById('sendReplyBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            sendCustomerMessage();
+        });
+    }
+    
+    // Load messages on page load
+    fetchMessages();
+});
 // Function untuk update ticket status UI
 function updateTicketStatusUI(statusName) {
     console.log('Updating UI status to:', statusName);

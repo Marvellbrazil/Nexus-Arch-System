@@ -23,7 +23,7 @@ class DepartmentController extends BaseController
     private $priorityModel;
     private $categoryModel;
     private $statusModel;
-    private $db;
+    protected $db;
 
     public function __construct()
     {
@@ -119,37 +119,57 @@ public function checkTicketStatus($ticketId)
         $canMarkResolved = false;
         $reason = '';
         
-        // **LOGIKA SESUAI DATABASE**:
-        // 1. Jika internal_status = 'reopened' DAN department_resolved_at = null
-        //    (Support mereset department_resolved_at ketika reopen)
-        // 2. Jika internal_status = 'rejected' DAN department_resolved_at = null
-        //    (Support mereset department_resolved_at ketika reject)
-        // 3. Jika belum pernah di-resolve sama sekali (pending)
-        
-        if (($ticket['internal_status'] === 'reopened' || $ticket['internal_status'] === 'rejected') 
-            && $ticket['department_resolved_at'] === null) {
+        // 🔥 LOGIKA BISA/TIDAK BISA MARK RESOLVED:
+        // 1. Jika status = 'rejected' DAN belum di-resolve → BISA
+        if ($ticket['internal_status'] === 'rejected' && $ticket['department_resolved_at'] === null) {
             $canMarkResolved = true;
-            $reason = 'Ticket has been ' . $ticket['internal_status'] . ' by Support';
+            $reason = 'Ticket was rejected and needs correction';
         } 
+        // 2. Jika status = 'reopened' (dicentang for corrections) DAN belum di-resolve → BISA
+        elseif ($ticket['internal_status'] === 'reopened' && $ticket['department_resolved_at'] === null) {
+            $canMarkResolved = true;
+            $reason = 'Ticket reopened for corrections';
+        }
+        // 3. Jika status = 'reopened_no' (TIDAK dicentang) → TIDAK BISA
+        elseif ($ticket['internal_status'] === 'reopened_no') {
+            $canMarkResolved = false;
+            $reason = 'Ticket reopened for review only (no corrections needed)';
+        }
+        // 4. Jika status = 'approved' → TIDAK BISA
+        elseif ($ticket['internal_status'] === 'approved') {
+            $canMarkResolved = false;
+            $reason = 'Ticket already approved by Support';
+        }
+        // 5. Jika masih pending (belum pernah di-resolve) → BISA
         elseif ($ticket['department_resolved_at'] === null && $ticket['internal_status'] === 'pending') {
             $canMarkResolved = true;
             $reason = 'Ticket has not been resolved yet';
         }
-        // Jika sudah di-resolve tapi di-reopen oleh Support (department_resolved_at direset)
-        elseif ($ticket['department_resolved_at'] === null && $ticket['internal_status'] === 'reopened') {
-            $canMarkResolved = true;
-            $reason = 'Ticket reopened by Support, needs correction';
-        }
+        // 6. Status lainnya (review_needed, testing) → TIDAK BISA
         else {
             $canMarkResolved = false;
-            $reason = 'Ticket already resolved or under review';
+            $reason = 'Ticket under Support review';
         }
         
-        // Cek apakah ada notes dari Support (gunakan internal_status_notes)
+        // Cek apakah ada notes dari Support
         $correctionNotes = '';
         if (!empty($ticket['internal_status_notes'])) {
             $correctionNotes = $ticket['internal_status_notes'];
         }
+        
+        // Status labels untuk display
+        $statusLabels = [
+            'pending' => ['label' => 'Pending', 'color' => 'bg-gray-100 text-gray-800', 'icon' => 'fa-clock'],
+            'review_needed' => ['label' => 'Review Needed', 'color' => 'bg-yellow-100 text-yellow-800', 'icon' => 'fa-search'],
+            'testing' => ['label' => 'Testing', 'color' => 'bg-blue-100 text-blue-800', 'icon' => 'fa-flask'],
+            'approved' => ['label' => 'Approved', 'color' => 'bg-green-100 text-green-800', 'icon' => 'fa-check'],
+            'rejected' => ['label' => 'Rejected', 'color' => 'bg-red-100 text-red-800', 'icon' => 'fa-times'],
+            'reopened' => ['label' => 'Reopened for Corrections', 'color' => 'bg-purple-100 text-purple-800', 'icon' => 'fa-redo'],
+            'reopened_no' => ['label' => 'Reopened for Review', 'color' => 'bg-indigo-100 text-indigo-800', 'icon' => 'fa-comments']
+        ];
+        
+        $currentStatus = $ticket['internal_status'] ?? 'pending';
+        $statusInfo = $statusLabels[$currentStatus] ?? $statusLabels['pending'];
         
         return $this->response->setJSON([
             'success' => true,
@@ -158,6 +178,9 @@ public function checkTicketStatus($ticketId)
             'ticket_status' => $ticket['internal_status'],
             'department_resolved_at' => $ticket['department_resolved_at'],
             'correction_notes' => $correctionNotes,
+            'status_info' => $statusInfo,
+            'current_status' => $currentStatus,
+            'current_status_label' => $statusInfo['label'],
             'ticket_data' => [
                 'ticket_id' => $ticketId,
                 'ticket_number' => $ticket['ticket_number'],
@@ -176,7 +199,6 @@ public function checkTicketStatus($ticketId)
         ]);
     }
 }
-
 /**
  * Get ticket status info untuk real-time polling
  */
@@ -524,7 +546,13 @@ public function assignedTickets($deptType = null)
     // Get all projects for filter
     $data['projects'] = $this->projectModel->findAll();
     
-    // **PERBAIKAN: Query yang benar untuk CodeIgniter**
+    // 🔥 PERBAIKAN UTAMA: Query untuk mengambil semua ticket yang di-assign ke department
+    // Tampilkan ticket yang: 
+    // 1. department_id = departmentId (milik department ini)
+    // 2. status_id IN (1, 2) -> Open atau In Progress
+    // 3. department_resolved_at IS NULL -> belum di-resolve oleh department
+    // 4. internal_status NOT IN ('approved', 'reopened_no') -> bukan yang sudah approved atau review only
+    
     $assignedTickets = $this->db->table('tickets t')
         ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
                  u.full_name as customer_name, proj.project_name, proj.project_code,
@@ -536,9 +564,11 @@ public function assignedTickets($deptType = null)
         ->join('users u', 'u.user_id = t.customer_id')
         ->join('projects proj', 'proj.project_id = t.project_id', 'left')
         ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
-        ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left') // PERBAIKAN DI SINI
-        ->where('t.department_id', $departmentId) // KUNCI: department_id harus sama
+        ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left')
+        ->where('t.department_id', $departmentId) // Ticket milik department ini
+        ->whereIn('t.status_id', [1, 2]) // 🔥 Open (1) atau In Progress (2)
         ->where('t.department_resolved_at IS NULL') // Belum di-resolve oleh department
+        ->whereNotIn('t.internal_status', ['approved', 'reopened_no']) // 🔥 Bukan yang sudah approved atau review only
         ->orderBy('t.updated_at', 'DESC')
         ->get()
         ->getResultArray();
@@ -546,34 +576,39 @@ public function assignedTickets($deptType = null)
     // Debugging
     log_message('debug', '=== DEPARTMENT TICKETS DEBUG ===');
     log_message('debug', 'Department: ' . $departmentName . ' (ID: ' . $departmentId . ')');
+    log_message('debug', 'User Role: Department');
+    log_message('debug', 'Query condition: department_id=' . $departmentId . ', status_id IN (1,2), department_resolved_at IS NULL');
     log_message('debug', 'Tickets found: ' . count($assignedTickets));
     
-    // Jika tidak ada data, coba alternatif query (tanpa ticket_assignments)
+    // Log detail tiap ticket untuk debugging
+    foreach ($assignedTickets as $index => $ticket) {
+        log_message('debug', "Ticket #{$index}: ID={$ticket['ticket_id']}, Subject={$ticket['subject']}, StatusID={$ticket['status_id']}, DeptID={$ticket['department_id']}, InternalStatus={$ticket['internal_status']}");
+    }
+
+    // Jika tidak ada data, coba alternatif query (tampilkan SEMUA ticket department kecuali Closed)
     if (empty($assignedTickets)) {
-        log_message('debug', 'Trying alternative query...');
+        log_message('debug', 'Trying alternative query (show all except Closed)...');
         
         $assignedTickets = $this->db->table('tickets t')
             ->select('t.*, p.priority_name, s.status_name, cat.category_name, 
                      u.full_name as customer_name, proj.project_name, proj.project_code,
-                     u2.full_name as assigned_to_name')
+                     u2.full_name as assigned_to_name, ta.assignment_notes,
+                     ta.created_at as forwarded_at')
             ->join('priorities p', 'p.priority_id = t.priority_id')
             ->join('statuses s', 's.status_id = t.status_id')
             ->join('categories cat', 'cat.category_id = t.category_id')
             ->join('users u', 'u.user_id = t.customer_id')
             ->join('projects proj', 'proj.project_id = t.project_id', 'left')
             ->join('users u2', 'u2.user_id = t.assigned_to', 'left')
+            ->join('ticket_assignments ta', 'ta.ticket_id = t.ticket_id AND ta.department_id = t.department_id', 'left')
             ->where('t.department_id', $departmentId)
-            ->where('t.department_resolved_at IS NULL')
+            ->where('t.status_id !=', 4) // Bukan status Closed (4)
+            ->where('t.department_resolved_at IS NULL') // Belum di-resolve
             ->orderBy('t.updated_at', 'DESC')
             ->get()
             ->getResultArray();
             
         log_message('debug', 'Alternative query found: ' . count($assignedTickets) . ' tickets');
-    }
-
-    // Log detail tiap ticket untuk debugging
-    foreach ($assignedTickets as $index => $ticket) {
-        log_message('debug', "Ticket #{$index}: ID={$ticket['ticket_id']}, DeptID={$ticket['department_id']}, Subject={$ticket['subject']}");
     }
 
     // Jika user filter "My Tickets" aktif, filter lagi
@@ -658,6 +693,42 @@ public function assignedTickets($deptType = null)
 
     return view($data['view'], $data);
 }
+
+/**
+ * Update ticket status to In Progress when department first replies
+ */
+private function updateTicketToInProgress($ticketId)
+{
+    try {
+        $db = $this->db;
+        
+        // Cek apakah status masih Open (1)
+        $ticket = $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->get()
+            ->getRowArray();
+        
+        if ($ticket && $ticket['status_id'] == 1) { // Jika status masih Open
+            // Update ke In Progress (2)
+            $db->table('tickets')
+                ->where('ticket_id', $ticketId)
+                ->update([
+                    'status_id' => 2, // In Progress
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+            
+            log_message('debug', 'Ticket #' . $ticketId . ' status updated from Open to In Progress');
+            
+            return true;
+        }
+        
+        return false;
+    } catch (\Exception $e) {
+        log_message('error', 'Error updating ticket to in progress: ' . $e->getMessage());
+        return false;
+    }
+}
+
 /**
  * Helper method: Get tickets assigned to department by Support
  */
@@ -928,7 +999,7 @@ private function getTicketsAssignedBySupport($departmentId, $limit = null, $only
 
 public function ticketDetail($ticketId, $deptType = null)
 {
-    // PERBAIKAN: Jika $deptType null, ambil dari session (bukan dari URL)
+    // PERBAIKAN: Jika $deptType null, ambil dari session
     if ($deptType === null) {
         // Dapatkan department name dari session dan konversi ke URL slug
         $deptName = session()->get('department_name');
@@ -978,17 +1049,53 @@ public function ticketDetail($ticketId, $deptType = null)
         ->get()
         ->getRowArray();
 
-     if (!$ticket) {
+    if (!$ticket) {
         return redirect()->to("department/{$deptType}/assigned_tickets")->with('error', 'Ticket not found');
     }
-      // CHECK: Jika ticket sudah di-resolve oleh department, redirect
-    if ($ticket['department_resolved_at'] !== null && $ticket['internal_status'] !== 'reopened') {
+    
+    // 🔥 PERBAIKAN: Department TETAP bisa akses meskipun sudah approved atau reopened
+    // Hanya block jika status benar-benar Closed (4)
+    if ($ticket['status_id'] == 4) { // Status Closed
         return redirect()->to("department/{$deptType}/assigned_tickets")
-            ->with('error', 'This ticket has been resolved and is under review by Support. Access restricted.');
+            ->with('error', 'This ticket has been closed. Access restricted.');
+    }
+
+    // 🔥 PERBAIKAN: Cek apakah department bisa mark as resolved
+    $canMarkResolved = false;
+    $reason = '';
+    
+    // 1. Jika status = 'rejected' DAN belum di-resolve → BISA
+    if ($ticket['internal_status'] === 'rejected' && $ticket['department_resolved_at'] === null) {
+        $canMarkResolved = true;
+        $reason = 'Ticket was rejected and needs correction';
+    } 
+    // 2. Jika status = 'reopened' (dicentang for corrections) DAN belum di-resolve → BISA
+    elseif ($ticket['internal_status'] === 'reopened' && $ticket['department_resolved_at'] === null) {
+        $canMarkResolved = true;
+        $reason = 'Ticket reopened for corrections';
+    }
+    // 3. Jika status = 'reopened_no' (TIDAK dicentang) → TIDAK BISA
+    elseif ($ticket['internal_status'] === 'reopened_no') {
+        $canMarkResolved = false;
+        $reason = 'Ticket reopened for review only (no corrections needed)';
+    }
+    // 4. Jika status = 'approved' → TIDAK BISA
+    elseif ($ticket['internal_status'] === 'approved') {
+        $canMarkResolved = false;
+        $reason = 'Ticket already approved by Support';
+    }
+    // 5. Jika masih pending (belum pernah di-resolve) → BISA
+    elseif ($ticket['department_resolved_at'] === null && $ticket['internal_status'] === 'pending') {
+        $canMarkResolved = true;
+        $reason = 'Initial resolution';
+    }
+    // 6. Jika status = 'review_needed' atau 'testing' → TIDAK BISA
+    elseif (in_array($ticket['internal_status'], ['review_needed', 'testing'])) {
+        $canMarkResolved = false;
+        $reason = 'Ticket under Support review';
     }
 
     // PERBAIKAN: Get ONLY Support-Department conversation messages
-    // Option 1: Coba pakai tabel internal_chat_messages jika ada
     $messages = [];
     
     if ($this->db->tableExists('internal_chat_messages')) {
@@ -1044,12 +1151,23 @@ public function ticketDetail($ticketId, $deptType = null)
     $data['department_members'] = $departmentMembers;
     $data['ticket_id'] = $ticketId;
     $data['department_id'] = $departmentId;
+    $data['can_mark_resolved'] = $canMarkResolved;
+    $data['mark_resolved_reason'] = $reason;
 
     return view("Department/{$this->formatDepartmentView($departmentName)}/ticket_detail", $data);
 }
 
 /**
  * Send message to support (Department to Support chat)
+ */
+/**
+ * Send message from department to support
+ */
+/**
+ * Send message from department to support
+ */
+/**
+ * Send message from department to support
  */
 /**
  * Send message from department to support
@@ -1088,7 +1206,10 @@ public function sendChatMessage($ticketId)
             return $this->response->setJSON(['success' => false, 'message' => 'Ticket not found or unauthorized']);
         }
         
-        // Save message to internal_chat_messages
+        // 🔥 PERUBAHAN UTAMA: Cek apakah ini pesan pertama dari department
+        $isFirstMessage = $this->isFirstDepartmentMessage($ticketId, $department['department_id']);
+        
+        // Save message to internal chat
         $messageData = [
             'ticket_id' => $ticketId,
             'sender_id' => $userId,
@@ -1102,6 +1223,28 @@ public function sendChatMessage($ticketId)
         $db->table('internal_chat_messages')->insert($messageData);
         $messageId = $db->insertID();
         
+        // 🔥 PERUBAHAN UTAMA: Jika ini pesan pertama, update status ticket ke In Progress
+        $statusUpdated = false;
+        if ($isFirstMessage) {
+            $statusUpdated = $this->updateTicketToInProgress($ticketId);
+            
+            // Tambahkan system message ke internal chat
+            if ($statusUpdated) {
+                $systemMessage = "🔄 **Ticket Status Updated**\n" .
+                    "First department response received. Status changed to In Progress.";
+                
+                $db->table('internal_chat_messages')->insert([
+                    'ticket_id' => $ticketId,
+                    'sender_id' => 0, // System user
+                    'sender_role' => 'System',
+                    'department_id' => $department['department_id'],
+                    'message' => $systemMessage,
+                    'is_internal' => true,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+        }
+        
         // Update ticket timestamp
         $db->table('tickets')
             ->where('ticket_id', $ticketId)
@@ -1109,9 +1252,8 @@ public function sendChatMessage($ticketId)
         
         // Get complete message data
         $newMessage = $db->table('internal_chat_messages icm')
-            ->select('icm.*, u.full_name, u.role_id, r.role_name')
+            ->select('icm.*, u.full_name as sender_name')
             ->join('users u', 'u.user_id = icm.sender_id', 'left')
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
             ->where('icm.message_id', $messageId)
             ->get()
             ->getRowArray();
@@ -1122,17 +1264,10 @@ public function sendChatMessage($ticketId)
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Message sent successfully',
-            'data' => [
-                'message_id' => $messageId,
-                'sender_id' => $userId,
-                'sender_name' => $newMessage['full_name'] ?? 'Department Member',
-                'sender_role' => $newMessage['role_name'] ?? 'Department',
-                'message' => $message,
-                'created_at' => date('Y-m-d H:i:s'),
-                'time_ago' => 'Just now',
-                'is_current_user' => true,
-                'is_internal' => true
-            ]
+            'is_internal' => true,
+            'is_first_department_response' => $isFirstMessage,
+            'status_updated' => $statusUpdated,
+            'data' => $newMessage
         ]);
         
     } catch (\Exception $e) {
@@ -1145,6 +1280,243 @@ public function sendChatMessage($ticketId)
 }
 
 /**
+ * Check if this is the first message from department for this ticket
+ */
+private function isFirstDepartmentMessage($ticketId, $departmentId)
+{
+    $db = $this->db;
+    
+    // Cek apakah sudah ada pesan dari department di internal chat
+    if ($db->tableExists('internal_chat_messages')) {
+        $count = $db->table('internal_chat_messages')
+            ->where('ticket_id', $ticketId)
+            ->where('department_id', $departmentId)
+            ->where('sender_role', 'Department')
+            ->countAllResults();
+        
+        return $count == 0; // Return true jika ini pesan pertama
+    }
+    
+    return true; // Default anggap pesan pertama
+}
+
+/**
+ * Update ticket status to In Progress
+ */
+
+
+/**
+ * Mark ticket as In Progress (by Department)
+ */
+public function markAsInProgress($ticketId)
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $userId = session()->get('user_id');
+    $departmentName = session()->get('department_name');
+    $userName = session()->get('full_name') ?? 'Department Member';
+    
+    // Get department info
+    $department = $this->deptDepartmentModel->findByName($departmentName);
+    if (!$department) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Department not found']);
+    }
+    
+    $db = $this->db;
+    
+    try {
+        // Verify ticket belongs to user's department
+        $ticket = $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->where('department_id', $department['department_id'])
+            ->get()
+            ->getRowArray();
+        
+        if (!$ticket) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Ticket not found or unauthorized']);
+        }
+        
+        // Cek jika status sudah In Progress
+        if ($ticket['status_id'] == 2) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Ticket is already In Progress'
+            ]);
+        }
+        
+        // Cek jika ticket sudah di-resolve oleh department
+        if ($ticket['department_resolved_at']) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Cannot change status. Ticket has been resolved.'
+            ]);
+        }
+        
+        // Update ticket status to In Progress
+        $updateData = [
+            'status_id' => 2, // In Progress
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->update($updateData);
+        
+        // Add system message to internal chat
+        $systemMessage = "🔄 **Ticket Status Updated**\n" .
+                        "Marked as In Progress by: {$userName}\n" .
+                        "Department: {$departmentName}\n" .
+                        "Status: In Progress";
+        
+        $db->table('internal_chat_messages')->insert([
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'sender_role' => 'System',
+            'department_id' => $department['department_id'],
+            'message' => $systemMessage,
+            'is_internal' => true,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        // Log status change
+        $db->table('ticket_status_history')->insert([
+            'ticket_id' => $ticketId,
+            'status_type' => 'status',
+            'old_value' => $ticket['status_id'],
+            'new_value' => 2,
+            'changed_by' => $userId,
+            'change_reason' => 'Department started working on ticket',
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        // Create notification for Support users
+        $supportUsers = $db->table('users')
+            ->where('role_id', 3) // Support role
+            ->where('is_active', true)
+            ->get()
+            ->getResultArray();
+        
+        foreach ($supportUsers as $supportUser) {
+            $db->table('notifications')->insert([
+                'user_id' => $supportUser['user_id'],
+                'ticket_id' => $ticketId,
+                'title' => 'Ticket Status Changed - In Progress',
+                'message' => "Ticket #{$ticket['ticket_number']} is now In Progress by {$departmentName} department.",
+                'is_read' => false,
+                'notification_type' => 'ticket_in_progress',
+                'priority_id' => 2,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+        
+        // Get updated ticket data
+        $updatedTicket = $db->table('tickets')
+            ->select('t.*, s.status_name')
+            ->join('statuses s', 's.status_id = t.status_id', 'left')
+            ->where('t.ticket_id', $ticketId)
+            ->get()
+            ->getRowArray();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Ticket marked as In Progress',
+            'ticket_data' => $updatedTicket,
+            'new_status_id' => 2,
+            'new_status_name' => 'In Progress'
+        ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error marking ticket as in progress: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+
+/**
+ * Send message from support to department (Support side - untuk referensi)
+ */
+public function sendSupportMessage($ticketId)
+{
+    // Method untuk Support mengirim pesan ke Department
+    // TIDAK update status ke In Progress di sini
+    
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $message = $this->request->getPost('message');
+    $userId = session()->get('user_id');
+    
+    // Verifikasi role Support
+    $roleName = session()->get('role_name');
+    if ($roleName !== 'Support') {
+        return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+    }
+    
+    $db = $this->db;
+    
+    try {
+        // Save message - TIDAK update status
+        $messageData = [
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'sender_role' => 'Support',
+            'department_id' => $this->getTicketDepartmentId($ticketId),
+            'message' => $message,
+            'is_internal' => true,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        $db->table('internal_chat_messages')->insert($messageData);
+        
+        // 🔥 PERHATIAN: Support chat TIDAK mengubah status ticket
+        // Hanya update timestamp
+        $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->update(['updated_at' => date('Y-m-d H:i:s')]);
+        
+        // ... sisa kode untuk response ...
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error sending support message: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+// Helper function di Controller
+private function isFirstDepartmentResponse($ticketId, $departmentId)
+{
+    $db = $this->db;
+    
+    $count = $db->table('internal_chat_messages icm')
+        ->join('users u', 'u.user_id = icm.sender_id')
+        ->join('roles r', 'r.role_id = u.role_id')
+        ->where('icm.ticket_id', $ticketId)
+        ->where('icm.department_id', $departmentId)
+        ->where('r.role_name', 'Department')
+        ->countAllResults();
+    
+    return $count == 0;
+}
+
+/**
+ * Get internal chat messages (Department ↔ Support)
+ */
+/**
+ * Get internal chat messages (Department ↔ Support)
+ */
+/**
+ * Mengambil pesan chat internal antara Support dan Department
+ */
+/**
  * Get internal chat messages (Department ↔ Support)
  */
 public function getChatMessages($ticketId)
@@ -1155,39 +1527,45 @@ public function getChatMessages($ticketId)
     
     $userId = session()->get('user_id');
     $departmentName = session()->get('department_name');
+    
+    // Get department info
+    $department = $this->deptDepartmentModel->findByName($departmentName);
+    if (!$department) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Department not found']);
+    }
+    
     $db = $this->db;
     
     try {
-        // Get department
-        $department = $this->deptDepartmentModel->findByName($departmentName);
-        if (!$department) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Department not found']);
-        }
-        
-        // Get messages from internal_chat_messages
+        // 🔥 PERBAIKAN UTAMA: HANYA ambil dari internal_chat_messages
         $messages = $db->table('internal_chat_messages icm')
-            ->select('icm.*, u.full_name, u.role_id, r.role_name')
+            ->select('icm.*, u.full_name as sender_name, u.photo_profile as sender_photo, 
+                icm.sender_role as role_name_db')
             ->join('users u', 'u.user_id = icm.sender_id', 'left')
-            ->join('roles r', 'r.role_id = u.role_id', 'left')
             ->where('icm.ticket_id', $ticketId)
-            ->where('icm.department_id', $department['department_id'])
+            ->where('icm.department_id', $department['department_id']) // HANYA chat internal untuk department ini
             ->orderBy('icm.created_at', 'ASC')
             ->get()
             ->getResultArray();
         
-        // Format messages
+        // Format messages untuk response
         $formattedMessages = [];
         foreach ($messages as $msg) {
+            // Gunakan sender_role dari icm, bukan role dari users
+            $roleName = !empty($msg['sender_role']) ? $msg['sender_role'] : 'User';
+            
             $formattedMessages[] = [
                 'message_id' => $msg['message_id'],
                 'sender_id' => $msg['sender_id'],
-                'sender_name' => $msg['full_name'] ?? 'Unknown',
-                'sender_role' => $msg['role_name'] ?? $msg['sender_role'] ?? 'User',
+                'sender_name' => $msg['sender_name'] ?? 'Unknown',
+                'sender_role' => $roleName,
+                'role_name' => $roleName,
                 'message' => $msg['message'],
                 'is_internal' => (bool)$msg['is_internal'],
                 'created_at' => $msg['created_at'],
                 'time_ago' => $this->formatTimeAgo($msg['created_at']),
-                'is_current_user' => $msg['sender_id'] == $userId
+                'is_current_user' => $msg['sender_id'] == $userId,
+                'is_support_to_customer' => false // 🔥 SELALU false untuk internal chat
             ];
         }
         
@@ -1204,7 +1582,6 @@ public function getChatMessages($ticketId)
         ]);
     }
 }
-
 /**
  * Get new chat messages
  */
@@ -1867,7 +2244,10 @@ public function markAsResolved($ticketId)
     // Get department info
     $department = $this->deptDepartmentModel->findByName($departmentName);
     if (!$department) {
-        return $this->response->setJSON(['success' => false, 'message' => 'Department not found']);
+        return $this->response->setJSON([
+            'success' => false, 
+            'message' => 'Department not found'
+        ]);
     }
     
     $db = $this->db;
@@ -1887,15 +2267,39 @@ public function markAsResolved($ticketId)
             ]);
         }
         
-        // Check if already resolved
-        if ($ticket['department_resolved_at']) {
+        // 🔥 LOGIKA PENTING: Cek apakah boleh mark as resolved
+        $canMarkResolved = false;
+        $reason = '';
+        
+        // 1. Jika status = 'rejected' DAN belum di-resolve → BISA
+        if ($ticket['internal_status'] === 'rejected' && $ticket['department_resolved_at'] === null) {
+            $canMarkResolved = true;
+            $reason = 'Ticket was rejected and needs correction';
+        } 
+        // 2. Jika status = 'reopened' (dicentang for corrections) DAN belum di-resolve → BISA
+        elseif ($ticket['internal_status'] === 'reopened' && $ticket['department_resolved_at'] === null) {
+            $canMarkResolved = true;
+            $reason = 'Ticket reopened for corrections';
+        }
+        // 3. Jika status = 'reopened_no_corrections' (TIDAK dicentang) → TIDAK BISA
+        elseif ($ticket['internal_status'] === 'reopened_no_corrections') {
+            $canMarkResolved = false;
+            $reason = 'Ticket reopened for review only (no corrections needed)';
+        }
+        // 4. Jika masih pending (belum pernah di-resolve) → BISA
+        elseif ($ticket['department_resolved_at'] === null && $ticket['internal_status'] === 'pending') {
+            $canMarkResolved = true;
+            $reason = 'Initial resolution';
+        }
+        
+        if (!$canMarkResolved) {
             return $this->response->setJSON([
                 'success' => false, 
-                'message' => 'Ticket already resolved by department'
+                'message' => 'Cannot mark as resolved. ' . $reason
             ]);
         }
         
-        // PERBAIKAN: Update ticket dengan benar
+        // Update ticket
         $updateData = [
             'department_resolved_at' => date('Y-m-d H:i:s'),
             'department_resolved_by' => $userId,
@@ -1907,45 +2311,32 @@ public function markAsResolved($ticketId)
             ->where('ticket_id', $ticketId)
             ->update($updateData);
         
-        // PERBAIKAN: Ambil data ticket yang sudah diupdate
-        $updatedTicket = $db->table('tickets t')
-            ->select('t.*, s.status_name, p.priority_name, u.full_name as customer_name')
-            ->join('statuses s', 's.status_id = t.status_id', 'left')
-            ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
-            ->join('users u', 'u.user_id = t.customer_id', 'left')
-            ->where('t.ticket_id', $ticketId)
-            ->get()
-            ->getRowArray();
-        
         // Add internal message
         $userName = session()->get('full_name') ?? 'Department Member';
         $message = "✅ **Department Resolution**\n";
         $message .= "Marked as resolved by: {$userName}\n";
         $message .= "Department: {$departmentName}\n";
+        
+        if ($ticket['internal_status'] === 'rejected') {
+            $message .= "📌 **This is a corrected resolution after rejection**\n";
+        } elseif ($ticket['internal_status'] === 'reopened') {
+            $message .= "📌 **Corrections completed after reopening**\n";
+        }
+        
         if ($notes) {
             $message .= "Notes: {$notes}";
         }
         
-        // PERBAIKAN: Pastikan tabel internal_chat_messages ada
-        if ($db->tableExists('internal_chat_messages')) {
-            $db->table('internal_chat_messages')->insert([
-                'ticket_id' => $ticketId,
-                'sender_id' => $userId,
-                'sender_role' => 'Department',
-                'department_id' => $department['department_id'],
-                'message' => $message,
-                'is_internal' => true,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-        } else {
-            // Fallback ke ticket_messages
-            $db->table('ticket_messages')->insert([
-                'ticket_id' => $ticketId,
-                'sender_id' => $userId,
-                'message' => $message,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-        }
+        // Tambahkan ke internal_chat_messages
+        $db->table('internal_chat_messages')->insert([
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'sender_role' => 'Department',
+            'department_id' => $department['department_id'],
+            'message' => $message,
+            'is_internal' => true,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
         
         // Create notification for Support users
         $supportUsers = $db->table('users')
@@ -1962,27 +2353,30 @@ public function markAsResolved($ticketId)
                 'message' => "Ticket #{$ticket['ticket_number']} marked as resolved by {$departmentName}. Please review.",
                 'is_read' => false,
                 'notification_type' => 'department_resolution',
-                'priority_id' => 2, // Medium
+                'priority_id' => 2,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
         }
         
-        // Di dalam method markAsResolved() setelah berhasil:
-return $this->response->setJSON([
-    'success' => true,
-    'message' => 'Ticket marked as resolved. Waiting for Support review.',
-    'ticket_data' => [
-        'ticket_id' => $ticketId,
-        'ticket_number' => $updatedTicket['ticket_number'],
-        'status_id' => $updatedTicket['status_id'],
-        'status_name' => 'UNDER REVIEW',
-        'internal_status' => 'review_needed',
-        'department_resolved_at' => date('Y-m-d H:i:s'),
-        'department_resolved_by' => $userId
-    ],
-    'requires_ui_update' => true, // Flag untuk update UI
-    'new_status' => 'review_needed'
-]);
+        // Get updated ticket data
+        $updatedTicket = $db->table('tickets')
+            ->where('ticket_id', $ticketId)
+            ->get()
+            ->getRowArray();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Ticket marked as resolved. Waiting for Support review.',
+            'ticket_data' => [
+                'ticket_id' => $ticketId,
+                'ticket_number' => $ticket['ticket_number'],
+                'internal_status' => 'review_needed',
+                'department_resolved_at' => date('Y-m-d H:i:s'),
+                'department_resolved_by' => $userId,
+                'status_name' => 'UNDER REVIEW'
+            ],
+            'reason' => $reason
+        ]);
         
     } catch (\Exception $e) {
         log_message('error', 'Error marking ticket as resolved: ' . $e->getMessage());

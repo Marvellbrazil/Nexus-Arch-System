@@ -781,28 +781,52 @@ class UserModel extends Model
     /**
      * Update user dengan handling PostgreSQL boolean
      */
-    public function updateUserWithPostgres(int $id, array $data): bool
-    {
-        $db = db_connect();
+// Di method updateUserWithPostgres, tambahkan handling untuk photo_profile:
+public function updateUserWithPostgres(int $id, array $data): bool
+{
+    $db = db_connect();
 
-        // Handle boolean untuk PostgreSQL
-        if (isset($data['is_active'])) {
-            $data['is_active'] = $data['is_active'] ? 't' : 'f';
-        }
-
-        // Handle nullable fields
-        $fieldsToNull = ['department_id', 'phone_number'];
-        foreach ($fieldsToNull as $field) {
-            if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
-                $data[$field] = null;
-            }
-        }
-
-        $builder = $db->table($this->table);
-        $builder->where($this->primaryKey, $id);
-
-        return $builder->update($data);
+    // Handle boolean untuk PostgreSQL
+    if (isset($data['is_active'])) {
+        $data['is_active'] = $data['is_active'] ? 't' : 'f';
     }
+
+    // Handle nullable fields
+    $fieldsToNull = ['department_id', 'phone_number', 'photo_profile'];
+    foreach ($fieldsToNull as $field) {
+        if (isset($data[$field]) && ($data[$field] === '' || $data[$field] === null)) {
+            $data[$field] = null;
+        }
+    }
+
+    $builder = $db->table($this->table);
+    $builder->where($this->primaryKey, $id);
+
+    return $builder->update($data);
+}
+
+// Atau buat method khusus untuk update profile:
+public function updateUserProfile(int $userId, array $data): bool
+{
+    $db = db_connect();
+    
+    // Clean data
+    if (isset($data['phone_number']) && empty($data['phone_number'])) {
+        $data['phone_number'] = null;
+    }
+    
+    if (isset($data['photo_profile']) && empty($data['photo_profile'])) {
+        $data['photo_profile'] = null;
+    }
+    
+    // Update updated_at
+    $data['updated_at'] = date('Y-m-d H:i:s');
+    
+    $builder = $db->table($this->table);
+    $builder->where('user_id', $userId);
+    
+    return $builder->update($data);
+}
 
     /**
      * Get user dengan role dan department

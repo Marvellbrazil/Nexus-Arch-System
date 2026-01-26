@@ -57,31 +57,42 @@
         </div>
     </div>
 
-    <!-- Ticket Info Bar -->
-    <div class="bg-gradient-to-r from-secondary to-[#8A84C6] rounded-2xl p-6 text-white mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <div class="text-white/80 text-sm mb-1">Ticket Number</div>
-                <div class="text-lg font-bold">#<?= $ticket['ticket_number'] ?? $ticket_id ?></div>
-            </div>
-            <div>
-                <div class="text-white/80 text-sm mb-1">Status</div>
-                <div class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold inline-block">
-                    <?= strtoupper($ticket['status_name'] ?? 'OPEN') ?>
-                </div>
-            </div>
-            <div>
-                <div class="text-white/80 text-sm mb-1">Priority</div>
-                <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block">
-                    <?= strtoupper($ticket['priority_name'] ?? 'MEDIUM') ?>
-                </div>
-            </div>
-            <div>
-                <div class="text-white/80 text-sm mb-1">Customer</div>
-                <div class="text-lg font-semibold"><?= $ticket['customer_name'] ?? 'Unknown' ?></div>
+<!-- Ticket Info Bar -->
+<div class="bg-gradient-to-r from-secondary to-[#8A84C6] rounded-2xl p-6 text-white mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <div class="text-white/80 text-sm mb-1">Ticket Number</div>
+            <div class="text-lg font-bold">#<?= $ticket['ticket_number'] ?? $ticket_id ?></div>
+        </div>
+        <div>
+            <div class="text-white/80 text-sm mb-1">Status</div>
+            <div class="px-3 py-1 <?= $ticket['status_id'] == 2 ? 'bg-purple-500/20' : 'bg-white/20' ?> rounded-full text-sm font-semibold inline-block" id="statusBadge">
+                <?php 
+                // Tampilkan status berdasarkan status_id
+                $statusText = 'OPEN';
+                if ($ticket['status_id'] == 2) {
+                    $statusText = 'IN PROGRESS';
+                } elseif ($ticket['status_id'] == 3) {
+                    $statusText = 'RESOLVED';
+                } elseif ($ticket['status_id'] == 4) {
+                    $statusText = 'CLOSED';
+                }
+                echo $statusText;
+                ?>
             </div>
         </div>
+        <div>
+            <div class="text-white/80 text-sm mb-1">Priority</div>
+            <div class="px-3 py-1 bg-red-500/20 rounded-full text-sm font-semibold inline-block">
+                <?= strtoupper($ticket['priority_name'] ?? 'MEDIUM') ?>
+            </div>
+        </div>
+        <div>
+            <div class="text-white/80 text-sm mb-1">Customer</div>
+            <div class="text-lg font-semibold"><?= $ticket['customer_name'] ?? 'Unknown' ?></div>
+        </div>
     </div>
+</div>
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
@@ -333,7 +344,32 @@
             $canMarkResolved = true;
             $reasonMessage = 'Ticket not yet resolved';
         }
+        
+        // 🔥 TAMBAHKAN: TOMBOL MARK AS IN PROGRESS
+        $showMarkInProgressBtn = false;
+        if ($ticket['status_id'] == 1 && $ticket['department_resolved_at'] === null) { // Jika status Open
+            $showMarkInProgressBtn = true;
+        }
         ?>
+        
+        <?php if ($showMarkInProgressBtn): ?>
+            <!-- Tombol Mark as In Progress -->
+            <button onclick="markAsInProgress(<?= $ticket_id ?>)" 
+                    class="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium flex items-center justify-center gap-2 mb-3">
+                <i class="fas fa-play-circle"></i>
+                <span>Mark as In Progress</span>
+            </button>
+            
+            <div class="mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <div class="flex items-center gap-2 text-purple-800">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="text-sm font-medium">Ready to Start</span>
+                </div>
+                <p class="text-sm text-purple-700 mt-1">
+                    Click "Mark as In Progress" when you start working on this ticket.
+                </p>
+            </div>
+        <?php endif; ?>
         
         <?php if ($canMarkResolved): ?>
             <button onclick="openMarkResolvedModal()" 
@@ -411,6 +447,14 @@
                 <?php elseif ($ticket['internal_status'] === 'testing'): ?>
                     <i class="fas fa-flask mr-2"></i>
                     <span>Testing Phase</span>
+                <?php elseif ($ticket['status_id'] == 2): ?>
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    <span>In Progress</span>
+                    <?php if (!empty($ticket['updated_at'])): ?>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Started on: <?= date('F d, Y H:i', strtotime($ticket['updated_at'])) ?>
+                        </p>
+                    <?php endif; ?>
                 <?php else: ?>
                     <i class="fas fa-hourglass-half mr-2"></i>
                     <span>Under Support Review</span>
@@ -533,35 +577,175 @@
         statusPollingInterval = setInterval(checkTicketStatus, 10000);
     }
 
+    // 🔥 FUNCTION BARU: Mark as In Progress
+function markAsInProgress(ticketId) {
+    if (!confirm('Mark this ticket as In Progress? This will notify the Support team that you have started working on this ticket.')) {
+        return;
+    }
+    
+    // Show loading
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    button.disabled = true;
+    
+    fetch(`<?= base_url('department/it-support/ticket/mark_in_progress/') ?>${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI
+            updateUIAfterInProgress(data);
+            showToast(data.message, 'success');
+            
+            // Update button menjadi disabled
+            setTimeout(() => {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-check"></i> In Progress';
+                button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                button.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+            }, 1000);
+        } else {
+            showToast(data.message || 'Failed to mark as in progress', 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error. Please try again.', 'error');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+// 🔥 FUNCTION BARU: Update UI setelah mark as in progress
+function updateUIAfterInProgress(data) {
+    // 1. Update status badge di info bar
+    const infoBar = document.querySelector('.bg-gradient-to-r.from-secondary');
+    if (infoBar) {
+        const statusElements = infoBar.querySelectorAll('div.text-white\\/80');
+        statusElements.forEach(element => {
+            if (element.textContent.includes('Status') && element.nextElementSibling) {
+                const statusBadge = element.nextElementSibling;
+                statusBadge.textContent = 'IN PROGRESS';
+                statusBadge.className = 'px-3 py-1 bg-purple-500/20 rounded-full text-sm font-semibold inline-block';
+            }
+        });
+    }
+    
+    // 2. Update Quick Actions container
+    const quickActionsContainer = document.getElementById('quickActionsContainer');
+    if (quickActionsContainer) {
+        quickActionsContainer.innerHTML = `
+            <div class="mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <div class="flex items-center gap-2 text-purple-800">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="text-sm font-medium">Ticket is now In Progress</span>
+                </div>
+                <p class="text-sm text-purple-700 mt-1">
+                    You can now work on this ticket. When finished, click "Mark as Resolved".
+                </p>
+            </div>
+            <div class="px-4 py-3 bg-purple-100 text-purple-800 rounded-lg text-center">
+                <i class="fas fa-sync-alt mr-2"></i>
+                <span>In Progress</span>
+                <p class="text-xs text-purple-600 mt-1">
+                    Started on: ${new Date().toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </p>
+            </div>
+        `;
+    }
+    
+    // 3. Update Update Status button
+    const updateStatusBtn = document.getElementById('updateStatusBtn');
+    if (updateStatusBtn) {
+        updateStatusBtn.innerHTML = `
+            <i class="fas fa-sync-alt"></i>
+            <span>In Progress</span>
+        `;
+        updateStatusBtn.className = 'px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium flex items-center gap-2';
+    }
+    
+    // 4. Add system message to chat
+    addInProgressSystemMessage();
+}
+
+// 🔥 FUNCTION BARU: Add system message untuk in progress
+function addInProgressSystemMessage() {
+    const userName = '<?= session()->get("full_name") ?>' || 'You';
+    const message = `🔄 Ticket marked as In Progress by ${userName}. Department has started working on this ticket.`;
+    
+    const container = document.getElementById('conversationContainer');
+    if (container) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'flex justify-center my-4';
+        messageDiv.innerHTML = `
+            <div class="bg-purple-50 border border-purple-200 rounded-lg px-4 py-3 max-w-md text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <i class="fas fa-sync-alt text-purple-600"></i>
+                    <span class="text-purple-800 font-medium text-sm">${message}</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(messageDiv);
+        scrollToBottom();
+    }
+}
+
     function checkTicketStatus() {
         const ticketId = <?= $ticket_id ?>;
         
-        // GUNAKAN ENDPOINT YANG BENAR - getTicketStatusInfo
         fetch(`<?= base_url('department/it-support/ticket/status_info/') ?>${ticketId}`, {
             headers: { 
                 'X-Requested-With': 'XMLHttpRequest',
                 'Cache-Control': 'no-cache'
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             console.log('Status check response:', data);
             
             if (data.success) {
-                // Update UI if status changed
+                // 🔥 LOGIKA PENTING UNTUK MENGECEK APAKAH BISA MARK RESOLVED
+                let canMarkResolved = false;
+                const ticket = data.ticket;
+                
+                // 1. Jika status = 'reopened' atau 'rejected' DAN belum di-resolve
+                if ((ticket.internal_status === 'reopened' || ticket.internal_status === 'rejected') 
+                    && !ticket.department_resolved_at) {
+                    canMarkResolved = true;
+                } 
+                // 2. Jika masih pending (belum pernah di-resolve)
+                else if (!ticket.department_resolved_at && ticket.internal_status === 'pending') {
+                    canMarkResolved = true;
+                }
+                
+                // Update UI berdasarkan hasil check
+                if (canMarkResolved !== data.can_mark_resolved) {
+                    data.can_mark_resolved = canMarkResolved;
+                    updateQuickActionsUI(data);
+                }
+                
+                // Update jika status berubah
                 if (data.current_status !== currentInternalStatus) {
-                    console.log('Status changed from', currentInternalStatus, 'to', data.current_status);
                     currentInternalStatus = data.current_status;
                     updateQuickActionsUI(data);
                     
-                    // Only show toast for specific status changes
+                    // Show toast untuk status tertentu
                     if (data.current_status === 'reopened' || data.current_status === 'rejected') {
-                        showToast('Ticket status updated: ' + data.current_status_label, 'info');
+                        showToast('Ticket ' + data.current_status + ' by Support. Please review.', 'info');
                     }
                 }
             }
@@ -582,83 +766,102 @@
         const statusInfo = data.status_info;
         
         if (canMarkResolved) {
+            let actionMessage = '';
+            
+            if (ticket.internal_status === 'reopened') {
+                actionMessage = `
+                    <div class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-yellow-800">
+                            <i class="fas fa-tools"></i>
+                            <span class="text-sm font-medium">Reopened for Corrections</span>
+                        </div>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Support has reopened this ticket for corrections. Please make the necessary changes.
+                        </p>
+                        ${ticket.internal_status_notes ? `
+                            <p class="text-sm text-yellow-600 mt-1">
+                                <strong>Correction notes:</strong> ${escapeHtml(ticket.internal_status_notes)}
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (ticket.internal_status === 'rejected') {
+                actionMessage = `
+                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-red-800">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span class="text-sm font-medium">Rejected - Needs Corrections</span>
+                        </div>
+                        <p class="text-sm text-red-700 mt-1">
+                            Support has rejected the previous resolution. Please review and make corrections.
+                        </p>
+                        ${ticket.internal_status_notes ? `
+                            <p class="text-sm text-red-600 mt-1">
+                                <strong>Rejection reason:</strong> ${escapeHtml(ticket.internal_status_notes)}
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (ticket.internal_status === 'pending') {
+                actionMessage = `
+                    <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-blue-800">
+                            <i class="fas fa-clock"></i>
+                            <span class="text-sm font-medium">Initial Resolution Needed</span>
+                        </div>
+                        <p class="text-sm text-blue-700 mt-1">
+                            This ticket needs to be resolved by the department.
+                        </p>
+                    </div>
+                `;
+            }
+            
             container.innerHTML = `
+                ${actionMessage}
                 <button onclick="openMarkResolvedModal()" 
                         class="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center justify-center gap-2 mb-3">
                     <i class="fas fa-check-circle"></i>
                     <span>Mark as Resolved</span>
                 </button>
-                
-                ${ticket.internal_status === 'reopened' ? `
-                    <div class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div class="flex items-center gap-2 text-yellow-800">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span class="text-sm font-medium">Support reopened this ticket</span>
-                        </div>
-                        ${ticket.internal_status_notes ? `
-                            <p class="text-sm text-yellow-700 mt-1">
-                                <strong>Correction needed:</strong> ${escapeHtml(ticket.internal_status_notes)}
-                            </p>
-                        ` : ''}
-                        ${ticket.last_reopened_at ? `
-                            <p class="text-xs text-yellow-600 mt-1">
-                                Reopened on: ${new Date(ticket.last_reopened_at).toLocaleDateString('en-US', { 
-                                    month: 'long', 
-                                    day: 'numeric', 
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </p>
-                        ` : ''}
-                        <p class="text-sm text-yellow-600 mt-1">Please make the requested corrections and mark as resolved again.</p>
-                    </div>
-                ` : ''}
-                
-                ${ticket.internal_status === 'rejected' ? `
-                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <div class="flex items-center gap-2 text-red-800">
-                            <i class="fas fa-times-circle"></i>
-                            <span class="text-sm font-medium">Support rejected the resolution</span>
-                        </div>
-                        ${ticket.internal_status_notes ? `
-                            <p class="text-sm text-red-700 mt-1">
-                                <strong>Reason:</strong> ${escapeHtml(ticket.internal_status_notes)}
-                            </p>
-                        ` : ''}
-                        ${ticket.last_rejected_at ? `
-                            <p class="text-xs text-red-600 mt-1">
-                                Rejected on: ${new Date(ticket.last_rejected_at).toLocaleDateString('en-US', { 
-                                    month: 'long', 
-                                    day: 'numeric', 
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </p>
-                        ` : ''}
-                        <p class="text-sm text-red-600 mt-1">Please review and make corrections.</p>
-                    </div>
-                ` : ''}
-                
-                ${data.reason && (ticket.internal_status !== 'reopened' && ticket.internal_status !== 'rejected') ? `
-                    <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div class="flex items-center gap-2 text-blue-800">
-                            <i class="fas fa-info-circle"></i>
-                            <span class="text-sm font-medium">${data.reason}</span>
-                        </div>
-                    </div>
-                ` : ''}
+                <p class="text-xs text-gray-500 text-center">
+                    ${data.reason || 'Ready to mark as resolved'}
+                </p>
             `;
+            
         } else {
-            container.innerHTML = `
-                <div class="px-4 py-3 ${statusInfo.color || 'bg-gray-100'} text-gray-600 rounded-lg text-center">
-                    ${ticket.internal_status === 'approved' ? `
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <span>Approved by Support</span>
-                        ${ticket.approved_at ? `
-                            <p class="text-xs text-gray-500 mt-1">
-                                Approved on: ${new Date(ticket.approved_at).toLocaleDateString('en-US', { 
+            // TIDAK BISA MARK RESOLVED
+            if (ticket.internal_status === 'reopened_no') {
+                container.innerHTML = `
+                    <div class="mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-indigo-800">
+                            <i class="fas fa-comments"></i>
+                            <span class="text-sm font-medium">Reopened for Discussion Only</span>
+                        </div>
+                        <p class="text-sm text-indigo-700 mt-1">
+                            Ticket reopened for internal discussion. You can chat with Support but cannot mark as resolved.
+                        </p>
+                        <p class="text-xs text-indigo-600 mt-1">
+                            <i class="fas fa-info-circle"></i> No corrections needed from department.
+                        </p>
+                    </div>
+                    <div class="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-center">
+                        <i class="fas fa-lock mr-2"></i>
+                        <span>Cannot mark as resolved</span>
+                    </div>
+                `;
+            } else if (ticket.internal_status === 'approved') {
+                container.innerHTML = `
+                    <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-green-800">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="text-sm font-medium">Approved by Support</span>
+                        </div>
+                        <p class="text-sm text-green-700 mt-1">
+                            This ticket has been approved by Support and is considered resolved.
+                        </p>
+                        ${ticket.resolved_at ? `
+                            <p class="text-xs text-green-600 mt-1">
+                                Approved on: ${new Date(ticket.resolved_at).toLocaleDateString('en-US', { 
                                     month: 'long', 
                                     day: 'numeric', 
                                     year: 'numeric',
@@ -667,33 +870,30 @@
                                 })}
                             </p>
                         ` : ''}
-                    ` : ticket.internal_status === 'review_needed' ? `
-                        <i class="fas fa-search mr-2"></i>
-                        <span>Under Support Review</span>
+                    </div>
+                    <div class="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-center">
+                        <i class="fas fa-check mr-2"></i>
+                        <span>Completed - No action needed</span>
+                    </div>
+                `;
+            } else {
+                // Status lainnya (review_needed, testing, dll)
+                container.innerHTML = `
+                    <div class="px-4 py-3 ${statusInfo.color || 'bg-gray-100'} text-gray-600 rounded-lg text-center">
+                        <i class="fas ${statusInfo.icon || 'fa-hourglass-half'} mr-2"></i>
+                        <span>${statusInfo.label || 'Processing'}</span>
+                        <p class="text-xs text-gray-500 mt-1">
+                            ${data.reason || 'Ticket under Support review'}
+                        </p>
                         ${ticket.department_resolved_at ? `
                             <p class="text-xs text-gray-500 mt-1">
-                                Resolved on: ${new Date(ticket.department_resolved_at).toLocaleDateString('en-US', { 
-                                    month: 'long', 
-                                    day: 'numeric', 
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
+                                Resolved on: ${new Date(ticket.department_resolved_at).toLocaleDateString()}
                             </p>
                         ` : ''}
-                    ` : ticket.internal_status === 'testing' ? `
-                        <i class="fas fa-flask mr-2"></i>
-                        <span>Testing Phase</span>
-                    ` : `
-                        <i class="fas ${statusInfo.icon || 'fa-hourglass-half'} mr-2"></i>
-                        <span>${statusInfo.label || 'Under Support Review'}</span>
-                    `}
-                </div>
-            `;
+                    </div>
+                `;
+            }
         }
-        
-        // Juga update status badge di header jika ada
-        updateStatusBadgeInHeader(ticket);
     }
     
     function updateStatusBadgeInHeader(ticket) {
@@ -993,20 +1193,20 @@
             }, 5000);
         }
         
-        // Chat System Functions
+        // 🔥 PERUBAHAN UTAMA: Chat System Functions
         function initDepartmentChat() {
             console.log('Initializing department chat for ticket:', ticketId);
             
             // Setup event listeners
             setupChatListeners();
             
-            // Load initial messages
-            loadChatMessages();
+            // Load initial messages - PERUBAHAN: Panggil loadInternalChatMessages()
+            loadInternalChatMessages();
             
             // Start polling for new messages
             startPolling();
             
-            // Scroll to bottom initially
+            // Scroll to bottom
             setTimeout(scrollToBottom, 500);
         }
         
@@ -1031,6 +1231,266 @@
             });
         }
         
+        // 🔥 PERUBAHAN: Function baru untuk load internal chat messages
+        function loadInternalChatMessages() {
+            fetch(`<?= base_url('department/chat/messages/') ?>${ticketId}`, {
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Loaded internal chat messages:', data);
+                
+                if (data.success && data.messages && data.messages.length > 0) {
+                    // Clear container
+                    const container = document.getElementById('conversationContainer');
+                    if (container) {
+                        container.innerHTML = '';
+                    }
+                    
+                    // Group messages by date
+                    let currentDate = null;
+                    
+                    data.messages.forEach(message => {
+                        const messageDate = new Date(message.created_at);
+                        const formattedDate = messageDate.toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                        
+                        // Add date separator jika tanggal berubah
+                        if (formattedDate !== currentDate) {
+                            currentDate = formattedDate;
+                            addDateSeparatorToChat(formattedDate);
+                        }
+                        
+                        // Add message to UI
+                        addInternalMessageToUI(message);
+                    });
+                    
+                    // Update last message ID
+                    if (data.messages.length > 0) {
+                        lastMessageId = data.messages[data.messages.length - 1].message_id;
+                    }
+                    
+                    scrollToBottom();
+                } else {
+                    // Jika tidak ada messages, tampilkan pesan default
+                    const container = document.getElementById('conversationContainer');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-comments text-3xl mb-3"></i>
+                                <p>No messages yet. Start the conversation with Support!</p>
+                                <p class="text-sm text-gray-400 mt-1">
+                                    This chat is only visible to IT Support Department and Support Team.
+                                </p>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading internal chat messages:', error);
+                showToast('Error loading chat messages', 'error');
+            });
+        }
+        
+        // 🔥 PERUBAHAN: Function baru untuk polling messages internal
+        function getNewInternalMessages() {
+            if (lastMessageId === 0) return;
+            
+            fetch(`<?= base_url('department/chat/get_new/') ?>${ticketId}?last_message_id=${lastMessageId}`, {
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('New internal messages:', data);
+                
+                if (data.success && data.messages && data.messages.length > 0) {
+                    // Filter out messages from current user (to avoid duplicates)
+                    const newMessages = data.messages.filter(msg => !msg.is_current_user);
+                    
+                    if (newMessages.length > 0) {
+                        newMessages.forEach(msg => {
+                            addInternalMessageToUI(msg);
+                        });
+                        
+                        // Play notification sound untuk pesan baru dari Support
+                        playNotificationSound();
+                        scrollToBottom();
+                    }
+                    
+                    // Update last message ID
+                    if (data.messages.length > 0) {
+                        lastMessageId = data.messages[data.messages.length - 1].message_id;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error getting new internal messages:', error);
+            });
+        }
+        
+        // 🔥 PERUBAHAN: Function untuk menambah pesan internal ke UI
+        function addInternalMessageToUI(messageData, isCurrentUser = false) {
+            const container = document.getElementById('conversationContainer');
+            if (!container) return;
+            
+            // Cek apakah message sudah ada (berdasarkan message_id)
+            const existingMsg = container.querySelector(`[data-message-id="${messageData.message_id}"]`);
+            if (existingMsg) {
+                return; // Skip jika sudah ada
+            }
+            
+            // Tentukan apakah pesan dari Support atau Department
+            const isSupport = messageData.sender_role === 'Support' || 
+                             messageData.role_name === 'Support';
+            const isDepartment = messageData.sender_role === 'Department' || 
+                                messageData.role_name === 'Department' ||
+                                messageData.sender_role === 'Department Member';
+            
+            // Format waktu
+            const messageDate = new Date(messageData.created_at);
+            const timeString = messageDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // Buat HTML untuk message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 message-item';
+            messageDiv.setAttribute('data-message-id', messageData.message_id);
+            messageDiv.setAttribute('data-sender-id', messageData.sender_id);
+            messageDiv.setAttribute('data-sender-role', messageData.sender_role || '');
+            messageDiv.setAttribute('data-timestamp', messageData.created_at);
+            
+            if (isCurrentUser) {
+                // Message dari user sendiri (Department)
+                messageDiv.innerHTML = `
+                    <div class="flex flex-col max-w-[80%] ml-auto">
+                        <div class="mb-2 text-right">
+                            <span class="text-gray-700 font-semibold text-sm">You</span>
+                            <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">
+                                Department
+                            </span>
+                            <span class="ml-2 text-gray-500 text-xs">
+                                <i class="far fa-clock mr-1"></i>${timeString}
+                            </span>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                            <p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(messageData.message)}</p>
+                            <div class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                                <i class="fas fa-lock text-xs"></i>
+                                Internal message
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isSupport) {
+                // Message dari Support
+                messageDiv.innerHTML = `
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-headset text-green-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 max-w-[80%]">
+                            <div class="mb-2">
+                                <span class="text-gray-700 font-semibold text-sm">${escapeHtml(messageData.sender_name || 'Support')}</span>
+                                <span class="ml-2 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded">
+                                    Support
+                                </span>
+                                <span class="ml-2 text-gray-500 text-xs">
+                                    <i class="far fa-clock mr-1"></i>${timeString}
+                                </span>
+                            </div>
+                            <div class="bg-green-50 border border-green-100 rounded-xl p-4">
+                                <p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(messageData.message)}</p>
+                                <div class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                                    <i class="fas fa-lock text-xs"></i>
+                                    Internal message
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isDepartment) {
+                // Message dari Department lain
+                messageDiv.innerHTML = `
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-building text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 max-w-[80%]">
+                            <div class="mb-2">
+                                <span class="text-gray-700 font-semibold text-sm">${escapeHtml(messageData.sender_name || 'Department Member')}</span>
+                                <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">
+                                    Department
+                                </span>
+                                <span class="ml-2 text-gray-500 text-xs">
+                                    <i class="far fa-clock mr-1"></i>${timeString}
+                                </span>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                <p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(messageData.message)}</p>
+                                <div class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                                    <i class="fas fa-lock text-xs"></i>
+                                    Internal message
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            
+            // Tambahkan animation
+            messageDiv.style.animation = 'slideIn 0.3s ease-out';
+            
+            // Scroll ke bottom
+            setTimeout(() => {
+                scrollToBottom();
+            }, 50);
+        }
+        
+        // 🔥 PERUBAHAN: Function untuk menambah separator tanggal
+        function addDateSeparatorToChat(dateString) {
+            const container = document.getElementById('conversationContainer');
+            if (!container) return;
+            
+            const separatorDiv = document.createElement('div');
+            separatorDiv.className = 'text-center my-4';
+            separatorDiv.innerHTML = `
+                <span class="px-4 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                    ${dateString}
+                </span>
+            `;
+            
+            container.appendChild(separatorDiv);
+        }
+        
+        // 🔥 PERUBAHAN: Update function handleSendMessage untuk internal chat
         function handleSendMessage() {
             const messageInput = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendMessageBtn');
@@ -1048,6 +1508,7 @@
             sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             sendBtn.disabled = true;
             
+            // 🔥 PERUBAHAN: Kirim ke endpoint department chat (internal)
             fetch(`<?= base_url('department/chat/send/') ?>${ticketId}`, {
                 method: 'POST',
                 headers: {
@@ -1058,17 +1519,22 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Send message response:', data);
+                
                 if (data.success) {
                     messageInput.value = '';
                     messageInput.style.height = 'auto';
                     
+                    // Tambahkan message user ke UI
                     if (data.data) {
-                        addMessageToUI(data.data, true);
+                        // Tandai sebagai current user
+                        data.data.is_current_user = true;
+                        addInternalMessageToUI(data.data, true);
                         lastMessageId = data.data.message_id;
-                        scrollToBottom();
                     }
                     
                     showToast('Message sent successfully', 'success');
+                    scrollToBottom();
                 } else {
                     showToast(data.message || 'Failed to send message', 'error');
                 }
@@ -1083,118 +1549,25 @@
             });
         }
         
-        function loadChatMessages() {
-            fetch(`<?= base_url('department/chat/messages/') ?>${ticketId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.messages && data.messages.length > 0) {
-                    data.messages.forEach(message => {
-                        addMessageToUI(message, message.is_current_user);
-                    });
-                    lastMessageId = data.messages[data.messages.length - 1].message_id;
-                    scrollToBottom();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading messages:', error);
-            });
-        }
-        
-        function getNewMessages() {
-            if (lastMessageId === 0) return;
-            
-            fetch(`<?= base_url('department/chat/get_new/') ?>${ticketId}?last_message_id=${lastMessageId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.messages && data.messages.length > 0) {
-                    const newMessages = data.messages.filter(msg => !msg.is_current_user);
-                    
-                    if (newMessages.length > 0) {
-                        newMessages.forEach(msg => {
-                            addMessageToUI(msg, false);
-                        });
-                        scrollToBottom();
-                    }
-                    
-                    lastMessageId = data.messages[data.messages.length - 1].message_id;
-                }
-            })
-            .catch(error => {
-                console.error('Error getting new messages:', error);
-            });
-        }
-        
+        // 🔥 PERUBAHAN: Update polling function
         function startPolling() {
-            setInterval(getNewMessages, 3000);
+            // Poll setiap 3 detik untuk pesan baru dari Support
+            setInterval(getNewInternalMessages, 3000);
         }
         
-        function addMessageToUI(messageData, isCurrentUser) {
-            const container = document.getElementById('conversationContainer');
-            if (!container) return;
-            
-            if (container.querySelector(`[data-message-id="${messageData.message_id}"]`)) {
-                return;
+        // Function untuk memainkan sound notification
+        function playNotificationSound() {
+            try {
+                // Ganti dengan path ke file sound notification Anda
+                const audio = new Audio('/assets/sounds/notification.mp3');
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            } catch (e) {
+                console.log('Could not play notification sound');
             }
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex gap-4 message-item ${isCurrentUser ? 'justify-end' : ''}`;
-            messageDiv.setAttribute('data-message-id', messageData.message_id);
-            
-            if (isCurrentUser) {
-                messageDiv.innerHTML = `
-                    <div class="flex flex-col max-w-[80%]">
-                        <div class="mb-1 text-right">
-                            <span class="text-gray-700 font-semibold text-sm">You</span>
-                            <span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">
-                                ${escapeHtml(messageData.sender_role || 'Department')}
-                            </span>
-                            <span class="ml-2 text-gray-500 text-xs">${messageData.time_ago || 'Just now'}</span>
-                        </div>
-                        <div class="bg-blue-50 border-blue-100 rounded-xl p-4 border">
-                            <p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(messageData.message)}</p>
-                            <div class="mt-1 text-xs text-gray-500 flex items-center gap-1">
-                                <i class="fas fa-lock text-xs"></i> Internal message
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const bgClass = messageData.sender_role === 'Support' ? 'bg-green-50 border-green-100' : 'bg-blue-50 border-blue-100';
-                const iconClass = messageData.sender_role === 'Support' ? 'fa-headset text-green-600' : 'fa-building text-blue-600';
-                const avatarBg = messageData.sender_role === 'Support' ? 'bg-green-100' : 'bg-blue-100';
-                
-                messageDiv.innerHTML = `
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 ${avatarBg} rounded-full flex items-center justify-center">
-                            <i class="fas ${iconClass}"></i>
-                        </div>
-                    </div>
-                    <div class="flex-1 max-w-[80%]">
-                        <div class="mb-1">
-                            <span class="text-gray-700 font-semibold text-sm">${escapeHtml(messageData.sender_name)}</span>
-                            <span class="ml-2 px-2 py-0.5 ${messageData.sender_role === 'Support' ? 'text-green-700 bg-green-50' : 'text-blue-700 bg-blue-50'} text-xs rounded">
-                                ${escapeHtml(messageData.sender_role)}
-                            </span>
-                            <span class="ml-2 text-gray-500 text-xs">${messageData.time_ago || 'Just now'}</span>
-                        </div>
-                        <div class="${bgClass} rounded-xl p-4 border">
-                            <p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(messageData.message)}</p>
-                            <div class="mt-1 text-xs text-gray-500 flex items-center gap-1">
-                                <i class="fas fa-lock text-xs"></i> Internal message
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.appendChild(messageDiv);
-            messageDiv.style.animation = 'slideIn 0.3s ease-out';
         }
         
+        // Function untuk scroll ke bottom
         function scrollToBottom() {
             const container = document.getElementById('conversationContainer');
             if (container) {

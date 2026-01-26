@@ -133,6 +133,12 @@ $routes->group('support', function ($routes) {
     $routes->get('department_conversation/(:num)', [SupportController::class, 'departmentConversation/$1']);
     $routes->get('profile', [SupportController::class, 'profile']);
 
+    // Route untuk chat internal (Support ke Department)
+$routes->get('support/chat/internal/(:num)', [SupportController::class, 'getInternalMessages/$1']);
+
+// Route untuk chat eksternal (Support ke Customer)
+$routes->get('support/chat/customer/(:num)', [SupportController::class, 'getCustomerMessages/$1']);
+
     // PERBAIKAN: Gunakan SupportController (yang sudah ada) bukan DepartmentTicketController
     $routes->get('department_ticket_detail/(:num)', [SupportController::class, 'departmentTicketDetail/$1']);
     $routes->post('department_chat/send/(:num)', [SupportController::class, 'sendDepartmentMessage/$1']);
@@ -199,6 +205,7 @@ $routes->group('department', function ($routes) {
     $routes->group('it-support', function ($routes) {
         $routes->get('dashboard', [DepartmentController::class, 'dashboard']);
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
+        $routes->post('ticket/mark_in_progress/(:num)', [DepartmentController::class, 'markAsInProgress/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
 
         // Resolution routes

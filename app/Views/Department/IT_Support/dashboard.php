@@ -112,106 +112,61 @@
 
         <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="w-full min-w-max">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header"
-                            data-sort="id">
-                            <div class="flex items-center gap-1">
-                                <span class="hidden sm:inline">Ticket ID</span>
-                                <span class="sm:hidden">ID</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header"
-                            data-sort="subject">
-                            <div class="flex items-center gap-1">
-                                <span>Subject</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden md:table-cell"
-                            data-sort="project">
-                            <div class="flex items-center gap-1">
-                                <span>Project</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header"
-                            data-sort="priority">
-                            <div class="flex items-center gap-1">
-                                <span class="hidden xs:inline">Priority</span>
-                                <span class="xs:hidden">Pri</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden sm:table-cell"
-                            data-sort="status">
-                            <div class="flex items-center gap-1">
-                                <span>Status</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 cursor-pointer sort-header hidden lg:table-cell"
-                            data-sort="updated">
-                            <div class="flex items-center gap-1">
-                                <span>Last Updated</span>
-                                <i class="fas fa-sort text-gray-400 ml-1 text-xs"></i>
-                            </div>
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="recentTicketsTable" class="divide-y divide-gray-200">
-                    <?php if (!empty($recent_tickets)): ?>
-                        <?php foreach ($recent_tickets as $ticket): ?>
-                            <tr class="bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                                <td class="py-3 px-4">
-                                    <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['ticket_number']) ?></span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <div>
-                                        <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-xs"><?= esc($ticket['subject']) ?></p>
-                                        <p class="text-gray-500 text-xs mt-1 md:hidden"><?= esc($ticket['project_name'] ?? 'No Project') ?></p>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-4 hidden md:table-cell">
-                                    <span class="text-gray-700 text-sm"><?= esc($ticket['project_name'] ?? 'No Project') ?></span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap">
-                                        <?= esc($ticket['priority_name']) ?>
-                                    </span>
-                                </td>
-                                <td class="py-3 px-4 hidden sm:table-cell">
-                                    <span class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap">
-                                        <?= esc($ticket['status_name']) ?>
-                                    </span>
-                                </td>
-                                <td class="py-3 px-4 hidden lg:table-cell">
-                                    <span class="text-gray-600 text-sm"><?= esc($ticket['time']) ?></span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <div class="flex items-center gap-2">
-                                        <a href="<?= base_url('department/it-support/ticket_detail/') . $ticket['ticket_id'] ?>" 
-                                           class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
-                                            <i class="fas fa-eye text-xs"></i>
-                                            <span>View</span>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="py-8 text-center text-gray-500">
-                                <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
-                                <p class="text-gray-400">No recent tickets found</p>
-                            </td>
-                        </tr>
+            <!-- Di bagian Recent Assigned Tickets Section, update table header: -->
+<table class="w-full min-w-max">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Ticket ID</th>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Subject</th>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 hidden md:table-cell">Assigned By</th>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Priority</th>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700 hidden sm:table-cell">Status</th>
+            <th class="py-3 px-4 text-left text-xs md:text-sm font-semibold text-gray-700">Action</th>
+        </tr>
+    </thead>
+    <tbody id="recentTicketsTable" class="divide-y divide-gray-200">
+    <?php if (!empty($recent_tickets)): ?>
+        <?php foreach ($recent_tickets as $ticket): ?>
+            <tr class="bg-white hover:bg-gray-50 transition-colors cursor-pointer" 
+                data-ticket-id="<?= $ticket['ticket_id'] ?>">
+                <td class="py-3 px-4">
+                    <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['ticket_number']) ?></span>
+                    <?php if (!empty($ticket['assigned_by_name'])): ?>
+                        <div class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-user-shield mr-1"></i>
+                            Assigned by: <?= esc($ticket['assigned_by_name']) ?>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </td>
+                <!-- ... kolom lainnya ... -->
+                <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                        <a href="<?= base_url('department/it-support/ticket_detail/') . $ticket['ticket_id'] ?>" 
+                           class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg hover:bg-blue-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>View</span>
+                        </a>
+                        <?php if (empty($ticket['assigned_to'])): ?>
+                            <button onclick="assignToMe(<?= $ticket['ticket_id'] ?>)" 
+                                    class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-lg hover:bg-green-200 transition-colors whitespace-nowrap flex items-center gap-1">
+                                <i class="fas fa-user-plus text-xs"></i>
+                                <span>Assign to Me</span>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="6" class="py-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                <p class="text-gray-400">No tickets assigned by Support yet</p>
+            </td>
+        </tr>
+    <?php endif; ?>
+</tbody>
+</table>
         </div>
 
         <!-- View All Footer -->
@@ -374,6 +329,34 @@
 </style>
 
 <script>
+    // Di bagian script, tambahkan:
+function assignToMe(ticketId) {
+    if (confirm('Assign this ticket to yourself?')) {
+        fetch(`<?= base_url('department/it-support/ticket/assign/') ?>${ticketId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Ticket assigned to you successfully', 'success');
+                // Reload setelah 1 detik
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showToast(data.message || 'Failed to assign ticket', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Network error', 'error');
+        });
+    }
+}
     document.addEventListener('DOMContentLoaded', function () {
         // Recent tickets data from PHP
         const recentTicketsData = <?= json_encode($recent_tickets) ?>;
@@ -422,20 +405,17 @@
         });
 
         // Table row click for recent tickets
-        document.querySelectorAll('#recentTicketsTable tr').forEach(row => {
-            row.addEventListener('click', function (e) {
-                if (!e.target.closest('a') && !e.target.closest('button')) {
-                    const ticketId = this.querySelector('td:first-child span')?.textContent;
-                    if (ticketId) {
-                        // Extract numeric ID from ticket number
-                        const idMatch = ticketId.match(/PROJ\d+-(\d+)/);
-                        if (idMatch) {
-                            window.location.href = `<?= base_url('department/it-support/ticket_detail/') ?>${idMatch[1]}`;
-                        }
-                    }
-                }
-            });
-        });
+document.querySelectorAll('#recentTicketsTable tr[data-ticket-id]').forEach(row => {
+    row.addEventListener('click', function (e) {
+        // Cegah jika klik pada link atau button
+        if (!e.target.closest('a') && !e.target.closest('button')) {
+            const ticketId = this.dataset.ticketId;
+            if (ticketId) {
+                window.location.href = `<?= base_url('department/it-support/ticket_detail/') ?>${ticketId}`;
+            }
+        }
+    });
+});
     });
 
     let recentSortDirection = 'desc';

@@ -590,25 +590,181 @@ function getToastIcon(type) {
 // Internal Status Management
 let currentInternalStatus = '<?= $ticket['internal_status'] ?? 'pending' ?>';
 
+// Update di Support view - modal reopen
 function openInternalStatusModal() {
     const modal = document.getElementById('internalStatusModal');
     const reopenOption = document.getElementById('reopenOption');
     const statusSelect = document.getElementById('internalStatusSelect');
+    const checkboxLabel = document.querySelector('#reopenOption span');
+    const checkboxDescription = document.querySelector('#reopenOption p');
     
     // Set current value
     statusSelect.value = currentInternalStatus;
     
     // Show/hide reopen option based on selected status
     statusSelect.addEventListener('change', function() {
-        reopenOption.classList.toggle('hidden', this.value !== 'reopened');
+        const showReopenOption = this.value === 'reopened';
+        reopenOption.classList.toggle('hidden', !showReopenOption);
+        
+        if (this.value === 'reopened') {
+            // Set label dan description yang jelas
+            checkboxLabel.textContent = 'Allow department to make corrections';
+            checkboxDescription.textContent = 
+                'If checked: Department can mark as resolved again. ' +
+                'If unchecked: Department can only chat, cannot mark as resolved.';
+        }
     });
     
     // Trigger initial check
-    reopenOption.classList.toggle('hidden', statusSelect.value !== 'reopened');
+    const initialShow = statusSelect.value === 'reopened';
+    reopenOption.classList.toggle('hidden', !initialShow);
     
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
+
+function fetchInternalMessages() {
+    const ticketId = <?= $ticket_id ?>;
+    
+    // Pastikan URL ini memanggil fungsi getInternalMessages di SupportController
+    fetch(`<?= base_url('support/internal_chat/messages/') ?>${ticketId}`, {
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const container = document.getElementById('conversationContainer');
+            if (container) {
+                container.innerHTML = '';
+                data.messages.forEach(msg => {
+                    // Hanya render pesan dari internal_chat_messages untuk internal chat
+                    appendInternalMessage(msg);
+                });
+            }
+        }
+    });
+}
+
+// 🔥 PERBAIKAN: Function appendInternalMessage hanya untuk internal messages
+function appendInternalMessage(msg) {
+    const container = document.getElementById('conversationContainer');
+    if (!container) return;
+    
+    const isDepartment = msg.sender_role === 'Department' || msg.sender_role === 'Department Member';
+    const isSupport = msg.sender_role === 'Support' || msg.role_name === 'Support';
+    
+    // Hanya tampilkan pesan untuk internal conversation
+    if (isDepartment || isSupport || msg.sender_role === 'System') {
+        const messageDate = new Date(msg.created_at);
+        const formattedDate = messageDate.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        // Create message HTML
+        const messageHTML = `
+            <div class="flex gap-4 message-item">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 ${isSupport ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center">
+                        ${isSupport ? 
+                            '<i class="fas fa-headset text-green-600"></i>' : 
+                            '<i class="fas fa-building text-blue-600"></i>'
+                        }
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div>
+                            <span class="text-gray-800 font-semibold">${escapeHtml(msg.sender_name || 'Unknown')}</span>
+                            <span class="ml-2 px-2 py-0.5 ${isSupport ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'} text-xs rounded">
+                                ${escapeHtml(msg.sender_role || msg.role_name || 'User')}
+                            </span>
+                        </div>
+                        <div class="text-gray-500 text-sm ml-auto">
+                            <i class="far fa-clock mr-1"></i>
+                            ${messageDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
+                    <div class="${isSupport ? 'bg-green-50 border-green-100' : 'bg-blue-50 border-blue-100'} rounded-xl p-4 border">
+                        <p class="text-gray-700">${escapeHtml(msg.message || '')}</p>
+                        <div class="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                            <i class="fas fa-lock text-xs"></i> Internal message
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', messageHTML);
+    }
+}
+
+// 🔥 PERBAIKAN: Function untuk mengirim pesan internal
+function sendInternalMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+        showToast('Please enter a message', 'warning');
+        return;
+    }
+    
+    // 🔥 PERHATIAN: Kirim dengan flag is_internal = true (untuk internal chat)
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('is_internal', 'true'); // 🔥 PENTING: true untuk internal
+    
+    fetch(`<?= base_url('support/internal_chat/send/') ?><?= $ticket_id ?>`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-RequestedWith': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageInput.value = '';
+            
+            // Tambahkan pesan ke UI
+            if (data.data) {
+                appendInternalMessage(data.data);
+            }
+            
+            showToast('Internal message sent successfully', 'success');
+        } else {
+            showToast(data.message || 'Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error. Please try again.', 'error');
+    });
+}
+
+// Helper function
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event listener untuk send button di internal chat
+document.addEventListener('DOMContentLoaded', function() {
+    const sendBtn = document.getElementById('sendMessageBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            sendInternalMessage();
+        });
+    }
+    
+    // Load internal messages on page load
+    fetchInternalMessages();
+});
 
 function closeInternalStatusModal() {
     const modal = document.getElementById('internalStatusModal');

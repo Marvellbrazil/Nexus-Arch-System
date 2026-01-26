@@ -13,6 +13,7 @@ use App\Models\TicketAttachmentModel;
 use App\Models\CategoryModel;
 use App\Models\DepartmentModel;
 use App\Models\CategoryDepartmentMapping;
+use App\Models\CategoryDepartmentMappingModel;
 use CodeIgniter\I18n\Time;
 
 class CustomerController extends BaseController
@@ -29,7 +30,7 @@ class CustomerController extends BaseController
     private $categoryModel;
     private $departmentModel;
     private $categoryDepartmentMapping;
-    private $db;
+    protected $db;
     private $currentTime;
 
     public function __construct()
@@ -49,7 +50,7 @@ class CustomerController extends BaseController
         $this->ticketAttachmentModel = new TicketAttachmentModel();
         $this->categoryModel = new CategoryModel();
         $this->departmentModel = new DepartmentModel();
-        $this->categoryDepartmentMapping = new CategoryDepartmentMapping();
+        $this->categoryDepartmentMapping = new CategoryDepartmentMappingModel();
 
         // load common data
         $this->currentTime = Time::now(env('app.timezone'))->toDateTimeString();
@@ -543,153 +544,117 @@ public function uploadAttachment()
         return view('Customer/project_detail', $data);
     }
 
-    // Di method updateProfile() - REPLACE dengan ini:
-
-    public function updateProfile()
-    {
-        // Debug: Log semua input
-        $postData = $this->request->getPost();
-        log_message('debug', 'POST Data: ' . print_r($postData, true));
-
-        // Validation rules
-        $validationRules = [
-            'full_name' => 'required|min_length[3]|max_length[100]',
-            'phone_number' => 'permit_empty|min_length[10]|max_length[20]',
-            'current_password' => 'permit_empty',
-            'new_password' => 'permit_empty|min_length[6]',
-            'confirm_password' => 'matches[new_password]',
-        ];
-
-        // Validate
-        if (!$this->validate($validationRules)) {
-            $errors = $this->validator->getErrors();
-            log_message('error', 'Validation errors: ' . print_r($errors, true));
-            return redirect()->back()->withInput()->with('errors', $errors);
+public function updateProfile()
+{
+    // Debug
+    log_message('debug', '=== UPDATE PROFILE CALLED ===');
+    
+    $userId = session()->get('user_id');
+    if (!$userId) {
+        return redirect()->to('/login')->with('error', 'Session expired');
+    }
+    
+    // Get POST data
+    $postData = $this->request->getPost();
+    log_message('debug', 'POST: ' . print_r($postData, true));
+    
+    // Validation
+    $validation = \Config\Services::validation();
+    $rules = [
+        'full_name' => 'required|min_length[3]|max_length[100]',
+        'phone_number' => 'permit_empty|min_length[10]|max_length[20]',
+    ];
+    
+    if (!$validation->setRules($rules)->run($postData)) {
+        return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+    }
+    
+    // Prepare update data
+    $updateData = [
+        'full_name' => $postData['full_name'],
+        'updated_at' => date('Y-m-d H:i:s')
+    ];
+    
+    // Handle phone number
+    if (!empty($postData['phone_number'])) {
+        $updateData['phone_number'] = $postData['phone_number'];
+    } else {
+        $updateData['phone_number'] = null;
+    }
+    
+    // Handle file upload
+    $photo = $this->request->getFile('photo_profile');
+    if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+        log_message('debug', 'File uploaded: ' . $photo->getName());
+        
+        $uploadDir = FCPATH . 'uploads/profile/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
         }
-
-        // Get current user
-        $userModel = new UserModel();
-        $currentUser = $userModel->find($this->userId);
-
-        if (!$currentUser) {
-            return redirect()->back()->with('error', 'User not found');
+        
+        // Delete old photo if exists
+        $oldPhoto = $this->userModel->find($userId)['photo_profile'] ?? null;
+        if ($oldPhoto && file_exists(FCPATH . $oldPhoto)) {
+            unlink(FCPATH . $oldPhoto);
         }
-
-        // Prepare update data - PERHATIKAN NAMA FIELD DATABASE
-        $updateData = [
-            'full_name' => $postData['full_name'],
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        // Add phone number if provided
-        if (!empty($postData['phone_number'])) {
-            $updateData['phone_number'] = $postData['phone_number'];
-        } else {
-            $updateData['phone_number'] = null; // Set to null if empty
-        }
-
-        // Handle password change
-        if (!empty($postData['current_password'])) {
-            if (!password_verify($postData['current_password'], $currentUser['password'])) {
-                log_message('debug', 'Password verification failed');
-                return redirect()->back()->with('error', 'Current password is incorrect');
-            }
-
-            // Check new password
-            if (empty($postData['new_password'])) {
-                return redirect()->back()->with('error', 'New password is required');
-            }
-
-            if ($postData['new_password'] !== $postData['confirm_password']) {
-                return redirect()->back()->with('error', 'New password and confirmation do not match');
-            }
-
-            // Hash new password
-            $updateData['password'] = password_hash($postData['new_password'], PASSWORD_DEFAULT);
-            log_message('debug', 'Password will be updated');
-        }
-
-        // Handle file upload
-        $photo = $this->request->getFile('photo_profile');
-        log_message('debug', 'File upload check: ' . ($photo ? 'File exists' : 'No file'));
-
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            log_message('debug', 'File is valid: ' . $photo->getName());
-
-            // Define upload directory
-            $uploadDir = FCPATH . 'uploads/profile/'; // FCPATH = public/
-
-            // Create directory if not exists
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            // Delete old photo if exists
-            if (!empty($currentUser['photo_profile'])) {
-                $oldPhotoPath = WRITEPATH . $currentUser['photo_profile'];
-                if (file_exists($oldPhotoPath)) {
-                    unlink($oldPhotoPath);
-                    log_message('debug', 'Old photo deleted: ' . $oldPhotoPath);
-                }
-            }
-
-            // Generate new filename
-            $newName = $photo->getRandomName();
-
-            // Move file
-            if ($photo->move($uploadDir, $newName)) {
-                $updateData['photo_profile'] = 'uploads/profile/' . $newName;
-                log_message('debug', 'File uploaded: ' . $updateData['photo_profile']);
-            } else {
-                log_message('error', 'File move failed: ' . $photo->getErrorString());
-                return redirect()->back()->with('error', 'Failed to upload profile photo');
-            }
-        }
-
-        // Debug before update
-        log_message('debug', 'Final update data: ' . print_r($updateData, true));
-
-        // Update database
-        try {
-            $result = $userModel->update($this->userId, $updateData);
-            log_message('debug', 'Update result: ' . ($result ? 'true' : 'false'));
-
-            if ($result) {
-                // Get updated user data
-                $updatedUser = $userModel->find($this->userId);
-                log_message('debug', 'Updated user phone: ' . ($updatedUser['phone_number'] ?? 'null'));
-
-                // Update session
-                session()->set([
-                    'full_name' => $updatedUser['full_name'],
-                    'photo_profile' => $updatedUser['photo_profile'] ?? null
-                ]);
-
-                // Also update phone in session if needed
-                if (isset($updatedUser['phone_number'])) {
-                    session()->set('phone_number', $updatedUser['phone_number']);
-                }
-
-                log_message('debug', 'Profile updated successfully');
-                return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
-            } else {
-                $error = $userModel->errors();
-                log_message('error', 'Model errors: ' . print_r($error, true));
-
-                // Check database error
-                $dbError = $this->db->error();
-                if ($dbError) {
-                    log_message('error', 'Database error: ' . print_r($dbError, true));
-                }
-
-                return redirect()->back()->with('error', 'Failed to update profile. Please try again.');
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Exception: ' . $e->getMessage());
-            log_message('error', 'Trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        
+        // Generate new filename
+        $newName = $photo->getRandomName();
+        
+        // Move file
+        if ($photo->move($uploadDir, $newName)) {
+            $updateData['photo_profile'] = 'uploads/profile/' . $newName;
+            log_message('debug', 'New photo path: ' . $updateData['photo_profile']);
         }
     }
+    
+    // Handle password change
+    if (!empty($postData['current_password'])) {
+        $user = $this->userModel->find($userId);
+        
+        if (!password_verify($postData['current_password'], $user['password'])) {
+            return redirect()->back()->with('error', 'Current password incorrect');
+        }
+        
+        if (!empty($postData['new_password']) && 
+            $postData['new_password'] === $postData['confirm_password']) {
+            $updateData['password'] = password_hash($postData['new_password'], PASSWORD_DEFAULT);
+        }
+    }
+    
+    // Update database - gunakan query builder langsung untuk PostgreSQL
+    $db = db_connect();
+    
+    try {
+        $builder = $db->table('users');
+        $builder->where('user_id', $userId);
+        $result = $builder->update($updateData);
+        
+        log_message('debug', 'Update result: ' . ($result ? 'true' : 'false'));
+        
+        if ($result) {
+            // Update session
+            session()->set([
+                'full_name' => $updateData['full_name'],
+                'photo_profile' => $updateData['photo_profile'] ?? session()->get('photo_profile')
+            ]);
+            
+            if (isset($updateData['phone_number'])) {
+                session()->set('phone_number', $updateData['phone_number']);
+            }
+            
+            return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
+        } else {
+            $error = $db->error();
+            log_message('error', 'DB error: ' . print_r($error, true));
+            return redirect()->back()->with('error', 'Database update failed');
+        }
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Exception: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+    }
+}
 
     public function profile()
     {
