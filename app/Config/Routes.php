@@ -51,7 +51,7 @@ $routes->group('admin', function ($routes) {
         $routes->post('ajax-change-status/(:num)', 'AdminController::ajaxChangeStatus/$1');
     });
 
-// AJAX Department Management - Put this BEFORE main routes
+    // AJAX Department Management - Put this BEFORE main routes
     $routes->post('departments/ajax', [AdminController::class, 'ajaxDepartments']);
     $routes->post('departments/get-categories', [AdminController::class, 'ajaxDepartments']);
 
@@ -83,7 +83,8 @@ $routes->group('admin', function ($routes) {
         $routes->get('/', [AdminController::class, 'viewTickets']);
         $routes->get('details/(:num)', 'AdminController::getTicketDetails/$1');
         $routes->get('statistics', [AdminController::class, 'getTicketStatistics']);
-        $routes->get('export', [AdminController::class, 'exportTickets']);
+        $routes->post('ajax', [AdminController::class, 'ajaxManageTickets']);
+        $routes->post('delete', [AdminController::class, 'deleteTicket']);
     });
 
     $routes->get('settings', [AdminController::class, 'systemSettings']);
@@ -132,12 +133,6 @@ $routes->group('support', function ($routes) {
     $routes->get('ticket_in_progress', [SupportController::class, 'ticketInProgress']);
     $routes->get('department_conversation/(:num)', [SupportController::class, 'departmentConversation/$1']);
     $routes->get('profile', [SupportController::class, 'profile']);
-
-    // Route untuk chat internal (Support ke Department)
-$routes->get('support/chat/internal/(:num)', [SupportController::class, 'getInternalMessages/$1']);
-
-// Route untuk chat eksternal (Support ke Customer)
-$routes->get('support/chat/customer/(:num)', [SupportController::class, 'getCustomerMessages/$1']);
 
     // PERBAIKAN: Gunakan SupportController (yang sudah ada) bukan DepartmentTicketController
     $routes->get('department_ticket_detail/(:num)', [SupportController::class, 'departmentTicketDetail/$1']);
@@ -205,7 +200,6 @@ $routes->group('department', function ($routes) {
     $routes->group('it-support', function ($routes) {
         $routes->get('dashboard', [DepartmentController::class, 'dashboard']);
         $routes->post('ticket/assign/(:num)', [DepartmentController::class, 'assignTicketToMe/$1']);
-        $routes->post('ticket/mark_in_progress/(:num)', [DepartmentController::class, 'markAsInProgress/$1']);
         $routes->post('ticket/update_status/(:num)', [DepartmentController::class, 'updateTicketStatus/$1']);
 
         // Resolution routes

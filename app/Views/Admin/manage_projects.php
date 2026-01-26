@@ -211,7 +211,7 @@
                         </button>
                         <button class="w-full py-3 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed" disabled>
                             <i class="fas fa-power-off mr-2"></i>
-                            Change Status
+                            Deactive Project
                         </button>
                     </div>
                 </div>

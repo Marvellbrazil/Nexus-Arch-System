@@ -56,10 +56,11 @@ class TicketModel extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    public function store($data){
-    $db = db_connect()->table('tickets');   
+    public function store($data)
+    {
+        $db = db_connect()->table('tickets');
 
-    return $db ->insert( $data);
+        return $db->insert($data);
     }
 
     /**
@@ -492,14 +493,14 @@ class TicketModel extends Model
     // ==================== METHODS UNTUK ADMIN VIEW TICKETS ====================
 
     /**
-     * Get tickets for admin view with all details
+     * Get tickets for admin view with all details - FIXED VERSION untuk PostgreSQL
      */
     public function getTicketsForAdmin(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $db = db_connect();
         $builder = $db->table('tickets t');
 
-        // Base query
+        // Base query - FIXED: Tambahkan LEFT JOIN untuk semua tabel
         $builder->select("
         t.ticket_id, 
         t.ticket_number, 
@@ -531,13 +532,15 @@ class TicketModel extends Model
         $this->applyAdminTicketFilters($builder, $filters);
 
         // Apply pagination
-        $builder->limit($limit, $offset);
+        if ($limit > 0) {
+            $builder->limit($limit, $offset);
+        }
 
         return $builder->get()->getResultArray();
     }
 
     /**
-     * Count tickets for admin with filters
+     * Count tickets for admin with filters - FIXED VERSION
      */
     public function countTicketsForAdmin(array $filters = []): int
     {
@@ -555,48 +558,63 @@ class TicketModel extends Model
     }
 
     /**
-     * Apply filters for admin ticket view
+     * Apply filters for admin ticket view - FIXED VERSION untuk PostgreSQL
      */
     private function applyAdminTicketFilters(&$builder, $filters): void
     {
-        // Search filter
+        // Search filter - FIXED untuk PostgreSQL
         if (!empty($filters['search'])) {
-            $builder->groupStart()
-                ->like('t.ticket_number', $filters['search'])
-                ->orLike('t.subject', $filters['search'])
-                ->orLike('t.description', $filters['search'])
-                ->orLike('u_customer.full_name', $filters['search'])
-                ->orLike('u_customer.email', $filters['search'])
-                ->groupEnd();
+            $searchTerm = trim($filters['search']);
+            if (!empty($searchTerm)) {
+                $builder->groupStart()
+                    ->like('t.ticket_number', $searchTerm, 'both', null, true)
+                    ->orLike('t.subject', $searchTerm, 'both', null, true)
+                    ->orLike('t.description', $searchTerm, 'both', null, true)
+                    ->orLike('u_customer.full_name', $searchTerm, 'both', null, true)
+                    ->orLike('u_customer.email', $searchTerm, 'both', null, true)
+                    ->groupEnd();
+            }
         }
 
-        // Priority filter
+        // Priority filter - FIXED: Handle string seperti "high", "medium", "low"
         if (!empty($filters['priority'])) {
-            $builder->where('p.priority_name', $filters['priority']);
+            if ($filters['priority'] === 'low') {
+                $builder->where('LOWER(p.priority_name)', 'low');
+            } elseif ($filters['priority'] === 'medium') {
+                $builder->where('LOWER(p.priority_name)', 'medium');
+            } elseif ($filters['priority'] === 'high') {
+                $builder->where('LOWER(p.priority_name)', 'high');
+            } elseif ($filters['priority'] === 'urgent') {
+                $builder->where('LOWER(p.priority_name)', 'urgent');
+            }
         }
 
-        // Department filter
+        // Department filter - FIXED: Handle string dengan hyphens
         if (!empty($filters['department'])) {
-            $builder->where('d.department_name', $filters['department']);
+            $deptValue = str_replace('-', ' ', $filters['department']);
+            $builder->where('LOWER(d.department_name)', strtolower($deptValue));
         }
 
-        // Status filter
+        // Status filter - FIXED: Handle string dengan hyphens
         if (!empty($filters['status'])) {
-            $builder->where('s.status_name', $filters['status']);
+            $statusValue = str_replace('-', ' ', $filters['status']);
+            $builder->where('LOWER(s.status_name)', strtolower($statusValue));
         }
 
-        // Date range filter
+        // Date range filter - FIXED untuk PostgreSQL date format
         if (!empty($filters['date_from'])) {
-            $builder->where('DATE(t.created_at) >=', $filters['date_from']);
+            $dateFrom = date('Y-m-d', strtotime($filters['date_from']));
+            $builder->where("DATE(t.created_at) >= ", $dateFrom);
         }
 
         if (!empty($filters['date_to'])) {
-            $builder->where('DATE(t.created_at) <=', $filters['date_to']);
+            $dateTo = date('Y-m-d', strtotime($filters['date_to']));
+            $builder->where("DATE(t.created_at) <= ", $dateTo);
         }
 
         // Customer filter
         if (!empty($filters['customer_id'])) {
-            $builder->where('t.customer_id', $filters['customer_id']);
+            $builder->where('t.customer_id', (int)$filters['customer_id']);
         }
     }
 
@@ -773,38 +791,38 @@ class TicketModel extends Model
 
     // Di TicketModel.php - Tambahkan method ini
 
-/**
- * Update ticket status
- */
-public function updateTicketStatus($ticketId, $statusId, $resolvedBy = null)
-{
-    $data = [
-        'status_id' => $statusId,
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-    
-    if ($statusId == 3 || $statusId == 4) { // Resolved atau Closed
-        $data['resolved_at'] = date('Y-m-d H:i:s');
-        if ($resolvedBy) {
-            $data['resolved_by'] = $resolvedBy;
-        }
-    }
-    
-    return $this->update($ticketId, $data);
-}
+    /**
+     * Update ticket status
+     */
+    public function updateTicketStatus($ticketId, $statusId, $resolvedBy = null)
+    {
+        $data = [
+            'status_id' => $statusId,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
-/**
- * Get status ID by name
- */
-public function getStatusIdByName($statusName)
-{
-    $db = db_connect();
-    $status = $db->table('statuses')
-        ->select('status_id')
-        ->where('status_name', $statusName)
-        ->get()
-        ->getRowArray();
-    
-    return $status ? $status['status_id'] : null;
-}
+        if ($statusId == 3 || $statusId == 4) { // Resolved atau Closed
+            $data['resolved_at'] = date('Y-m-d H:i:s');
+            if ($resolvedBy) {
+                $data['resolved_by'] = $resolvedBy;
+            }
+        }
+
+        return $this->update($ticketId, $data);
+    }
+
+    /**
+     * Get status ID by name
+     */
+    public function getStatusIdByName($statusName)
+    {
+        $db = db_connect();
+        $status = $db->table('statuses')
+            ->select('status_id')
+            ->where('status_name', $statusName)
+            ->get()
+            ->getRowArray();
+
+        return $status ? $status['status_id'] : null;
+    }
 }
