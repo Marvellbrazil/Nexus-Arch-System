@@ -60,11 +60,11 @@
             </div>
         </div>
 
-        <!-- Resolved Card -->
-        <div class="bg-gradient-to-r from-[#AEA2CA] to-[#C4B8E0] rounded-2xl p-4 md:p-6 text-white">
+        <!-- Approved Card -->
+        <div class="bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-2xl p-4 md:p-6 text-white">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <div class="text-white/80 text-sm md:text-base mb-1">Resolved</div>
+                    <div class="text-white/80 text-sm md:text-base mb-1">Approved</div>
                     <div class="text-3xl md:text-5xl font-bold"><?= $stats['resolved_week'] ?? 0 ?></div>
                 </div>
                 <div class="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-xl flex items-center justify-center">
@@ -72,7 +72,7 @@
                 </div>
             </div>
             <div class="text-white/60 text-xs md:text-sm">
-                Successfully resolved this week
+                Successfully approved this week
             </div>
         </div>
     </div>
@@ -111,7 +111,7 @@
                     <option value="all">All Status</option>
                     <option value="in-progress">In Progress</option>
                     <option value="waiting-customer-reply">Waiting for Customer</option>
-                    <option value="resolved">Resolved</option>
+                    <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                     <option value="forwarded">Forwarded</option>
                 </select>
@@ -185,31 +185,71 @@
                             break;
                     }
 
-                    // Determine status
-                    $status = strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'in-progress'));
-                    $statusColor = 'bg-gray-100 text-gray-800';
-                    $statusText = $ticket['status_name'] ?? 'In Progress';
-
-                    switch ($status) {
-                        case 'in-progress':
-                        case 'processing':
-                            $statusColor = 'bg-[#434264] text-white';
-                            break;
-                        case 'waiting-customer-reply':
-                        case 'waiting-customer':
-                            $statusColor = 'bg-[#817CB2] text-white';
-                            $statusText = 'Waiting for Customer';
-                            break;
-                        case 'resolved':
-                        case 'closed':
-                            $statusColor = 'bg-[#ABA0C8] text-white';
-                            break;
-                        case 'pending':
-                            $statusColor = 'bg-yellow-100 text-yellow-800';
-                            break;
-                        case 'forwarded':
-                            $statusColor = 'bg-purple-100 text-purple-800';
-                            break;
+                    // 🔥 PERUBAHAN UTAMA: Check internal_status untuk menentukan tampilan
+                    $statusText = 'In Progress';
+                    $statusColor = 'bg-[#434264] text-white';
+                    
+                    if (isset($ticket['internal_status'])) {
+                        switch ($ticket['internal_status']) {
+                            case 'approved':
+                                $statusColor = 'bg-green-100 text-green-800';
+                                $statusText = 'Approved';
+                                break;
+                            case 'rejected':
+                                $statusColor = 'bg-red-100 text-red-800';
+                                $statusText = 'Rejected';
+                                break;
+                            case 'review_needed':
+                                $statusColor = 'bg-yellow-100 text-yellow-800';
+                                $statusText = 'Review Needed';
+                                break;
+                            case 'testing':
+                                $statusColor = 'bg-blue-100 text-blue-800';
+                                $statusText = 'Testing';
+                                break;
+                            case 'reopened':
+                                $statusColor = 'bg-purple-100 text-purple-800';
+                                $statusText = 'Reopened';
+                                break;
+                            case 'reopened_no':
+                                $statusColor = 'bg-indigo-100 text-indigo-800';
+                                $statusText = 'Review Only';
+                                break;
+                            case 'pending':
+                            default:
+                                $statusColor = 'bg-[#434264] text-white';
+                                $statusText = 'In Progress';
+                                break;
+                        }
+                    } else {
+                        // Fallback ke status lama jika internal_status tidak ada
+                        $status = strtolower(str_replace(' ', '-', $ticket['status_name'] ?? 'in-progress'));
+                        
+                        switch ($status) {
+                            case 'in-progress':
+                            case 'processing':
+                                $statusColor = 'bg-[#434264] text-white';
+                                $statusText = 'In Progress';
+                                break;
+                            case 'waiting-customer-reply':
+                            case 'waiting-customer':
+                                $statusColor = 'bg-[#817CB2] text-white';
+                                $statusText = 'Waiting for Customer';
+                                break;
+                            case 'resolved':
+                            case 'closed':
+                                $statusColor = 'bg-[#ABA0C8] text-white';
+                                $statusText = 'Resolved';
+                                break;
+                            case 'pending':
+                                $statusColor = 'bg-yellow-100 text-yellow-800';
+                                $statusText = 'Pending';
+                                break;
+                            case 'forwarded':
+                                $statusColor = 'bg-purple-100 text-purple-800';
+                                $statusText = 'Forwarded';
+                                break;
+                        }
                     }
 
                     // Determine department slug
@@ -237,13 +277,13 @@
                     }
                     ?>
                     <div class="p-4 md:p-6 hover:bg-gray-50 transition-colors ticket-card" data-priority="<?= $priority ?>"
-                        data-status="<?= $status ?>" data-department="<?= $department ?>" data-search="<?= htmlspecialchars(strtolower(
+                        data-status="<?= strtolower($statusText) ?>" data-department="<?= $department ?>" data-search="<?= htmlspecialchars(strtolower(
                                 ($ticket['subject'] ?? '') . ' ' .
                                 ($ticket['customer_name'] ?? '') . ' ' .
                                 ($ticket['department_name'] ?? '') . ' ' .
                                 ($ticket['project_name'] ?? '') . ' ' .
                                 ($ticket['ticket_id'] ?? '')
-                            )) ?>">
+                            )) ?>" data-internal-status="<?= $ticket['internal_status'] ?? '' ?>">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <!-- Left Section -->
                             <div class="flex-1">
@@ -257,6 +297,22 @@
                                     <span class="px-3 py-1 <?= $statusColor ?> text-xs rounded-full font-medium">
                                         <?= $statusText ?>
                                     </span>
+                                    
+                                    <!-- 🔥 TAMBAHKAN: Approved badge jika ticket sudah approved -->
+                                    <?php if (isset($ticket['internal_status']) && $ticket['internal_status'] === 'approved'): ?>
+                                        <span class="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                            <i class="fas fa-check-circle text-xs"></i>
+                                            Approved
+                                        </span>
+                                    <?php endif; ?>
+                                    
+                                    <!-- 🔥 TAMBAHKAN: Department resolved badge jika sudah di-resolve oleh department -->
+                                    <?php if (!empty($ticket['department_resolved_at'])): ?>
+                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                            <i class="fas fa-check text-xs"></i>
+                                            Dept Resolved
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <h3 class="text-gray-800 font-semibold text-base md:text-lg mb-1">
                                     <?= htmlspecialchars($ticket['subject'] ?? 'No Subject') ?>
@@ -285,6 +341,32 @@
                                         </span>
                                     <?php endif; ?>
                                 </div>
+                                
+                                <!-- 🔥 TAMBAHKAN: Internal status info -->
+                                <?php if (isset($ticket['internal_status']) && $ticket['internal_status'] !== 'pending'): ?>
+                                    <div class="mt-2 text-xs text-gray-500 flex items-center gap-2">
+                                        <i class="fas fa-info-circle text-xs"></i>
+                                        <span>
+                                            <?php 
+                                            $statusMessages = [
+                                                'approved' => '✅ Approved by Support',
+                                                'rejected' => '❌ Rejected - Needs correction',
+                                                'review_needed' => '🔍 Needs review',
+                                                'testing' => '🧪 Under testing',
+                                                'reopened' => '🔄 Reopened for corrections',
+                                                'reopened_no' => '💬 Reopened for review only'
+                                            ];
+                                            echo $statusMessages[$ticket['internal_status']] ?? 'Under review';
+                                            ?>
+                                            
+                                            <?php if (!empty($ticket['approved_at'])): ?>
+                                                • <?= date('M d, H:i', strtotime($ticket['approved_at'])) ?>
+                                            <?php elseif (!empty($ticket['department_resolved_at'])): ?>
+                                                • Dept resolved: <?= date('M d, H:i', strtotime($ticket['department_resolved_at'])) ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Middle Section -->
@@ -305,20 +387,20 @@
 
                             <!-- Right Section -->
                             <div class="flex flex-col sm:flex-row gap-2">
-<!-- Di file ticket_in_progress.php, update tombol Department Chat: -->
-<?php if (!empty($ticket['department_id'])): ?>
-    <a href="<?= base_url('support/department_ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
-        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
-        <i class="fas fa-comments"></i>
-        <span>Department Chat</span>
-    </a>
-<?php else: ?>
-    <button onclick="assignDepartment(<?= $ticket['ticket_id'] ?? 0 ?>)"
-        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
-        <i class="fas fa-share-alt"></i>
-        <span>Assign Department</span>
-    </button>
-<?php endif; ?>
+                                <!-- 🔥 PERUBAHAN: Department Chat button -->
+                                <?php if (!empty($ticket['department_id'])): ?>
+                                    <a href="<?= base_url('support/department_ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
+                                        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
+                                        <i class="fas fa-comments"></i>
+                                        <span>Department Chat</span>
+                                    </a>
+                                <?php else: ?>
+                                    <button onclick="assignDepartment(<?= $ticket['ticket_id'] ?? 0 ?>)"
+                                        class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
+                                        <i class="fas fa-share-alt"></i>
+                                        <span>Assign Department</span>
+                                    </button>
+                                <?php endif; ?>
 
                                 <a href="<?= base_url('support/ticket_detail/' . ($ticket['ticket_id'] ?? '')) ?>"
                                     class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[120px]">
@@ -393,14 +475,14 @@
                                     <span class="font-medium"><?= $dept['in_progress'] ?? 0 ?></span>
                                 </div>
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Resolved</span>
-                                    <span class="font-medium text-green-600"><?= $dept['resolved'] ?? 0 ?></span>
+                                    <span class="text-gray-600">Approved</span>
+                                    <span class="font-medium text-green-600"><?= $dept['approved'] ?? 0 ?></span>
                                 </div>
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Avg. Time</span>
                                     <span class="font-medium">
                                         <?php
-                                        $avgTime = $dept['avg_time_hours'] ?? 0;
+                                        $avgTime = $dept['avg_approval_hours'] ?? 0;
                                         if ($avgTime == 0) {
                                             echo 'N/A';
                                         } elseif ($avgTime < 1) {
@@ -491,6 +573,12 @@
     .ticket-card[data-priority="urgent"] {
         border-left: 4px solid #ef4444;
     }
+    
+    /* Highlight approved tickets */
+    .ticket-card[data-internal-status="approved"] {
+        border-left: 4px solid #10B981;
+        background-color: #f0fdf4;
+    }
 </style>
 
 <script>
@@ -529,8 +617,20 @@
                     card.dataset.search.includes(searchTerm);
                 const matchesPriority = priorityValue === 'all' ||
                     card.dataset.priority === priorityValue;
-                const matchesStatus = statusValue === 'all' ||
-                    card.dataset.status === statusValue.replace(' ', '-');
+                
+                // 🔥 PERUBAHAN: Filter berdasarkan status (internal_status)
+                let matchesStatus = true;
+                if (statusValue !== 'all') {
+                    if (statusValue === 'approved') {
+                        matchesStatus = card.dataset.internalStatus === 'approved';
+                    } else if (statusValue === 'in-progress') {
+                        matchesStatus = card.dataset.internalStatus !== 'approved' && 
+                                       card.dataset.internalStatus !== '';
+                    } else {
+                        matchesStatus = card.dataset.status === statusValue.replace(' ', '-');
+                    }
+                }
+                
                 const matchesDepartment = departmentValue === 'all' ||
                     card.dataset.department === departmentValue;
 
@@ -671,28 +771,35 @@
 
         // Function to create ticket card HTML
         function createTicketCard(ticket) {
+            // Determine priority color
             const priorityColor = ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                 ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
                     ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-blue-100 text-blue-800';
 
-            const statusColor = ticket.status === 'in-progress' || ticket.status === 'processing'
-                ? 'bg-[#434264] text-white' :
-                ticket.status === 'waiting-customer-reply' || ticket.status === 'waiting-customer'
-                    ? 'bg-[#817CB2] text-white' :
-                    ticket.status === 'resolved' || ticket.status === 'closed'
-                        ? 'bg-[#ABA0C8] text-white' :
-                        ticket.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800';
-
-            const statusText = ticket.status === 'in-progress' || ticket.status === 'processing'
-                ? 'In Progress' :
-                ticket.status === 'waiting-customer-reply' || ticket.status === 'waiting-customer'
-                    ? 'Waiting for Customer' :
-                    ticket.status === 'resolved' || ticket.status === 'closed'
-                        ? 'Resolved' :
-                        ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1);
+            // Determine status based on internal_status
+            let statusColor = 'bg-[#434264] text-white';
+            let statusText = 'In Progress';
+            
+            if (ticket.internal_status === 'approved') {
+                statusColor = 'bg-green-100 text-green-800';
+                statusText = 'Approved';
+            } else if (ticket.internal_status === 'rejected') {
+                statusColor = 'bg-red-100 text-red-800';
+                statusText = 'Rejected';
+            } else if (ticket.internal_status === 'review_needed') {
+                statusColor = 'bg-yellow-100 text-yellow-800';
+                statusText = 'Review Needed';
+            } else if (ticket.internal_status === 'testing') {
+                statusColor = 'bg-blue-100 text-blue-800';
+                statusText = 'Testing';
+            } else if (ticket.internal_status === 'reopened') {
+                statusColor = 'bg-purple-100 text-purple-800';
+                statusText = 'Reopened';
+            } else if (ticket.internal_status === 'reopened_no') {
+                statusColor = 'bg-indigo-100 text-indigo-800';
+                statusText = 'Review Only';
+            }
 
             const departmentSlug = ticket.department ?
                 ticket.department.toLowerCase().replace(/ /g, '-') : 'technical';
@@ -700,11 +807,12 @@
             const card = document.createElement('div');
             card.className = 'p-4 md:p-6 hover:bg-gray-50 transition-colors ticket-card';
             card.dataset.priority = ticket.priority;
-            card.dataset.status = ticket.status;
+            card.dataset.status = statusText.toLowerCase().replace(' ', '-');
             card.dataset.department = departmentSlug;
             card.dataset.search = (ticket.subject + ' ' + ticket.customer_name + ' ' +
                 ticket.department_name + ' ' + ticket.project_name + ' ' +
                 ticket.ticket_id).toLowerCase();
+            card.dataset.internalStatus = ticket.internal_status || '';
 
             card.innerHTML = `
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -717,6 +825,16 @@
                         <span class="px-3 py-1 ${statusColor} text-xs rounded-full font-medium">
                             ${statusText}
                         </span>
+                        ${ticket.internal_status === 'approved' ? 
+                            `<span class="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                <i class="fas fa-check-circle text-xs"></i>
+                                Approved
+                            </span>` : ''}
+                        ${ticket.department_resolved_at ? 
+                            `<span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                <i class="fas fa-check text-xs"></i>
+                                Dept Resolved
+                            </span>` : ''}
                     </div>
                     <h3 class="text-gray-800 font-semibold text-base md:text-lg mb-1">${ticket.subject}</h3>
                     <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600">
@@ -724,6 +842,15 @@
                         ${ticket.project_name ? `<span class="hidden md:inline">•</span><span><i class="fas fa-project-diagram mr-1"></i>${ticket.project_name}</span>` : ''}
                         ${ticket.assigned_to_name ? `<span class="hidden md:inline">•</span><span><i class="fas fa-user-check mr-1"></i>${ticket.assigned_to_name}</span>` : ''}
                     </div>
+                    ${ticket.internal_status && ticket.internal_status !== 'pending' ? 
+                        `<div class="mt-2 text-xs text-gray-500 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-xs"></i>
+                            <span>
+                                ${getStatusMessage(ticket.internal_status)}
+                                ${ticket.approved_at ? '• ' + formatDate(ticket.approved_at) : ''}
+                                ${ticket.department_resolved_at && !ticket.approved_at ? '• Dept resolved: ' + formatDate(ticket.department_resolved_at) : ''}
+                            </span>
+                        </div>` : ''}
                 </div>
                 <div class="flex flex-col md:items-center gap-2">
                     <div class="flex items-center gap-2">
@@ -734,17 +861,17 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2">
                     ${ticket.department_id ?
-                    `<a href="<?= base_url('support/department_conversation/') ?>${ticket.ticket_id}" 
+                        `<a href="<?= base_url('support/department_ticket_detail/') ?>${ticket.ticket_id}" 
                            class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
                             <i class="fas fa-comments"></i>
                             <span>Department Chat</span>
                         </a>` :
-                    `<button onclick="assignDepartment(${ticket.ticket_id})" 
+                        `<button onclick="assignDepartment(${ticket.ticket_id})" 
                                 class="px-3 py-2 bg-secondary text-white rounded-lg hover:bg-[#817CB2] transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[140px]">
                             <i class="fas fa-share-alt"></i>
                             <span>Assign Department</span>
                         </button>`
-                }
+                    }
                     <a href="<?= base_url('support/ticket_detail/') ?>${ticket.ticket_id}" 
                        class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm flex items-center justify-center gap-2 min-w-[120px]">
                         <i class="fas fa-eye"></i>
@@ -755,6 +882,24 @@
         `;
 
             return card;
+        }
+
+        function getStatusMessage(status) {
+            const messages = {
+                'approved': '✅ Approved by Support',
+                'rejected': '❌ Rejected - Needs correction',
+                'review_needed': '🔍 Needs review',
+                'testing': '🧪 Under testing',
+                'reopened': '🔄 Reopened for corrections',
+                'reopened_no': '💬 Reopened for review only'
+            };
+            return messages[status] || 'Under review';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + 
+                   date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
 
         // Function to assign department

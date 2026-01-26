@@ -2231,6 +2231,9 @@ public function assignTicketToMe($ticketId)
 /**
  * Department marks ticket as resolved
  */
+/**
+ * Department marks ticket as resolved
+ */
 public function markAsResolved($ticketId)
 {
     if (!$this->request->isAJAX()) {
@@ -2302,7 +2305,7 @@ public function markAsResolved($ticketId)
         // Update ticket
         $updateData = [
             'department_resolved_at' => date('Y-m-d H:i:s'),
-            'department_resolved_by' => $userId,
+            'department_resolved_by' => $userId, // 🔥 KOLOM SUDAH ADA
             'internal_status' => 'review_needed', // Status untuk review oleh Support
             'updated_at' => date('Y-m-d H:i:s')
         ];

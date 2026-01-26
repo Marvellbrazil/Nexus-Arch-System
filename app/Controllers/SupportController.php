@@ -283,16 +283,35 @@ public function updateInternalStatus($ticketId)
 
         $systemMessage = "";
 
-        // 🆕 1. JIKA STATUS = REOPENED (Support mengembalikan ke Department)
-        if ($status === 'reopened') {
-            // 🔥 PENTING: TETAP status_id = 2 (In Progress) agar department bisa akses
-            $updateData['status_id'] = 2; // Tetap In Progress
+        // 🆕 1. JIKA STATUS = APPROVED (Support menyetujui resolusi Department) → TICKET APPROVED (TETAP IN PROGRESS)
+        if ($status === 'approved') {
+            // 🔥 PERUBAHAN PENTING: Status tetap In Progress (2), BUKAN Resolved (3)
+            $updateData['status_id'] = 2; // 🔥 TETAP In Progress
+            $updateData['resolved_by'] = $userId; // Catat siapa yang approve
+            $updateData['approved_at'] = date('Y-m-d H:i:s'); // Tambah timestamp approval
+            
+            if ($notes) {
+                $updateData['internal_status_notes'] = $notes;
+            }
+
+            $systemMessage = "✅ **Ticket Approved by Support**\n" .
+                "Support Agent: {$userName}\n" .
+                "Status: Approved\n";
+            if ($notes) {
+                $systemMessage .= "Notes: {$notes}\n";
+            }
+            $systemMessage .= "✅ Ticket has been approved. It will remain visible for reference.";
+        }
+
+        // 2. JIKA STATUS = REOPENED (Support mengembalikan ke Department)
+        elseif ($status === 'reopened') {
+            $updateData['status_id'] = 2; // Kembali ke In Progress
             
             if ($reopenForDepartment) {
-                // 🔥 Dicentang: Department bisa mark as resolved lagi
                 $updateData['department_resolved_at'] = null;
                 $updateData['department_resolved_by'] = null;
-                $updateData['internal_status'] = 'reopened'; // Untuk corrections
+                $updateData['internal_status'] = 'reopened';
+                $updateData['last_reopened_by'] = $userId;
                 
                 $systemMessage = "🔄 **Ticket Reopened by Support for Corrections**\n" .
                     "Support Agent: {$userName}\n" .
@@ -302,8 +321,7 @@ public function updateInternalStatus($ticketId)
                 }
                 $systemMessage .= "⚠️ Department can now make corrections and mark as resolved again.";
             } else {
-                // 🔥 TIDAK dicentang: Department hanya bisa chat, tidak bisa mark resolved
-                $updateData['internal_status'] = 'reopened_no'; // Untuk review only
+                $updateData['internal_status'] = 'reopened_no';
                 $updateData['last_reopened_by'] = $userId;
                 
                 $systemMessage = "🔄 **Ticket Reopened by Support for Review**\n" .
@@ -316,7 +334,7 @@ public function updateInternalStatus($ticketId)
             }
         }
 
-        // 2. JIKA STATUS = REJECTED (Support menolak resolusi Department)
+        // 3. JIKA STATUS = REJECTED (Support menolak resolusi Department)
         elseif ($status === 'rejected') {
             $updateData['status_id'] = 2; // Tetap In Progress
             $updateData['department_resolved_at'] = null;
@@ -333,24 +351,9 @@ public function updateInternalStatus($ticketId)
             $systemMessage .= "⚠️ Department needs to review and make corrections.";
         }
 
-        // 3. JIKA STATUS = APPROVED (Support menyetujui resolusi Department)
-        elseif ($status === 'approved') {
-            // 🔥 PENTING: JANGAN ubah status_id ke Resolved (3) atau Closed (4)
-            // Biarkan status_id = 2 agar department tetap bisa akses
-            $updateData['status_id'] = 2; // Tetap In Progress, BUKAN 3 (Resolved)
-            $updateData['resolved_at'] = date('Y-m-d H:i:s');
-
-            $systemMessage = "✅ **Ticket Approved by Support**\n" .
-                "Support Agent: {$userName}\n" .
-                "Status: Approved\n";
-            if ($notes) {
-                $systemMessage .= "Notes: {$notes}\n";
-            }
-            $systemMessage .= "✅ Ticket marked as approved. Department can still view the ticket for reference.";
-        }
-
         // 4. STATUS LAINNYA (pending, review_needed, testing)
         else {
+            $updateData['status_id'] = 2; // Tetap In Progress
             $systemMessage = "🔄 **Internal Status Updated**\n" .
                 "Updated by: {$userName} (Support)\n" .
                 "Status: {$statusLabels[$status]}\n";
@@ -371,7 +374,7 @@ public function updateInternalStatus($ticketId)
             ]);
         }
 
-        // Log status history
+        // Log status history - internal_status
         $historyStatus = $status;
         if ($status === 'reopened' && !$reopenForDepartment) {
             $historyStatus = 'reopened_no';
@@ -442,6 +445,36 @@ public function updateInternalStatus($ticketId)
             }
         }
 
+        // 🔥 TAMBAHKAN: Jika status approved, buat notifikasi untuk customer
+        if ($status === 'approved') {
+            // Notify customer
+            $db->table('notifications')->insert([
+                'user_id' => $ticket['customer_id'],
+                'ticket_id' => $ticketId,
+                'title' => 'Ticket Approved - #' . ($ticket['ticket_number'] ?? $ticketId),
+                'message' => 'Your ticket has been approved by the support team.',
+                'is_read' => false,
+                'notification_type' => 'ticket_approved',
+                'priority_id' => 2,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // 🔥 TAMBAHKAN: Tambahkan pesan untuk customer di ticket_messages
+            $customerMessage = "✅ **Ticket Approved**\n" .
+                "Your ticket has been approved by the support team.\n" .
+                "Status: Approved\n";
+            if ($notes) {
+                $customerMessage .= "Notes from support: " . $notes;
+            }
+
+            $db->table('ticket_messages')->insert([
+                'ticket_id' => $ticketId,
+                'sender_id' => $userId,
+                'message' => $customerMessage,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
         // Get updated ticket data untuk response
         $updatedTicket = $db->table('tickets t')
             ->select('t.*, s.status_name, d.department_name')
@@ -459,7 +492,11 @@ public function updateInternalStatus($ticketId)
             'reopened_for_department' => $reopenForDepartment,
             'reopened_type' => $reopenForDepartment ? 'with_corrections' : 'review_only',
             'ticket' => $updatedTicket,
-            'requires_ui_update' => true
+            'requires_ui_update' => true,
+            'ticket_status' => $updatedTicket['status_name'] ?? '',
+            'ticket_status_id' => $updatedTicket['status_id'] ?? 2,
+            'approved_at' => $status === 'approved' ? date('Y-m-d H:i:s') : null,
+            'resolved_by' => $userId
         ]);
     } catch (\Exception $e) {
         log_message('error', 'Error updating internal status: ' . $e->getMessage());
@@ -2063,98 +2100,108 @@ public function getInternalMessages($ticketId)
         return view('Support/ticket_summary', $data);
     }
 
-    public function ticketInProgress()
-    {
-        $data = $this->loadCommonData();
+public function ticketInProgress()
+{
+    $data = $this->loadCommonData();
 
-        $userId = session()->get('user_id');
-        $db = db_connect();
+    $userId = session()->get('user_id');
+    $db = db_connect();
 
-        // ==================== STATISTIK DINAMIS ====================
+    // ==================== STATISTIK DINAMIS ====================
 
-        // Get current date for PostgreSQL
-        $currentDate = date('Y-m-d');
-        $firstDayOfWeek = date('Y-m-d', strtotime('monday this week'));
-        $lastDayOfWeek = date('Y-m-d', strtotime('sunday this week'));
+    // Get current date for PostgreSQL
+    $currentDate = date('Y-m-d');
+    $firstDayOfWeek = date('Y-m-d', strtotime('monday this week'));
+    $lastDayOfWeek = date('Y-m-d', strtotime('sunday this week'));
 
-        // Tickets in progress - PERBAIKI: Include tickets with department_id (baru diforward)
-        $inProgressCount = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.department_id IS NOT NULL') // Ticket yang sudah ada department
-            ->whereIn('s.status_name', ['In Progress', 'Processing', 'Open'])
-            ->countAllResults();
+    // 🔥 PERUBAHAN: Tickets dengan department (include approved)
+    $inProgressCount = $db->table('tickets t')
+        ->join('statuses s', 's.status_id = t.status_id')
+        ->where('t.department_id IS NOT NULL')
+        ->whereIn('s.status_name', ['In Progress']) // Hanya In Progress
+        ->countAllResults();
 
-        // Waiting for customer
-        $waitingCount = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.department_id IS NOT NULL')
-            ->where('s.status_name', 'Waiting Customer Reply')
-            ->countAllResults();
+    // Waiting for customer
+    $waitingCount = $db->table('tickets t')
+        ->join('statuses s', 's.status_id = t.status_id')
+        ->where('t.department_id IS NOT NULL')
+        ->where('s.status_name', 'Waiting Customer Reply')
+        ->countAllResults();
 
-        // Resolved (this week)
-        $resolvedCount = $db->table('tickets t')
-            ->join('statuses s', 's.status_id = t.status_id')
-            ->where('t.department_id IS NOT NULL')
-            ->where('s.status_name', 'Resolved')
-            ->where("DATE(t.resolved_at) >= '{$firstDayOfWeek}'")
-            ->where("DATE(t.resolved_at) <= '{$lastDayOfWeek}'")
-            ->countAllResults();
+    // 🔥 PERUBAHAN: Approved (this week) - Ticket yang di-approve oleh Support
+    $approvedCount = $db->table('tickets t')
+        ->where('t.department_id IS NOT NULL')
+        ->where('t.internal_status', 'approved')
+        ->where("DATE(t.updated_at) >= '{$firstDayOfWeek}'")
+        ->where("DATE(t.updated_at) <= '{$lastDayOfWeek}'")
+        ->countAllResults();
 
-        $data['stats'] = [
-            'in_progress' => $inProgressCount,
-            'waiting_customer' => $waitingCount,
-            'resolved_week' => $resolvedCount
-        ];
+    $data['stats'] = [
+        'in_progress' => $inProgressCount,
+        'waiting_customer' => $waitingCount,
+        'resolved_week' => $approvedCount // 🔥 Ubah label ke "Approved this week"
+    ];
 
-        // ==================== TICKETS DINAMIS ====================
+    // ==================== TICKETS DINAMIS ====================
 
-        // Get tickets in progress dengan semua relasi - PERBAIKI QUERY INI
-        $data['tickets'] = $db->table('tickets t')
-            ->select('t.*, 
-            p.priority_name, p.priority_id,
-            s.status_name, 
-            cat.category_name, 
-            u.full_name as customer_name, u.email as customer_email,
-            proj.project_name, proj.project_id,
-            d.department_name, d.department_id,
-            a.full_name as assigned_to_name, a.email as assigned_to_email')
-            ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
-            ->join('statuses s', 's.status_id = t.status_id', 'left')
-            ->join('categories cat', 'cat.category_id = t.category_id', 'left')
-            ->join('users u', 'u.user_id = t.customer_id', 'left')
-            ->join('projects proj', 'proj.project_id = t.project_id', 'left')
-            ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->join('users a', 'a.user_id = t.assigned_to', 'left')
-            ->where('t.department_id IS NOT NULL') // TAMPILKAN TICKET YANG SUDAH ADA DEPARTMENT
-            ->whereIn('s.status_name', ['In Progress', 'Processing', 'Waiting Customer Reply', 'Pending', 'Forwarded', 'Open'])
-            ->orderBy('p.priority_id', 'DESC') // Priority first
-            ->orderBy('t.created_at', 'DESC')
-            ->get()
-            ->getResultArray();
+    // 🔥 PERUBAHAN: Get semua ticket dengan department (termasuk yang approved)
+    $data['tickets'] = $db->table('tickets t')
+        ->select('t.*, 
+        p.priority_name, p.priority_id,
+        s.status_name, 
+        cat.category_name, 
+        u.full_name as customer_name, u.email as customer_email,
+        proj.project_name, proj.project_id,
+        d.department_name, d.department_id,
+        a.full_name as assigned_to_name, a.email as assigned_to_email,
+        t.internal_status, t.department_resolved_at, t.resolved_at, t.approved_at')
+        ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
+        ->join('statuses s', 's.status_id = t.status_id', 'left')
+        ->join('categories cat', 'cat.category_id = t.category_id', 'left')
+        ->join('users u', 'u.user_id = t.customer_id', 'left')
+        ->join('projects proj', 'proj.project_id = t.project_id', 'left')
+        ->join('departments d', 'd.department_id = t.department_id', 'left')
+        ->join('users a', 'a.user_id = t.assigned_to', 'left')
+        ->where('t.department_id IS NOT NULL')
+        ->whereIn('t.internal_status', ['pending', 'review_needed', 'testing', 'approved', 'rejected', 'reopened', 'reopened_no'])
+        ->orderBy("
+            CASE t.internal_status 
+                WHEN 'pending' THEN 1
+                WHEN 'review_needed' THEN 2
+                WHEN 'testing' THEN 3
+                WHEN 'rejected' THEN 4
+                WHEN 'reopened' THEN 5
+                WHEN 'reopened_no' THEN 6
+                WHEN 'approved' THEN 7
+                ELSE 8
+            END", 'ASC', false)
+        ->orderBy('p.priority_id', 'DESC')
+        ->orderBy('t.created_at', 'DESC')
+        ->get()
+        ->getResultArray();
 
-        // ==================== DEPARTMENT PERFORMANCE ====================
+    // ==================== DEPARTMENT PERFORMANCE ====================
 
-        // Get department statistics
-        $departmentStats = $db->table('tickets t')
-            ->select('d.department_name,
-            COUNT(t.ticket_id) as total_tickets,
-            SUM(CASE WHEN s.status_name IN (\'In Progress\', \'Processing\') THEN 1 ELSE 0 END) as in_progress,
-            SUM(CASE WHEN s.status_name = \'Resolved\' THEN 1 ELSE 0 END) as resolved,
-            EXTRACT(EPOCH FROM AVG(t.resolved_at - t.created_at)) / 3600 as avg_time_hours')
-            ->join('departments d', 'd.department_id = t.department_id', 'left')
-            ->join('statuses s', 's.status_id = t.status_id', 'left')
-            ->where('t.department_id IS NOT NULL')
-            ->whereIn('s.status_name', ['In Progress', 'Processing', 'Resolved', 'Waiting Customer Reply'])
-            ->groupBy('d.department_id, d.department_name')
-            ->orderBy('total_tickets', 'DESC')
-            ->limit(5)
-            ->get()
-            ->getResultArray();
+    // Get department statistics
+    $departmentStats = $db->table('tickets t')
+        ->select('d.department_name,
+        COUNT(t.ticket_id) as total_tickets,
+        SUM(CASE WHEN t.internal_status IN (\'pending\', \'review_needed\', \'testing\', \'rejected\', \'reopened\', \'reopened_no\') THEN 1 ELSE 0 END) as in_progress,
+        SUM(CASE WHEN t.internal_status = \'approved\' THEN 1 ELSE 0 END) as approved,
+        EXTRACT(EPOCH FROM AVG(t.approved_at - t.created_at)) / 3600 as avg_approval_hours')
+        ->join('departments d', 'd.department_id = t.department_id', 'left')
+        ->where('t.department_id IS NOT NULL')
+        ->whereIn('t.internal_status', ['pending', 'review_needed', 'testing', 'approved', 'rejected', 'reopened', 'reopened_no'])
+        ->groupBy('d.department_id, d.department_name')
+        ->orderBy('total_tickets', 'DESC')
+        ->limit(5)
+        ->get()
+        ->getResultArray();
 
-        $data['department_stats'] = $departmentStats;
+    $data['department_stats'] = $departmentStats;
 
-        return view('Support/ticket_in_progress', $data);
-    }
+    return view('Support/ticket_in_progress', $data);
+}
 
     // Add this method to SupportController.php
     public function loadMoreTickets()

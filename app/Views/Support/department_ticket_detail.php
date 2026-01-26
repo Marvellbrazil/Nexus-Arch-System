@@ -831,9 +831,16 @@ function submitInternalStatusUpdate(ticketId) {
             // Close modal
             closeInternalStatusModal();
             
-            // Jika status approved atau reopened, reload page setelah delay
-            if (status === 'approved' || status === 'reopened') {
-                showToast('Reloading page...', 'info');
+            // 🔥 PERUBAHAN: Jika status approved, show special message dan reload
+            if (status === 'approved') {
+                showToast('Ticket marked as RESOLVED! Refreshing page...', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } 
+            // Jika status reopened atau rejected, reload juga
+            else if (status === 'reopened' || status === 'rejected') {
+                showToast('Refreshing page...', 'info');
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
