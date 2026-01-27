@@ -136,7 +136,6 @@
 
 <?php
 // Helper function for project colors
-
 use CodeIgniter\Database\Config;
 
 function getProjectColor($id)
@@ -161,8 +160,7 @@ function getProjectColor($id)
     <div class="mb-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex-1">
-                <h1 class="text-xl md:text-2xl lg:text-[35px] font-semibold mb-1 md:mb-2 text-text-dark">Create New
-                    Ticket</h1>
+                <h1 class="text-xl md:text-2xl lg:text-[35px] font-semibold mb-1 md:mb-2 text-text-dark">Create New Ticket</h1>
                 <p class="text-xs md:text-sm lg:text-[15px] font-light text-[#666]">Submit a new support request</p>
             </div>
 
@@ -546,8 +544,54 @@ function getProjectColor($id)
 
 <script>
     let editor;
+    let wsConnection = null;
+    const WS_URL = '<?= \App\Helpers\WebSocketHelper::getSocketUrl() ?: "http://localhost:3000" ?>'.replace('http://', 'ws://').replace('https://', 'wss://');
+
+    // Initialize WebSocket connection
+    function initWebSocket() {
+        try {
+            wsConnection = new WebSocket(WS_URL);
+            
+            wsConnection.onopen = function() {
+                console.log('WebSocket connected for ticket creation');
+                
+                // Authenticate dengan user data
+                const userData = {
+                    type: 'authenticate',
+                    user_id: '<?= session()->get("user_id") ?>',
+                    role: '<?= session()->get("role") ?>',
+                    department_id: '<?= session()->get("department_id") ?>'
+                };
+                wsConnection.send(JSON.stringify(userData));
+            };
+            
+            wsConnection.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            wsConnection.onclose = function() {
+                console.log('WebSocket disconnected');
+            };
+            
+        } catch (error) {
+            console.error('Failed to initialize WebSocket:', error);
+        }
+    }
+
+    // Join ticket room
+    function joinTicketRoom(ticketId) {
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.send(JSON.stringify({
+                type: 'join_ticket',
+                ticket_id: ticketId
+            }));
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize WebSocket
+        initWebSocket();
+        
         // Initialize CKEditor
         ClassicEditor
             .create(document.querySelector('#editor-container'), {
@@ -818,61 +862,21 @@ function getProjectColor($id)
             });
         });
 
-        // Form submission
-        // form.addEventListener('submit', async function(e) {
-        //     e.preventDefault();
+        // Form submission handling (regular form submission, not AJAX)
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return;
+            }
 
-        //     // Validate form
-        //     if (!validateForm()) {
-        //         return;
-        //     }
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Creating Ticket...';
+            loadingSpinner.classList.remove('hidden');
 
-        //     // Show loading
-        //     submitBtn.disabled = true;
-        //     btnText.textContent = 'Creating Ticket...';
-        //     loadingSpinner.classList.remove('hidden');
-
-        //     try {
-        //         const formData = new FormData(form);
-
-        //         // Add files to FormData
-        //         files.forEach(file => {
-        //             formData.append('attachments[]', file);
-        //         });
-
-        //         // Get CKEditor content
-        //         if (editor) {
-        //             formData.set('description', editor.getData());
-        //         }
-
-        //         // Send to server
-        //         const response = await fetch('<?= base_url('customer/process_create_ticket') ?>', {
-        //             method: 'POST',
-        //             body: formData
-        //         });
-
-        //         if (response.ok) {
-        //             const result = await response.json();
-        //             showToast(result.message || 'Ticket created successfully!', 'success');
-
-        //             setTimeout(() => {
-        //                 window.location.href = '<?= base_url('customer/my_tickets') ?>';
-        //             }, 2000);
-        //         } else {
-        //             const error = await response.json();
-        //             throw new Error(error.message || 'Failed to create ticket');
-        //         }
-
-        //     } catch (error) {
-        //         console.error('Error:', error);
-        //         showToast(error.message || 'Failed to create ticket. Please try again.', 'error');
-
-        //         // Reset button
-        //         submitBtn.disabled = false;
-        //         btnText.textContent = 'Create Ticket';
-        //         loadingSpinner.classList.add('hidden');
-        //     }
-        // });
+            // Form akan submit secara normal ke controller
+            // Notifikasi WebSocket akan dikirim oleh controller
+        });
 
         function validateForm() {
             let isValid = true;
@@ -976,6 +980,13 @@ function getProjectColor($id)
                 }
             });
         });
+    });
+
+    // Close WebSocket on page unload
+    window.addEventListener('beforeunload', function() {
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.close();
+        }
     });
 </script>
 

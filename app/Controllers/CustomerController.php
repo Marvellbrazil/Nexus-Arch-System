@@ -129,6 +129,17 @@ public function sendMessage()
         
         log_message('debug', 'Message saved with ID: ' . $messageId);
         
+        // ===== TAMBAHKAN: KIRIM KE WEBSOCKET =====
+        helper('websocket');
+        WebSocketHelper::sendChatMessage([
+            'ticket_id' => $ticketId,
+            'sender_id' => $userId,
+            'message' => $message,
+            'is_internal' => false,
+            'sender_role' => 'Customer'
+        ]);
+        // =========================================
+        
         // Update ticket timestamp
         $db->table('tickets')
             ->where('ticket_id', $ticketId)
@@ -544,6 +555,8 @@ public function uploadAttachment()
         return view('Customer/project_detail', $data);
     }
 
+// Update method updateProfile() untuk tambahkan WebSocket:
+
 public function updateProfile()
 {
     // Debug
@@ -642,6 +655,17 @@ public function updateProfile()
             if (isset($updateData['phone_number'])) {
                 session()->set('phone_number', $updateData['phone_number']);
             }
+            
+            // ===== TAMBAHKAN: KIRIM UPDATE PROFILE KE WEBSOCKET =====
+            helper('websocket');
+            WebSocketHelper::sendNotification([
+                'type' => 'profile_updated',
+                'user_id' => $userId,
+                'full_name' => $updateData['full_name'],
+                'phone_number' => $updateData['phone_number'] ?? null,
+                'photo_profile' => $updateData['photo_profile'] ?? null
+            ]);
+            // ========================================================
             
             return redirect()->to('/customer/profile')->with('success', 'Profile updated successfully!');
         } else {
@@ -742,59 +766,274 @@ public function updateProfile()
     }
 
     // Tambahkan method untuk menangani form submission:
-    public function processCreateTicket()
-    {
-        // Ambil data sesuai atribut 'name' di view create_ticket.php
-        $projectId = $this->request->getPost('project_id'); // Sesuai view
-        $title = $this->request->getPost('title');
-        $description = $this->request->getPost('description');
-        $priorityId = $this->request->getPost('priority_id'); // Sesuai view
-        $categoryId = $this->request->getPost('category_id'); // Sesuai view
+// Update method processCreateTicket() untuk tambahkan WebSocket notification:
 
-        // Validasi
-        if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
-            return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
-        }
+public function processCreateTicket()
+{
+    // Ambil data sesuai atribut 'name' di view create_ticket.php
+    $projectId = $this->request->getPost('project_id'); // Sesuai view
+    $title = $this->request->getPost('title');
+    $description = $this->request->getPost('description');
+    $priorityId = $this->request->getPost('priority_id'); // Sesuai view
+    $categoryId = $this->request->getPost('category_id'); // Sesuai view
 
-        // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
-        $project = $this->projectModel->getProjectForCustomer($projectId, $this->userId);
-
-        if (!$project) {
-            return redirect()->back()->with('error', 'Project not found or access denied');
-        }
-
-        // Nomor Tiket & Mapping Departemen
-        $ticketCount = $this->ticketModel->countTicketsByProject($projectId);
-        $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
-        
-
-        $departmentMapping = $this->categoryDepartmentMapping->getDepartmentByCategory($categoryId);
-        $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
-
-        $ticketData = [
-            'ticket_number' => $ticketNumber,
-            'project_id' => $projectId,
-            'customer_id' => $this->userId,
-            'category_id' => $categoryId,
-            'priority_id' => $priorityId,
-            'status_id' => 1, // Open
-            'department_id' => $departmentId,
-            'subject' => $title,
-            'description' => $description,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        // var_dump(db_connect()->error());die();
-
-        $ticketId = $this->ticketModel->store($ticketData);
-
-        $this->handleAttachments($ticketId);
-        // $this->createTicketNotification($ticketId);
-
-        // Sekarang redirect akan bekerja dengan benar karena dikirim via Form HTML, bukan AJAX
-        return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
+    // Validasi
+    if (empty($projectId) || empty($title) || empty($description) || empty($priorityId) || empty($categoryId)) {
+        return redirect()->back()->withInput()->with('error', 'All required fields must be filled');
     }
+
+    // Cek project (Gunakan tabel 'projects' sesuai instruksi sebelumnya)
+    $project = $this->projectModel->getProjectForCustomer($projectId, $this->userId);
+
+    if (!$project) {
+        return redirect()->back()->with('error', 'Project not found or access denied');
+    }
+
+    // Nomor Tiket & Mapping Departemen
+    $ticketCount = $this->ticketModel->countTicketsByProject($projectId);
+    $ticketNumber = $project['project_code'] . '-' . str_pad($ticketCount + 1, 3, '0', STR_PAD_LEFT);
+    
+    $departmentMapping = $this->categoryDepartmentMapping->getDepartmentByCategory($categoryId);
+    $departmentId = $departmentMapping ? $departmentMapping['department_id'] : null;
+
+    $ticketData = [
+        'ticket_number' => $ticketNumber,
+        'project_id' => $projectId,
+        'customer_id' => $this->userId,
+        'category_id' => $categoryId,
+        'priority_id' => $priorityId,
+        'status_id' => 1, // Open
+        'department_id' => $departmentId,
+        'subject' => $title,
+        'description' => $description,
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ];
+
+    $ticketId = $this->ticketModel->store($ticketData);
+
+    // ===== TAMBAHKAN: KIRIM NOTIFIKASI KE WEBSOCKET =====
+    helper('websocket');
+    
+    // Get priority name
+    $priority = $this->priorityModel->find($priorityId);
+    $priorityName = $priority ? $priority['priority_name'] : 'Medium';
+    
+    // Notifikasi ke semua Support
+    WebSocketHelper::sendNotification([
+        'broadcast_role' => 'Support',
+        'title' => 'New Ticket Created - #' . $ticketNumber,
+        'message' => 'New ticket created: ' . $title . ' (Priority: ' . $priorityName . ')',
+        'type' => 'ticket_created',
+        'ticket_id' => $ticketId
+    ]);
+    
+    // Jika ada department, notifikasi ke department juga
+    if ($departmentId) {
+        WebSocketHelper::sendNotification([
+            'department_id' => $departmentId,
+            'title' => 'New Ticket Assigned - #' . $ticketNumber,
+            'message' => 'New ticket assigned to your department: ' . $title,
+            'type' => 'department_ticket_assigned',
+            'ticket_id' => $ticketId
+        ]);
+    }
+    // =====================================================
+
+    $this->handleAttachments($ticketId);
+    
+    // Update user statistics via WebSocket
+    $stats = $this->getTicketStats();
+    WebSocketHelper::sendNotification([
+        'type' => 'stats_update',
+        'user_id' => $this->userId,
+        'total_tickets' => $stats['total_tickets'],
+        'open_tickets' => $stats['open_tickets'],
+        'tickets_this_month' => $stats['tickets_this_month']
+    ]);
+    
+    // Sekarang redirect akan bekerja dengan benar karena dikirim via Form HTML, bukan AJAX
+    return redirect()->to('/customer/my_tickets')->with('success', 'Ticket created successfully!');
+}
+/**
+ * Get ticket statistics for AJAX request
+ */
+public function getStats()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $userId = session()->get('user_id');
+    $stats = $this->getTicketStats();
+    
+    // Calculate percentages
+    $totalTickets = $stats['total_tickets'];
+    $percentages = [
+        'open' => $totalTickets > 0 ? round(($stats['open_tickets'] / $totalTickets) * 100, 1) : 0,
+        'in_progress' => $totalTickets > 0 ? round(($stats['in_progress_tickets'] / $totalTickets) * 100, 1) : 0,
+        'resolved' => $totalTickets > 0 ? round(($stats['resolved_tickets'] / $totalTickets) * 100, 1) : 0,
+        'closed' => $totalTickets > 0 ? round(($stats['cancelled_tickets'] / $totalTickets) * 100, 1) : 0,
+    ];
+    
+    return $this->response->setJSON([
+        'success' => true,
+        'total_tickets' => $stats['total_tickets'],
+        'open_tickets' => $stats['open_tickets'],
+        'in_progress_tickets' => $stats['in_progress_tickets'],
+        'resolved_tickets' => $stats['resolved_tickets'],
+        'cancelled_tickets' => $stats['cancelled_tickets'],
+        'tickets_this_month' => $stats['tickets_this_month'],
+        'percentages' => $percentages
+    ]);
+}
+
+/**
+ * Mark notification as read
+ */
+public function markNotificationRead()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $notificationId = $this->request->getPost('notification_id');
+    $userId = session()->get('user_id');
+    
+    $db = db_connect();
+    
+    // Mark notification as read
+    $db->table('notifications')
+        ->where('notification_id', $notificationId)
+        ->where('user_id', $userId)
+        ->update(['is_read' => true, 'updated_at' => date('Y-m-d H:i:s')]);
+    
+    // Send WebSocket notification
+    helper('websocket');
+    WebSocketHelper::sendNotification([
+        'type' => 'notification_read',
+        'notification_id' => $notificationId,
+        'user_id' => $userId
+    ]);
+    
+    return $this->response->setJSON(['success' => true]);
+}
+
+/**
+ * Delete notification
+ */
+public function deleteNotification()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $notificationId = $this->request->getPost('notification_id');
+    $userId = session()->get('user_id');
+    
+    $db = db_connect();
+    
+    // Delete notification
+    $db->table('notifications')
+        ->where('notification_id', $notificationId)
+        ->where('user_id', $userId)
+        ->delete();
+    
+    return $this->response->setJSON(['success' => true]);
+}
+
+/**
+ * Get recent activity for profile page
+ */
+public function getRecentActivity()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $userId = session()->get('user_id');
+    $limit = $this->request->getGet('limit') ?: 10;
+    
+    $db = db_connect();
+    
+    $activities = $db->table('notifications n')
+        ->select('n.*, n.created_at as timestamp')
+        ->where('n.user_id', $userId)
+        ->orderBy('n.created_at', 'DESC')
+        ->limit($limit)
+        ->get()
+        ->getResultArray();
+    
+    // Format activities
+    $formattedActivities = [];
+    foreach ($activities as $activity) {
+        $formattedActivities[] = [
+            'id' => $activity['notification_id'],
+            'type' => $activity['notification_type'],
+            'title' => $activity['title'],
+            'description' => $activity['message'],
+            'icon' => $this->getActivityIcon($activity['notification_type']),
+            'created_at' => $activity['timestamp'],
+            'is_read' => $activity['is_read']
+        ];
+    }
+    
+    return $this->response->setJSON([
+        'success' => true,
+        'activities' => $formattedActivities
+    ]);
+}
+
+/**
+ * Helper function to get icon for activity type
+ */
+private function getActivityIcon($type)
+{
+    $icons = [
+        'ticket_created' => 'plus-circle',
+        'message' => 'comment',
+        'status_change' => 'sync-alt',
+        'system' => 'cog',
+        'assigned' => 'user-check',
+        'resolved' => 'check-circle'
+    ];
+    
+    return $icons[$type] ?? 'bell';
+}
+
+/**
+ * Update user status (online/offline)
+ */
+public function updateUserStatus()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+    
+    $userId = session()->get('user_id');
+    $status = $this->request->getPost('status');
+    $lastActive = $this->request->getPost('last_active');
+    
+    // Update last login time in database
+    $db = db_connect();
+    $db->table('users')
+        ->where('user_id', $userId)
+        ->update([
+            'last_login' => $lastActive ?: date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+    
+    // Send WebSocket notification
+    helper('websocket');
+    WebSocketHelper::sendNotification([
+        'type' => 'user_status_update',
+        'user_id' => $userId,
+        'status' => $status,
+        'last_active' => $lastActive ?: date('Y-m-d H:i:s')
+    ]);
+    
+    return $this->response->setJSON(['success' => true]);
+}
 
     private function handleAttachments($ticketId)
     {

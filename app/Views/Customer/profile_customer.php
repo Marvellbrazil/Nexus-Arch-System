@@ -67,7 +67,6 @@
             opacity: 0;
             transform: translateY(-20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -343,67 +342,6 @@
         </div>
     </div>
 
-    <!-- Projects Section -->
-    <!-- <div class="mb-8">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-project-diagram text-secondary"></i>
-                    My Projects
-                </h3>
-                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                    2 Projects
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <h4 class="text-lg font-semibold text-gray-800 mb-1">Nexus ERP - NXS-ERP</h4>
-                            <p class="text-gray-600 text-sm">Enterprise resource planning system for internal operations
-                                and reporting.</p>
-                        </div>
-                        <div class="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-cogs text-blue-600"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-gray-500"></i>
-                            <span class="text-gray-700">12 tickets</span>
-                        </div>
-                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                            Active
-                        </span>
-                    </div>
-                </div>
-
-                <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <h4 class="text-lg font-semibold text-gray-800 mb-1">Nova E-Commerce - NVC-ECOM</h4>
-                            <p class="text-gray-600 text-sm">Online shopping platform with payment gateway integration
-                                and order management.</p>
-                        </div>
-                        <div class="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-shopping-cart text-purple-600"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-gray-500"></i>
-                            <span class="text-gray-700">8 tickets</span>
-                        </div>
-                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                            Active
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
     <!-- Ticket Statistics -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Ticket Statistics</h3>
@@ -485,8 +423,7 @@
             <div class="text-center py-8">
                 <i class="fas fa-ticket-alt text-3xl text-gray-300 mb-3"></i>
                 <p class="text-gray-600">No tickets yet. Create your first ticket!</p>
-                <a href="<?= base_url('customer/create_ticket') ?>"
-                    class="inline-block mt-3 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors">
+                <a href="<?= base_url('customer/create_ticket') ?>" class="inline-block mt-3 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-[#665C9E] transition-colors">
                     Create Ticket
                 </a>
             </div>
@@ -744,7 +681,185 @@
 </div>
 
 <script>
+    let wsConnection = null;
+    const WS_URL = '<?= \App\Helpers\WebSocketHelper::getSocketUrl() ?: "http://localhost:3000" ?>'.replace('http://', 'ws://').replace('https://', 'wss://');
+
+    // Initialize WebSocket connection
+    function initWebSocket() {
+        try {
+            wsConnection = new WebSocket(WS_URL);
+            
+            wsConnection.onopen = function() {
+                console.log('WebSocket connected for profile updates');
+                
+                // Authenticate dengan user data
+                const userData = {
+                    type: 'authenticate',
+                    user_id: '<?= session()->get("user_id") ?>',
+                    role: '<?= session()->get("role") ?>',
+                    department_id: '<?= session()->get("department_id") ?>'
+                };
+                wsConnection.send(JSON.stringify(userData));
+                
+                // Subscribe to profile updates
+                wsConnection.send(JSON.stringify({
+                    type: 'subscribe_profile',
+                    user_id: '<?= session()->get("user_id") ?>'
+                }));
+            };
+            
+            wsConnection.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'profile_updated') {
+                        handleProfileUpdate(data);
+                    } else if (data.type === 'ticket_stats_updated') {
+                        handleTicketStatsUpdate(data);
+                    }
+                } catch (error) {
+                    console.error('Error processing WebSocket message:', error);
+                }
+            };
+            
+            wsConnection.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            wsConnection.onclose = function() {
+                console.log('WebSocket disconnected');
+            };
+            
+        } catch (error) {
+            console.error('Failed to initialize WebSocket:', error);
+        }
+    }
+
+    // Handle profile update from WebSocket
+    function handleProfileUpdate(data) {
+        // Update UI elements
+        if (data.full_name) {
+            document.getElementById('userFullName').textContent = data.full_name;
+            document.getElementById('full_name').value = data.full_name;
+        }
+        
+        if (data.phone_number !== undefined) {
+            const phoneDisplay = data.phone_number || 'Not Set';
+            document.getElementById('userPhone').textContent = phoneDisplay;
+            document.getElementById('displayPhone').textContent = phoneDisplay;
+            document.getElementById('phone_number').value = data.phone_number || '';
+        }
+        
+        if (data.photo_profile) {
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar.tagName === 'IMG') {
+                avatar.src = data.photo_profile;
+            }
+            document.getElementById('currentAvatar').src = data.photo_profile;
+        }
+        
+        // Show notification
+        showToast('Profile updated successfully', 'success');
+    }
+
+    // Handle ticket stats update
+    function handleTicketStatsUpdate(data) {
+        // Update statistics
+        if (data.total_tickets !== undefined) {
+            updateStatElement('statTotalTickets', data.total_tickets);
+            updateStatElement('statTotal', data.total_tickets);
+        }
+        if (data.open_tickets !== undefined) {
+            updateStatElement('statOpenTickets', data.open_tickets);
+            updateStatElement('statOpen', data.open_tickets);
+        }
+        if (data.in_progress_tickets !== undefined) {
+            updateStatElement('statProgress', data.in_progress_tickets);
+        }
+        if (data.resolved_tickets !== undefined) {
+            updateStatElement('statResolvedTickets', data.resolved_tickets);
+            updateStatElement('statResolved', data.resolved_tickets);
+        }
+        if (data.tickets_this_month !== undefined) {
+            updateStatElement('statMonthTickets', data.tickets_this_month);
+        }
+        
+        // Update progress bars
+        if (data.percentages) {
+            updateProgressBar('openProgress', data.percentages.open);
+            updateProgressBar('progressProgress', data.percentages.in_progress);
+            updateProgressBar('resolvedProgress', data.percentages.resolved);
+            updateProgressBar('closedProgress', data.percentages.closed);
+            
+            // Update percentage labels
+            updatePercentageLabel('openPercentage', data.open_tickets, data.percentages.open);
+            updatePercentageLabel('progressPercentage', data.in_progress_tickets, data.percentages.in_progress);
+            updatePercentageLabel('resolvedPercentage', data.resolved_tickets, data.percentages.resolved);
+            updatePercentageLabel('closedPercentage', data.cancelled_tickets || 0, data.percentages.closed);
+        }
+        
+        // Show subtle notification
+        showToast('Statistics updated', 'info');
+    }
+
+    // Update statistic element
+    function updateStatElement(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            const current = parseInt(element.textContent) || 0;
+            if (current !== value) {
+                element.textContent = value;
+            }
+        }
+    }
+
+    // Update progress bar
+    function updateProgressBar(elementId, percentage) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.width = `${percentage}%`;
+        }
+    }
+
+    // Update percentage label
+    function updatePercentageLabel(elementId, count, percentage) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = `${count} (${percentage}%)`;
+        }
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-24 right-4 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slide-in ${
+            type === 'error' ? 'bg-red-500 text-white' :
+            type === 'success' ? 'bg-green-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        toast.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i class="fas ${
+                    type === 'error' ? 'fa-exclamation-circle' :
+                    type === 'success' ? 'fa-check-circle' :
+                    'fa-info-circle'
+                }"></i>
+                <span class="text-sm">${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize WebSocket
+        initWebSocket();
+        
         // Logout confirmation
         window.confirmLogout = function () {
             if (confirm('Are you sure you want to logout?')) {
@@ -862,7 +977,7 @@
         }
     });
 
-    // Modal functions
+    // Modal functions with navbar handling
     function openEditModal() {
         const modal = document.getElementById('editProfileModal');
         const navbar = document.querySelector('.liquid-glass-navbar');
@@ -894,5 +1009,12 @@
             navbar.style.pointerEvents = '';
         }
     }
+
+    // Close WebSocket on page unload
+    window.addEventListener('beforeunload', function() {
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.close();
+        }
+    });
 </script>
 <?= $this->endSection() ?>

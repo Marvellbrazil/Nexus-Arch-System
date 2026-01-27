@@ -23,7 +23,6 @@
             transform: translateY(10px);
             opacity: 0;
         }
-
         to {
             transform: translateY(0);
             opacity: 1;
@@ -46,12 +45,9 @@
 
     /* Unread indicator animation */
     @keyframes pulse {
-
-        0%,
-        100% {
+        0%, 100% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.6;
         }
@@ -260,7 +256,202 @@
 </div>
 
 <script>
+    let wsConnection = null;
+    const WS_URL = '<?= \App\Helpers\WebSocketHelper::getSocketUrl() ?: "http://localhost:3000" ?>'.replace('http://', 'ws://').replace('https://', 'wss://');
+
+    // Initialize WebSocket connection
+    function initWebSocket() {
+        try {
+            wsConnection = new WebSocket(WS_URL);
+            
+            wsConnection.onopen = function() {
+                console.log('WebSocket connected for notifications');
+                
+                // Authenticate dengan user data
+                const userData = {
+                    type: 'authenticate',
+                    user_id: '<?= session()->get("user_id") ?>',
+                    role: '<?= session()->get("role") ?>',
+                    department_id: '<?= session()->get("department_id") ?>'
+                };
+                wsConnection.send(JSON.stringify(userData));
+                
+                // Join personal notification room
+                wsConnection.send(JSON.stringify({
+                    type: 'join_notifications',
+                    user_id: '<?= session()->get("user_id") ?>'
+                }));
+            };
+            
+            wsConnection.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'new_notification') {
+                        handleNewNotification(data);
+                    }
+                } catch (error) {
+                    console.error('Error processing WebSocket message:', error);
+                }
+            };
+            
+            wsConnection.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            wsConnection.onclose = function() {
+                console.log('WebSocket disconnected');
+            };
+            
+        } catch (error) {
+            console.error('Failed to initialize WebSocket:', error);
+        }
+    }
+
+    // Handle new notification from WebSocket
+    function handleNewNotification(notificationData) {
+        // Show desktop notification if permitted
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(notificationData.title, {
+                body: notificationData.message,
+                icon: '/favicon.ico'
+            });
+        }
+        
+        // Add notification to UI
+        addNotificationToUI(notificationData);
+        
+        // Update counters
+        updateNotificationCounters(1, 1);
+        
+        // Show toast
+        showToast(`New notification: ${notificationData.title}`, 'info');
+    }
+
+    // Add notification to UI
+    function addNotificationToUI(notification) {
+        const container = document.querySelector('.space-y-4');
+        const emptyState = container.querySelector('.text-center');
+        
+        // Hide empty state if visible
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Create notification element
+        const notificationElement = document.createElement('div');
+        notificationElement.className = 'notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in';
+        
+        const timeAgo = formatTimeAgo(notification.created_at);
+        
+        notificationElement.innerHTML = `
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                        <h3 class="text-base md:text-lg font-bold text-text-dark">${notification.title}</h3>
+                        <span class="unread-indicator px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                            NEW
+                        </span>
+                        <span class="text-xs md:text-sm text-gray-500">
+                            ${timeAgo}
+                        </span>
+                    </div>
+                    <p class="text-sm md:text-base text-gray-700 mb-3">${notification.message}</p>
+                    <div class="flex items-center gap-2">
+                        <div class="priority-badge px-3 py-1 bg-[#E16D7F] rounded-lg">
+                            <span class="text-xs font-bold text-white">${notification.type || 'system'}</span>
+                        </div>
+                        <div class="priority-badge px-3 py-1 bg-[#a9a9a9] rounded-lg">
+                            <span class="text-xs font-bold text-white">Unread</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insert at the top
+        container.insertBefore(notificationElement, container.firstChild);
+    }
+
+    // Update notification counters
+    function updateNotificationCounters(totalChange = 0, unreadChange = 0) {
+        const totalElement = document.querySelector('.bg-gradient-to-r.from-secondary .text-3xl');
+        const unreadElement = document.querySelector('.bg-white .text-gray-800');
+        
+        if (totalElement) {
+            const currentTotal = parseInt(totalElement.textContent) || 0;
+            totalElement.textContent = currentTotal + totalChange;
+        }
+        
+        if (unreadElement) {
+            const currentUnread = parseInt(unreadElement.textContent) || 0;
+            unreadElement.textContent = currentUnread + unreadChange;
+        }
+    }
+
+    // Format time ago
+    function formatTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        if (diffSec < 60) return 'Just now';
+        if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+        if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+        if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleDateString();
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-24 right-4 md:right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slide-in ${
+            type === 'error' ? 'bg-red-500 text-white' :
+            type === 'success' ? 'bg-green-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        toast.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i class="fas ${
+                    type === 'error' ? 'fa-exclamation-circle' :
+                    type === 'success' ? 'fa-check-circle' :
+                    'fa-info-circle'
+                }"></i>
+                <span class="text-sm">${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Request notification permission
+    function requestNotificationPermission() {
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("Notification permission granted");
+                }
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize WebSocket
+        initWebSocket();
+        
+        // Request notification permission
+        requestNotificationPermission();
+        
         // Mark all as read button
         const markAllReadBtn = document.querySelector('button:contains("Mark All as Read")');
         if (markAllReadBtn) {
@@ -353,15 +544,22 @@
 
                     // Show/hide empty state
                     const visibleNotifications = document.querySelectorAll('.notification-item[style*="display: flex"]').length;
-                    const emptyState = document.getElementById('emptyState');
+                    const emptyState = document.querySelector('.text-center.py-24');
                     const notificationsContainer = document.querySelector('.space-y-4');
 
                     if (visibleNotifications === 0 && priorityText !== 'All Priorities') {
-                        emptyState.classList.remove('hidden');
-                        notificationsContainer.classList.add('hidden');
-                    } else {
-                        emptyState.classList.add('hidden');
-                        notificationsContainer.classList.remove('hidden');
+                        if (!emptyState) {
+                            notificationsContainer.innerHTML = `
+                                <div class="text-center py-24 items-center">
+                                    <div class="bg-gray-100 p-4 rounded-full mb-4">
+                                        <i class="fas fa-bell text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <p class="text-gray-500">No notifications match your filters</p>
+                                </div>
+                            `;
+                        }
+                    } else if (emptyState && visibleNotifications > 0) {
+                        emptyState.remove();
                     }
 
                     priorityDropdown.classList.add('hidden');
@@ -375,7 +573,7 @@
             searchInput.addEventListener('input', function () {
                 const searchTerm = this.value.toLowerCase().trim();
                 const notifications = document.querySelectorAll('.notification-item');
-                const emptyState = document.getElementById('emptyState');
+                const emptyState = document.querySelector('.text-center.py-24');
 
                 let visibleCount = 0;
 
@@ -397,119 +595,28 @@
 
                 // Show/hide empty state
                 if (visibleCount === 0 && searchTerm !== '') {
-                    emptyState.classList.remove('hidden');
-                } else {
-                    emptyState.classList.add('hidden');
-                }
-            });
-        }
-
-        // Load more button
-        const loadMoreBtn = document.querySelector('button:contains("Load More Notifications")');
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', function () {
-                // Simulate loading
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading...';
-                this.disabled = true;
-
-                setTimeout(() => {
-                    // Add sample notifications
-                    addSampleNotifications();
-                    this.innerHTML = 'Load More Notifications';
-                    this.disabled = false;
-
-                    showToast('More notifications loaded', 'success');
-                }, 1000);
-            });
-        }
-
-        // Function to add sample notifications
-        function addSampleNotifications() {
-            const notificationsContainer = document.querySelector('.space-y-4');
-
-            const sampleNotifications = [
-                {
-                    time: '2 days ago',
-                    title: 'System update completed',
-                    content: 'Ticket #2299 – Database maintenance',
-                    priority: 'Low',
-                    priorityColor: 'bg-[#C7D2FE]',
-                    priorityTextColor: 'text-blue-800',
-                    unread: false
-                },
-                {
-                    time: '3 days ago',
-                    title: 'New team member joined',
-                    content: 'Project Alpha – Welcome Sarah Johnson',
-                    priority: 'Medium',
-                    priorityColor: 'bg-[#FED7AA]',
-                    priorityTextColor: 'text-orange-800',
-                    unread: true
-                }
-            ];
-
-            sampleNotifications.forEach(notif => {
-                const notificationHTML = `
-                <div class="notification-item bg-card-bg rounded-xl p-4 md:p-5 hover:bg-card-bg/80 transition-colors animate-slide-in">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                                <h3 class="text-base md:text-lg font-bold text-text-dark">${notif.title}</h3>
-                                <span class="text-xs md:text-sm text-gray-500">${notif.time}</span>
-                            </div>
-                            <p class="text-sm md:text-base text-gray-700 mb-3">${notif.content}</p>
-                            <div class="flex items-center gap-2">
-                                <div class="priority-badge px-3 py-1 ${notif.priorityColor} rounded-lg">
-                                    <span class="text-xs font-bold ${notif.priorityTextColor}">${notif.priority}</span>
+                    if (!emptyState) {
+                        const container = document.querySelector('.space-y-4');
+                        container.innerHTML = `
+                            <div class="text-center py-24 items-center">
+                                <div class="bg-gray-100 p-4 rounded-full mb-4">
+                                    <i class="fas fa-bell text-gray-400 text-2xl"></i>
                                 </div>
+                                <p class="text-gray-500">No notifications match your search</p>
                             </div>
-                        </div>
-                        <div class="flex flex-col items-end gap-3">
-                            <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center ${notif.unread ? 'unread-indicator' : ''}">
-                                <div class="w-2 h-2 bg-white rounded-full ${!notif.unread ? 'opacity-50' : ''}"></div>
-                            </div>
-                            <button class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-                notificationsContainer.insertAdjacentHTML('beforeend', notificationHTML);
+                        `;
+                    }
+                } else if (emptyState && visibleCount > 0) {
+                    emptyState.remove();
+                }
             });
-
-            // Update total count
-            const totalElement = document.querySelector('.text-3xl.font-bold:first-child');
-            if (totalElement) {
-                const currentTotal = parseInt(totalElement.textContent || '24');
-                totalElement.textContent = currentTotal + sampleNotifications.length;
-            }
         }
+    });
 
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `fixed top-24 right-4 md:right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slide-in ${type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                        'bg-blue-500 text-white'
-                }`;
-            toast.innerHTML = `
-            <div class="flex items-center gap-2">
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'success' ? 'fa-check-circle' :
-                        'fa-info-circle'
-                }"></i>
-                <span class="text-sm">${message}</span>
-            </div>
-        `;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+    // Close WebSocket on page unload
+    window.addEventListener('beforeunload', function() {
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.close();
         }
     });
 </script>

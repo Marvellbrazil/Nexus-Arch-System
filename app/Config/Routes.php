@@ -96,6 +96,11 @@ $routes->group('customer', function ($routes) {
         return redirect()->to('customer/dashboard');
     });
 
+    // Di dalam group 'customer', tambahkan routes berikut:
+$routes->post('profile/stats', 'CustomerController::getStats');
+$routes->post('notifications/mark_read', 'CustomerController::markNotificationRead');
+$routes->post('notifications/delete', 'CustomerController::deleteNotification');
+
     // Dashboard & Profile
     $routes->get('dashboard', [CustomerController::class, 'dashboard']);
     $routes->get('profile', [CustomerController::class, 'profile']);

@@ -2,6 +2,11 @@
 
 <?= $this->section('title') ?>My Tickets - NEXUS<?= $this->endSection() ?>
 
+<?= $this->section('head') ?>
+<!-- Tambahkan script untuk WebSocket -->
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<?= $this->endSection() ?>
+
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
 <div
@@ -15,8 +20,43 @@
 </div>
 <?= $this->endSection() ?>
 
+<?php
+// Helper function untuk relative time - DIPINDAHKAN KE ATAS
+function getRelativeTimeView($timestamp) {
+    $now = time();
+    $diff = $now - $timestamp;
+    
+    if ($diff < 60) return 'just now';
+    if ($diff < 3600) return floor($diff / 60) . ' min ago';
+    if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
+    if ($diff < 604800) return floor($diff / 86400) . ' days ago';
+    if ($diff < 2592000) return floor($diff / 604800) . ' weeks ago';
+    if ($diff < 31536000) return floor($diff / 2592000) . ' months ago';
+    return floor($diff / 31536000) . ' years ago';
+}
+?>
+
 <?= $this->section('content') ?>
 <div class="mt-4 md:mt-[77px] p-4 md:p-[30px] relative z-10">
+    <!-- WebSocket Status Indicator -->
+    <div id="wsStatus" class="fixed top-4 right-4 z-50 hidden">
+        <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-white shadow-md flex items-center gap-2">
+            <span class="status-dot w-2 h-2 rounded-full"></span>
+            <span class="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notificationContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- Real-time Ticket Updates Indicator -->
+    <div id="ticketUpdateIndicator" class="fixed bottom-4 right-4 z-50 hidden">
+        <div class="bg-secondary text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+            <i class="fas fa-sync-alt animate-spin"></i>
+            <span class="text-sm">Updating tickets...</span>
+        </div>
+    </div>
+
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -67,7 +107,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Total Tickets</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['total_tickets'] ?></p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800" id="totalTickets"><?= $data['stats']['total_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -79,7 +119,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Open</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['open_tickets'] ?></p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800" id="openTickets"><?= $data['stats']['open_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -91,7 +131,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">Resolved</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['resolved_tickets'] ?></p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800" id="resolvedTickets"><?= $data['stats']['resolved_tickets'] ?></p>
                 </div>
             </div>
         </div>
@@ -103,8 +143,7 @@
                 </div>
                 <div>
                     <p class="text-gray-600 text-xs md:text-sm">This Month</p>
-                    <p class="text-xl md:text-2xl font-bold text-gray-800"><?= $data['stats']['tickets_this_month'] ?>
-                    </p>
+                    <p class="text-xl md:text-2xl font-bold text-gray-800" id="monthTickets"><?= $data['stats']['tickets_this_month'] ?></p>
                 </div>
             </div>
         </div>
@@ -246,8 +285,6 @@
         <!-- Table -->
         <div class="overflow-x-auto">
             <table class="w-full min-w-max">
-                <!-- GANTI semua link sorting dengan kode berikut: -->
-
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="py-3 px-3 md:py-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-700">
@@ -349,10 +386,13 @@
                             Actions</th>
                     </tr>
                 </thead>
-                <tbody id="ticketsTable" class="divide-y divide-gray-200">
+                <tbody id="ticketsTableBody" class="divide-y divide-gray-200">
                     <?php if (!empty($data['tickets'])): ?>
                         <?php foreach ($data['tickets'] as $ticket): ?>
-                            <tr class="bg-white hover:bg-gray-100 transition-colors">
+                            <tr class="bg-white hover:bg-gray-100 transition-colors" 
+                                data-ticket-id="<?= $ticket['ticket_id'] ?>"
+                                data-status="<?= $ticket['status_name'] ?>"
+                                data-priority="<?= $ticket['priority_name'] ?>">
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <span class="font-bold text-gray-800 text-sm md:text-base"><?= esc($ticket['id']) ?></span>
                                 </td>
@@ -361,8 +401,9 @@
                                         <p class="font-medium text-gray-800 text-sm truncate max-w-[150px] md:max-w-none">
                                             <?= esc($ticket['subject']) ?>
                                         </p>
-                                        <p class="text-gray-500 text-xs mt-1 hidden md:block">
-                                            Last updated: <?= getRelativeTime($ticket['timestamp']) ?>
+                                        <p class="text-gray-500 text-xs mt-1 hidden md:block last-updated" 
+                                           data-timestamp="<?= strtotime($ticket['updated_at']) ?>">
+                                            Last updated: <?= getRelativeTimeView(strtotime($ticket['updated_at'])) ?>
                                         </p>
                                     </div>
                                 </td>
@@ -371,16 +412,16 @@
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <span
-                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap">
+                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['priorityColor'] ?> font-medium whitespace-nowrap priority-badge">
                                         <?= esc($ticket['priority_name']) ?>
                                     </span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6 hidden sm:table-cell">
-                                    <span class="text-gray-600 text-sm"><?= $ticket['time'] ?></span>
+                                    <span class="text-gray-600 text-sm"><?= getRelativeTimeView($ticket['timestamp']) ?></span>
                                 </td>
                                 <td class="py-3 px-3 md:py-4 md:px-6">
                                     <span
-                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap">
+                                        class="px-2 py-1 text-xs rounded-full <?= $ticket['statusColor'] ?> font-medium whitespace-nowrap status-badge">
                                         <?= esc($ticket['status_name']) ?>
                                     </span>
                                 </td>
@@ -523,171 +564,618 @@
     </div>
 </div>
 
-<script>
-    // Helper function to build query string
-    function buildQueryString(excludeParams = []) {
-        const params = new URLSearchParams(window.location.search);
-        excludeParams.forEach(param => params.delete(param));
-        return params.toString() ? '&' + params.toString() : '';
+<style>
+    /* WebSocket Status Styles */
+    #wsStatus {
+        transition: all 0.3s ease;
     }
+    
+    #wsStatus.connected .status-dot {
+        background-color: #10B981;
+        box-shadow: 0 0 10px #10B981;
+        animation: pulse 2s infinite;
+    }
+    
+    #wsStatus.disconnected .status-dot {
+        background-color: #EF4444;
+        box-shadow: 0 0 10px #EF4444;
+    }
+    
+    #wsStatus.connecting .status-dot {
+        background-color: #F59E0B;
+        box-shadow: 0 0 10px #F59E0B;
+        animation: pulse 1s infinite;
+    }
+    
+    /* Notification Toast Styles */
+    .notification-toast {
+        animation: slideInRight 0.3s ease-out;
+        max-width: 400px;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    /* Ticket update animation */
+    .ticket-updated {
+        animation: highlight 2s ease-out;
+    }
+    
+    @keyframes highlight {
+        0% {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        100% {
+            background-color: transparent;
+        }
+    }
+    
+    /* Status badge colors */
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+    
+    /* Real-time update indicator */
+    #ticketUpdateIndicator {
+        animation: slideInUp 0.3s ease-out;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
 
-    // Get relative time for last updated
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ==================== WEBSOCKET INITIALIZATION ====================
+    const wsStatus = document.getElementById('wsStatus');
+    const ticketUpdateIndicator = document.getElementById('ticketUpdateIndicator');
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    
+    // Get user data from PHP session
+    const userId = '<?= session()->get('user_id') ?>';
+    const userRole = '<?= session()->get('role') ?? 'Customer' ?>';
+    const departmentId = '<?= session()->get('department_id') ?? null ?>';
+    
+    function initializeWebSocket() {
+        if (!userId) {
+            console.warn('User ID not found, skipping WebSocket connection');
+            return;
+        }
+        
+        // WebSocket server URL
+        const socketUrl = '<?= env('WS_SERVER_URL', 'http://localhost:3000') ?>';
+        
+        // Initialize Socket.IO
+        socket = io(socketUrl, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: maxReconnectAttempts,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
+            auth: {
+                user_id: userId,
+                role: userRole,
+                department_id: departmentId
+            }
+        });
+        
+        // Connection established
+        socket.on('connect', () => {
+            console.log('✅ WebSocket connected with ID:', socket.id);
+            updateConnectionStatus('connected', 'Connected');
+            reconnectAttempts = 0;
+            
+            // Send authentication data
+            socket.emit('authenticate', {
+                user_id: userId,
+                role: userRole,
+                department_id: departmentId
+            });
+        });
+        
+        // Authentication successful
+        socket.on('authenticated', (data) => {
+            console.log('✅ Authenticated:', data);
+        });
+        
+        // New notification received
+        socket.on('new_notification', (notification) => {
+            console.log('📢 New notification:', notification);
+            handleNewNotification(notification);
+        });
+        
+        // Ticket status updated
+        socket.on('ticket_status_changed', (data) => {
+            console.log('🔄 Ticket status changed:', data);
+            handleTicketStatusUpdate(data);
+        });
+        
+        // New chat message for a ticket
+        socket.on('new_message', (message) => {
+            console.log('💬 New message for ticket:', message.ticket_id);
+            handleNewTicketMessage(message);
+        });
+        
+        // Connection error
+        socket.on('connect_error', (error) => {
+            console.error('❌ Connection error:', error);
+            updateConnectionStatus('disconnected', 'Connection Error');
+        });
+        
+        // Disconnected
+        socket.on('disconnect', (reason) => {
+            console.log('🔌 Disconnected:', reason);
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            // Attempt to reconnect
+            if (reason === 'io server disconnect') {
+                setTimeout(() => {
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`🔄 Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                        socket.connect();
+                    }
+                }, 3000);
+            }
+        });
+        
+        // Reconnecting
+        socket.on('reconnecting', (attemptNumber) => {
+            console.log(`🔄 Reconnecting (${attemptNumber}/${maxReconnectAttempts})...`);
+            updateConnectionStatus('connecting', `Reconnecting (${attemptNumber})`);
+        });
+        
+        // Show status after 1 second
+        setTimeout(() => {
+            wsStatus.classList.remove('hidden');
+        }, 1000);
+    }
+    
+    function updateConnectionStatus(status, text) {
+        // Remove all status classes
+        wsStatus.classList.remove('connected', 'disconnected', 'connecting');
+        
+        // Add current status class
+        wsStatus.classList.add(status);
+        
+        // Update text
+        const statusText = wsStatus.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = text;
+        }
+    }
+    
+    // ==================== TICKET STATUS UPDATE HANDLING ====================
+    function handleTicketStatusUpdate(data) {
+        const { ticket_id, status, updated_by, updated_at } = data;
+        
+        // Find the ticket row in the table
+        const ticketRow = document.querySelector(`tr[data-ticket-id="${ticket_id}"]`);
+        
+        if (ticketRow) {
+            // Update status badge
+            const statusBadge = ticketRow.querySelector('.status-badge');
+            if (statusBadge) {
+                // Remove all existing status classes
+                statusBadge.className = 'px-2 py-1 text-xs rounded-full font-medium whitespace-nowrap status-badge';
+                
+                // Add appropriate color class based on status
+                const statusColors = {
+                    'Open': 'bg-gray-100 text-gray-800',
+                    'In Progress': 'bg-blue-100 text-blue-800',
+                    'Resolved': 'bg-green-100 text-green-800',
+                    'Closed': 'bg-purple-100 text-purple-800',
+                    'Cancelled': 'bg-red-100 text-red-800'
+                };
+                
+                const colorClasses = statusColors[status]?.split(' ') || ['bg-gray-100', 'text-gray-800'];
+                colorClasses.forEach(className => {
+                    statusBadge.classList.add(className);
+                });
+                
+                statusBadge.textContent = status;
+                
+                // Update data attribute
+                ticketRow.setAttribute('data-status', status);
+            }
+            
+            // Update last updated time
+            const lastUpdatedElement = ticketRow.querySelector('.last-updated');
+            if (lastUpdatedElement) {
+                const timestamp = Math.floor(new Date(updated_at).getTime() / 1000);
+                lastUpdatedElement.textContent = `Last updated: ${formatTimeAgo(new Date(updated_at))}`;
+                lastUpdatedElement.setAttribute('data-timestamp', timestamp);
+            }
+            
+            // Highlight the row to show update
+            ticketRow.classList.add('ticket-updated');
+            setTimeout(() => {
+                ticketRow.classList.remove('ticket-updated');
+            }, 2000);
+            
+            // Update statistics
+            updateTicketStatistics(status);
+            
+            // Show update indicator
+            showTicketUpdateIndicator(`Ticket #${ticket_id} status updated to ${status}`);
+        } else {
+            // Ticket not in current view, update stats only
+            updateTicketStatistics(status);
+        }
+    }
+    
+    function handleNewTicketMessage(message) {
+        const { ticket_id, sender_id, sender_role, created_at } = message;
+        
+        // Find the ticket row in the table
+        const ticketRow = document.querySelector(`tr[data-ticket-id="${ticket_id}"]`);
+        
+        if (ticketRow) {
+            // Update last updated time
+            const lastUpdatedElement = ticketRow.querySelector('.last-updated');
+            if (lastUpdatedElement) {
+                const timestamp = Math.floor(new Date(created_at).getTime() / 1000);
+                lastUpdatedElement.textContent = `New message: ${formatTimeAgo(new Date(created_at))}`;
+                lastUpdatedElement.setAttribute('data-timestamp', timestamp);
+            }
+            
+            // Highlight the row
+            ticketRow.classList.add('ticket-updated');
+            setTimeout(() => {
+                ticketRow.classList.remove('ticket-updated');
+            }, 2000);
+            
+            // Show notification
+            showTicketUpdateIndicator(`New message in Ticket #${ticket_id}`);
+        }
+    }
+    
+    function updateTicketStatistics(newStatus) {
+        // Update the statistics cards based on status changes
+        const stats = {
+            'total_tickets': document.getElementById('totalTickets'),
+            'open_tickets': document.getElementById('openTickets'),
+            'resolved_tickets': document.getElementById('resolvedTickets'),
+            'month_tickets': document.getElementById('monthTickets')
+        };
+        
+        // Get current values
+        const currentOpen = parseInt(stats.open_tickets?.textContent || 0);
+        const currentResolved = parseInt(stats.resolved_tickets?.textContent || 0);
+        const currentTotal = parseInt(stats.total_tickets?.textContent || 0);
+        
+        // Update based on status change
+        if (newStatus === 'Resolved' || newStatus === 'Closed') {
+            if (stats.open_tickets && currentOpen > 0) {
+                stats.open_tickets.textContent = currentOpen - 1;
+            }
+            if (stats.resolved_tickets) {
+                stats.resolved_tickets.textContent = currentResolved + 1;
+            }
+        } else if (newStatus === 'Cancelled') {
+            if (stats.open_tickets && currentOpen > 0) {
+                stats.open_tickets.textContent = currentOpen - 1;
+            }
+        }
+        
+        // Animate the update
+        Object.values(stats).forEach(element => {
+            if (element) {
+                element.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                }, 300);
+            }
+        });
+    }
+    
+    function showTicketUpdateIndicator(message) {
+        // Show update indicator
+        ticketUpdateIndicator.classList.remove('hidden');
+        ticketUpdateIndicator.querySelector('span').textContent = message;
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            ticketUpdateIndicator.classList.add('hidden');
+        }, 3000);
+    }
+    
+    // ==================== NOTIFICATION HANDLING ====================
+    function handleNewNotification(notification) {
+        // Show toast notification
+        showNotificationToast(notification);
+        
+        // Play notification sound
+        playNotificationSound();
+    }
+    
+    function showNotificationToast(notification) {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'notification-toast bg-white rounded-lg shadow-lg border border-gray-200 p-4';
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-3 h-3 bg-secondary rounded-full"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-semibold text-gray-800 truncate">${notification.title}</h4>
+                        <button onclick="closeToast('${toastId}')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-2">${notification.message}</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>${formatTimeAgo(new Date(notification.created_at))}</span>
+                        ${notification.ticket_id ? 
+                            `<a href="${baseUrl}/customer/ticket_detail/${notification.ticket_id}" class="text-secondary hover:underline">
+                                View Ticket
+                            </a>` : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 5000);
+    }
+    
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    }
+    
+    function playNotificationSound() {
+        // Simple notification sound
+        try {
+            const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+            audio.volume = 0.3;
+            audio.play().catch(() => {
+                // Ignore errors if audio cannot play
+            });
+        } catch (error) {
+            console.log('Audio playback not supported');
+        }
+    }
+    
+    // ==================== HELPER FUNCTIONS ====================
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        if (diffSec < 60) return 'Just now';
+        if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+        if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+        if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+        if (diffDay < 30) return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
+        if (diffDay < 365) return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : ''} ago`;
+        return `${Math.floor(diffDay / 365)} year${Math.floor(diffDay / 365) > 1 ? 's' : ''} ago`;
+    }
+    
     function getRelativeTime(timestamp) {
         const now = Math.floor(Date.now() / 1000);
         const diff = now - timestamp;
-
+        
         if (diff < 60) return 'just now';
         if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
         if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
         if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
-        return Math.floor(diff / 604800) + ' weeks ago';
+        if (diff < 2592000) return Math.floor(diff / 604800) + ' weeks ago';
+        if (diff < 31536000) return Math.floor(diff / 2592000) + ' months ago';
+        return Math.floor(diff / 31536000) + ' years ago';
     }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Mobile filter toggle
-        document.getElementById('mobileFilterBtn').addEventListener('click', function () {
-            const filters = document.getElementById('mobileFilters');
-            filters.classList.toggle('hidden');
-        });
-
-        // Dropdown menu for ticket actions
-        document.querySelectorAll('.dropdown-toggle').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.stopPropagation();
-                const dropdown = this.nextElementSibling;
-                const isVisible = !dropdown.classList.contains('hidden');
-
-                // Close all other dropdowns
-                document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                    menu.classList.add('hidden');
-                });
-
-                if (!isVisible) {
-                    dropdown.classList.remove('hidden');
-                }
-            });
-        });
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function () {
+    
+    // Base URL helper
+    const baseUrl = '<?= base_url() ?>';
+    
+    // Make closeToast globally available
+    window.closeToast = closeToast;
+    
+    // ==================== EVENT LISTENERS ====================
+    // Mobile filter toggle
+    document.getElementById('mobileFilterBtn')?.addEventListener('click', function () {
+        const filters = document.getElementById('mobileFilters');
+        filters.classList.toggle('hidden');
+    });
+    
+    // Dropdown menu for ticket actions
+    document.querySelectorAll('.dropdown-toggle').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const dropdown = this.nextElementSibling;
+            const isVisible = !dropdown.classList.contains('hidden');
+            
+            // Close all other dropdowns
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
                 menu.classList.add('hidden');
             });
-        });
-
-        // Cancel ticket functionality
-        document.querySelectorAll('.cancel-ticket').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const ticketId = this.dataset.ticketId;
-
-                if (confirm('Are you sure you want to cancel this ticket?')) {
-                    fetch('<?= base_url("customer/cancel_ticket/") ?>' + ticketId, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                location.reload();
-                            } else {
-                                alert(data.message || 'Failed to cancel ticket');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred');
-                        });
-                }
-            });
-        });
-
-        // Real-time search with debounce
-        let searchTimeout;
-        const searchInput = document.getElementById('ticketSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', function () {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    this.form.submit();
-                }, 500);
-            });
-        }
-
-        // Update last updated times dynamically
-        function updateLastUpdatedTimes() {
-            document.querySelectorAll('.last-updated').forEach(element => {
-                const timestamp = element.dataset.timestamp;
-                if (timestamp) {
-                    element.textContent = 'Last updated: ' + getRelativeTime(parseInt(timestamp));
-                }
-            });
-        }
-
-        // Update every minute
-        updateLastUpdatedTimes();
-        setInterval(updateLastUpdatedTimes, 60000);
-    });
-
-    // Function untuk update status ticket secara real-time (optional)
-function updateTicketStatus(ticketId, newStatus) {
-    // Update di table jika ticket ada di halaman saat ini
-    const ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`);
-    if (ticketRow) {
-        const statusCell = ticketRow.querySelector('.status-cell');
-        if (statusCell) {
-            const statusBadge = statusCell.querySelector('span');
-            if (statusBadge) {
-                statusBadge.textContent = newStatus;
-                
-                // Update warna berdasarkan status
-                if (newStatus === 'Closed') {
-                    statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium whitespace-nowrap';
-                } else if (newStatus === 'Resolved') {
-                    statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium whitespace-nowrap';
-                }
+            
+            if (!isVisible) {
+                dropdown.classList.remove('hidden');
             }
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
+    
+    // Cancel ticket functionality
+    document.querySelectorAll('.cancel-ticket').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const ticketId = this.dataset.ticketId;
+            
+            if (confirm('Are you sure you want to cancel this ticket?')) {
+                fetch('<?= base_url("customer/cancel_ticket/") ?>' + ticketId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update status via WebSocket
+                        if (socket && socket.connected) {
+                            socket.emit('ticket_status_changed', {
+                                ticket_id: ticketId,
+                                status: 'Cancelled',
+                                updated_by: userId
+                            });
+                        }
+                        
+                        // Update UI immediately
+                        const ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`);
+                        if (ticketRow) {
+                            const statusBadge = ticketRow.querySelector('.status-badge');
+                            if (statusBadge) {
+                                statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 font-medium whitespace-nowrap status-badge';
+                                statusBadge.textContent = 'Cancelled';
+                            }
+                        }
+                        
+                        showToast('Ticket cancelled successfully', 'success');
+                    } else {
+                        showToast(data.message || 'Failed to cancel ticket', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred', 'error');
+                });
+            }
+        });
+    });
+    
+    // Real-time search with debounce
+    let searchTimeout;
+    const searchInput = document.getElementById('ticketSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        });
+    }
+    
+    // Update last updated times dynamically
+    function updateLastUpdatedTimes() {
+        document.querySelectorAll('.last-updated').forEach(element => {
+            const timestamp = element.dataset.timestamp;
+            if (timestamp) {
+                element.textContent = 'Last updated: ' + getRelativeTime(parseInt(timestamp));
+            }
+        });
+    }
+    
+    // Toast function
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const toastId = 'alert-toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        
+        const colors = {
+            success: 'bg-green-500 text-white',
+            error: 'bg-red-500 text-white',
+            warning: 'bg-yellow-500 text-white',
+            info: 'bg-blue-500 text-white'
+        };
+        
+        toast.className = `notification-toast ${colors[type]} rounded-lg shadow-lg p-4`;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                  type === 'error' ? 'fa-exclamation-circle' : 
+                                  type === 'warning' ? 'fa-exclamation-triangle' : 
+                                  'fa-info-circle'}"></i>
+                    <span class="text-sm font-medium">${message}</span>
+                </div>
+                <button onclick="closeToast('${toastId}')" class="text-white/80 hover:text-white">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 3000);
+    }
+    
+    // Initialize WebSocket connection
+    initializeWebSocket();
+    
+    // Initialize time updates
+    updateLastUpdatedTimes();
+    setInterval(updateLastUpdatedTimes, 60000);
+    
+    // Handle page visibility change
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && socket && !socket.connected) {
+            console.log('Page visible, reconnecting WebSocket...');
+            socket.connect();
         }
-    }
-}
-
-
+    });
+});
 </script>
-
 <?= $this->endSection() ?>
-
-<?php
-// Helper function to build query string for links
-helper('url');
-function buildQueryString($excludeParams = [])
-{
-    $request = \Config\Services::request();
-    $queryParams = $request->getGet();
-
-    foreach ($excludeParams as $param) {
-        unset($queryParams[$param]);
-    }
-
-    return $queryParams ? '&' . http_build_query($queryParams) : '';
-}
-
-// Helper function for relative time
-function getRelativeTime($timestamp)
-{
-    $now = time();
-    $diff = $now - $timestamp;
-
-    if ($diff < 60)
-        return 'just now';
-    if ($diff < 3600)
-        return floor($diff / 60) . ' min ago';
-    if ($diff < 86400)
-        return floor($diff / 3600) . ' hours ago';
-    if ($diff < 604800)
-        return floor($diff / 86400) . ' days ago';
-    return floor($diff / 604800) . ' weeks ago';
-}
-?>

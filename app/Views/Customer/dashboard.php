@@ -2,6 +2,11 @@
 
 <?= $this->section('title') ?>Customer Dashboard - NEXUS<?= $this->endSection() ?>
 
+<?= $this->section('head') ?>
+<!-- Tambahkan script untuk WebSocket -->
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<?= $this->endSection() ?>
+
 <?= $this->section('background_effects') ?>
 <!-- Background Effects -->
 <div
@@ -17,6 +22,17 @@
 
 <?= $this->section('content') ?>
 <div class="mt-4 md:mt-[10px] p-4 md:p-[30px] relative z-10">
+    <!-- WebSocket Status Indicator -->
+    <div id="wsStatus" class="fixed top-4 right-4 z-50 hidden">
+        <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-white shadow-md flex items-center gap-2">
+            <span class="status-dot w-2 h-2 rounded-full"></span>
+            <span class="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notificationContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
     <!-- Page Header -->
     <div class="mb-6 md:mb-[25px] relative">
         <div class="flex flex-col">
@@ -62,24 +78,6 @@
                     <span class="truncate"><?= $data['user']['email'] ?></span>
                 </div>
             </div>
-
-            <!-- <div class="mb-4 md:mb-[25px]">
-                <h3 class="text-text-dark text-sm md:text-[14px] font-semibold mb-2">Projects:</h3>
-                <ul class="text-text-muted text-xs md:text-[12px] space-y-1">
-                    <li class="flex items-center gap-2">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        Project 1
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Project 2
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        Project 3
-                    </li>
-                </ul>
-            </div> -->
 
             <div class="flex flex-col sm:flex-row gap-2 md:gap-[12px]">
                 <a href="<?= base_url('customer/profile') ?>"
@@ -142,10 +140,10 @@
                     <i class="fas fa-comment text-white text-xs"></i>
                 </div>
             </div>
-            <div class="text-gray-500 text-sm md:text-[14px] mb-4">No new messages</div>
-            <a href="<?= base_url('customer/view_messages') ?>"
+            <div class="text-gray-500 text-sm md:text-[14px] mb-4" id="supportMessageCount">No new messages</div>
+            <a href="<?= base_url('customer/my_tickets') ?>"
                 class="w-full px-4 md:px-[16px] py-2 md:py-[10px] rounded-lg bg-secondary text-white text-xs md:text-[12px] font-medium cursor-pointer text-center transition-colors duration-300 hover:bg-[#656099] no-underline block">
-                View Messages
+                View Tickets
             </a>
         </div>
 
@@ -311,12 +309,14 @@
                     View All
                 </a>
             </div>
-            <div class="space-y-3 md:space-y-4">
+            <div id="notificationsList" class="space-y-3 md:space-y-4">
                 <?php if (!empty($data['notifications'])): ?>
                     <?php foreach ($data['notifications'] as $notification): ?>
-                        <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors notification-item" 
+                             data-notification-id="<?= $notification['notification_id'] ?>"
+                             data-is-read="<?= $notification['is_read'] ? 'true' : 'false' ?>">
                             <div class="flex-shrink-0 mt-1">
-                                <?php if ($notification['is_read']): ?>
+                                <?php if (!$notification['is_read']): ?>
                                     <div class="w-2 h-2 bg-secondary rounded-full unread-indicator"></div>
                                 <?php else: ?>
                                     <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -324,7 +324,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p
-                                    class="text-text-dark text-sm md:text-[14px] font-medium <?= $notification['is_read'] ? 'font-semibold' : '' ?> truncate">
+                                    class="text-text-dark text-sm md:text-[14px] font-medium <?= !$notification['is_read'] ? 'font-semibold' : '' ?> truncate">
                                     <?= $notification['title'] ?>
                                 </p>
                                 <p class="text-gray-500 text-xs md:text-[12px] mt-1">
@@ -344,29 +344,75 @@
             </div>
 
             <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
-                <form action="<?= base_url('customer/notifications/mark_read') ?>" method="POST" class="inline">
-                    <?= csrf_field() ?>
-                    <button type="submit"
-                        class="w-full py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm md:text-[14px] font-medium">
-                        Mark All as Read
-                    </button>
-                </form>
+                <button id="markAllReadBtn"
+                    class="w-full py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm md:text-[14px] font-medium">
+                    Mark All as Read
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Unread indicator animation */
-    @keyframes pulse {
-
-        0%,
-        100% {
+    /* WebSocket Status Styles */
+    #wsStatus {
+        transition: all 0.3s ease;
+    }
+    
+    #wsStatus.connected .status-dot {
+        background-color: #10B981;
+        box-shadow: 0 0 10px #10B981;
+        animation: pulse 2s infinite;
+    }
+    
+    #wsStatus.disconnected .status-dot {
+        background-color: #EF4444;
+        box-shadow: 0 0 10px #EF4444;
+    }
+    
+    #wsStatus.connecting .status-dot {
+        background-color: #F59E0B;
+        box-shadow: 0 0 10px #F59E0B;
+        animation: pulse 1s infinite;
+    }
+    
+    /* Notification Toast Styles */
+    .notification-toast {
+        animation: slideInRight 0.3s ease-out;
+        max-width: 400px;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
             opacity: 1;
         }
-
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    /* Unread indicator animation */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
         50% {
             opacity: 0.6;
+            transform: scale(1.1);
         }
     }
 
@@ -403,111 +449,515 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Search form validation
-        document.getElementById('searchForm').addEventListener('submit', function (e) {
-            const searchInput = this.querySelector('input[name="search_term"]');
-            if (!searchInput.value.trim()) {
-                e.preventDefault();
-                showToast('Please enter a search term.', 'warning');
-                searchInput.focus();
+document.addEventListener('DOMContentLoaded', function () {
+    // ==================== WEBSOCKET INITIALIZATION ====================
+    const wsStatus = document.getElementById('wsStatus');
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+    
+    // Get user data from PHP session
+    const userId = '<?= session()->get('user_id') ?>';
+    const userRole = '<?= session()->get('role') ?? 'Customer' ?>';
+    const departmentId = '<?= session()->get('department_id') ?? null ?>';
+    
+    function initializeWebSocket() {
+        if (!userId) {
+            console.warn('User ID not found, skipping WebSocket connection');
+            return;
+        }
+        
+        // WebSocket server URL - adjust based on your environment
+        const socketUrl = '<?= env('WS_SERVER_URL', 'http://localhost:3000') ?>';
+        
+        // Initialize Socket.IO
+        socket = io(socketUrl, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: maxReconnectAttempts,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
+            auth: {
+                user_id: userId,
+                role: userRole,
+                department_id: departmentId
             }
         });
-
-        // Mark all notifications as read
-        const markAllReadBtn = document.querySelector('button[type="submit"]');
-        if (markAllReadBtn && markAllReadBtn.textContent.includes('Mark All as Read')) {
-            markAllReadBtn.addEventListener('click', function (e) {
-                // Update UI immediately for better UX
-                document.querySelectorAll('.unread-indicator').forEach(indicator => {
-                    indicator.style.animation = 'none';
-                    indicator.style.opacity = '0.5';
-                });
-
-                document.querySelectorAll('.font-semibold').forEach(text => {
-                    text.classList.remove('font-semibold');
-                });
-
-                // Show success message
-                showToast('All notifications marked as read', 'success');
+        
+        // Connection established
+        socket.on('connect', () => {
+            console.log('✅ WebSocket connected with ID:', socket.id);
+            updateConnectionStatus('connected', 'Connected');
+            reconnectAttempts = 0;
+            
+            // Send authentication data
+            socket.emit('authenticate', {
+                user_id: userId,
+                role: userRole,
+                department_id: departmentId
             });
+        });
+        
+        // Authentication successful
+        socket.on('authenticated', (data) => {
+            console.log('✅ Authenticated:', data);
+        });
+        
+        // Authentication failed
+        socket.on('unauthorized', (error) => {
+            console.error('❌ Authentication failed:', error);
+            updateConnectionStatus('disconnected', 'Auth Failed');
+        });
+        
+        // New notification received
+        socket.on('new_notification', (notification) => {
+            console.log('📢 New notification:', notification);
+            handleNewNotification(notification);
+            updateNotificationBadge();
+        });
+        
+        // Ticket status updated
+        socket.on('ticket_status_changed', (data) => {
+            console.log('🔄 Ticket status changed:', data);
+            showTicketStatusUpdate(data);
+        });
+        
+        // New chat message (if you're in a ticket room)
+        socket.on('new_message', (message) => {
+            console.log('💬 New message:', message);
+            // This would be handled in ticket_detail page
+        });
+        
+        // Connection error
+        socket.on('connect_error', (error) => {
+            console.error('❌ Connection error:', error);
+            updateConnectionStatus('disconnected', 'Connection Error');
+        });
+        
+        // Disconnected
+        socket.on('disconnect', (reason) => {
+            console.log('🔌 Disconnected:', reason);
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            // Attempt to reconnect
+            if (reason === 'io server disconnect') {
+                setTimeout(() => {
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`🔄 Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                        socket.connect();
+                    }
+                }, reconnectDelay);
+            }
+        });
+        
+        // Reconnecting
+        socket.on('reconnecting', (attemptNumber) => {
+            console.log(`🔄 Reconnecting (${attemptNumber}/${maxReconnectAttempts})...`);
+            updateConnectionStatus('connecting', `Reconnecting (${attemptNumber})`);
+        });
+        
+        // Reconnect failed
+        socket.on('reconnect_failed', () => {
+            console.error('❌ Reconnection failed');
+            updateConnectionStatus('disconnected', 'Connection Lost');
+        });
+        
+        // Show status after 1 second
+        setTimeout(() => {
+            wsStatus.classList.remove('hidden');
+        }, 1000);
+    }
+    
+    function updateConnectionStatus(status, text) {
+        // Remove all status classes
+        wsStatus.classList.remove('connected', 'disconnected', 'connecting');
+        
+        // Add current status class
+        wsStatus.classList.add(status);
+        
+        // Update text
+        const statusText = wsStatus.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = text;
         }
-
-        // Notification click to mark as read
-        document.querySelectorAll('.flex.items-start.gap-3.p-3').forEach(item => {
-            item.addEventListener('click', function (e) {
-                const indicator = this.querySelector('.unread-indicator');
-                if (indicator) {
-                    indicator.style.animation = 'none';
-                    indicator.style.opacity = '0.5';
-
-                    const title = this.querySelector('.font-semibold');
+    }
+    
+    // ==================== NOTIFICATION HANDLING ====================
+    function handleNewNotification(notification) {
+        // Show toast notification
+        showNotificationToast(notification);
+        
+        // Update notification list if on notifications page
+        updateNotificationList(notification);
+        
+        // Play notification sound
+        playNotificationSound();
+        
+        // Update browser notification if permission granted
+        if (Notification.permission === 'granted') {
+            showBrowserNotification(notification);
+        }
+    }
+    
+    function showNotificationToast(notification) {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'notification-toast bg-white rounded-lg shadow-lg border border-gray-200 p-4';
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-3 h-3 bg-secondary rounded-full"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-semibold text-gray-800 truncate">${notification.title}</h4>
+                        <button onclick="closeToast('${toastId}')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-2">${notification.message}</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>${formatTimeAgo(new Date(notification.created_at))}</span>
+                        ${notification.ticket_id ? 
+                            `<a href="${baseUrl}/customer/ticket_detail/${notification.ticket_id}" class="text-secondary hover:underline">
+                                View Ticket
+                            </a>` : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 5000);
+    }
+    
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    }
+    
+    function updateNotificationList(notification) {
+        const notificationsList = document.getElementById('notificationsList');
+        if (!notificationsList) return;
+        
+        // Create new notification item
+        const notificationItem = document.createElement('div');
+        notificationItem.className = 'flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors notification-item';
+        notificationItem.setAttribute('data-notification-id', notification.notification_id);
+        notificationItem.setAttribute('data-is-read', 'false');
+        
+        notificationItem.innerHTML = `
+            <div class="flex-shrink-0 mt-1">
+                <div class="w-2 h-2 bg-secondary rounded-full unread-indicator"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-text-dark text-sm md:text-[14px] font-semibold truncate">
+                    ${notification.title}
+                </p>
+                <p class="text-gray-500 text-xs md:text-[12px] mt-1">
+                    ${formatTimeAgo(new Date(notification.created_at))}
+                </p>
+            </div>
+        `;
+        
+        // Insert at the beginning
+        notificationsList.insertBefore(notificationItem, notificationsList.firstChild);
+        
+        // Update notification count
+        updateNotificationCount();
+    }
+    
+    function updateNotificationCount() {
+        const unreadCount = document.querySelectorAll('.notification-item[data-is-read="false"]').length;
+        const messageCountElement = document.getElementById('supportMessageCount');
+        
+        if (messageCountElement) {
+            if (unreadCount > 0) {
+                messageCountElement.textContent = `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`;
+                messageCountElement.classList.remove('text-gray-500');
+                messageCountElement.classList.add('text-secondary', 'font-medium');
+            } else {
+                messageCountElement.textContent = 'No new messages';
+                messageCountElement.classList.remove('text-secondary', 'font-medium');
+                messageCountElement.classList.add('text-gray-500');
+            }
+        }
+    }
+    
+    function playNotificationSound() {
+        // Create notification sound
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (error) {
+            console.log('Audio context not supported');
+        }
+    }
+    
+    function showBrowserNotification(notification) {
+        if (!('Notification' in window)) return;
+        
+        const options = {
+            body: notification.message,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            tag: 'nexus-notification',
+            requireInteraction: false,
+            silent: false
+        };
+        
+        new Notification(notification.title, options);
+    }
+    
+    function showTicketStatusUpdate(data) {
+        // Show status update toast
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const toastId = 'status-toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'notification-toast bg-blue-50 border border-blue-200 rounded-lg shadow-lg p-4';
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <i class="fas fa-sync-alt text-blue-500"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-semibold text-blue-800">Ticket Status Updated</h4>
+                        <button onclick="closeToast('${toastId}')" class="text-blue-400 hover:text-blue-600">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-blue-700 mb-2">
+                        Ticket #${data.ticket_id} is now <span class="font-semibold">${data.status}</span>
+                    </p>
+                    <div class="text-xs text-blue-600">
+                        ${formatTimeAgo(new Date(data.updated_at))}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 5000);
+    }
+    
+    // ==================== HELPER FUNCTIONS ====================
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        if (diffSec < 60) return 'Just now';
+        if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+        if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+        if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString();
+    }
+    
+    // Base URL helper
+    const baseUrl = '<?= base_url() ?>';
+    
+    // Make closeToast globally available
+    window.closeToast = closeToast;
+    
+    // ==================== EVENT LISTENERS ====================
+    // Mark all notifications as read
+    document.getElementById('markAllReadBtn')?.addEventListener('click', function() {
+        fetch('<?= base_url('customer/notifications/mark_all_read') ?>', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.setAttribute('data-is-read', 'true');
+                    const indicator = item.querySelector('.unread-indicator');
+                    if (indicator) {
+                        indicator.style.animation = 'none';
+                        indicator.style.backgroundColor = '#D1D5DB';
+                    }
+                    
+                    const title = item.querySelector('.font-semibold');
                     if (title) {
                         title.classList.remove('font-semibold');
                         title.classList.add('font-medium');
                     }
-
-                    showToast('Notification marked as read', 'info');
-                }
-            });
+                });
+                
+                updateNotificationCount();
+                
+                // Show success message
+                showToast('All notifications marked as read', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to mark notifications as read', 'error');
         });
-
-        // Project card interaction
-        document.querySelectorAll('.group').forEach(projectCard => {
-            projectCard.addEventListener('mouseenter', function () {
-                this.querySelector('.hover-card')?.classList.add('opacity-100', 'visible');
-            });
-
-            projectCard.addEventListener('mouseleave', function () {
-                this.querySelector('.hover-card')?.classList.remove('opacity-100', 'visible');
-            });
+    });
+    
+    // Notification click handler
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const notificationId = this.getAttribute('data-notification-id');
+            const isRead = this.getAttribute('data-is-read') === 'true';
+            
+            if (!isRead) {
+                // Mark as read via AJAX
+                fetch(`<?= base_url('customer/notifications/mark_read/') ?>${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.setAttribute('data-is-read', 'true');
+                        const indicator = this.querySelector('.unread-indicator');
+                        if (indicator) {
+                            indicator.style.animation = 'none';
+                            indicator.style.backgroundColor = '#D1D5DB';
+                        }
+                        
+                        const title = this.querySelector('.font-semibold');
+                        if (title) {
+                            title.classList.remove('font-semibold');
+                            title.classList.add('font-medium');
+                        }
+                        
+                        updateNotificationCount();
+                    }
+                });
+            }
         });
-
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            // Remove existing toasts
-            document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-
-            const toast = document.createElement('div');
-            toast.className = `custom-toast fixed top-24 right-4 md:right-6 p-4 rounded-lg shadow-lg z-[1000] max-w-sm animate-slide-in ${type === 'warning' ? 'bg-yellow-500 text-white' :
-                    type === 'error' ? 'bg-red-500 text-white' :
-                        type === 'success' ? 'bg-green-500 text-white' :
-                            'bg-blue-500 text-white'
-                }`;
-            toast.innerHTML = `
+    });
+    
+    // Toast function
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const toastId = 'alert-toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        
+        const colors = {
+            success: 'bg-green-500 text-white',
+            error: 'bg-red-500 text-white',
+            warning: 'bg-yellow-500 text-white',
+            info: 'bg-blue-500 text-white'
+        };
+        
+        toast.className = `notification-toast ${colors[type]} rounded-lg shadow-lg p-4`;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <i class="fas ${type === 'warning' ? 'fa-exclamation-triangle' :
-                    type === 'error' ? 'fa-exclamation-circle' :
-                        type === 'success' ? 'fa-check-circle' :
-                            'fa-info-circle'
-                }"></i>
-                    <span class="text-sm">${message}</span>
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                  type === 'error' ? 'fa-exclamation-circle' : 
+                                  type === 'warning' ? 'fa-exclamation-triangle' : 
+                                  'fa-info-circle'}"></i>
+                    <span class="text-sm font-medium">${message}</span>
                 </div>
-            `;
-            document.body.appendChild(toast);
-
-            // Add animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                .animate-slide-in {
-                    animation: slideIn 0.3s ease-out;
-                }
-            `;
-            document.head.appendChild(style);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toast.remove();
-                    style.remove();
-                }, 300);
-            }, 3000);
+                <button onclick="closeToast('${toastId}')" class="text-white/80 hover:text-white">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 3000);
+    }
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        // Optionally request permission on user interaction
+        document.addEventListener('click', function requestPermission() {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+            document.removeEventListener('click', requestPermission);
+        }, { once: true });
+    }
+    
+    // Search form validation
+    document.getElementById('searchForm')?.addEventListener('submit', function (e) {
+        const searchInput = this.querySelector('input[name="search_term"]');
+        if (!searchInput.value.trim()) {
+            e.preventDefault();
+            showToast('Please enter a search term.', 'warning');
+            searchInput.focus();
         }
     });
+    
+    // Initialize WebSocket connection
+    initializeWebSocket();
+    
+    // Initialize notification count
+    updateNotificationCount();
+    
+    // Handle page visibility change
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && socket && !socket.connected) {
+            console.log('Page visible, reconnecting WebSocket...');
+            socket.connect();
+        }
+    });
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (socket) {
+            socket.disconnect();
+        }
+    });
+});
 </script>
 <?= $this->endSection() ?>
