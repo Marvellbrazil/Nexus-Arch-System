@@ -3227,7 +3227,7 @@ class AdminController extends BaseController
     }
 
     /**
-     * Get ticket details (non-AJAX)
+     * Get ticket details (non-AJAX) - UPDATED VERSION
      */
     public function getTicketDetails($id = null)
     {
@@ -3241,19 +3241,167 @@ class AdminController extends BaseController
         }
 
         try {
-            $ticket = $this->ticketModel->getTicketDetailsForAdmin($ticketId);
+            $db = db_connect();
+
+            // Get ticket with all related data
+            $ticket = $db->table('tickets t')
+                ->select("
+                t.*,
+                p.priority_name,
+                s.status_name,
+                c.category_name,
+                d.department_name,
+                u_customer.full_name as customer_name,
+                u_customer.email as customer_email,
+                u_customer.phone_number as customer_phone,
+                u_assigned.full_name as assigned_to_name,
+                u_assigned.email as assigned_to_email,
+                u_assigned.phone_number as assigned_to_phone,
+                proj.project_name,
+                proj.project_code,
+                proj.description as project_description
+            ")
+                ->join('priorities p', 'p.priority_id = t.priority_id', 'left')
+                ->join('statuses s', 's.status_id = t.status_id', 'left')
+                ->join('categories c', 'c.category_id = t.category_id', 'left')
+                ->join('departments d', 'd.department_id = t.department_id', 'left')
+                ->join('users u_customer', 'u_customer.user_id = t.customer_id', 'left')
+                ->join('users u_assigned', 'u_assigned.user_id = t.assigned_to', 'left')
+                ->join('projects proj', 'proj.project_id = t.project_id', 'left')
+                ->where('t.ticket_id', $ticketId)
+                ->get()
+                ->getRowArray();
 
             if (!$ticket) {
                 return redirect()->to('/admin/tickets')->with('error', 'Ticket not found');
             }
 
+            // Get ticket activity (messages/comments)
+            $activity = $db->table('ticket_messages tm')
+                ->select("
+                tm.*,
+                u.full_name,
+                u.email,
+                u.photo_profile,
+                r.role_name,
+            ")
+                ->join('users u', 'u.user_id = tm.sender_id')
+                ->join('roles r', 'r.role_id = u.role_id', 'left')
+                ->where('tm.ticket_id', $ticketId)
+                ->orderBy('tm.created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+
+            $statusHistory = $db->table('ticket_status_history tsh')
+                ->select("
+        tsh.history_id,
+        tsh.ticket_id,
+        tsh.status_type,
+        tsh.old_value,
+        tsh.new_value,
+        tsh.changed_by,
+        tsh.change_reason,
+        tsh.created_at,
+        s.status_name,
+        u.full_name as changed_by_name,
+        u.email as changed_by_email
+    ")
+                ->join('users u', 'u.user_id = tsh.changed_by', 'left')
+                ->join('statuses s', 's.status_name = tsh.new_value', 'left') // Join berdasarkan status_name jika new_value adalah string
+                ->where('tsh.ticket_id', $ticketId)
+                ->where('tsh.status_type', 'ticket_status')
+                ->orderBy('tsh.created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+
+            // Get all status options for dropdown
+            $statusOptions = $db->table('statuses')
+                ->select('status_id, status_name')
+                ->orderBy('status_id', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            // Get all support users for assignment
+            $supportUsers = $db->table('users u')
+                ->select('u.user_id, u.username, u.full_name, u.email, r.role_name')
+                ->join('roles r', 'r.role_id = u.role_id')
+                ->where('u.is_active', true)
+                ->whereIn('r.role_name', ['Support', 'Department Head', 'Admin'])
+                ->orderBy('u.full_name', 'ASC')
+                ->get()
+                ->getResultArray();
+
             $data['ticket'] = $ticket;
+            $data['activity'] = $activity;
+            $data['status_history'] = $statusHistory;
+            $data['status_options'] = $statusOptions;
+            $data['support_users'] = $supportUsers;
+
+            // Pass helper methods to view
+            $data['getStatusBadgeClass'] = [$this, 'getStatusBadgeClass'];
+            $data['getPriorityBadgeClass'] = [$this, 'getPriorityBadgeClass'];
+            $data['time_ago'] = [$this, 'time_ago'];
 
             return view('Admin/ticket_details', $data);
         } catch (\Exception $e) {
             log_message('error', 'Get ticket details error: ' . $e->getMessage());
-            return redirect()->to('/admin/tickets')->with('error', 'Failed to load ticket details');
+            return redirect()->to('/admin/tickets')->with('error', 'Failed to load ticket details: ' . $e->getMessage());
         }
+    }
+
+// File: AdminController.php
+// Tambahkan method helper ini ke dalam class AdminController
+
+    /**
+     * Helper function untuk badge status
+     */
+    public function getStatusBadgeClass($status)
+    {
+        $status = strtolower($status);
+        $classes = [
+            'open' => 'status-open',
+            'in progress' => 'status-in-progress',
+            'in-progress' => 'status-in-progress',
+            'resolved' => 'status-resolved',
+            'closed' => 'status-closed',
+            'need info' => 'status-need-info',
+            'need-info' => 'status-need-info',
+            'waiting customer reply' => 'status-need-info',
+            'waiting-customer-reply' => 'status-need-info'
+        ];
+        return $classes[$status] ?? 'status-open';
+    }
+
+    /**
+     * Helper function untuk badge priority
+     */
+    public function getPriorityBadgeClass($priority)
+    {
+        $priority = strtolower($priority);
+        $classes = [
+            'urgent' => 'priority-urgent',
+            'high' => 'priority-high',
+            'medium' => 'priority-medium',
+            'low' => 'priority-low'
+        ];
+        return $classes[$priority] ?? 'priority-medium';
+    }
+
+    /**
+     * Helper function untuk format waktu
+     */
+    public function time_ago($datetime): string
+    {
+        $time = strtotime($datetime);
+        $now = time();
+        $diff = $now - $time;
+
+        if ($diff < 60) return 'just now';
+        if ($diff < 3600) return floor($diff / 60) . ' minutes';
+        if ($diff < 86400) return floor($diff / 3600) . ' hours';
+        if ($diff < 604800) return floor($diff / 86400) . ' days';
+
+        return floor($diff / 604800) . ' weeks';
     }
 
     /**
